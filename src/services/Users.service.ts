@@ -3,11 +3,10 @@ import { ObjectId } from 'mongodb'
 import { StringValue } from 'ms'
 import { envs } from '~/configs/env.config'
 import { CONSTANT_JOB, CONSTANT_USER } from '~/constants'
-import { RegisterUserDto, LoginUserDto } from '~/dtos/requests/auth.dto'
+import { LoginUserDto, RegisterUserDto } from '~/dtos/requests/auth.dto'
 import { ForgotPasswordDto, ResetPasswordDto, UpdateMeDto } from '~/dtos/requests/user.dto'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { sendEmailQueue } from '~/libs/bull/queues'
-import { FollowerCollection } from '~/models/schemas/Follower.schema'
 import { RefreshTokenCollection, RefreshTokenSchema } from '~/models/schemas/RefreshToken.schema'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '~/shared/classes/error.class'
@@ -384,30 +383,6 @@ class UsersService {
     return { access_token, refresh_token }
   }
 
-  async toggleFollow(user_id: string, followed_user_id: string) {
-    const userIdObjectId = new ObjectId(user_id)
-    const followedUserIdObjectId = new ObjectId(followed_user_id)
-
-    //
-    const followerDeleted = await FollowerCollection.findOneAndDelete({
-      user_id: userIdObjectId,
-      followed_user_id: followedUserIdObjectId
-    })
-
-    //
-    if (followerDeleted?._id) {
-      return 'Unfollow'
-    }
-
-    //
-    await FollowerCollection.insertOne({
-      user_id: userIdObjectId,
-      followed_user_id: followedUserIdObjectId
-    })
-
-    return 'Follow'
-  }
-
   // Auth use
   async findOneByEmail(email: string) {
     return await UserCollection.findOne(
@@ -422,7 +397,7 @@ class UsersService {
   }
 
   // local use
-  async signAccessAndRefreshToken({
+  private async signAccessAndRefreshToken({
     payload,
     exp_refresh
   }: {
@@ -466,7 +441,7 @@ class UsersService {
   }
 
   // local use, use in user-modified functions
-  async resetUserActive(user_id: string) {
+  private async resetUserActive(user_id: string) {
     const keyCache = `${CONSTANT_USER.user_active_key_cache}-${user_id}`
     await cacheServiceInstance.del(keyCache)
   }

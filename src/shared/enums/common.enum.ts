@@ -1,4 +1,4 @@
 export enum ETweetAudience {
   Everyone,
-  TwitterCircle
+  Followers
 }

@@ -39,7 +39,7 @@ export const ResetPasswordDtoSchema = z
   })
 
 export const toggleFollowDtoSchema = z.object({
-  followed_user_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+  user_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'Invalid MongoDB ObjectId'
   })
 })

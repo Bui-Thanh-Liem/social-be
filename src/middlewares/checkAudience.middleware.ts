@@ -1,0 +1,45 @@
+import { NextFunction, Request, Response } from 'express'
+import { ObjectId } from 'mongodb'
+import { FollowerCollection } from '~/models/schemas/Follower.schema'
+import { UserCollection } from '~/models/schemas/User.schema'
+import { BadRequestError, UnauthorizedError } from '~/shared/classes/error.class'
+import { ETweetAudience } from '~/shared/enums/common.enum'
+import { EUserVerifyStatus } from '~/shared/enums/status.enum'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
+
+export async function checkAudience(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { user_id: user_author_id, audience } = req.tweet as Pick<ITweet, '_id' | 'user_id' | 'audience'>
+
+    // Kiểm tra tác giả ổn không
+    const author = await UserCollection.findOne({ _id: user_author_id }, { projection: { _id: 1, verify: 1 } })
+    if (!author || author.verify === EUserVerifyStatus.Banned) {
+      throw new UnauthorizedError('Author does not exist or is banned')
+    }
+
+    // Kiểm tra audience của tweet là gì
+    if (audience === ETweetAudience.Followers) {
+      // Có đăng nhập không
+      if (!req?.decoded_authorization) {
+        throw new UnauthorizedError('Tweet này bạn phải đăng nhập mới xem được')
+      }
+
+      // Kiểm tra người xem có trong follows không
+      const { user_id: user_active_id } = req.decoded_authorization as IJwtPayload
+
+      //
+      const follow = await FollowerCollection.findOne({
+        user_id: new ObjectId(user_active_id), // muốn xem tweet của người ta thì phải theo dõi người ta
+        followed_user_id: user_author_id
+      })
+      if (!follow) {
+        throw new BadRequestError('Bạn chưa follow tác giả')
+      }
+    }
+
+    next()
+  } catch (error) {
+    next(error)
+  }
+}

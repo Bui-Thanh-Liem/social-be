@@ -30,4 +30,11 @@ export const CreateTweetDtoSchema = z.object({
   medias: z.array(MediaSchema).optional()
 })
 
+export const GetOneTweetByIdDtoSchema = z.object({
+  tweet_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+    message: 'Invalid MongoDB ObjectId'
+  })
+})
+
+export type GetOneTweetByIdDto = z.infer<typeof GetOneTweetByIdDtoSchema>
 export type CreateTweetDto = z.infer<typeof CreateTweetDtoSchema>

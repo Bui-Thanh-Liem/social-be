@@ -9,13 +9,14 @@ import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 export async function verifyUserActive(req: Request, res: Response, next: NextFunction) {
   try {
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const { followed_user_id } = req.params as ToggleFollowDto
+    const { user_id: followed_user_id } = req.params as ToggleFollowDto
 
     if (user_id === followed_user_id) {
       throw new BadRequestError('Invalid operation (bạn không thể theo dõi chính bạn)')
     }
 
     const userActive = await UserService.getUserActive(user_id)
+    console.log('userActive::', userActive) 
     if (userActive?.verify === EUserVerifyStatus.Unverified) {
       throw new UnauthorizedError('Your account is not verified.')
     }

@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import UsersControllers from '~/controllers/Users.controller'
+import AuthController from '~/controllers/Auth.controller'
 import { LoginUserDtoSchema, RegisterUserDtoSchema } from '~/dtos/requests/auth.dto'
 import {
   ChangePasswordDtoSchema,
@@ -16,40 +16,40 @@ import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 
 const authRoute = Router()
 
-authRoute.post('/register', requestBodyValidate(RegisterUserDtoSchema), wrapAsyncHandler(UsersControllers.register))
+authRoute.post('/register', requestBodyValidate(RegisterUserDtoSchema), wrapAsyncHandler(AuthController.register))
 
-authRoute.post('/login', requestBodyValidate(LoginUserDtoSchema), UsersControllers.login)
+authRoute.post('/login', requestBodyValidate(LoginUserDtoSchema), AuthController.login)
 
-authRoute.get('/google-login', UsersControllers.googleLogin)
+authRoute.get('/google-login', AuthController.googleLogin)
 
-authRoute.post('/logout', verifyAccessToken, verifyRefreshToken, wrapAsyncHandler(UsersControllers.logout))
+authRoute.post('/logout', verifyAccessToken, verifyRefreshToken, wrapAsyncHandler(AuthController.logout))
 
-authRoute.post('/refresh-token', verifyRefreshToken, wrapAsyncHandler(UsersControllers.refreshToken))
+authRoute.post('/refresh-token', verifyRefreshToken, wrapAsyncHandler(AuthController.refreshToken))
 
 authRoute.post(
   '/change-password',
   verifyAccessToken,
   requestBodyValidate(ChangePasswordDtoSchema),
   verifyUserActiveForChangePassword,
-  wrapAsyncHandler(UsersControllers.changePassword)
+  wrapAsyncHandler(AuthController.changePassword)
 )
 
 authRoute.post(
   '/forgot-password',
   requestBodyValidate(ForgotPasswordDtoSchema),
-  wrapAsyncHandler(UsersControllers.forgotPassword)
+  wrapAsyncHandler(AuthController.forgotPassword)
 )
 
 authRoute.post(
   '/reset-password',
   requestBodyValidate(ResetPasswordDtoSchema),
   verifyTokenForgotPassword,
-  wrapAsyncHandler(UsersControllers.resetPassword)
+  wrapAsyncHandler(AuthController.resetPassword)
 )
 
 authRoute
   .route('/me')
-  .get(verifyAccessToken, verifyRefreshToken, wrapAsyncHandler(UsersControllers.getMe))
-  .patch(verifyAccessToken, requestBodyValidate(UpdateMeDtoSchema), wrapAsyncHandler(UsersControllers.updateMe))
+  .get(verifyAccessToken, verifyRefreshToken, wrapAsyncHandler(AuthController.getMe))
+  .patch(verifyAccessToken, requestBodyValidate(UpdateMeDtoSchema), wrapAsyncHandler(AuthController.updateMe))
 
 export default authRoute

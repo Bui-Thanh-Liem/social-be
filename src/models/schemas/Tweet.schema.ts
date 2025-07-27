@@ -21,7 +21,7 @@ export class TweetSchema extends BaseSchema implements ITweet {
     super()
     this.user_id = tweet.user_id || new ObjectId()
     this.type = tweet.type || ETweetType.Tweet
-    this.audience = tweet.audience || ETweetAudience.TwitterCircle
+    this.audience = tweet.audience || ETweetAudience.Everyone
     this.content = tweet.content || ''
     this.parent_id = tweet.parent_id || null
     this.hashtags = tweet.hashtags || []

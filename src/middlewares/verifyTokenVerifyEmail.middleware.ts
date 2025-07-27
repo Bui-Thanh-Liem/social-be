@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from 'express'
-import { ObjectId } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { UserCollection } from '~/models/schemas/User.schema'
 import { UnauthorizedError } from '~/shared/classes/error.class'
@@ -14,10 +13,10 @@ export async function verifyTokenVerifyEmail(req: Request, res: Response, next: 
     }
 
     //
-    const decoded = await verifyToken({ token, privateKey: envs.JWT_SECRET_TEMP })
+    await verifyToken({ token, privateKey: envs.JWT_SECRET_TEMP })
 
     //
-    const user = await UserCollection.findOne({ _id: new ObjectId(decoded.user_id), email_verify_token: token })
+    const user = await UserCollection.findOne({ email_verify_token: token })
     if (!user) {
       throw new UnauthorizedError('Invalid verify token')
     }
