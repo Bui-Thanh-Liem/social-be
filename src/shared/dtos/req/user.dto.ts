@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CONSTANT_REGEX } from '~/constants'
+import { CONSTANT_REGEX } from '~/shared/constants'
 
 export const verifyEmailDtoSchema = z.object({
   email_verify_token: z.string().trim()
@@ -23,21 +23,6 @@ export const UpdateMeDtoSchema = z.object({
   cover_photo: z.string().min(1).max(400).trim().optional()
 })
 
-export const ForgotPasswordDtoSchema = z.object({
-  email: z.string().email().trim()
-})
-
-export const ResetPasswordDtoSchema = z
-  .object({
-    password: z.string().trim(),
-    confirm_password: z.string().trim(),
-    forgot_password_token: z.string().trim()
-  })
-  .refine((data) => data.password === data.confirm_password, {
-    path: ['confirm_password'],
-    message: 'Password do not match'
-  })
-
 export const toggleFollowDtoSchema = z.object({
   user_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'Invalid MongoDB ObjectId'
@@ -56,7 +41,5 @@ export const ChangePasswordDtoSchema = z
   })
 
 export type UpdateMeDto = z.infer<typeof UpdateMeDtoSchema>
-export type ForgotPasswordDto = z.infer<typeof ForgotPasswordDtoSchema>
-export type ResetPasswordDto = z.infer<typeof ResetPasswordDtoSchema>
 export type ToggleFollowDto = z.infer<typeof toggleFollowDtoSchema>
 export type ChangePasswordDto = z.infer<typeof ChangePasswordDtoSchema>

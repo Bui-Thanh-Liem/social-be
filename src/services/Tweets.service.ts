@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { CreateTweetDto } from '~/dtos/requests/tweet.dto'
+import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import HashtagsService from './Hashtags.service'
 

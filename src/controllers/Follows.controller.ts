@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
-import { ToggleFollowDto } from '~/dtos/requests/user.dto'
 import FollowsService from '~/services/Follows.service'
 import { OkResponse } from '~/shared/classes/response.class'
+import { ToggleFollowDto } from '~/shared/dtos/req/user.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class FollowsController {

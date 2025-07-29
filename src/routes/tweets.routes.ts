@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import TweetsController from '~/controllers/Tweets.controller'
-import { CreateTweetDtoSchema, GetOneTweetByIdDtoSchema } from '~/dtos/requests/tweet.dto'
+import { CreateTweetDtoSchema, GetOneTweetByIdDtoSchema } from '~/shared/dtos/req/tweet.dto'
 import { checkAudience } from '~/middlewares/checkAudience.middleware'
 import { checkTweetParams } from '~/middlewares/checkTweetParams.middleware'
 import { optionLogin } from '~/middlewares/optionLogin.middleware'

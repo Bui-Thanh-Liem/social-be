@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { ToggleBookmarkDto } from '~/dtos/requests/bookmark.dto'
+import { ToggleBookmarkDto } from '~/shared/dtos/req/bookmark.dto'
 import BookmarksService from '~/services/Bookmarks.service'
 import { CreatedResponse } from '~/shared/classes/response.class'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'

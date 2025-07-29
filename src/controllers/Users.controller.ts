@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb'
 import { UserCollection } from '~/models/schemas/User.schema'
 import UsersServices from '~/services/Users.service'
 import { OkResponse } from '~/shared/classes/response.class'
+import { ChangePasswordDto } from '~/shared/dtos/req/user.dto'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
@@ -30,6 +31,13 @@ class UsersController {
     const { username } = req.params
     const result = await UsersServices.getIdByUsername(username)
     res.json(new OkResponse(`${result} Success`, result))
+  }
+
+  async changePassword(req: Request, res: Response, next: NextFunction) {
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const { new_password } = req.body as ChangePasswordDto
+    const result = await UsersServices.changePassword(user_id, new_password)
+    res.json(new OkResponse(`Change password Success`, result))
   }
 }
 

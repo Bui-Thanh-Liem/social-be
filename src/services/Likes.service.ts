@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { ToggleLikeDto } from '~/dtos/requests/like.dto'
+import { ToggleLikeDto } from '~/shared/dtos/req/like.dto'
 import { LikeCollection } from '~/models/schemas/Like.schema'
 
 class LikesService {

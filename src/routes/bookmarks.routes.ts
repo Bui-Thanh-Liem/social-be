@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import BookmarksController from '~/controllers/Bookmarks.controller'
-import { ToggleBookmarkDtoSchema } from '~/dtos/requests/bookmark.dto'
+import { ToggleBookmarkDtoSchema } from '~/shared/dtos/req/bookmark.dto'
 import { checkTweetParams } from '~/middlewares/checkTweetParams.middleware'
 import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'

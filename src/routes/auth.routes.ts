@@ -1,18 +1,17 @@
 import { Router } from 'express'
 import AuthController from '~/controllers/Auth.controller'
-import { LoginUserDtoSchema, RegisterUserDtoSchema } from '~/dtos/requests/auth.dto'
 import {
-  ChangePasswordDtoSchema,
   ForgotPasswordDtoSchema,
-  ResetPasswordDtoSchema,
-  UpdateMeDtoSchema
-} from '~/dtos/requests/user.dto'
+  LoginUserDtoSchema,
+  RegisterUserDtoSchema,
+  ResetPasswordDtoSchema
+} from '~/shared/dtos/req/auth.dto'
 import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyRefreshToken } from '~/middlewares/verifyRefreshToken.middleware'
 import { verifyTokenForgotPassword } from '~/middlewares/verifyTokenForgotPassword.middleware'
-import { verifyUserActiveForChangePassword } from '~/middlewares/verifyUserActiveForChangePassword.middleware'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
+import { UpdateMeDtoSchema } from '~/shared/dtos/req/user.dto'
 
 const authRoute = Router()
 
@@ -25,14 +24,6 @@ authRoute.get('/google-login', AuthController.googleLogin)
 authRoute.post('/logout', verifyAccessToken, verifyRefreshToken, wrapAsyncHandler(AuthController.logout))
 
 authRoute.post('/refresh-token', verifyRefreshToken, wrapAsyncHandler(AuthController.refreshToken))
-
-authRoute.post(
-  '/change-password',
-  verifyAccessToken,
-  requestBodyValidate(ChangePasswordDtoSchema),
-  verifyUserActiveForChangePassword,
-  wrapAsyncHandler(AuthController.changePassword)
-)
 
 authRoute.post(
   '/forgot-password',

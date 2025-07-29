@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CONSTANT_REGEX } from '~/constants'
+import { CONSTANT_REGEX } from '~/shared/constants'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EMediaType, ETweetType } from '~/shared/enums/type.enum'
 

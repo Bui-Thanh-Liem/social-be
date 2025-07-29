@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { ToggleLikeDto } from '~/dtos/requests/like.dto'
+import { ToggleLikeDto } from '~/shared/dtos/req/like.dto'
 import LikesService from '~/services/Likes.service'
 import { CreatedResponse } from '~/shared/classes/response.class'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'

@@ -1,4 +1,4 @@
-import { CONSTANT_JOB } from '~/constants'
+import { CONSTANT_JOB } from '~/shared/constants'
 import mailServiceInstance from '~/helpers/mail.helper'
 import VideosService from '~/services/Videos.service'
 import { BadRequestError } from '~/shared/classes/error.class'

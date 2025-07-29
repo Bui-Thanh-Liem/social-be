@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { ToggleBookmarkDto } from '~/dtos/requests/bookmark.dto'
+import { ToggleBookmarkDto } from '~/shared/dtos/req/bookmark.dto'
 import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
 
 class BookmarksService {

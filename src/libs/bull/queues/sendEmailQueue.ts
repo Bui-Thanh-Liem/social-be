@@ -1,6 +1,6 @@
 import Queue from 'bull'
 import { envs } from '~/configs/env.config'
-import { CONSTANT_QUEUE } from '~/constants'
+import { CONSTANT_QUEUE } from '~/shared/constants'
 
 export const sendEmailQueue = new Queue(CONSTANT_QUEUE.SEND_MAIL, {
   redis: { host: envs.REDIS_HOST, port: envs.REDIS_PORT },
