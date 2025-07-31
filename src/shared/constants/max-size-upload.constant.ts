@@ -1,0 +1,5 @@
+export const MAX_SIZE_IMAGE_UPLOAD = 3 * 1024 * 1024
+export const MAX_LENGTH_IMAGE_UPLOAD = 10
+
+export const MAX_SIZE_VIDEO_UPLOAD = 50 * 1024 * 1024
+export const MAX_LENGTH_VIDEO_UPLOAD = 2

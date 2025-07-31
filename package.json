@@ -14,7 +14,7 @@
     "lint:fix": "eslint . --fix",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "sync:shared": "rm -rf ../client/src/shared && cp -r ./src/shared ../client/src/"
+    "sync:shared": "rm -rf ../fe/src/shared && cp -r ./src/shared ../fe/src/"
   },
   "keywords": [],
   "author": "",

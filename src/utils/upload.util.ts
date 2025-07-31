@@ -2,17 +2,22 @@ import { Request } from 'express'
 // const { default: formidable } = await import('formidable')
 import formidable, { File, Part } from 'formidable'
 import fs from 'fs'
-import { InsertOneResult, ObjectId } from 'mongodb'
+import { ObjectId } from 'mongodb'
 import { nanoid } from 'nanoid'
 import path from 'path'
 import { envs } from '~/configs/env.config'
-import { CONSTANT_JOB } from '~/shared/constants'
 import { compressionQueue } from '~/libs/bull/queues'
-import { VideoSchema } from '~/models/schemas/Video.schema'
 import VideosService from '~/services/Videos.service'
 import { BadRequestError } from '~/shared/classes/error.class'
-import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from '~/shared/consts/path.conts'
+import { CONSTANT_JOB } from '~/shared/constants'
+import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from '~/shared/constants/path-static.constant'
 import { compressionFile } from './compression.util'
+import {
+  MAX_LENGTH_IMAGE_UPLOAD,
+  MAX_LENGTH_VIDEO_UPLOAD,
+  MAX_SIZE_IMAGE_UPLOAD,
+  MAX_SIZE_VIDEO_UPLOAD
+} from '~/shared/constants'
 
 // class Queue {
 //   items: string[]
@@ -52,9 +57,6 @@ import { compressionFile } from './compression.util'
 
 export function uploadImages(req: Request): Promise<string[]> {
   //
-  const fileSize = 3 * 1024 * 1024 // 3mb
-  const maxFiles = 10
-
   if (!fs.existsSync(UPLOAD_IMAGE_FOLDER_PATH)) {
     fs.mkdirSync(UPLOAD_IMAGE_FOLDER_PATH, { recursive: true })
   }
@@ -62,11 +64,11 @@ export function uploadImages(req: Request): Promise<string[]> {
   //
   const form = formidable({
     multiples: true,
-    maxFiles: maxFiles,
+    maxFiles: MAX_LENGTH_IMAGE_UPLOAD,
     keepExtensions: true,
     uploadDir: UPLOAD_IMAGE_FOLDER_PATH,
-    maxFileSize: fileSize,
-    maxTotalFileSize: maxFiles * fileSize,
+    maxFileSize: MAX_SIZE_IMAGE_UPLOAD,
+    maxTotalFileSize: MAX_LENGTH_IMAGE_UPLOAD * MAX_SIZE_IMAGE_UPLOAD,
     filter: ({ name, originalFilename, mimetype }) => {
       const valid = name === 'images' && Boolean(mimetype && mimetype?.includes('image/'))
 
@@ -81,6 +83,8 @@ export function uploadImages(req: Request): Promise<string[]> {
   //
   return new Promise((res, rej) => {
     form.parse(req, (err, fields, files) => {
+      console.log('files::', files)
+
       //
       if (err) {
         return rej(new BadRequestError(err?.message || 'Images upload error'))
@@ -102,10 +106,6 @@ export function uploadImages(req: Request): Promise<string[]> {
 
 export function uploadVideos(req: Request): Promise<string[]> {
   //
-  const fileSize = 50 * 1024 * 1024 // 50mb
-  const maxFiles = 2
-
-  //
   if (!fs.existsSync(UPLOAD_VIDEO_FOLDER_PATH)) {
     fs.mkdirSync(UPLOAD_VIDEO_FOLDER_PATH, { recursive: true })
   }
@@ -113,11 +113,11 @@ export function uploadVideos(req: Request): Promise<string[]> {
   //
   const form = formidable({
     multiples: true,
-    maxFiles: maxFiles,
+    maxFiles: MAX_LENGTH_VIDEO_UPLOAD,
     keepExtensions: true,
     uploadDir: UPLOAD_VIDEO_FOLDER_PATH,
-    maxFileSize: fileSize,
-    maxTotalFileSize: maxFiles * fileSize,
+    maxFileSize: MAX_SIZE_VIDEO_UPLOAD,
+    maxTotalFileSize: MAX_LENGTH_VIDEO_UPLOAD * MAX_SIZE_VIDEO_UPLOAD,
     filter: ({ name, originalFilename, mimetype }) => {
       const valid = name === 'videos' && Boolean(mimetype && mimetype?.includes('video/'))
 

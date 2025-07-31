@@ -3,7 +3,7 @@ import fs from 'fs'
 import mime from 'mime'
 import path from 'path'
 import { BadRequestError } from '~/shared/classes/error.class'
-import { UPLOAD_VIDEO_FOLDER_PATH } from '~/shared/consts/path.conts'
+import { UPLOAD_VIDEO_FOLDER_PATH } from '~/shared/constants/path-static.constant'
 
 class StreamVideoController {
   async streamVideo(req: Request, res: Response, next: NextFunction) {

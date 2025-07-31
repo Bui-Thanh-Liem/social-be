@@ -2,7 +2,7 @@ import { File } from 'formidable'
 import { unlinkSync } from 'fs'
 import { join } from 'path'
 import sharp from 'sharp'
-import { UPLOAD_IMAGE_FOLDER_PATH } from '~/shared/consts/path.conts'
+import { UPLOAD_IMAGE_FOLDER_PATH } from '~/shared/constants/path-static.constant'
 import { encodeHLSWithMultipleVideoStreams } from './video'
 
 export async function compressionFile(file: File): Promise<string> {
