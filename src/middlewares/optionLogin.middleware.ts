@@ -7,6 +7,7 @@ export const optionLogin =
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (req.headers['authorization']) {
+        console.log(req.headers['authorization'])
         middleware(req, res, next)
       } else {
         next()

@@ -1,8 +1,8 @@
-import { ETweetType } from '~/shared/enums/type.enum'
-import { IBase } from './base.interface'
-import { ETweetAudience } from '~/shared/enums/common.enum'
-import { IMedia } from '../common/media.interface'
 import { ObjectId } from 'mongodb'
+import { ETweetAudience } from '~/shared/enums/common.enum'
+import { ETweetType } from '~/shared/enums/type.enum'
+import { IMedia } from '../common/media.interface'
+import { IBase } from './base.interface'
 
 export interface ITweet extends IBase {
   user_id: ObjectId

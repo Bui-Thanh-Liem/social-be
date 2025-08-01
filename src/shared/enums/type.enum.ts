@@ -2,7 +2,7 @@ export enum ETweetType {
   Tweet,
   Retweet,
   Comment,
-  QuoteTweet
+  QuoteTweet // đăng lại và thêm được content của mình
 }
 
 export enum EMediaType {

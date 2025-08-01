@@ -7,14 +7,16 @@ import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
+import { IUser } from '~/shared/interfaces/schemas/user.interface'
 
 export async function checkAudience(req: Request, res: Response, next: NextFunction) {
   try {
-    const { user_id: user_author_id, audience } = req.tweet as Pick<ITweet, '_id' | 'user_id' | 'audience'>
+    const { user_id: author, audience } = req.tweet as ITweet
+    const { _id: authorId } = author as unknown as IUser
 
     // Kiểm tra tác giả ổn không
-    const author = await UserCollection.findOne({ _id: user_author_id }, { projection: { _id: 1, verify: 1 } })
-    if (!author || author.verify === EUserVerifyStatus.Banned) {
+    const user = await UserCollection.findOne({ _id: authorId }, { projection: { _id: 1, verify: 1 } })
+    if (!user || user.verify === EUserVerifyStatus.Banned) {
       throw new UnauthorizedError('Author does not exist or is banned')
     }
 
@@ -31,7 +33,7 @@ export async function checkAudience(req: Request, res: Response, next: NextFunct
       //
       const follow = await FollowerCollection.findOne({
         user_id: new ObjectId(user_active_id), // muốn xem tweet của người ta thì phải theo dõi người ta
-        followed_user_id: user_author_id
+        followed_user_id: authorId
       })
       if (!follow) {
         throw new BadRequestError('Bạn chưa follow tác giả')

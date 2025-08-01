@@ -1,29 +1,31 @@
 import { ObjectId } from 'mongodb'
-import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
+import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
+import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import HashtagsService from './Hashtags.service'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
+    const { audience, type, content, parent_id, mentions, medias } = payload
     const hashtags = await HashtagsService.checkHashtags(payload.hashtags)
 
     const result = await TweetCollection.insertOne(
       new TweetSchema({
         user_id: new ObjectId(user_id),
-        type: payload.type,
-        audience: payload.audience,
+        type: type,
+        audience: audience,
         hashtags: hashtags,
-        content: payload.content,
-        parent_id: new ObjectId(payload.parent_id),
-        mentions: payload.mentions ? payload.mentions?.map((id) => new ObjectId(id)) : [],
-        medias: payload.medias
+        content: content,
+        parent_id: parent_id ? new ObjectId(parent_id) : null,
+        mentions: mentions ? mentions?.map((id) => new ObjectId(id)) : [],
+        medias: medias
       })
     )
     return result
   }
 
   async getOneById(tweet_id: string) {
-    const result = await TweetCollection.aggregate([
+    const result = await TweetCollection.aggregate<TweetSchema>([
       {
         $match: {
           _id: new ObjectId(tweet_id)
@@ -85,11 +87,6 @@ class TweetsService {
         }
       },
       {
-        $addFields: {
-          bookmark_count: { $size: '$bookmarks' }
-        }
-      },
-      {
         $lookup: {
           from: 'likes', // collection chứa bookmark
           localField: '_id', // _id của tweet
@@ -106,30 +103,39 @@ class TweetsService {
       },
       {
         $addFields: {
-          like_count: { $size: '$likes' }
+          bookmark_count: { $size: '$bookmarks' },
+          like_count: { $size: '$likes' },
+          views: {
+            $add: ['$guest_view', '$user_view']
+          }
         }
       }
-      // {
-      //   $project: {
-      //     'user_id.password': 0,
-      //     'user_id.email_verify_token': 0,
-      //     'user_id.forgot_password_token': 0,
-      //     'user_id.verify': 0,
-      //     'user_id.created_at': 0,
-      //     'user_id.updated_at': 0,
-      //     'user_id.location': 0,
-      //     'user_id.website': 0,
-      //     'user_id.bio': 0,
-      //     'user_id.day_of_birth': 0,
-
-      //     //
-      //     'hashtags.created_at': 0,
-      //     'hashtags.updated_at': 0
-      //   }
-      // }
     ]).next()
 
     return result
+  }
+
+  async increaseView(tweet_id: ObjectId, user_id: string | null) {
+    const inc = user_id ? { user_view: 1 } : { guest_view: 1 }
+
+    const result = await TweetCollection.findOneAndUpdate(
+      {
+        _id: tweet_id
+      },
+      {
+        $inc: inc,
+        $currentDate: { updated_at: true }
+      },
+      {
+        returnDocument: 'after',
+        projection: {
+          user_view: 1,
+          guest_view: 1
+        }
+      }
+    )
+
+    return result as Pick<ITweet, 'guest_view' | 'user_view'>
   }
 }
 

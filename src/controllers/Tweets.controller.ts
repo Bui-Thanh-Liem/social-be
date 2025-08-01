@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
-import { GetOneTweetByIdDto } from '~/shared/dtos/req/tweet.dto'
 import TweetsService from '~/services/Tweets.service'
 import { CreatedResponse, OkResponse } from '~/shared/classes/response.class'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 
 class TweetsController {
   async create(req: Request, res: Response) {
@@ -12,9 +12,15 @@ class TweetsController {
   }
 
   async getOneById(req: Request, res: Response) {
-    const { tweet_id } = req.params as GetOneTweetByIdDto
-    const result = await TweetsService.getOneById(tweet_id)
-    res.status(200).json(new OkResponse('Get tweet Success', result))
+    const tweet = req.tweet as ITweet
+    const user = req?.decoded_authorization as IJwtPayload
+    const { guest_view, user_view } = await TweetsService.increaseView(tweet._id!, user?.user_id)
+
+    tweet.guest_view = guest_view
+    tweet.user_view = user_view
+
+    // Trả về ngay tại controller vì ở middleware đã query rồi
+    res.status(200).json(new OkResponse('Get tweet Success', tweet))
   }
 }
 
