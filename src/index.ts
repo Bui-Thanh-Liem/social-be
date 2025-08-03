@@ -1,5 +1,6 @@
+import bodyParser from 'body-parser'
 import cors from 'cors'
-import express from 'express'
+import express, { Request, Response } from 'express'
 import morgan from 'morgan'
 import database from '~/configs/database.config'
 import { envs } from './configs/env.config'
@@ -13,8 +14,8 @@ import likesRoute from './routes/likes.routes'
 import tweetsRoute from './routes/tweets.routes'
 import uploadsRoute from './routes/uploads.routes'
 import usersRoute from './routes/users.routes'
-import bodyParser from 'body-parser'
 import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/constants/path-static.constant'
+import { startFaker } from './utils/faker.util'
 
 const app = express()
 const port = envs.SERVER_PORT
@@ -24,9 +25,10 @@ app.use(cors())
 app.use(morgan('dev'))
 app.use(loggerMiddleware)
 
+// Linh động giữa form-data hoặc application/json
 app.use((req, res, next) => {
-  console.log("req.is('multipart/form-data'):::", req.is('multipart/form-data'))
   if (req.is('multipart/form-data')) {
+    console.log("req.is('multipart/form-data'):::", req.is('multipart/form-data'))
     return next()
   }
   express.json({ limit: '10mb' })(req, res, next)
@@ -34,6 +36,12 @@ app.use((req, res, next) => {
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' })) // parse x-www-form-urlencoded
 
 //
+app.post('/faker', async (req: Request, res: Response) => {
+  await startFaker()
+  res.status(200).json({
+    message: 'Faker data success'
+  })
+})
 app.use('/auth', authRoute)
 app.use('/users', usersRoute)
 app.use('/likes', likesRoute)

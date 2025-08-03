@@ -16,6 +16,9 @@ export async function checkAudience(req: Request, res: Response, next: NextFunct
 
     // Kiểm tra tác giả ổn không
     const user = await UserCollection.findOne({ _id: authorId }, { projection: { _id: 1, verify: 1 } })
+    console.log('checkAudience - req.tweet:::', req.tweet)
+    console.log('checkAudience - user:::', user)
+
     if (!user || user.verify === EUserVerifyStatus.Banned) {
       throw new UnauthorizedError('Author does not exist or is banned')
     }

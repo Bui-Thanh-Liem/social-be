@@ -10,9 +10,15 @@ export enum EMediaType {
   Video
 }
 
-export enum TokenType {
+export enum ETokenType {
   accessToken,
   refreshToken,
   forgotPasswordToken,
   verifyToken
+}
+
+export enum EFeedType {
+  All = 'all', // New feeds tổng (everyone + following)
+  Everyone = 'everyone', // Chỉ người mình everyone
+  Following = 'following' // Chỉ người mình follow
 }

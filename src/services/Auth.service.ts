@@ -8,7 +8,7 @@ import { RefreshTokenCollection, RefreshTokenSchema } from '~/models/schemas/Ref
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '~/shared/classes/error.class'
 import { ForgotPasswordDto, LoginUserDto, RegisterUserDto, ResetPasswordDto } from '~/shared/dtos/req/auth.dto'
-import { TokenType } from '~/shared/enums/type.enum'
+import { ETokenType } from '~/shared/enums/type.enum'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oauth-google.interface'
 import { generatePassword, hashPassword, verifyPassword } from '~/utils/crypto.util'
@@ -28,7 +28,7 @@ class AuthService {
 
     //
     const email_verify_token = await signToken({
-      payload: { user_id: '', type: TokenType.verifyToken },
+      payload: { user_id: '', type: ETokenType.verifyToken },
       privateKey: envs.JWT_SECRET_TEMP,
       options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
     })
@@ -186,7 +186,7 @@ class AuthService {
 
     //
     const forgot_password_token = await signToken({
-      payload: { user_id: user._id.toString(), type: TokenType.forgotPasswordToken },
+      payload: { user_id: user._id.toString(), type: ETokenType.forgotPasswordToken },
       privateKey: envs.JWT_SECRET_TEMP,
       options: { expiresIn: envs.TEMP_TOKEN_EXPIRES_IN as StringValue }
     })
@@ -288,12 +288,12 @@ class AuthService {
   }): Promise<[string, string]> {
     return (await Promise.all([
       signToken({
-        payload: { ...payload, type: TokenType.accessToken },
+        payload: { ...payload, type: ETokenType.accessToken },
         privateKey: envs.JWT_SECRET_ACCESS,
         options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
       }),
       signToken({
-        payload: { ...payload, type: TokenType.refreshToken, exp: exp_refresh },
+        payload: { ...payload, type: ETokenType.refreshToken, exp: exp_refresh },
         privateKey: envs.JWT_SECRET_REFRESH,
         options: { expiresIn: envs.REFRESH_TOKEN_EXPIRES_IN as StringValue }
       })

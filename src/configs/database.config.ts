@@ -56,7 +56,7 @@ class DatabaseConfig {
 
     // User
     UserCollection.createIndex({ email: 1 }, { unique: true })
-    UserCollection.createIndex({ username: 1 }, { unique: true })
+    // UserCollection.createIndex({ username: 1 }, { unique: true })
 
     // Refresh
     RefreshTokenCollection.createIndex({ token: 1 }, { unique: true })

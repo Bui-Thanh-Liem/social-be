@@ -8,7 +8,7 @@ import { UserCollection } from '~/models/schemas/User.schema'
 import { ConflictError, NotFoundError } from '~/shared/classes/error.class'
 import { UpdateMeDto } from '~/shared/dtos/req/user.dto'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
-import { TokenType } from '~/shared/enums/type.enum'
+import { ETokenType } from '~/shared/enums/type.enum'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { hashPassword } from '~/utils/crypto.util'
 import { signToken } from '~/utils/jwt.util'
@@ -41,7 +41,7 @@ class UsersService {
   async resendVerifyEmail(id: string) {
     //
     const email_verify_token = await signToken({
-      payload: { user_id: '', type: TokenType.verifyToken },
+      payload: { user_id: '', type: ETokenType.verifyToken },
       privateKey: envs.JWT_SECRET_TEMP,
       options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
     })
