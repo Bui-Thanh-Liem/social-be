@@ -26,6 +26,26 @@ class FollowsService {
       return { status: 'Follow', _id: inserted.insertedId }
     }
   }
+
+  async getUserFollowed(user_id: string) {
+    // Lấy user đang follow
+    const resultFollower = await FollowerCollection.find(
+      {
+        user_id: new ObjectId(user_id)
+      },
+      {
+        projection: {
+          _id: 0,
+          followed_user_id: 1
+        }
+      }
+    ).toArray()
+
+    //
+    const followed_user_ids = resultFollower.map((x) => x.followed_user_id) as unknown as string[]
+    followed_user_ids.push(user_id)
+    return followed_user_ids
+  }
 }
 
 export default new FollowsService()

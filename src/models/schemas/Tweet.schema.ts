@@ -13,7 +13,7 @@ export class TweetSchema extends BaseSchema implements ITweet {
   parent_id: ObjectId | null
   hashtags: ObjectId[]
   mentions: ObjectId[]
-  medias: IMedia[]
+  media: IMedia | null
   guest_view: number
   user_view: number
 
@@ -26,7 +26,7 @@ export class TweetSchema extends BaseSchema implements ITweet {
     this.parent_id = tweet.parent_id || null
     this.hashtags = tweet.hashtags || []
     this.mentions = tweet.mentions || []
-    this.medias = tweet.medias || []
+    this.media = tweet.media || null
     this.guest_view = tweet.guest_view || 0
     this.user_view = tweet.user_view || 0
   }

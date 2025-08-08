@@ -5,7 +5,7 @@ import { initFollowerCollection } from '~/models/schemas/Follower.schema'
 import { initHashtagCollection } from '~/models/schemas/Hashtag.schema'
 import { initLikeCollection } from '~/models/schemas/Like.schema'
 import { initRefreshTokenCollection, RefreshTokenCollection } from '~/models/schemas/RefreshToken.schema'
-import { initTweetCollection } from '~/models/schemas/Tweet.schema'
+import { initTweetCollection, TweetCollection } from '~/models/schemas/Tweet.schema'
 import { initUserCollection, UserCollection } from '~/models/schemas/User.schema'
 import { initVideoCollection } from '~/models/schemas/Video.schema'
 
@@ -19,7 +19,7 @@ class DatabaseConfig {
       {
         serverApi: {
           version: ServerApiVersion.v1,
-          strict: true,
+          strict: false,
           deprecationErrors: true
         }
       }
@@ -52,7 +52,8 @@ class DatabaseConfig {
   async initialIndex() {
     const indexUser = await UserCollection.indexExists(['email_1', 'username_1'])
     const indexRefresh = await RefreshTokenCollection.indexExists(['token_1', 'exp_1'])
-    if (indexUser && indexRefresh) return
+    const indexTweet = await TweetCollection.indexExists(['content_text'])
+    if (indexUser && indexRefresh && indexTweet) return
 
     // User
     UserCollection.createIndex({ email: 1 }, { unique: true })
@@ -61,6 +62,9 @@ class DatabaseConfig {
     // Refresh
     RefreshTokenCollection.createIndex({ token: 1 }, { unique: true })
     RefreshTokenCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
+
+    // Tweet - default_language: 'none' -> cho phép sử dụng stop words
+    TweetCollection.createIndex({ content: 'text' }, { default_language: 'none' })
   }
 
   getDb() {

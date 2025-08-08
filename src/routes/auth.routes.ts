@@ -40,7 +40,7 @@ authRoute.post(
 
 authRoute
   .route('/me')
-  .get(verifyAccessToken, verifyRefreshToken, wrapAsyncHandler(AuthController.getMe))
+  .get(verifyAccessToken, wrapAsyncHandler(AuthController.getMe))
   .patch(verifyAccessToken, requestBodyValidate(UpdateMeDtoSchema), wrapAsyncHandler(AuthController.updateMe))
 
 export default authRoute

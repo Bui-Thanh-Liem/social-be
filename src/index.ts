@@ -1,7 +1,9 @@
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express, { Request, Response } from 'express'
+import { createServer } from 'http'
 import morgan from 'morgan'
+import { Server } from 'socket.io'
 import database from '~/configs/database.config'
 import { envs } from './configs/env.config'
 import StreamVideoController from './controllers/StreamVideo.controller'
@@ -11,6 +13,7 @@ import authRoute from './routes/auth.routes'
 import bookmarksRoute from './routes/bookmarks.routes'
 import followsRoute from './routes/follows.routes'
 import likesRoute from './routes/likes.routes'
+import searchRoute from './routes/search.route'
 import tweetsRoute from './routes/tweets.routes'
 import uploadsRoute from './routes/uploads.routes'
 import usersRoute from './routes/users.routes'
@@ -18,6 +21,14 @@ import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/con
 import { startFaker } from './utils/faker.util'
 
 const app = express()
+const httpServer = createServer(app)
+const io = new Server(httpServer, {
+  cors: {
+    origin: 'http://localhost:3000'
+  }
+})
+
+//
 const port = envs.SERVER_PORT
 const host = envs.SERVER_HOST
 
@@ -48,6 +59,7 @@ app.use('/likes', likesRoute)
 app.use('/tweets', tweetsRoute)
 app.use('/follows', followsRoute)
 app.use('/uploads', uploadsRoute)
+app.use('/search', searchRoute)
 app.use('/bookmarks', bookmarksRoute)
 app.use('/videos-streaming/:filename', StreamVideoController.streamVideo)
 app.use('/videos-hls/:foldername/master.m3u8', StreamVideoController.streamMaster)
@@ -57,6 +69,16 @@ app.use(express.static(UPLOAD_VIDEO_FOLDER_PATH)) // Static file serving
 
 //
 app.use(errorHandler)
+
+// Socket
+io.on('connection', (socket) => {
+  console.log(`User ${socket.id} connected`)
+  socket.emit('getting', `Message to server 'Hi ${socket.id}'`)
+
+  socket.on('disconnect', (reason) => {
+    console.log(`User ${socket.id} disconnected. Reason: ${reason}`)
+  })
+})
 
 //
 async function bootstrap() {
@@ -70,7 +92,7 @@ async function bootstrap() {
     database.initialIndex()
     console.log('Cerated index!')
 
-    app.listen(port, host, () => {
+    httpServer.listen(port, host, () => {
       console.log(`Example app listening on ${host}:${port}`)
     })
   } catch (err) {

@@ -6,10 +6,10 @@ import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import TweetsService from '~/services/Tweets.service'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
-import { ETweetType } from '~/shared/enums/type.enum'
+import { EMediaType, ETweetType } from '~/shared/enums/type.enum'
 import { hashPassword } from './crypto.util'
 
-const MY_ID = new ObjectId('688f1a1c7fc55465abe62b96')
+const MY_ID = new ObjectId('689618f44a5dbd44941b6f15')
 
 function generateRandomTweet(): string {
   const openers = [
@@ -58,10 +58,13 @@ async function createRandomUsers() {
   function func() {
     return {
       name: faker.internet.username(),
+      username: faker.internet.username(),
       email: faker.internet.email(),
       password: hashPassword(pass),
       day_of_birth: faker.date.birthdate(),
-      verify: EUserVerifyStatus.Verified
+      avatar: faker.image.avatar(),
+      verify: EUserVerifyStatus.Verified,
+      cover_photo: faker.image.avatar()
     }
   }
 
@@ -85,6 +88,15 @@ async function createRandomUsers() {
   )
 }
 
+function randomHashtag() {
+  return faker.internet.username()
+}
+
+function getRandomMentions(user_ids: ObjectId[]) {
+  const shuffled = [...user_ids].sort(() => 0.5 - Math.random())
+  return shuffled.slice(0, 3).map((id) => id.toString())
+}
+
 // Tạo 300 tweet (1 user tạo 3 tweet)
 async function createRandomTweets(user_ids: ObjectId[]) {
   await Promise.all(
@@ -94,25 +106,25 @@ async function createRandomTweets(user_ids: ObjectId[]) {
           type: ETweetType.Tweet,
           audience: ETweetAudience.Everyone,
           content: generateRandomTweet(),
-          hashtags: [],
-          medias: [],
-          mentions: []
+          hashtags: [randomHashtag(), randomHashtag(), randomHashtag()],
+          mentions: getRandomMentions(user_ids),
+          media: { url: faker.image.avatar(), type: EMediaType.Image }
         }),
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
           audience: ETweetAudience.Everyone,
           content: generateRandomTweet(),
-          hashtags: [],
-          medias: [],
-          mentions: []
+          hashtags: [randomHashtag(), randomHashtag(), randomHashtag()],
+          mentions: getRandomMentions(user_ids),
+          media: { url: faker.image.avatar(), type: EMediaType.Image }
         }),
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
           audience: ETweetAudience.Everyone,
           content: generateRandomTweet(),
-          hashtags: [],
-          medias: [],
-          mentions: []
+          hashtags: [randomHashtag(), randomHashtag(), randomHashtag()],
+          mentions: getRandomMentions(user_ids),
+          media: { url: faker.image.avatar(), type: EMediaType.Image }
         })
       ])
     })
@@ -133,6 +145,6 @@ async function follow(user_id: ObjectId, followed_user_ids: ObjectId[]) {
 
 export async function startFaker() {
   const user_ids = await createRandomUsers()
-  // await follow(MY_ID, user_ids)
+  await follow(MY_ID, user_ids)
   await createRandomTweets(user_ids)
 }

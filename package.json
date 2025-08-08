@@ -66,7 +66,12 @@
     "redis": "^5.5.6",
     "sharp": "^0.34.2",
     "slash": "^5.1.0",
+    "socket.io": "^4.8.1",
     "zod": "^3.25.63",
     "zx": "^8.6.2"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.9",
+    "utf-8-validate": "^6.0.5"
   }
 }

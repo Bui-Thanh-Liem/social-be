@@ -1,5 +1,4 @@
 import { ObjectId } from 'mongodb'
-import { FollowerCollection } from '~/models/schemas/Follower.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
@@ -8,11 +7,12 @@ import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
-    const { audience, type, content, parent_id, mentions, medias } = payload
+    const { audience, type, content, parent_id, mentions, media } = payload
     const hashtags = await HashtagsService.checkHashtags(payload.hashtags)
 
     const result = await TweetCollection.insertOne(
@@ -24,7 +24,7 @@ class TweetsService {
         content: content,
         parent_id: parent_id ? new ObjectId(parent_id) : null,
         mentions: mentions ? mentions?.map((id) => new ObjectId(id)) : [],
-        medias: medias
+        media: media
       })
     )
     return result
@@ -335,6 +335,7 @@ class TweetsService {
 
     return {
       total,
+      total_page: Math.ceil(total / limit),
       items: tweets
     }
   }
@@ -351,24 +352,10 @@ class TweetsService {
     //
     const { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
 
-    // Lấy user đang follow
-    const resultFollower = await FollowerCollection.find(
-      {
-        user_id: new ObjectId(user_id)
-      },
-      {
-        projection: {
-          _id: 0,
-          followed_user_id: 1
-        }
-      }
-    ).toArray()
-
     //
-    const followed_user_ids = resultFollower.map((x) => x.followed_user_id) as unknown as string[]
+    const followed_user_ids = await FollowsService.getUserFollowed(user_id)
     followed_user_ids.push(user_id)
 
-    //
     // Dynamic match condition based on feed type
     let matchCondition: any
 
@@ -515,29 +502,23 @@ class TweetsService {
         $addFields: {
           bookmark_count: { $size: '$bookmarks' },
           like_count: { $size: '$likes' },
-          mentions: {
-            $map: {
-              input: '$mentions',
-              as: 'm', // alias
-              in: {
-                _id: '$m._id',
-                name: '$m.name',
-                // email: '$m.email',
-                username: '$m.username'
-              }
-            }
+          isLike: {
+            $in: [new ObjectId(user_id), '$likes.user_id']
           },
-          retweet: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.Retweet]
-                }
-              }
-            }
+          isBookmark: {
+            $in: [new ObjectId(user_id), '$bookmarks.user_id']
           },
+          // mentions: {
+          //   $map: {
+          //     input: '$mentions',
+          //     as: 'm',
+          //     in: {
+          //       _id: '$m._id',
+          //       name: '$m.name',
+          //       username: '$m.username'
+          //     }
+          //   }
+          // },
           comment_count: {
             $size: {
               $filter: {
@@ -545,6 +526,17 @@ class TweetsService {
                 as: 'tweet',
                 cond: {
                   $eq: ['$$tweet.type', ETweetType.Comment]
+                }
+              }
+            }
+          },
+          retweet_count: {
+            $size: {
+              $filter: {
+                input: '$tweets_children',
+                as: 'tweet',
+                cond: {
+                  $eq: ['$$tweet.type', ETweetType.Retweet]
                 }
               }
             }
@@ -569,7 +561,6 @@ class TweetsService {
 
     // Increase views
     const ids = tweets.map((tweet) => tweet._id as ObjectId)
-    const inc = user_id ? { user_view: 1 } : { guest_view: 1 }
     const date = new Date()
 
     const [total] = await Promise.all([
@@ -581,7 +572,7 @@ class TweetsService {
           }
         },
         {
-          $inc: inc,
+          $inc: { user_view: 1 },
           $set: {
             updated_at: date
           }
@@ -601,6 +592,7 @@ class TweetsService {
 
     return {
       total,
+      total_page: Math.ceil(total / limit),
       items: tweets
     }
   }

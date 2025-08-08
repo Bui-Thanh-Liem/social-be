@@ -29,6 +29,11 @@ tweetsRoute.post(
   wrapAsyncHandler(TweetsController.create)
 )
 
+/*
+All = 'all', // New feeds tổng (everyone + following)
+Everyone = 'everyone', // Chỉ người mình everyone
+Following = 'following' // Chỉ người mình follow
+ */
 tweetsRoute.get(
   '/feeds/:feed_type',
   verifyAccessToken,

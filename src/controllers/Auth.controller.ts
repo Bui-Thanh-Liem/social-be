@@ -24,14 +24,14 @@ class AuthController {
   async googleLogin(req: Request, res: Response, next: NextFunction) {
     const { code } = req.query
     const { access_token, refresh_token, status } = await AuthServices.googleLogin(code as string)
-    const url = `${envs.CLIENT_DOMAIN}/login/oauth?access_token=${access_token}&refresh_token=${refresh_token}&s=${status}`
+    const url = `${envs.CLIENT_DOMAIN}/?access_token=${access_token}&refresh_token=${refresh_token}&s=${status}`
     res.redirect(url)
   }
 
   async logout(req: Request, res: Response, next: NextFunction) {
     const { refresh_token } = req.body
     const result = await AuthServices.logout(refresh_token)
-    res.json(new OkResponse('Logout Success', result))
+    res.json(new OkResponse('Logout Success', !!result.deletedCount))
   }
 
   async refreshToken(req: Request, res: Response, next: NextFunction) {
