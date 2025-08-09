@@ -8,6 +8,7 @@ import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { EMediaType, ETweetType } from '~/shared/enums/type.enum'
 import { hashPassword } from './crypto.util'
+import _ from 'lodash'
 
 const MY_ID = new ObjectId('689618f44a5dbd44941b6f15')
 
@@ -56,9 +57,10 @@ async function createRandomUsers() {
 
   //
   function func() {
+    const name = faker.internet.username()
     return {
-      name: faker.internet.username(),
-      username: faker.internet.username(),
+      name: name,
+      username: _.snakeCase(name),
       email: faker.internet.email(),
       password: hashPassword(pass),
       day_of_birth: faker.date.birthdate(),

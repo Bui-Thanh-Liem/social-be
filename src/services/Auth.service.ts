@@ -14,6 +14,7 @@ import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oau
 import { generatePassword, hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import UsersService from './Users.service'
+import _ from 'lodash'
 
 class AuthService {
   async register(payload: RegisterUserDto) {
@@ -34,12 +35,14 @@ class AuthService {
     })
 
     //
+    const snakeCaseName = _.snakeCase(payload.name)
     const result = await UserCollection.insertOne(
       new UserSchema({
         ...payload,
+        email_verify_token,
+        username: snakeCaseName,
         password: passwordHashed,
-        day_of_birth: new Date(payload.day_of_birth),
-        email_verify_token
+        day_of_birth: new Date(payload.day_of_birth)
       })
     )
 
