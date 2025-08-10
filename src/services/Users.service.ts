@@ -70,8 +70,21 @@ class UsersService {
     return true
   }
 
-  async getIdByUsername(username: string) {
-    return await UserCollection.findOne({ username }, { projection: { _id: 1 } })
+  async getOneByUsername(username: string) {
+    const keyCache = `${CONSTANT_USER.user_active_key_cache}-${username}`
+    let user = await cacheServiceInstance.getCache<IUser>(keyCache)
+    if (!user) {
+      user = await UserCollection.findOne(
+        { username },
+        { projection: { email_verify_token: 0, forgot_password_token: 0, password: 0 } }
+      )
+    }
+
+    if (!user) {
+      throw new NotFoundError('User not found')
+    }
+
+    return user
   }
 
   async updateMe(user_id: string, payload: UpdateMeDto) {

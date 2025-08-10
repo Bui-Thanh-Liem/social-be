@@ -1,12 +1,14 @@
 import axios from 'axios'
+import _ from 'lodash'
 import { ObjectId } from 'mongodb'
 import { StringValue } from 'ms'
 import { envs } from '~/configs/env.config'
-import { CONSTANT_JOB } from '~/shared/constants'
+import cacheServiceInstance from '~/helpers/cache.helper'
 import { sendEmailQueue } from '~/libs/bull/queues'
 import { RefreshTokenCollection, RefreshTokenSchema } from '~/models/schemas/RefreshToken.schema'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '~/shared/classes/error.class'
+import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
 import { ForgotPasswordDto, LoginUserDto, RegisterUserDto, ResetPasswordDto } from '~/shared/dtos/req/auth.dto'
 import { ETokenType } from '~/shared/enums/type.enum'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
@@ -14,7 +16,6 @@ import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oau
 import { generatePassword, hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import UsersService from './Users.service'
-import _ from 'lodash'
 
 class AuthService {
   async register(payload: RegisterUserDto) {
@@ -176,7 +177,9 @@ class AuthService {
     return data
   }
 
-  async logout(refresh_token: string) {
+  async logout({ refresh_token, user_id }: { refresh_token: string; user_id: string }) {
+    const keyCache = `${CONSTANT_USER.user_active_key_cache}-${user_id}`
+    await cacheServiceInstance.del(keyCache)
     return await RefreshTokenCollection.deleteOne({ token: refresh_token })
   }
 
@@ -245,8 +248,6 @@ class AuthService {
   }
 
   async refreshToken({ user_id, token, exp }: { user_id: string; token: string; exp?: number }) {
-    console.log('userService - refreshToken - exp:::', exp)
-
     const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
       payload: { user_id },
       exp_refresh: exp

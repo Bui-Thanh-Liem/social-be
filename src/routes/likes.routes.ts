@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import LikesController from '~/controllers/Likes.controller'
 import { ToggleLikeDtoSchema } from '~/shared/dtos/req/like.dto'
-import { checkTweetParams } from '~/middlewares/checkTweetParams.middleware'
+import { checkTweetByIdParams } from '~/middlewares/checkTweetParams.middleware'
 import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyUserActive } from '~/middlewares/verifyUserActive.middleware'
@@ -14,7 +14,7 @@ likesRoute.post(
   verifyAccessToken,
   verifyUserActive,
   requestParamsValidate(ToggleLikeDtoSchema),
-  checkTweetParams,
+  checkTweetByIdParams,
   wrapAsyncHandler(LikesController.toggleLike)
 )
 

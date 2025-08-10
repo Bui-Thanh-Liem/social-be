@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express'
 import TweetsService from '~/services/Tweets.service'
 import { NotFoundError } from '~/shared/classes/error.class'
 
-export async function checkTweetParams(req: Request, res: Response, next: NextFunction) {
+export async function checkTweetByIdParams(req: Request, res: Response, next: NextFunction) {
   try {
     const { tweet_id } = req.params as { tweet_id: string }
 

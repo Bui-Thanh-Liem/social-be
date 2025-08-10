@@ -19,7 +19,7 @@ usersRoute.post(
 
 usersRoute.post('/resend-verify-email', verifyAccessToken, wrapAsyncHandler(UsersControllers.resendVerifyEmail))
 
-usersRoute.get('/username/:username', verifyAccessToken, wrapAsyncHandler(UsersControllers.getIdByUsername))
+usersRoute.get('/username/:username', verifyAccessToken, wrapAsyncHandler(UsersControllers.getOneByUsername))
 
 usersRoute.post(
   '/change-password',

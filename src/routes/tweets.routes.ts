@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import TweetsController from '~/controllers/Tweets.controller'
 import { checkAudience } from '~/middlewares/checkAudience.middleware'
-import { checkTweetParams } from '~/middlewares/checkTweetParams.middleware'
+import { checkTweetByIdParams } from '~/middlewares/checkTweetParams.middleware'
 import { checkTweetParamsId } from '~/middlewares/checkTweetParamsId.middleware'
 import { optionLogin } from '~/middlewares/optionLogin.middleware'
 import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middleware'
@@ -60,7 +60,7 @@ tweetsRoute.get(
   optionLogin(verifyAccessToken),
   optionLogin(verifyUserActive),
   requestParamsValidate(GetOneTweetByIdDtoSchema),
-  checkTweetParams,
+  checkTweetByIdParams,
   checkAudience,
   wrapAsyncHandler(TweetsController.getOneById)
 )

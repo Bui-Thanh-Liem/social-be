@@ -30,7 +30,8 @@ class AuthController {
 
   async logout(req: Request, res: Response, next: NextFunction) {
     const { refresh_token } = req.body
-    const result = await AuthServices.logout(refresh_token)
+    const { user_id } = req.decoded_refresh_token as IJwtPayload
+    const result = await AuthServices.logout({ refresh_token, user_id })
     res.json(new OkResponse('Logout Success', !!result.deletedCount))
   }
 

@@ -27,9 +27,9 @@ class UsersController {
     res.json(new OkResponse('Resend verify email Success', result))
   }
 
-  async getIdByUsername(req: Request, res: Response, next: NextFunction) {
+  async getOneByUsername(req: Request, res: Response, next: NextFunction) {
     const { username } = req.params
-    const result = await UsersServices.getIdByUsername(username)
+    const result = await UsersServices.getOneByUsername(username)
     res.json(new OkResponse(`${result} Success`, result))
   }
 

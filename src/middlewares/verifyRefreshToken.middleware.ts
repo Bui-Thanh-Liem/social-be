@@ -7,7 +7,6 @@ import { verifyToken } from '~/utils/jwt.util'
 export async function verifyRefreshToken(req: Request, res: Response, next: NextFunction) {
   try {
     const refresh_token = req.body?.refresh_token || undefined
-    console.log('middleware - verify refresh token:::', refresh_token)
 
     if (!refresh_token) {
       throw new UnauthorizedError('Refresh token is required')
