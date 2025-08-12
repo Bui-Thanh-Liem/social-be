@@ -8,7 +8,11 @@ class UploadsService {
   }
 
   async uploadVideos(req: Request) {
+    console.log('UploadsService:::')
+
     const videos = await uploadVideos(req)
+    console.log('videos:::', videos)
+
     return videos
   }
 }

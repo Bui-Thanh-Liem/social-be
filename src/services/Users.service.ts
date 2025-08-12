@@ -1,11 +1,11 @@
 import { ObjectId } from 'mongodb'
 import { StringValue } from 'ms'
 import { envs } from '~/configs/env.config'
-import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { sendEmailQueue } from '~/libs/bull/queues'
 import { UserCollection } from '~/models/schemas/User.schema'
 import { ConflictError, NotFoundError } from '~/shared/classes/error.class'
+import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
 import { UpdateMeDto } from '~/shared/dtos/req/user.dto'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { ETokenType } from '~/shared/enums/type.enum'
@@ -74,10 +74,44 @@ class UsersService {
     const keyCache = `${CONSTANT_USER.user_active_key_cache}-${username}`
     let user = await cacheServiceInstance.getCache<IUser>(keyCache)
     if (!user) {
-      user = await UserCollection.findOne(
-        { username },
-        { projection: { email_verify_token: 0, forgot_password_token: 0, password: 0 } }
-      )
+      user = await UserCollection.aggregate<IUser>([
+        {
+          $match: {
+            username
+          }
+        },
+        {
+          $lookup: {
+            from: 'followers',
+            localField: '_id',
+            foreignField: 'user_id',
+            as: 'followers'
+          }
+        },
+        {
+          $lookup: {
+            from: 'followers',
+            localField: '_id',
+            foreignField: 'followed_user_id',
+            as: 'following'
+          }
+        },
+        {
+          $addFields: {
+            follower_count: { $size: '$followers' },
+            following_count: { $size: '$following' }
+          }
+        },
+        {
+          $project: {
+            password: 0,
+            followers: 0,
+            following: 0,
+            email_verify_token: 0,
+            forgot_password_token: 0,
+          }
+        }
+      ]).next()
     }
 
     if (!user) {

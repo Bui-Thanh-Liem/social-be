@@ -400,6 +400,9 @@ class TweetsService {
         $match: matchCondition
       },
       {
+        $sort: sort
+      },
+      {
         $skip: skip
       },
       {
@@ -418,6 +421,7 @@ class TweetsService {
                 email: 1,
                 username: 1,
                 avatar: 1,
+                verify: 1,
                 cover_photo: 1
               }
             }
@@ -553,9 +557,6 @@ class TweetsService {
             }
           }
         }
-      },
-      {
-        $sort: sort
       }
     ]).toArray()
 

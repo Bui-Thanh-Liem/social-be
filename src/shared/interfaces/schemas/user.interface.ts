@@ -16,4 +16,8 @@ export interface IUser extends IBase {
   username?: string
   avatar?: string
   cover_photo?: string
+
+  //
+  follower_count?: number
+  following_count?: number
 }
