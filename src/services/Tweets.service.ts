@@ -417,6 +417,7 @@ class TweetsService {
           pipeline: [
             {
               $project: {
+                bio: 1,
                 name: 1,
                 email: 1,
                 username: 1,
@@ -504,8 +505,8 @@ class TweetsService {
       },
       {
         $addFields: {
-          bookmark_count: { $size: '$bookmarks' },
-          like_count: { $size: '$likes' },
+          bookmarks_count: { $size: '$bookmarks' },
+          likes_count: { $size: '$likes' },
           isLike: {
             $in: [new ObjectId(user_id), '$likes.user_id']
           },
@@ -523,7 +524,7 @@ class TweetsService {
           //     }
           //   }
           // },
-          comment_count: {
+          comments_count: {
             $size: {
               $filter: {
                 input: '$tweets_children',
@@ -534,7 +535,7 @@ class TweetsService {
               }
             }
           },
-          retweet_count: {
+          retweets_count: {
             $size: {
               $filter: {
                 input: '$tweets_children',
@@ -545,7 +546,7 @@ class TweetsService {
               }
             }
           },
-          quote_count: {
+          quotes_count: {
             $size: {
               $filter: {
                 input: '$tweets_children',
