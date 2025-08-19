@@ -51,6 +51,18 @@ class TweetsController {
     })
     res.status(200).json(new OkResponse('Get new feeds success', result))
   }
+
+  async getProfileTweetsByType(req: Request, res: Response) {
+    const user = req?.decoded_authorization as IJwtPayload
+    const { feed_type } = req.params as getNewFeedTypeDto
+
+    const result = await TweetsService.getProfileTweetsByType({
+      feed_type,
+      query: req.query,
+      user_id: user.user_id
+    })
+    res.status(200).json(new OkResponse('Get new feeds success', result))
+  }
 }
 
 export default new TweetsController()
