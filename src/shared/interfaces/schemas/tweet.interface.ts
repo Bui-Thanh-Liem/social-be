@@ -24,4 +24,6 @@ export interface ITweet extends IBase {
   quotes_count?: number
   isLike?: boolean
   isBookmark?: boolean
+  isRetweet?: boolean
+  isQuote?: boolean
 }

@@ -1,9 +1,10 @@
 import { ObjectId } from 'mongodb'
-import { ToggleBookmarkDto } from '~/shared/dtos/req/bookmark.dto'
 import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
+import { ToggleBookmarkDto } from '~/shared/dtos/req/bookmark.dto'
+import { ResToggleBookmark } from '~/shared/dtos/res/bookmark.dto'
 
 class BookmarksService {
-  async toggleBookmark(user_id: string, payload: ToggleBookmarkDto) {
+  async toggleBookmark(user_id: string, payload: ToggleBookmarkDto): Promise<ResToggleBookmark> {
     const userObjectId = new ObjectId(user_id)
     const tweetObjectId = new ObjectId(payload.tweet_id)
 
@@ -15,10 +16,10 @@ class BookmarksService {
     const deleted = await BookmarkCollection.findOneAndDelete(dataHandle)
 
     if (deleted?._id) {
-      return { status: 'UnBookmark', _id: deleted._id }
+      return { status: 'UnBookmark', _id: deleted._id.toString() }
     } else {
       const inserted = await BookmarkCollection.insertOne(dataHandle)
-      return { status: 'Bookmark', _id: inserted.insertedId }
+      return { status: 'Bookmark', _id: inserted.insertedId.toString() }
     }
   }
 }

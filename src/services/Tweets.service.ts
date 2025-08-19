@@ -65,7 +65,8 @@ class TweetsService {
                 email: 1,
                 username: 1,
                 avatar: 1,
-                cover_photo: 1
+                cover_photo: 1,
+                verify: 1
               }
             }
           ]
@@ -513,17 +514,44 @@ class TweetsService {
           isBookmark: {
             $in: [new ObjectId(user_id), '$bookmarks.user_id']
           },
-          // mentions: {
-          //   $map: {
-          //     input: '$mentions',
-          //     as: 'm',
-          //     in: {
-          //       _id: '$m._id',
-          //       name: '$m.name',
-          //       username: '$m.username'
-          //     }
-          //   }
-          // },
+          isRetweet: {
+            $gt: [
+              {
+                $size: {
+                  $filter: {
+                    input: '$tweets_children',
+                    as: 'child',
+                    cond: {
+                      $and: [
+                        { $eq: ['$$child.type', ETweetType.Retweet] },
+                        { $eq: ['$$child.user_id', new ObjectId(user_id)] }
+                      ]
+                    }
+                  }
+                }
+              },
+              0
+            ]
+          },
+          isQuote: {
+            $gt: [
+              {
+                $size: {
+                  $filter: {
+                    input: '$tweets_children',
+                    as: 'child',
+                    cond: {
+                      $and: [
+                        { $eq: ['$$child.type', ETweetType.QuoteTweet] },
+                        { $eq: ['$$child.user_id', new ObjectId(user_id)] }
+                      ]
+                    }
+                  }
+                }
+              },
+              0
+            ]
+          },
           comments_count: {
             $size: {
               $filter: {
@@ -615,6 +643,7 @@ class TweetsService {
         projection: {
           user_view: 1,
           guest_view: 1,
+          created_at: 1,
           updated_at: 1
         }
       }
