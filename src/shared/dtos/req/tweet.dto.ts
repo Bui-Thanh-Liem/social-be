@@ -54,6 +54,12 @@ export const getNewFeedTypeDtoSchema = z.object({
   })
 })
 
+export const getProfile = z.object({
+  feed_type: z.nativeEnum(EFeedType, {
+    errorMap: () => ({ message: 'Invalid Feed Type' })
+  })
+})
+
 export type GetOneTweetByIdDto = z.infer<typeof GetOneTweetByIdDtoSchema>
 export type CreateTweetDto = z.infer<typeof CreateTweetDtoSchema>
 export type getTweetChildrenDtoParams = z.infer<typeof getTweetChildrenDtoSchemaParams>
