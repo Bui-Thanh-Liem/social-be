@@ -1,4 +1,5 @@
 import z from 'zod'
+import { CONSTANT_REGEX } from '~/shared/constants'
 import { EMediaType } from '~/shared/enums/type.enum'
 
 export const QueryDtoSchema = z.object({
@@ -33,7 +34,14 @@ export const QueryDtoSchema = z.object({
     .string()
     .trim()
     .optional()
-    .refine((val) => !val || val === 'on', { message: 'People follow invalid (on)' })
+    .refine((val) => !val || val === 'on', { message: 'People follow invalid (on)' }),
+  user_owner_tweet_id: z
+    .string()
+    .trim()
+    .regex(CONSTANT_REGEX.ID_MONGO, {
+      message: 'Invalid MongoDB ObjectId'
+    })
+    .optional()
 })
 
 export type QueryDto = z.infer<typeof QueryDtoSchema>

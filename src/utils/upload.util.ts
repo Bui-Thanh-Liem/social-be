@@ -167,10 +167,10 @@ export function uploadVideos(req: Request): Promise<string[]> {
               })
 
               // Sử dụng Queue phía trên đơn giản hơn, nhưng chung thread (lag app), không tận dụng chạy song song, không retry
-              // compressionQueue.add(CONSTANT_JOB.COMPRESSION_HLS, {
-              //   _id: newVideo.insertedId,
-              //   path: video.filepath
-              // })
+              compressionQueue.add(CONSTANT_JOB.COMPRESSION_HLS, {
+                _id: newVideo.insertedId,
+                path: video.filepath
+              })
 
               //        http://localhost:9000/videos-hls/m6kQ0q4q2vbJIduXCAssl/master.m3u8
               return `${envs.SERVER_DOMAIN}/videos-hls/${name}/master.m3u8`

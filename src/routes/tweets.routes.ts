@@ -14,6 +14,7 @@ import {
   CreateTweetDtoSchema,
   getNewFeedTypeDtoSchema,
   GetOneTweetByIdDtoSchema,
+  getProfileTweetDtoSchema,
   getTweetChildrenDtoSchemaBody,
   getTweetChildrenDtoSchemaParams
 } from '~/shared/dtos/req/tweet.dto'
@@ -41,6 +42,31 @@ tweetsRoute.get(
   requestParamsValidate(getNewFeedTypeDtoSchema),
   requestQueryValidate(QueryDtoSchema),
   wrapAsyncHandler(TweetsController.getNewFeeds)
+)
+
+tweetsRoute.get(
+  '/profile/:tweet_type',
+  verifyAccessToken,
+  verifyUserActive,
+  requestParamsValidate(getProfileTweetDtoSchema),
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(TweetsController.getProfileTweetsByType)
+)
+
+tweetsRoute.get(
+  '/profile/media',
+  verifyAccessToken,
+  verifyUserActive,
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(TweetsController.getProfileMedia)
+)
+
+tweetsRoute.get(
+  '/profile/liked',
+  verifyAccessToken,
+  verifyUserActive,
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(TweetsController.getProfileLiked)
 )
 
 tweetsRoute.get(

@@ -725,7 +725,7 @@ class TweetsService {
     }
 
     //
-    let matchConditionHighlight: any
+    let matchConditionHighlight: any = {}
     if (isHighlight) {
       //
       matchConditionHighlight = {
@@ -744,7 +744,7 @@ class TweetsService {
       {
         $match: matchCondition
       },
-      matchConditionHighlight,
+      // matchConditionHighlight,
       {
         $sort: sort
       },
