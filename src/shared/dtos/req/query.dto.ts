@@ -35,13 +35,14 @@ export const QueryDtoSchema = z.object({
     .trim()
     .optional()
     .refine((val) => !val || val === 'on', { message: 'People follow invalid (on)' }),
-  user_owner_tweet_id: z
+  profile_id: z
     .string()
     .trim()
     .regex(CONSTANT_REGEX.ID_MONGO, {
       message: 'Invalid MongoDB ObjectId'
     })
-    .optional()
+    .optional(),
+  ishl: z.enum(['0', '1']).default('0')
 })
 
 export type QueryDto = z.infer<typeof QueryDtoSchema>

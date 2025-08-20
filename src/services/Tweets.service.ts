@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongodb'
+import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
@@ -678,17 +679,17 @@ class TweetsService {
     ]).next()
   }
 
-  async getProfileTweetsByType({
+  async getProfileTweets({
     query,
     user_id,
     tweet_type,
     isHighlight,
-    user_owner_tweet_id
+    profile_id
   }: {
     user_id: string
     tweet_type: ETweetType
     query: IQuery<ITweet>
-    user_owner_tweet_id: string
+    profile_id: string
     isHighlight?: boolean
   }): Promise<ResMultiType<ITweet>> {
     //
@@ -697,44 +698,27 @@ class TweetsService {
     //
     const followed_user_ids = await FollowsService.getUserFollowed(user_id)
     followed_user_ids.push(user_id)
-    if (user_id !== user_owner_tweet_id) {
-      followed_user_ids.push(user_owner_tweet_id)
+    if (user_id !== profile_id) {
+      followed_user_ids.push(profile_id)
     }
 
     //
     const matchCondition: any = {
+      user_id: new ObjectId(profile_id), // ✅ luôn lọc của chủ sở hữu
+      type: tweet_type,
       $or: [
-        {
-          audience: ETweetAudience.Everyone
-        },
+        { audience: ETweetAudience.Everyone }, // ai cũng xem
         {
           $and: [
-            {
-              audience: ETweetAudience.Followers
-            },
-            {
-              user_id: {
-                $in: followed_user_ids
-              }
-            }
+            { audience: ETweetAudience.Followers },
+            { user_id: { $in: followed_user_ids } } // chỉ khi có follow
           ]
         }
-      ],
-      type: tweet_type,
-      user_id: user_owner_tweet_id
+      ]
     }
 
     //
-    let matchConditionHighlight: any = {}
     if (isHighlight) {
-      //
-      matchConditionHighlight = {
-        $addFields: {
-          total_views: { $add: ['$user_view', '$guest_view'] }
-        }
-      }
-
-      //
       skip = 1
       limit = 20
       sort = { likes_count: -1, total_views: -1 } // Sắp xếp theo likes_count, sau đó total_views
@@ -744,7 +728,15 @@ class TweetsService {
       {
         $match: matchCondition
       },
-      // matchConditionHighlight,
+      ...(isHighlight
+        ? [
+            {
+              $addFields: {
+                total_views: { $add: ['$user_view', '$guest_view'] }
+              }
+            }
+          ]
+        : []),
       {
         $sort: sort
       },
@@ -944,11 +936,11 @@ class TweetsService {
   async getProfileMedia({
     query,
     user_id,
-    user_owner_tweet_id
+    profile_id
   }: {
     user_id: string
     query: IQuery<TweetSchema>
-    user_owner_tweet_id: string
+    profile_id: string
   }): Promise<ResMultiType<Pick<TweetSchema, '_id' | 'media'>>> {
     // Phân trang và truy vấn an toàn
     const { skip, limit, sort } = getPaginationAndSafeQuery<TweetSchema>(query)
@@ -958,20 +950,21 @@ class TweetsService {
     if (!followed_user_ids.includes(user_id)) {
       followed_user_ids.push(user_id)
     }
-    if (user_id !== user_owner_tweet_id && !followed_user_ids.includes(user_owner_tweet_id)) {
-      followed_user_ids.push(user_owner_tweet_id)
+    if (user_id !== profile_id && !followed_user_ids.includes(profile_id)) {
+      followed_user_ids.push(profile_id)
     }
 
     // Điều kiện lọc tweet
     const matchCondition: any = {
+      // type: ETweetType.Tweet,
+      user_id: new ObjectId(profile_id),
+      media: { $ne: null },
       $or: [
         { audience: ETweetAudience.Everyone },
         {
           $and: [{ audience: ETweetAudience.Followers }, { user_id: { $in: followed_user_ids } }]
         }
-      ],
-      type: ETweetType.Tweet, // Chỉ lấy tweet gốc
-      user_id: user_owner_tweet_id
+      ]
     }
 
     // Pipeline tổng hợp
@@ -991,7 +984,6 @@ class TweetsService {
         $limit: limit
       },
       {
-        // Chỉ lấy các trường _id và media
         $project: {
           _id: 1,
           media: 1
@@ -1035,24 +1027,23 @@ class TweetsService {
 
   async getProfileLiked({
     query,
-    user_id
+    profile_id
   }: {
-    user_id: string
+    profile_id: string
     query: IQuery<TweetSchema>
-  }): Promise<ResMultiType<Pick<TweetSchema, '_id' | 'media'>>> {
+  }): Promise<ResMultiType<TweetSchema>> {
     // Phân trang và truy vấn an toàn
     const { skip, limit, sort } = getPaginationAndSafeQuery<TweetSchema>(query)
 
     // Lấy danh sách người dùng được theo dõi
-    const followed_user_ids = await FollowsService.getUserFollowed(user_id)
-    if (!followed_user_ids.includes(user_id)) {
-      followed_user_ids.push(user_id)
+    const followed_user_ids = await FollowsService.getUserFollowed(profile_id)
+    if (!followed_user_ids.includes(profile_id)) {
+      followed_user_ids.push(profile_id)
     }
 
     // Lấy danh sách tweet_id mà user_id đã like
-    const likedTweetIds = await TweetCollection.distinct('tweet_id', {
-      user_id: new ObjectId(user_id),
-      from: 'likes'
+    const likedTweetIds = await LikeCollection.distinct('tweet_id', {
+      user_id: new ObjectId(profile_id)
     })
 
     // Điều kiện lọc tweet
@@ -1180,10 +1171,10 @@ class TweetsService {
           bookmarks_count: { $size: '$bookmarks' },
           likes_count: { $size: '$likes' },
           isLike: {
-            $in: [new ObjectId(user_id), '$likes.user_id']
+            $in: [new ObjectId(profile_id), '$likes.user_id']
           },
           isBookmark: {
-            $in: [new ObjectId(user_id), '$bookmarks.user_id']
+            $in: [new ObjectId(profile_id), '$bookmarks.user_id']
           },
           comments_count: {
             $size: {
@@ -1244,7 +1235,7 @@ class TweetsService {
     // Cập nhật views trong kết quả trả về
     tweets.forEach((tweet) => {
       tweet.updated_at = date
-      if (user_id) {
+      if (profile_id) {
         tweet.user_view = (tweet.user_view || 0) + 1
       } else {
         tweet.guest_view = (tweet.guest_view || 0) + 1

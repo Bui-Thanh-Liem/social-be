@@ -8,6 +8,7 @@ import {
   getTweetChildrenDtoParams
 } from '~/shared/dtos/req/tweet.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 
 class TweetsController {
@@ -57,36 +58,39 @@ class TweetsController {
     res.status(200).json(new OkResponse('Get new feeds success', result))
   }
 
-  async getProfileTweetsByType(req: Request, res: Response) {
+  async getProfileTweets(req: Request, res: Response) {
     const user = req?.decoded_authorization as IJwtPayload
     const { tweet_type } = req.params as unknown as getProfileTweetDto
+    const queries = req.query as IQuery<ITweet>
 
-    const result = await TweetsService.getProfileTweetsByType({
+    const result = await TweetsService.getProfileTweets({
       tweet_type,
-      query: req.query,
-      user_owner_tweet_id: req?.query?.user_owner_tweet_id as string,
-      user_id: user.user_id
+      query: queries,
+      user_id: user.user_id,
+      isHighlight: queries?.ishl === '1',
+      profile_id: queries?.profile_id as string
     })
     res.status(200).json(new OkResponse('Get profile tweet success', result))
   }
 
   async getProfileMedia(req: Request, res: Response) {
     const user = req?.decoded_authorization as IJwtPayload
+    const queries = req.query as IQuery<ITweet>
 
     const result = await TweetsService.getProfileMedia({
-      query: req.query,
+      query: queries,
       user_id: user.user_id,
-      user_owner_tweet_id: req?.query?.user_owner_tweet_id as string
+      profile_id: queries?.profile_id as string
     })
     res.status(200).json(new OkResponse('Get profile media success', result))
   }
 
   async getProfileLiked(req: Request, res: Response) {
-    const user = req?.decoded_authorization as IJwtPayload
+    const queries = req.query as IQuery<ITweet>
 
     const result = await TweetsService.getProfileLiked({
-      query: req.query,
-      user_id: user.user_id
+      query: queries,
+      profile_id: queries?.profile_id as string
     })
     res.status(200).json(new OkResponse('Get profile liked success', result))
   }
