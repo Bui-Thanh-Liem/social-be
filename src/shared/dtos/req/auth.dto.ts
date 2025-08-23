@@ -3,13 +3,12 @@ import { CONSTANT_REGEX } from '~/shared/constants'
 
 export const RegisterUserDtoSchema = z
   .object({
-    name: z.string().min(1).max(20).trim(),
+    name: z.string().min(1).max(16).trim(),
     email: z.string().email().trim(),
     password: z
       .string()
       .regex(CONSTANT_REGEX.STRONG_PASSWORD, {
-        message:
-          'Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+        message: 'Ít nhất 8 ký tự, chữ cái viết hoa, chữ cái viết thường, ký tự đặc biệt'
       })
       .trim(),
     confirm_password: z.string().trim(),
@@ -22,7 +21,7 @@ export const RegisterUserDtoSchema = z
   })
   .refine((data) => data.password === data.confirm_password, {
     path: ['confirm_password'],
-    message: 'Passwords do not match'
+    message: 'Mật khẩu không khớp'
   })
 
 export const LoginUserDtoSchema = z.object({

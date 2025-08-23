@@ -84,7 +84,7 @@ class UsersService {
           $lookup: {
             from: 'followers',
             localField: '_id',
-            foreignField: 'user_id',
+            foreignField: 'followed_user_id',
             as: 'followers'
           }
         },
@@ -92,7 +92,7 @@ class UsersService {
           $lookup: {
             from: 'followers',
             localField: '_id',
-            foreignField: 'followed_user_id',
+            foreignField: 'user_id',
             as: 'following'
           }
         },
@@ -108,7 +108,7 @@ class UsersService {
             followers: 0,
             following: 0,
             email_verify_token: 0,
-            forgot_password_token: 0,
+            forgot_password_token: 0
           }
         }
       ]).next()

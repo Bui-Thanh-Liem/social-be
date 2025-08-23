@@ -7,18 +7,23 @@ export const verifyEmailDtoSchema = z.object({
 
 export const UpdateMeDtoSchema = z.object({
   name: z.string().min(1).max(20).trim().optional(),
-  day_of_birth: z
-    .preprocess((arg) => {
-      if (typeof arg === 'string' || arg instanceof Date) {
-        return new Date(arg)
-      }
-      return arg
-    }, z.date())
-    .optional(),
+  day_of_birth: z.preprocess((arg) => {
+    if (typeof arg === 'string' || arg instanceof Date) {
+      const d = new Date(arg)
+      if (!isNaN(d.getTime())) return d
+    }
+    return undefined
+  }, z.date().optional()),
   bio: z.string().min(1).max(200).trim().optional(),
-  location: z.string().min(1).max(200).trim().optional(),
-  website: z.string().min(1).max(100).trim().optional(),
-  username: z.string().min(1).max(50).trim().regex(CONSTANT_REGEX.USERNAME, { message: 'Invalid username' }).optional(),
+  location: z.string().min(1).max(100).trim().optional(),
+  website: z.string().min(1).max(30).trim().optional(),
+  username: z
+    .string()
+    .min(1)
+    .max(20, { message: 'Tối đa 20 kí tự' })
+    .trim()
+    .regex(CONSTANT_REGEX.USERNAME, { message: 'Tên người dùng không hợp lệ (@liem_dev)' })
+    .optional(),
   avatar: z.string().min(1).max(400).trim().optional(),
   cover_photo: z.string().min(1).max(400).trim().optional()
 })

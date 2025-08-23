@@ -36,7 +36,7 @@ class AuthService {
     })
 
     //
-    const snakeCaseName = _.snakeCase(payload.name)
+    const snakeCaseName = `@${_.snakeCase(payload.name)}`.slice(0, 20)
     const result = await UserCollection.insertOne(
       new UserSchema({
         ...payload,
