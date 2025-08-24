@@ -9,7 +9,7 @@ import { RefreshTokenCollection, RefreshTokenSchema } from '~/models/schemas/Ref
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '~/shared/classes/error.class'
 import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
-import { ForgotPasswordDto, LoginUserDto, RegisterUserDto, ResetPasswordDto } from '~/shared/dtos/req/auth.dto'
+import { ForgotPasswordDto, LoginUserDto, RegisterUserDto, ResetPasswordDto, UpdateMeDto } from '~/shared/dtos/req/auth.dto'
 import { ETokenType } from '~/shared/enums/type.enum'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oauth-google.interface'
@@ -22,8 +22,11 @@ class AuthService {
     //
     const existEmail = await this.findOneByEmail(payload.email)
     if (existEmail) {
-      throw new ConflictError('Email already exists')
+      throw new ConflictError('Email đã tồn tại')
     }
+
+    //
+    await this.checkExistByName(payload?.name)
 
     //
     const passwordHashed = hashPassword(payload.password)
@@ -269,8 +272,8 @@ class AuthService {
     return { access_token, refresh_token }
   }
 
-  // Auth use
-  async findOneByEmail(email: string) {
+  //
+  private async findOneByEmail(email: string) {
     return await UserCollection.findOne(
       { email },
       {
@@ -282,7 +285,14 @@ class AuthService {
     )
   }
 
-  // local use
+  private async checkExistByName(name: string) {
+    const isExist = (await UserCollection.countDocuments({ name })) > 0
+    if (isExist) {
+      throw new ConflictError('Tên đã tồn tại')
+    }
+  }
+
+  //
   private async signAccessAndRefreshToken({
     payload,
     exp_refresh
@@ -306,6 +316,35 @@ class AuthService {
 
   async verifyToken(token: string, privateKey: string) {
     return verifyToken({ token, privateKey })
+  }
+
+  async updateMe(user_id: string, payload: UpdateMeDto) {
+    const user = await UserCollection.findOne({ username: payload.username, _id: { $ne: new ObjectId(user_id) } })
+    if (user) {
+      throw new ConflictError('Username already exist')
+    }
+
+    await UsersService.resetUserActive(user_id)
+
+    return await UserCollection.findOneAndUpdate(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          ...payload
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      },
+      {
+        returnDocument: 'after',
+        projection: {
+          password: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0
+        }
+      }
+    )
   }
 }
 

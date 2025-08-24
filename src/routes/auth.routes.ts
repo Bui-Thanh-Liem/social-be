@@ -4,14 +4,14 @@ import {
   ForgotPasswordDtoSchema,
   LoginUserDtoSchema,
   RegisterUserDtoSchema,
-  ResetPasswordDtoSchema
+  ResetPasswordDtoSchema,
+  UpdateMeDtoSchema
 } from '~/shared/dtos/req/auth.dto'
 import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyRefreshToken } from '~/middlewares/verifyRefreshToken.middleware'
 import { verifyTokenForgotPassword } from '~/middlewares/verifyTokenForgotPassword.middleware'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
-import { UpdateMeDtoSchema } from '~/shared/dtos/req/user.dto'
 
 const authRoute = Router()
 

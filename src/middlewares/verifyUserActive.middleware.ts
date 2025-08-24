@@ -12,7 +12,7 @@ export async function verifyUserActive(req: Request, res: Response, next: NextFu
     const userActive = await UserService.getUserActive(user_id)
 
     if (userActive?.verify === EUserVerifyStatus.Unverified) {
-      throw new UnauthorizedError('Your account is not verified.')
+      throw new UnauthorizedError('Tài khoản của bạn chưa được xác minh.')
     }
 
     next()

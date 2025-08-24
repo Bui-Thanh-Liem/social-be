@@ -402,6 +402,9 @@ class TweetsService {
         $match: matchCondition
       },
       {
+        $match: { type: { $ne: ETweetType.Comment } }
+      },
+      {
         $sort: sort
       },
       {
@@ -620,6 +623,8 @@ class TweetsService {
         tweet.guest_view += 1
       }
     })
+
+    console.log('tweets::', tweets)
 
     return {
       total,

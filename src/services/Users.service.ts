@@ -4,9 +4,8 @@ import { envs } from '~/configs/env.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { sendEmailQueue } from '~/libs/bull/queues'
 import { UserCollection } from '~/models/schemas/User.schema'
-import { ConflictError, NotFoundError } from '~/shared/classes/error.class'
+import { NotFoundError } from '~/shared/classes/error.class'
 import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
-import { UpdateMeDto } from '~/shared/dtos/req/user.dto'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { ETokenType } from '~/shared/enums/type.enum'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
@@ -57,10 +56,17 @@ class UsersService {
           updated_at: true
         }
       },
-      { returnDocument: 'after' }
+      {
+        returnDocument: 'after',
+        projection: {
+          email: 1,
+          name: 1
+        }
+      }
     )
 
     //
+    console.log('resendVerifyEmail - user:::', user)
     await sendEmailQueue.add(CONSTANT_JOB.VERIFY_MAIL, {
       toEmail: user?.email,
       name: user?.name,
@@ -119,35 +125,6 @@ class UsersService {
     }
 
     return user
-  }
-
-  async updateMe(user_id: string, payload: UpdateMeDto) {
-    const user = await UserCollection.findOne({ username: payload.username, _id: { $ne: new ObjectId(user_id) } })
-    if (user) {
-      throw new ConflictError('Username already exist')
-    }
-
-    await this.resetUserActive(user_id)
-
-    return await UserCollection.findOneAndUpdate(
-      { _id: new ObjectId(user_id) },
-      {
-        $set: {
-          ...payload
-        },
-        $currentDate: {
-          updated_at: true
-        }
-      },
-      {
-        returnDocument: 'after',
-        projection: {
-          password: 0,
-          email_verify_token: 0,
-          forgot_password_token: 0
-        }
-      }
-    )
   }
 
   async changePassword(user_id: string, new_password: string) {

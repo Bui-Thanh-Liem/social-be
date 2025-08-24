@@ -24,7 +24,7 @@ class UsersController {
     }
 
     const result = await UsersServices.resendVerifyEmail(user_id)
-    res.json(new OkResponse('Resend verify email Success', result))
+    res.json(new OkResponse('Kiểm tra mail để xác minh tài khoản.', result))
   }
 
   async getOneByUsername(req: Request, res: Response, next: NextFunction) {

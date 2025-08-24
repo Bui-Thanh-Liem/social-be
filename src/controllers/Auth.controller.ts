@@ -2,14 +2,13 @@ import { NextFunction, Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import AuthServices from '~/services/Auth.service'
-import UsersServices from '~/services/Users.service'
 import { CreatedResponse, OkResponse } from '~/shared/classes/response.class'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class AuthController {
   async register(req: Request, res: Response) {
     const result = await AuthServices.register(req.body)
-    res.status(201).json(new CreatedResponse('Register Success', result))
+    res.status(201).json(new CreatedResponse('Kiểm tra mail để xác minh tài khoản.', result))
   }
 
   async login(req: Request, res: Response, next: NextFunction) {
@@ -60,8 +59,8 @@ class AuthController {
 
   async updateMe(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await UsersServices.updateMe(user_id, req.body)
-    res.json(new OkResponse('Update me Success', result))
+    const result = await AuthServices.updateMe(user_id, req.body)
+    res.json(new OkResponse('Cập nhật thông tin thành côngcông', result))
   }
 }
 
