@@ -1,7 +1,7 @@
 import { JwtPayload } from 'jsonwebtoken'
-import { TokenType } from '~/shared/enums/type.enum'
+import { ETokenType } from '~/shared/enums/type.enum'
 
 export interface IJwtPayload extends JwtPayload {
   user_id: string
-  type: TokenType
+  type: ETokenType
 }
