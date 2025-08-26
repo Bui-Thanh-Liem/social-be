@@ -1,6 +1,6 @@
-1. Yêu cầu và hiểu rõ vấn đề
+1. Nhậnận yêu cầu và hiểu rõ vấn đề
 
-2. Thiết kế database để đáp ứng 100% yêu cần (nghĩ đơn giản nhất)
+2. Thiết kế database để đáp ứng 100% yêu cầu (nghĩ đơn giản nhất)
 
 3. Đánh giá mô database về hiệu xuất, khả năng mở rộng
 

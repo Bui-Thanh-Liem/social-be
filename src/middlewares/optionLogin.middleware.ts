@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
+import { logger } from '~/utils/logger.util'
 
 // Middleware này cho phép có hoặc không đăng nhập vẫn cho qua
 // Có đăng nhập qua thì có dữ liệu
