@@ -12,9 +12,6 @@ class SearchService {
   async searchTweet({ query, user_id }: { query: IQuery<ITweet>; user_id: string }): Promise<ResMultiType<ITweet>> {
     //
     const { skip, limit, q, f, pf, sort } = getPaginationAndSafeQuery<ITweet>(query)
-    console.log('q:::', q)
-    console.log('f:::', f)
-    console.log('pf:::', pf)
 
     //
     const followed_user_ids = await FollowsService.getUserFollowed(user_id)
@@ -74,9 +71,6 @@ class SearchService {
     }
 
     //
-    console.log('hasF:::', hasF)
-    console.log('hasQ:::', hasQ)
-    console.log('hasPf:::', hasPf)
     const tweets = await TweetCollection.aggregate<TweetSchema>([
       {
         $match: {

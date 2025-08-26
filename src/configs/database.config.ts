@@ -8,6 +8,7 @@ import { initRefreshTokenCollection, RefreshTokenCollection } from '~/models/sch
 import { initTweetCollection, TweetCollection } from '~/models/schemas/Tweet.schema'
 import { initUserCollection, UserCollection } from '~/models/schemas/User.schema'
 import { initVideoCollection } from '~/models/schemas/Video.schema'
+import { logger } from '~/utils/logger.util'
 
 class DatabaseConfig {
   private client: MongoClient
@@ -30,12 +31,12 @@ class DatabaseConfig {
   async connect() {
     await this.client.connect()
     await this.db.command({ ping: 1 })
-    console.log('Pinged your deployment. You successfully connected to MongoDB!')
+    logger.info('Pinged your deployment. You successfully connected to MongoDB!')
   }
 
   async disconnect() {
     await this.client.close()
-    console.log('Disconnected from MongoDB')
+    logger.info('Disconnected from MongoDB')
   }
 
   initialCollections() {

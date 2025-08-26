@@ -66,7 +66,7 @@ class UsersService {
     )
 
     //
-    console.log('resendVerifyEmail - user:::', user)
+    logger.info('resendVerifyEmail - user:::', user)
     await sendEmailQueue.add(CONSTANT_JOB.VERIFY_MAIL, {
       toEmail: user?.email,
       name: user?.name,

@@ -624,8 +624,6 @@ class TweetsService {
       }
     })
 
-    console.log('tweets::', tweets)
-
     return {
       total,
       total_page: Math.ceil(total / limit),

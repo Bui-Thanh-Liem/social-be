@@ -18,6 +18,7 @@ import {
   MAX_SIZE_IMAGE_UPLOAD,
   MAX_SIZE_VIDEO_UPLOAD
 } from '~/shared/constants'
+import { logger } from './logger.util'
 
 // class Queue {
 //   items: string[]
@@ -40,15 +41,15 @@ import {
 //       try {
 //         await compressionVideo(filepath)
 //         this.items.shift()
-//         console.log(`Encode video ${filepath} success`)
+//         logger.info(`Encode video ${filepath} success`)
 //       } catch (error) {
-//         console.log(`Encode video ${filepath} error`)
-//         console.log('error:::', error)
+//         logger.info(`Encode video ${filepath} error`)
+//         logger.info('error:::', error)
 //       }
 //       this.encoding = false
 //       this.processEncode()
 //     } else {
-//       console.log('Encode video queue is empty')
+//       logger.info('Encode video queue is empty')
 //     }
 //   }
 // }
@@ -83,7 +84,7 @@ export function uploadImages(req: Request): Promise<string[]> {
   //
   return new Promise((res, rej) => {
     form.parse(req, (err, fields, files) => {
-      console.log('files::', files)
+      logger.info('files::', files)
 
       //
       if (err) {

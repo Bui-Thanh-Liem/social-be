@@ -4,6 +4,7 @@ import { join } from 'path'
 import sharp from 'sharp'
 import { UPLOAD_IMAGE_FOLDER_PATH } from '~/shared/constants/path-static.constant'
 import { encodeHLSWithMultipleVideoStreams } from './video'
+import { logger } from './logger.util'
 
 export async function compressionFile(file: File): Promise<string> {
   try {
@@ -24,7 +25,7 @@ export async function compressionFile(file: File): Promise<string> {
     // Xóa file gốc nếu cần
     try {
       await fs.unlink(file.filepath)
-      console.log(`Đã xóa file gốc: ${file.filepath}`)
+      logger.info(`Đã xóa file gốc: ${file.filepath}`)
     } catch (err) {
       console.warn(`Không thể xóa file gốc ${file.filepath}:`, err)
     }

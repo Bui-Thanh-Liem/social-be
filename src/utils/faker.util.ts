@@ -105,7 +105,7 @@ function generateLocation(): string {
 
 // Tạo 100 Users
 async function createRandomUsers() {
-  console.log('Start create users...')
+  logger.info('Start create users...')
 
   //
   const pass = 'User@123'
@@ -132,7 +132,7 @@ async function createRandomUsers() {
     count: 100
   })
 
-  console.log('Finish create users')
+  logger.info('Finish create users')
 
   return await Promise.all(
     data.map(async (d) => {
@@ -158,7 +158,7 @@ function getRandomMentions(user_ids: ObjectId[]) {
 
 // Tạo 300 tweet (1 user tạo 3 tweet)
 async function createRandomTweets(user_ids: ObjectId[]) {
-  console.log('Start create tweet...')
+  logger.info('Start create tweet...')
 
   await Promise.all(
     user_ids.map(async (id) => {
@@ -190,18 +190,18 @@ async function createRandomTweets(user_ids: ObjectId[]) {
       ])
     })
   )
-  console.log('Finish create tweet')
+  logger.info('Finish create tweet')
 }
 
 // Hàm Follow 100 users trên
 async function follow(user_id: ObjectId, followed_user_ids: ObjectId[]) {
-  console.log('Start following...')
+  logger.info('Start following...')
 
   await Promise.all(
     followed_user_ids.map((id) => FollowerCollection.insertOne(new FollowerSchema({ user_id, followed_user_id: id })))
   )
 
-  console.log('Finish follow')
+  logger.info('Finish follow')
 }
 
 export async function startFaker() {

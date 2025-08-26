@@ -10,7 +10,7 @@ class StreamVideoController {
     const range = req.headers.range
     const { filename } = req.params
 
-    console.log('range::', range)
+    logger.info('range::', range)
 
     if (!range) {
       throw new BadRequestError('Required range headers')
@@ -20,7 +20,7 @@ class StreamVideoController {
 
     const videoSize = fs.statSync(videoPath).size
     const chunkSize = 10 ** 6 // 1mb - byte
-    console.log('chunkSize:::', chunkSize)
+    logger.info('chunkSize:::', chunkSize)
 
     const start = Number(range?.replace(/\D/g, ''))
     const end = Math.min(start + chunkSize, videoSize - 1) // đảm bảo end không bao giờ lớn hơn dung lượng video (-1)
@@ -34,9 +34,9 @@ class StreamVideoController {
       'Content-type': contentType
     }
 
-    console.log('start:::', start)
-    console.log('end:::', end)
-    console.log('contentLength:::', contentLength)
+    logger.info('start:::', start)
+    logger.info('end:::', end)
+    logger.info('contentLength:::', contentLength)
 
     res.writeHead(206, headers)
     const videoStreams = fs.createReadStream(videoPath, { start, end })

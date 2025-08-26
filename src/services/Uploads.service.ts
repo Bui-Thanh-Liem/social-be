@@ -4,6 +4,7 @@ import path from 'path'
 import { envs } from '~/configs/env.config'
 import { BadRequestError } from '~/shared/classes/error.class'
 import { UPLOAD_IMAGE_FOLDER_PATH } from '~/shared/constants'
+import { logger } from '~/utils/logger.util'
 import { uploadImages, uploadVideos } from '~/utils/upload.util'
 
 class UploadsService {
@@ -29,7 +30,7 @@ class UploadsService {
           // Check if the file exists and delete it
           if (fs.existsSync(filePath) && url) {
             fs.unlinkSync(filePath) // Synchronously delete the file
-            console.log(`Deleted image: ${filePath}`)
+            logger.info(`Deleted image: ${filePath}`)
           } else {
             console.warn(`Image not found: ${filePath}`)
           }
@@ -48,10 +49,10 @@ class UploadsService {
   }
 
   async uploadVideos(req: Request) {
-    console.log('UploadsService:::')
+    logger.info('UploadsService:::')
 
     const videos = await uploadVideos(req)
-    console.log('videos:::', videos)
+    logger.info('videos:::', videos)
 
     return videos
   }

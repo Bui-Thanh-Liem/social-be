@@ -1,4 +1,5 @@
 import { createClient, RedisClientType, SetOptions } from 'redis'
+import { logger } from '~/utils/logger.util'
 
 export class CacheService {
   private client: RedisClientType
@@ -16,11 +17,11 @@ export class CacheService {
     this.client.on('error', (err) => console.error('Redis Client Error:', err))
     this.client.on('connect', () => {
       this.isConnected = true
-      console.log('Redis Client Connected')
+      logger.info('Redis Client Connected')
     })
     this.client.on('end', () => {
       this.isConnected = false
-      console.log('Redis Client Disconnected')
+      logger.info('Redis Client Disconnected')
     })
 
     // Connect immediately

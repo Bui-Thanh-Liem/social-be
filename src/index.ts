@@ -19,6 +19,7 @@ import uploadsRoute from './routes/uploads.routes'
 import usersRoute from './routes/users.routes'
 import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/constants/path-static.constant'
 import { startFaker } from './utils/faker.util'
+import { logger } from './utils/logger.util'
 
 const app = express()
 const httpServer = createServer(app)
@@ -39,7 +40,7 @@ app.use(loggerMiddleware)
 // Linh động giữa form-data hoặc application/json
 app.use((req, res, next) => {
   if (req.is('multipart/form-data')) {
-    console.log("req.is('multipart/form-data'):::", req.is('multipart/form-data'))
+    logger.info("req.is('multipart/form-data'):::", req.is('multipart/form-data'))
     return next()
   }
   express.json({ limit: '10mb' })(req, res, next)
@@ -72,11 +73,11 @@ app.use(errorHandler)
 
 // Socket
 io.on('connection', (socket) => {
-  console.log(`User ${socket.id} connected`)
+  logger.info(`User ${socket.id} connected`)
   socket.emit('getting', `Message to server 'Hi ${socket.id}'`)
 
   socket.on('disconnect', (reason) => {
-    console.log(`User ${socket.id} disconnected. Reason: ${reason}`)
+    logger.info(`User ${socket.id} disconnected. Reason: ${reason}`)
   })
 })
 
@@ -84,20 +85,20 @@ io.on('connection', (socket) => {
 async function bootstrap() {
   try {
     await database.connect()
-    console.log('Database connected!')
+    logger.info('Database connected!')
 
     database.initialCollections()
-    console.log('Cerated collections!')
+    logger.info('Cerated collections!')
 
     database.initialIndex()
-    console.log('Cerated index!')
+    logger.info('Cerated index!')
 
     httpServer.listen(port, host, () => {
-      console.log(`Example app listening on ${host}:${port}`)
+      logger.info(`App listening on ${host}:${port}`)
     })
   } catch (err) {
     await database.disconnect()
-    console.error('Failed to connect database:', err)
+    logger.error('Failed to connect database:', err)
     process.exit(1) // dừng app nếu không connect được
   }
 }

@@ -7,4 +7,7 @@ dist/
 .env.dev
 
 # 
-client_secret_2_661699560738-gnksjjq3lmbm80q9462i8n91mjkhuek4.apps.googleusercontent.com.json
+google-login.json
+
+# logs
+app.log

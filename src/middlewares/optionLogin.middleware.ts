@@ -7,13 +7,13 @@ export const optionLogin =
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (req.headers['authorization']) {
-        console.log(req.headers['authorization'])
+        logger.info(req.headers['authorization'])
         middleware(req, res, next)
       } else {
         next()
       }
     } catch (error) {
-      console.log(error)
+      logger.info(error)
       next(error)
     }
   }

@@ -3,6 +3,7 @@ import path from 'path'
 import { envs } from '~/configs/env.config'
 import { BadRequestError } from '~/shared/classes/error.class'
 import { ISendVerifyEmail } from '~/shared/interfaces/common/mail.interface'
+import { logger } from '~/utils/logger.util'
 
 class MailService {
   private transporter
@@ -59,9 +60,9 @@ class MailService {
 
     //
     try {
-      console.log('✅ Đang gửi email xác minh:', toEmail)
+      logger.info('✅ Đang gửi email xác minh:', toEmail)
       const info = await this.transporter.sendMail(mailOptions)
-      console.log('✅ Đã gửi email xác minh:', info.response)
+      logger.info('✅ Đã gửi email xác minh:', info.response)
     } catch (error) {
       console.error('❌ Lỗi gửi email xác minh:', error)
       throw new BadRequestError(error as string)
@@ -88,9 +89,9 @@ class MailService {
 
     //
     try {
-      console.log('✅ Đang gửi email để đặt lại mật khẩu:', toEmail)
+      logger.info('✅ Đang gửi email để đặt lại mật khẩu:', toEmail)
       const info = await this.transporter.sendMail(_mailOptions)
-      console.log('✅ Đã gửi email để đặt lại mật khẩu:', info.response)
+      logger.info('✅ Đã gửi email để đặt lại mật khẩu:', info.response)
     } catch (error) {
       console.error('❌ Lỗi gửi email để đặt lại mật khẩu:', error)
       throw new BadRequestError(error as string)
