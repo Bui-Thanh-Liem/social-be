@@ -11,6 +11,7 @@ import { ETokenType } from '~/shared/enums/type.enum'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { hashPassword } from '~/utils/crypto.util'
 import { signToken } from '~/utils/jwt.util'
+import { logger } from '~/utils/logger.util'
 
 class UsersService {
   async verifyEmail(user_id: string) {
@@ -76,7 +77,7 @@ class UsersService {
     return true
   }
 
-  async getOneByUsername(username: string) {
+  async getOneByUsername(username: string, user_id_active: string) {
     const keyCache = `${CONSTANT_USER.user_active_key_cache}-${username}`
     let user = await cacheServiceInstance.getCache<IUser>(keyCache)
     if (!user) {
@@ -105,7 +106,10 @@ class UsersService {
         {
           $addFields: {
             follower_count: { $size: '$followers' },
-            following_count: { $size: '$following' }
+            following_count: { $size: '$following' },
+            isFollow: {
+              $in: [new ObjectId(user_id_active), '$followers.user_id']
+            }
           }
         },
         {

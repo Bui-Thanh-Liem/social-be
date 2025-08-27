@@ -20,4 +20,5 @@ export interface IUser extends IBase {
   //
   follower_count?: number
   following_count?: number
+  isFollow?: boolean // người đang active và user đang truy vấnvấn
 }

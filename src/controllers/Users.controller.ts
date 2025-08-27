@@ -29,7 +29,8 @@ class UsersController {
 
   async getOneByUsername(req: Request, res: Response, next: NextFunction) {
     const { username } = req.params
-    const result = await UsersServices.getOneByUsername(username)
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const result = await UsersServices.getOneByUsername(username, user_id)
     res.json(new OkResponse(`${result} Success`, result))
   }
 

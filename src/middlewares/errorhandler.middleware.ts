@@ -1,6 +1,7 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from 'express'
 import { ZodError } from 'zod'
 import { ErrorResponse } from '~/shared/classes/response.class'
+import { logger } from '~/utils/logger.util'
 
 export const errorHandler: ErrorRequestHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   const isDev = process.env.NODE_ENV === 'development'
@@ -24,14 +25,15 @@ export const errorHandler: ErrorRequestHandler = (err: any, req: Request, res: R
     message = formattedErrors.map((e) => e.message).join(' - ')
 
     //
-    console.error('🛑 Zod Validation Error:', {
+    logger.error('🛑 Zod Validation Error:', {
       issues: err.issues,
       formattedErrors
     })
   }
 
   // Log đầy đủ để dev dễ debug
-  console.error('🛑 Error caught by middleware:', {
+  logger.error('🛑 Error caught by middleware:', { message })
+  console.log({
     message: message,
     statusCode: statusCode,
     stack: stack,

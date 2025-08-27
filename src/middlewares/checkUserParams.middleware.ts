@@ -11,11 +11,12 @@ export async function checkUserParams(req: Request, res: Response, next: NextFun
       throw new NotFoundError('User_id is required')
     }
 
-    const tweet = await UserCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { _id: 1 } })
-    if (!tweet) {
+    const user = await UserCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { _id: 1 } })
+    if (!user) {
       throw new NotFoundError('User không tồn tại')
     }
 
+    req.user_local_one_lifecycle = user
     next()
   } catch (error) {
     next(error)
