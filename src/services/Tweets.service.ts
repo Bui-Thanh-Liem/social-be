@@ -161,6 +161,15 @@ class TweetsService {
         }
       },
       {
+        $sort: sort
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      },
+      {
         $lookup: {
           from: 'hashtags',
           localField: 'hashtags',
@@ -286,15 +295,6 @@ class TweetsService {
           comments: 0, // loại bỏ array comments khỏi kết quả (chỉ giữ comment_count)
           tweets_children: 0 // chỉ lấy 1 cấp
         }
-      },
-      {
-        $sort: sort
-      },
-      {
-        $skip: skip
-      },
-      {
-        $limit: limit
       }
     ]).toArray()
 

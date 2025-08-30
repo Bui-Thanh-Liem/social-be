@@ -8,7 +8,7 @@ import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middlewar
 import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middleware'
 import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
-import { verifyUserActive } from '~/middlewares/verifyUserActive.middleware'
+import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import {
   CreateTweetDtoSchema,
@@ -25,7 +25,7 @@ const tweetsRoute = Router()
 tweetsRoute.post(
   '/',
   verifyAccessToken,
-  verifyUserActive,
+  verifyUserEmail,
   requestBodyValidate(CreateTweetDtoSchema),
   wrapAsyncHandler(TweetsController.create)
 )
@@ -38,7 +38,7 @@ Following = 'following' // Chỉ người mình follow
 tweetsRoute.get(
   '/feeds/:feed_type',
   verifyAccessToken,
-  verifyUserActive,
+  verifyUserEmail,
   requestParamsValidate(getNewFeedTypeDtoSchema),
   requestQueryValidate(QueryDtoSchema),
   wrapAsyncHandler(TweetsController.getNewFeeds)
@@ -47,7 +47,7 @@ tweetsRoute.get(
 tweetsRoute.get(
   '/profile/media',
   verifyAccessToken,
-  verifyUserActive,
+  verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
   wrapAsyncHandler(TweetsController.getProfileMedia)
 )
@@ -55,7 +55,7 @@ tweetsRoute.get(
 tweetsRoute.get(
   '/profile/liked',
   verifyAccessToken,
-  verifyUserActive,
+  verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
   wrapAsyncHandler(TweetsController.getProfileLiked)
 )
@@ -63,7 +63,7 @@ tweetsRoute.get(
 tweetsRoute.get(
   '/profile/:tweet_type',
   verifyAccessToken,
-  verifyUserActive,
+  verifyUserEmail,
   requestParamsValidate(getProfileTweetDtoSchema),
   requestQueryValidate(QueryDtoSchema),
   wrapAsyncHandler(TweetsController.getProfileTweets)
@@ -72,7 +72,7 @@ tweetsRoute.get(
 tweetsRoute.get(
   '/:tweet_id/children',
   optionLogin(verifyAccessToken),
-  optionLogin(verifyUserActive),
+  optionLogin(verifyUserEmail),
   requestParamsValidate(getTweetChildrenDtoSchemaParams),
   requestBodyValidate(getTweetChildrenDtoSchemaBody),
   requestQueryValidate(QueryDtoSchema),
@@ -84,7 +84,7 @@ tweetsRoute.get(
 tweetsRoute.get(
   '/:tweet_id',
   optionLogin(verifyAccessToken),
-  optionLogin(verifyUserActive),
+  optionLogin(verifyUserEmail),
   requestParamsValidate(GetOneTweetByIdDtoSchema),
   checkTweetByIdParams,
   checkAudience,

@@ -36,8 +36,6 @@ class VideosService {
       }
     )
   }
-
-  delete() {}
 }
 
 export default new VideosService()

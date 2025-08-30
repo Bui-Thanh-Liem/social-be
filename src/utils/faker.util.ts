@@ -9,6 +9,7 @@ import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { EMediaType, ETweetType } from '~/shared/enums/type.enum'
 import { hashPassword } from './crypto.util'
+import { logger } from './logger.util'
 
 const MY_ID = new ObjectId('68981080240210c1b61fd82d')
 

@@ -22,3 +22,8 @@ export enum EFeedType {
   Everyone = 'everyone', // Chỉ người mình everyone
   Following = 'following' // Chỉ người mình follow
 }
+
+export enum EConversationType {
+  Private,
+  Group
+}

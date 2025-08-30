@@ -1,9 +1,11 @@
 import { Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { initBookmarkCollection } from '~/models/schemas/Bookmark.schema'
+import { initConversationCollection } from '~/models/schemas/Conversation.schema'
 import { initFollowerCollection } from '~/models/schemas/Follower.schema'
 import { initHashtagCollection } from '~/models/schemas/Hashtag.schema'
 import { initLikeCollection } from '~/models/schemas/Like.schema'
+import { initMessageCollection } from '~/models/schemas/Message.schema'
 import { initRefreshTokenCollection, RefreshTokenCollection } from '~/models/schemas/RefreshToken.schema'
 import { initTweetCollection, TweetCollection } from '~/models/schemas/Tweet.schema'
 import { initUserCollection, UserCollection } from '~/models/schemas/User.schema'
@@ -48,6 +50,8 @@ class DatabaseConfig {
     initHashtagCollection(this.db)
     initBookmarkCollection(this.db)
     initLikeCollection(this.db)
+    initConversationCollection(this.db)
+    initMessageCollection(this.db)
   }
 
   async initialIndex() {
