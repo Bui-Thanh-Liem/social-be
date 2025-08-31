@@ -10,8 +10,7 @@ export const CreateConversationDtoSchema = z
       .array(z.string().trim().regex(CONSTANT_REGEX.ID_MONGO), {
         message: 'Invalid MongoDB ObjectId'
       })
-      .nonempty({ message: 'Người tham gia phải có ít nhất một người.' }),
-    lastMessage: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, { message: 'Invalid MongoDB ObjectId' }).optional()
+      .nonempty({ message: 'Người tham gia phải có ít nhất một người.' })
   })
   .refine(
     (data) => {
@@ -40,7 +39,7 @@ export const CreateConversationDtoSchema = z
   .refine(
     (data) => {
       if (data.type === EConversationType.Group) {
-        return data.participants.length < 2
+        return data.participants.length >= 2
       }
       return true
     },

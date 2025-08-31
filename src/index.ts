@@ -21,6 +21,7 @@ import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/con
 import { startFaker } from './utils/faker.util'
 import { logger } from './utils/logger.util'
 import conversationsRoute from './routes/conversations.routes'
+import messagesRoute from './routes/messages.routes'
 
 const app = express()
 const httpServer = createServer(app)
@@ -64,6 +65,7 @@ app.use('/uploads', uploadsRoute)
 app.use('/search', searchRoute)
 app.use('/bookmarks', bookmarksRoute)
 app.use('/conversations', conversationsRoute)
+app.use('/messages', messagesRoute)
 app.use('/videos-streaming/:filename', StreamVideoController.streamVideo)
 app.use('/videos-hls/:foldername/master.m3u8', StreamVideoController.streamMaster)
 app.use('/videos-hls/:foldername/:v/:segment', StreamVideoController.streamSegment)

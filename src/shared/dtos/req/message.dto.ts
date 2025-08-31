@@ -7,4 +7,9 @@ export const CreateMessageDtoSchema = z.object({
   attachments: z.array(z.string().trim()).optional()
 })
 
+export const GetMultiMessageByConversationDtoSchema = z.object({
+  conversation_id: z.string().trim()
+})
+
 export type CreateMessageDto = z.infer<typeof CreateMessageDtoSchema>
+export type GetMultiMessageByConversationDto = z.infer<typeof GetMultiMessageByConversationDtoSchema>

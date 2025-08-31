@@ -9,17 +9,10 @@ import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.uti
 
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {
-    const lastMessageObjectId = payload.lastMessage ? new ObjectId(payload.lastMessage) : null
     const userObjectId = new ObjectId(user_id)
 
     if (payload.type === EConversationType.Private) {
       const participantObjectId = new ObjectId(payload.participants[0]) // Nếu type là private thì participant luôn là một User
-
-      //
-      console.log('private')
-      console.log('userObjectId::', userObjectId)
-      console.log('participantObjectId::', participantObjectId)
-      console.log('lastMessageObjectId::', lastMessageObjectId)
 
       return await ConversationCollection.findOneAndUpdate(
         {
@@ -29,8 +22,7 @@ class ConversationsService {
         {
           $setOnInsert: new ConversationSchema({
             type: payload.type,
-            participants: [userObjectId, participantObjectId],
-            lastMessage: lastMessageObjectId
+            participants: [userObjectId, participantObjectId]
           })
         },
         { upsert: true, returnDocument: 'after' }
@@ -42,13 +34,12 @@ class ConversationsService {
       new ConversationSchema({
         type: payload.type,
         name: payload.name,
-        participants: [userObjectId, ...participantObjectIds],
-        lastMessage: lastMessageObjectId
+        participants: [userObjectId, ...participantObjectIds]
       })
     )
   }
 
-  async getMany({
+  async getMulti({
     query,
     user_id
   }: {
@@ -105,6 +96,19 @@ class ConversationsService {
       total_page: Math.ceil(total / limit),
       items: conversations
     }
+  }
+
+  async updateLastMessage(conversation_id: string, message_id: string) {
+    return await ConversationCollection.findOneAndUpdate(
+      { _id: new ObjectId(conversation_id) },
+      {
+        $set: {
+          lastMessage: new ObjectId(message_id),
+          updatedAt: new Date()
+        }
+      },
+      { returnDocument: 'after' } // để trả về doc mới
+    )
   }
 }
 
