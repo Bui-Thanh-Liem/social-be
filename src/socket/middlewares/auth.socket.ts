@@ -1,23 +1,25 @@
 import { ExtendedError, Socket } from 'socket.io'
+import { envs } from '~/configs/env.config'
+import { UnauthorizedError } from '~/shared/classes/error.class'
+import { verifyToken } from '~/utils/jwt.util'
 
 // Middleware auth cho socket (VD: check token)
-export function authMiddleware(socket: Socket, next: (err?: ExtendedError) => void) {
-  // console.log('authMiddleware - socket.handshake:::', socket.handshake)
+export async function authMiddleware(socket: Socket, next: (err?: ExtendedError) => void) {
+  // Get token
   const token = socket.handshake.auth?.token || socket.handshake.headers['authorization']
 
-  // Thay vì cho ngắt kết nối thì tạo một authError rồi rồi cho kết nối bình thường
-  // Sau đó trong connection kiểm tra, nếu có authError thì emit về event 'error'
+  // Check exist token
   if (!token) {
-    socket.authError = 'Authentication error' // Lưu lỗi vào socket
-    return next() // Vẫn cho phép kết nối
+    return next(new UnauthorizedError('Missing token'))
   }
 
   try {
-    // TODO: verify token (jwt.verify, ...)
-    // socket.user = { id: '123', name: 'Demo User' } // mock user
+    // Verify token
+    const decoded = await verifyToken({ token, privateKey: envs.JWT_SECRET_ACCESS })
+    socket.decoded_authorization = decoded
     next()
   } catch (err) {
-    socket.authError = 'Invalid token'
-    next()
+    console.log('authMiddleware - err:::', err)
+    next(new UnauthorizedError('Invalid token'))
   }
 }
