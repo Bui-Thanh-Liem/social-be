@@ -11,6 +11,7 @@ class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {
     const userObjectId = new ObjectId(user_id)
 
+    // PRIVATE
     if (payload.type === EConversationType.Private) {
       const participantObjectId = new ObjectId(payload.participants[0]) // Nếu type là private thì participant luôn là một User
 
@@ -29,6 +30,7 @@ class ConversationsService {
       )
     }
 
+    // GROUP
     const participantObjectIds = payload.participants.map((userId) => new ObjectId(userId))
     return await ConversationCollection.insertOne(
       new ConversationSchema({

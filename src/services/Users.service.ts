@@ -4,7 +4,7 @@ import { envs } from '~/configs/env.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { sendEmailQueue } from '~/libs/bull/queues'
 import { UserCollection } from '~/models/schemas/User.schema'
-import { NotFoundError } from '~/shared/classes/error.class'
+import { BadRequestError, NotFoundError } from '~/shared/classes/error.class'
 import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { ETokenType } from '~/shared/enums/type.enum'
@@ -178,6 +178,15 @@ class UsersService {
   async resetUserActive(user_id: string) {
     const keyCache = `${CONSTANT_USER.user_active_key_cache}-${user_id}`
     await cacheServiceInstance.del(keyCache)
+  }
+
+  async checkExist(_ids: string[]) {
+    const objectIds = _ids.map((_id) => new ObjectId(_id))
+    const isExist = await UserCollection.countDocuments({ _id: { $in: objectIds } })
+    if (!isExist) {
+      throw new NotFoundError('Người dùng không tồn tại')
+    }
+    return isExist
   }
 }
 
