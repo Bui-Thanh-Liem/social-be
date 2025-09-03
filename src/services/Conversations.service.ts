@@ -15,27 +15,24 @@ import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.uti
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {
     let newConversation: InsertOneResult<ConversationSchema> | WithId<ConversationSchema> | null = null
-    let newId = undefined
     const userObjectId = new ObjectId(user_id)
 
     // PRIVATE
     if (payload.type === EConversationType.Private) {
-      const participantObjectId = new ObjectId(payload.participants[0]) // Nếu type là private thì participant luôn là một User
+      const participantObjectId = new ObjectId(payload.participants[0]) // Nếu type là private thì payload.participant luôn là một User
 
-      newConversation = await ConversationCollection.findOneAndUpdate(
-        {
-          type: payload.type,
-          participants: [userObjectId, participantObjectId]
-        },
-        {
-          $setOnInsert: new ConversationSchema({
-            type: payload.type,
-            participants: [userObjectId, participantObjectId]
-          })
-        },
-        { upsert: true, returnDocument: 'after' }
+      const result = await ConversationCollection.findOne({
+        type: payload.type,
+        participants: [userObjectId, participantObjectId]
+      })
+
+      if (result) {
+        return await this.getOneById(result?._id.toString(), user_id)
+      }
+
+      newConversation = await ConversationCollection.insertOne(
+        new ConversationSchema({ type: payload.type, participants: [userObjectId, participantObjectId] })
       )
-      newId = newConversation?._id.toString()
     } else {
       // GROUP
       const participantObjectIds = payload.participants.map((userId) => new ObjectId(userId))
@@ -46,11 +43,7 @@ class ConversationsService {
           participants: [userObjectId, ...participantObjectIds]
         })
       )
-
-      newId = newConversation.insertedId.toString()
     }
-
-    console.log('newId::', newId)
 
     // Del findAllIds and emit conversation:new
     const io = getIO()
@@ -58,7 +51,7 @@ class ConversationsService {
       [user_id, ...payload.participants].map(async (id) => {
         const cacheKey = createKeyAllConversationIds(id)
 
-        const conversation = await this.getOneById(newId || '', user_id)
+        const conversation = await this.getOneById(newConversation?.insertedId.toString() || '', user_id)
 
         io.to(id).emit(CONSTANT_EVENT_NAMES.NEW_CONVERSATION, conversation)
 
@@ -122,7 +115,8 @@ class ConversationsService {
             {
               $project: {
                 _id: 1,
-                name: 1
+                name: 1,
+                avatar: 1
               }
             }
           ]
@@ -159,6 +153,37 @@ class ConversationsService {
                 }
               },
               else: '$name' // Giữ nguyên name nếu type != Private
+            }
+          },
+          avatar: {
+            $cond: {
+              if: { $eq: ['$type', EConversationType.Private] },
+              then: {
+                $let: {
+                  vars: {
+                    otherParticipant: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: '$participants',
+                            as: 'participant',
+                            cond: { $ne: ['$$participant._id', new ObjectId(user_id)] }
+                          }
+                        },
+                        0
+                      ]
+                    }
+                  },
+                  in: '$$otherParticipant.avatar'
+                }
+              },
+              else: {
+                $map: {
+                  input: '$participants',
+                  as: 'participant',
+                  in: '$$participant.avatar' // Lấy tất cả avatar của participants (mảng chuỗi)
+                }
+              }
             }
           }
         }
