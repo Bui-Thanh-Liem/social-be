@@ -10,7 +10,7 @@ export async function roomHandler(io: Server, socket: Socket) {
   // Join vào room riêng của user để nhận thông báo cá nhân
   await socket.join(user_id as string)
 
-  // Join vào tất cả conversation room
+  // Join vào tất cả conversation room/ Bắt emit từ client để join room
   const conversationIds = await ConversationsService.getAllIds(user_id)
   conversationIds.forEach((id) => socket.join(id))
 }

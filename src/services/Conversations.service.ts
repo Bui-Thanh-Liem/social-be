@@ -14,7 +14,7 @@ import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.uti
 
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {
-    let newConversation: InsertOneResult<ConversationSchema> | WithId<ConversationSchema> | null = null
+    let _newConversation: InsertOneResult<ConversationSchema> | null = null
     const userObjectId = new ObjectId(user_id)
 
     // PRIVATE
@@ -30,13 +30,14 @@ class ConversationsService {
         return await this.getOneById(result?._id.toString(), user_id)
       }
 
-      newConversation = await ConversationCollection.insertOne(
+      const newData = await ConversationCollection.insertOne(
         new ConversationSchema({ type: payload.type, participants: [userObjectId, participantObjectId] })
       )
+      return await this.getOneById(newData?.insertedId.toString(), user_id)
     } else {
       // GROUP
       const participantObjectIds = payload.participants.map((userId) => new ObjectId(userId))
-      newConversation = await ConversationCollection.insertOne(
+      _newConversation = await ConversationCollection.insertOne(
         new ConversationSchema({
           type: payload.type,
           name: payload.name,
@@ -47,19 +48,20 @@ class ConversationsService {
 
     // Del findAllIds and emit conversation:new
     const io = getIO()
-    await Promise.all(
+    const [newData] = await Promise.all(
       [user_id, ...payload.participants].map(async (id) => {
         const cacheKey = createKeyAllConversationIds(id)
 
-        const conversation = await this.getOneById(newConversation?.insertedId.toString() || '', user_id)
+        const conversation = await this.getOneById(_newConversation?.insertedId.toString() || '', user_id)
 
         io.to(id).emit(CONSTANT_EVENT_NAMES.NEW_CONVERSATION, conversation)
+        await cacheServiceInstance.del(cacheKey)
 
-        return cacheServiceInstance.del(cacheKey)
+        return conversation
       })
     )
 
-    return newConversation
+    return newData
   }
 
   async getMulti({
