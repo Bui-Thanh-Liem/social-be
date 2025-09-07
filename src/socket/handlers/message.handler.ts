@@ -1,22 +1,23 @@
 import { Server, Socket } from 'socket.io'
+import MessagesService from '~/services/Messages.service'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
+import { sendMessageDtoSchema } from '~/shared/dtos/req/socket/message.dto'
 import { withValidationDataFromClient } from '../middlewares/validation.socket'
-import { messageDtoSchema } from '~/shared/dtos/req/socket/message.dto'
 
 // Xử lý send/new message
 export async function messageHandler(io: Server, socket: Socket) {
   //
   socket.on(
     CONSTANT_EVENT_NAMES.SEND_MESSAGE,
-    withValidationDataFromClient(messageDtoSchema, (data, socket) => {
-      console.log('📩 Message received:', data)
+    withValidationDataFromClient(sendMessageDtoSchema, socket, async (data, socket) => {
+      const { content, conversation, sender } = data
+      console.log('Co ai do gui tin nhan ::', content)
+
+      //
+      const newMessage = await MessagesService.create(sender, { content, conversation })
 
       // broadcast tin nhắn cho room / người nhận
-      io.to(data.roomId).emit(CONSTANT_EVENT_NAMES.NEW_MESSAGE, {
-        senderId: socket.id,
-        text: data.text,
-        createdAt: new Date()
-      })
+      io.to(data.conversation).emit(CONSTANT_EVENT_NAMES.NEW_MESSAGE, newMessage)
     })
   )
 }

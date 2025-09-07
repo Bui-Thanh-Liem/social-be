@@ -7,5 +7,8 @@ export interface IConversation extends IBase {
   avatar: string[] | string | null // group - lấy tất cả avatar, private - lấy avatar của participants (không phải mình)
   type: EConversationType
   participants: ObjectId[]
+
+  //
   lastMessage: ObjectId | null
+  readStatus: ObjectId[] | null
 }

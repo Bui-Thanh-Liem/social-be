@@ -7,22 +7,25 @@ import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 import ConversationsService from './Conversations.service'
 class MessagesService {
-  async create(user_id: string, payload: CreateMessageDto) {
-    const _idNew = new ObjectId()
-
+  async create(sender_id: string, payload: CreateMessageDto) {
     //
-    const conversationUpdated = await ConversationsService.updateLastMessage(payload.conversation, _idNew.toString())
-    if (!conversationUpdated) return conversationUpdated
-
-    return await MessageCollection.insertOne(
+    const newMessage = await MessageCollection.insertOne(
       new MessageSchema({
-        _id: _idNew,
-        sender: new ObjectId(user_id),
+        sender: new ObjectId(sender_id),
         conversation: new ObjectId(payload.conversation),
         content: payload.content,
         attachments: payload.attachments
       })
     )
+
+    // Khi có tin nhắn mới thì cập nhật lastMessage trong
+    // conversation db và emit về client
+    if (newMessage) {
+      await ConversationsService.updateLastMessage(payload.conversation, newMessage.insertedId.toString())
+    }
+
+    //
+    return await MessageCollection.findOne({ _id: newMessage.insertedId })
   }
 
   async getMultiByConversation({
@@ -32,7 +35,7 @@ class MessagesService {
     conversation_id: string
     query: IQuery<IMessage>
   }): Promise<ResMultiType<IMessage>> {
-    const { skip, limit, sort } = getPaginationAndSafeQuery<IMessage>(query)
+    const { skip, limit } = getPaginationAndSafeQuery<IMessage>(query)
 
     //
     const messages = await MessageCollection.aggregate<MessageSchema>([
@@ -40,7 +43,7 @@ class MessagesService {
         $match: { conversation: new ObjectId(conversation_id) }
       },
       {
-        $sort: sort
+        $sort: { created_at: 1 }
       },
       {
         $skip: skip

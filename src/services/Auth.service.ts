@@ -9,7 +9,13 @@ import { RefreshTokenCollection, RefreshTokenSchema } from '~/models/schemas/Ref
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '~/shared/classes/error.class'
 import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
-import { ForgotPasswordDto, LoginUserDto, RegisterUserDto, ResetPasswordDto, UpdateMeDto } from '~/shared/dtos/req/auth.dto'
+import {
+  ForgotPasswordDto,
+  LoginUserDto,
+  RegisterUserDto,
+  ResetPasswordDto,
+  UpdateMeDto
+} from '~/shared/dtos/req/auth.dto'
 import { ETokenType } from '~/shared/enums/type.enum'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oauth-google.interface'

@@ -9,6 +9,7 @@ export class ConversationSchema extends BaseSchema implements IConversation {
   lastMessage: null | ObjectId
   name: string | null
   avatar: string | string[] | null
+  readStatus: ObjectId[] | null
 
   constructor(conversation: Partial<IConversation>) {
     super()
@@ -17,6 +18,7 @@ export class ConversationSchema extends BaseSchema implements IConversation {
     this.lastMessage = conversation.lastMessage || null
     this.name = conversation.name || null
     this.avatar = conversation.avatar || null
+    this.readStatus = conversation.readStatus || null
   }
 }
 

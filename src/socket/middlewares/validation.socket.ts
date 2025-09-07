@@ -1,18 +1,24 @@
 import { ZodSchema } from 'zod'
 import { Socket } from 'socket.io'
+import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 
-export function withValidationDataFromClient<T>(schema: ZodSchema<T>, handler: (data: T, socket: Socket) => void) {
-  return (socket: Socket) => {
-    return (data: unknown) => {
-      const result = schema.safeParse(data)
-      if (!result.success) {
-        socket.emit('ERROR', {
-          message: 'Invalid data format',
-          issues: result.error.errors
-        })
-        return
-      }
-      handler(result.data, socket)
+export function withValidationDataFromClient<T>(
+  schema: ZodSchema<T>,
+  socket: Socket,
+  handler: (data: T, socket: Socket) => void
+) {
+  return (data: unknown) => {
+    const result = schema.safeParse(data)
+
+    //
+    if (!result.success) {
+      socket.emit(CONSTANT_EVENT_NAMES.ERROR, {
+        message: 'Invalid data format',
+        issues: result.error.errors
+      })
+      return
     }
+
+    handler(result.data, socket)
   }
 }

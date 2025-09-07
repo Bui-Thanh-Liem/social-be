@@ -1,4 +1,4 @@
-import { InsertOneResult, ObjectId, WithId } from 'mongodb'
+import { InsertOneResult, ObjectId } from 'mongodb'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { ConversationCollection, ConversationSchema } from '~/models/schemas/Conversation.schema'
 import { BadRequestError, NotFoundError } from '~/shared/classes/error.class'
@@ -8,12 +8,14 @@ import { EConversationType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IConversation } from '~/shared/interfaces/schemas/conversation.interface'
 import { ResMultiType } from '~/shared/types/response.type'
-import { getIO } from '~/socket'
+import { getIO, getSocket } from '~/socket'
 import { createKeyAllConversationIds } from '~/utils/createKeyCache.util'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {
+    const io = getIO()
+    const socket = getSocket()
     let _newConversation: InsertOneResult<ConversationSchema> | null = null
     const userObjectId = new ObjectId(user_id)
 
@@ -21,33 +23,36 @@ class ConversationsService {
     if (payload.type === EConversationType.Private) {
       const participantObjectId = new ObjectId(payload.participants[0]) // Nếu type là private thì payload.participant luôn là một User
 
-      const result = await ConversationCollection.findOne({
+      const findItem = await ConversationCollection.findOne({
         type: payload.type,
         participants: [userObjectId, participantObjectId]
       })
 
-      if (result) {
-        return await this.getOneById(result?._id.toString(), user_id)
+      if (findItem) {
+        return await this.getOneById(findItem?._id.toString(), user_id)
       }
 
       const newData = await ConversationCollection.insertOne(
         new ConversationSchema({ type: payload.type, participants: [userObjectId, participantObjectId] })
       )
-      return await this.getOneById(newData?.insertedId.toString(), user_id)
-    } else {
-      // GROUP
-      const participantObjectIds = payload.participants.map((userId) => new ObjectId(userId))
-      _newConversation = await ConversationCollection.insertOne(
-        new ConversationSchema({
-          type: payload.type,
-          name: payload.name,
-          participants: [userObjectId, ...participantObjectIds]
-        })
-      )
+      const newCon = await this.getOneById(newData?.insertedId.toString(), user_id)
+      if (newCon._id) {
+        socket.join(newCon._id?.toString())
+      }
+      return newCon
     }
 
+    // GROUP
+    const participantObjectIds = payload.participants.map((userId) => new ObjectId(userId))
+    _newConversation = await ConversationCollection.insertOne(
+      new ConversationSchema({
+        type: payload.type,
+        name: payload.name,
+        participants: [userObjectId, ...participantObjectIds]
+      })
+    )
+
     // Del findAllIds and emit conversation:new
-    const io = getIO()
     const [newData] = await Promise.all(
       [user_id, ...payload.participants].map(async (id) => {
         const cacheKey = createKeyAllConversationIds(id)
@@ -101,6 +106,7 @@ class ConversationsService {
             {
               $project: {
                 content: 1,
+                sender: 1,
                 created_at: 1
               }
             }
@@ -224,6 +230,7 @@ class ConversationsService {
           pipeline: [
             {
               $project: {
+                sender: 1,
                 content: 1,
                 created_at: 1
               }
@@ -241,7 +248,8 @@ class ConversationsService {
             {
               $project: {
                 _id: 1,
-                name: 1
+                name: 1,
+                avatar: 1
               }
             }
           ]
@@ -279,6 +287,37 @@ class ConversationsService {
               },
               else: '$name' // Giữ nguyên name nếu type != Private
             }
+          },
+          avatar: {
+            $cond: {
+              if: { $eq: ['$type', EConversationType.Private] },
+              then: {
+                $let: {
+                  vars: {
+                    otherParticipant: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: '$participants',
+                            as: 'participant',
+                            cond: { $ne: ['$$participant._id', new ObjectId(user_id)] }
+                          }
+                        },
+                        0
+                      ]
+                    }
+                  },
+                  in: '$$otherParticipant.avatar'
+                }
+              },
+              else: {
+                $map: {
+                  input: '$participants',
+                  as: 'participant',
+                  in: '$$participant.avatar' // Lấy tất cả avatar của participants (mảng chuỗi)
+                }
+              }
+            }
           }
         }
       }
@@ -291,35 +330,35 @@ class ConversationsService {
     return conversation
   }
 
-  async getAllIds(user_id: string): Promise<string[]> {
-    const cacheKey = createKeyAllConversationIds(user_id)
-    const dataInCache = await cacheServiceInstance.getCache<string[]>(cacheKey)
+  // async getAllIds(user_id: string): Promise<string[]> {
+  //   const cacheKey = createKeyAllConversationIds(user_id)
+  //   const dataInCache = await cacheServiceInstance.getCache<string[]>(cacheKey)
 
-    if (!dataInCache) {
-      // Tìm trong db
-      const conversations = await ConversationCollection.aggregate<ConversationSchema>([
-        {
-          $match: {
-            participants: {
-              $in: [new ObjectId(user_id)]
-            }
-          }
-        },
-        {
-          $project: {
-            _id: 1
-          }
-        }
-      ]).toArray()
+  //   if (!dataInCache) {
+  //     // Tìm trong db
+  //     const conversations = await ConversationCollection.aggregate<ConversationSchema>([
+  //       {
+  //         $match: {
+  //           participants: {
+  //             $in: [new ObjectId(user_id)]
+  //           }
+  //         }
+  //       },
+  //       {
+  //         $project: {
+  //           _id: 1
+  //         }
+  //       }
+  //     ]).toArray()
 
-      // Gán cache
-      const ids = conversations?.map((x) => x._id!.toString())
-      await cacheServiceInstance.setCache(cacheKey, ids)
-      return ids
-    } else {
-      return dataInCache
-    }
-  }
+  //     // Gán cache
+  //     const ids = conversations?.map((x) => x._id!.toString())
+  //     await cacheServiceInstance.setCache(cacheKey, ids)
+  //     return ids
+  //   } else {
+  //     return dataInCache
+  //   }
+  // }
 
   async updateLastMessage(conversation_id: string, message_id: string) {
     return await ConversationCollection.findOneAndUpdate(

@@ -19,7 +19,7 @@ export async function authMiddleware(socket: Socket, next: (err?: ExtendedError)
     socket.decoded_authorization = decoded
     next()
   } catch (err) {
-    console.log('authMiddleware - err:::', err)
-    next(new UnauthorizedError('Invalid token'))
+    console.log('Socket - authMiddleware - err:::', err)
+    next(new UnauthorizedError((err as { message: string })?.message))
   }
 }

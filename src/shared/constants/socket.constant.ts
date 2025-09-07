@@ -3,5 +3,6 @@ export const CONSTANT_EVENT_NAMES = {
   NEW_MESSAGE: 'message:new',
   NEW_CONVERSATION: 'conversation:new',
   JOIN_ROOM: 'room:join',
-  LEAVE_ROOM: 'room:leave'
+  LEAVE_ROOM: 'room:leave',
+  ERROR: 'error'
 }

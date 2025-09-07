@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io'
-import ConversationsService from '~/services/Conversations.service'
+import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 // Xử lý join/leave room
@@ -10,7 +10,15 @@ export async function roomHandler(io: Server, socket: Socket) {
   // Join vào room riêng của user để nhận thông báo cá nhân
   await socket.join(user_id as string)
 
-  // Join vào tất cả conversation room/ Bắt emit từ client để join room
-  const conversationIds = await ConversationsService.getAllIds(user_id)
-  conversationIds.forEach((id) => socket.join(id))
+  // Join vào conversation mới
+  socket.on(CONSTANT_EVENT_NAMES.JOIN_ROOM, (ids: string[]) => {
+    console.log('Join room:::', ids)
+    socket.join(ids)
+  })
+
+  // Join vào conversation mới
+  socket.on(CONSTANT_EVENT_NAMES.LEAVE_ROOM, (ids: string[]) => {
+    console.log('Leave room:::', ids)
+    ids.forEach((id) => socket.leave(id))
+  })
 }

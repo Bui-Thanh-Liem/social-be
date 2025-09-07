@@ -6,7 +6,7 @@ export async function connectionHandler(io: Server, socket: Socket) {
   const decoded = socket.decoded_authorization
 
   console.log(`🔌 User connected - socket.id::: ${socket.id}`)
-  console.log(`🔌 User connected - decoded::: ${decoded}`)
+  console.log(`🔌 User connected - decoded - user_id::: ${decoded?.user_id}`)
 
   //
   socket.on('disconnect', (reason) => {
