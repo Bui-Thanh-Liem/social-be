@@ -28,9 +28,9 @@ class FollowsService {
     }
   }
 
-  async getUserFollowed(user_id: string) {
-    // Lấy user đang follow
-    const resultFollower = await FollowerCollection.find(
+  // Lấy user mình đang follow
+  async getUserFollowing(user_id: string) {
+    const resultFollowing = await FollowerCollection.find(
       {
         user_id: new ObjectId(user_id)
       },
@@ -43,9 +43,28 @@ class FollowsService {
     ).toArray()
 
     //
-    const followed_user_ids = resultFollower.map((x) => x.followed_user_id) as unknown as string[]
+    const followed_user_ids = resultFollowing.map((x) => x.followed_user_id) as unknown as string[]
     followed_user_ids.push(user_id)
     return followed_user_ids
+  }
+
+  // Lấy user đang follow mình
+  async getUserFollowers(user_id: string) {
+    const resultFollower = await FollowerCollection.find(
+      {
+        followed_user_id: new ObjectId(user_id)
+      },
+      {
+        projection: {
+          _id: 0,
+          user_id: 1
+        }
+      }
+    ).toArray()
+
+    //
+    const followers_user_ids = resultFollower.map((x) => x.user_id) as unknown as string[]
+    return followers_user_ids
   }
 }
 

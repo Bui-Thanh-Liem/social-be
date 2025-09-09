@@ -34,6 +34,12 @@ class UsersController {
     res.json(new OkResponse(`${result} Success`, result))
   }
 
+  async getFollowedUsersBasic(req: Request, res: Response, next: NextFunction) {
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const result = await UsersServices.getFollowedUsersBasic({ user_id_active: user_id, query: req.query })
+    res.json(new OkResponse('Lấy người dùng đang theo dõi mình thành công', result))
+  }
+
   async changePassword(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const { new_password } = req.body as ChangePasswordDto

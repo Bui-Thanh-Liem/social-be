@@ -3,15 +3,19 @@ import { StringValue } from 'ms'
 import { envs } from '~/configs/env.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { sendEmailQueue } from '~/libs/bull/queues'
-import { UserCollection } from '~/models/schemas/User.schema'
+import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { NotFoundError } from '~/shared/classes/error.class'
 import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { ETokenType } from '~/shared/enums/type.enum'
+import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { hashPassword } from '~/utils/crypto.util'
+import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 import { signToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
+import FollowsService from './Follows.service'
+import { ResMultiType } from '~/shared/types/response.type'
 
 class UsersService {
   async verifyEmail(user_id: string) {
@@ -129,6 +133,52 @@ class UsersService {
     }
 
     return user
+  }
+
+  async getFollowedUsersBasic({
+    user_id_active,
+    query
+  }: {
+    user_id_active: string
+    query: IQuery<IUser>
+  }): Promise<ResMultiType<IUser>> {
+    //
+    const { skip, limit, sort } = getPaginationAndSafeQuery<IUser>(query)
+
+    //
+    const followed_user_ids = await FollowsService.getUserFollowers(user_id_active)
+    const users = await UserCollection.aggregate<UserSchema>([
+      {
+        $match: {
+          _id: { $in: followed_user_ids }
+        }
+      },
+      {
+        $sort: sort
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      },
+      {
+        $project: {
+          name: 1,
+          avatar: 1
+        }
+      }
+    ]).toArray()
+
+    const total = await UserCollection.countDocuments({
+      _id: { $in: followed_user_ids.map((id) => new ObjectId(id)) }
+    })
+
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: users
+    }
   }
 
   async changePassword(user_id: string, new_password: string) {

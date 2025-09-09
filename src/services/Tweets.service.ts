@@ -355,7 +355,7 @@ class TweetsService {
     const { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
 
     //
-    const followed_user_ids = await FollowsService.getUserFollowed(user_id)
+    const followed_user_ids = await FollowsService.getUserFollowing(user_id)
     followed_user_ids.push(user_id)
 
     // Dynamic match condition based on feed type
@@ -745,7 +745,7 @@ class TweetsService {
     let { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
 
     //
-    const followed_user_ids = await FollowsService.getUserFollowed(user_id)
+    const followed_user_ids = await FollowsService.getUserFollowing(user_id)
     followed_user_ids.push(user_id)
     if (user_id !== profile_id) {
       followed_user_ids.push(profile_id)
@@ -994,8 +994,8 @@ class TweetsService {
     // Phân trang và truy vấn an toàn
     const { skip, limit, sort } = getPaginationAndSafeQuery<TweetSchema>(query)
 
-    // Lấy danh sách người dùng được theo dõi
-    const followed_user_ids = await FollowsService.getUserFollowed(user_id)
+    // Lấy danh sách người dùng mình đang theo dõi
+    const followed_user_ids = await FollowsService.getUserFollowing(user_id)
     if (!followed_user_ids.includes(user_id)) {
       followed_user_ids.push(user_id)
     }
@@ -1084,8 +1084,8 @@ class TweetsService {
     // Phân trang và truy vấn an toàn
     const { skip, limit, sort } = getPaginationAndSafeQuery<TweetSchema>(query)
 
-    // Lấy danh sách người dùng được theo dõi
-    const followed_user_ids = await FollowsService.getUserFollowed(profile_id)
+    // Lấy danh sách người dùng mình đang theo dõi
+    const followed_user_ids = await FollowsService.getUserFollowing(profile_id)
     if (!followed_user_ids.includes(profile_id)) {
       followed_user_ids.push(profile_id)
     }

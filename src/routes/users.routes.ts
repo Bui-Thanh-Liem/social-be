@@ -1,9 +1,11 @@
 import { Router } from 'express'
 import UsersControllers from '~/controllers/Users.controller'
 import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middleware'
+import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyTokenVerifyEmail } from '~/middlewares/verifyTokenVerifyEmail.middleware'
 import { verifyUserActiveForChangePassword } from '~/middlewares/verifyUserActiveForChangePassword.middleware'
+import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { ChangePasswordDtoSchema, verifyEmailDtoSchema } from '~/shared/dtos/req/user.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 
@@ -20,6 +22,12 @@ usersRoute.post(
 usersRoute.post('/resend-verify-email', verifyAccessToken, wrapAsyncHandler(UsersControllers.resendVerifyEmail))
 
 usersRoute.get('/username/:username', verifyAccessToken, wrapAsyncHandler(UsersControllers.getOneByUsername))
+usersRoute.get(
+  '/followed',
+  verifyAccessToken,
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(UsersControllers.getFollowedUsersBasic)
+)
 
 usersRoute.post(
   '/change-password',
