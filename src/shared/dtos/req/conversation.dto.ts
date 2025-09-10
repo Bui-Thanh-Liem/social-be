@@ -6,11 +6,9 @@ export const CreateConversationDtoSchema = z
   .object({
     type: z.nativeEnum(EConversationType),
     name: z.string().trim().max(10).optional(),
-    participants: z
-      .array(z.string().trim().regex(CONSTANT_REGEX.ID_MONGO), {
-        message: 'Invalid MongoDB ObjectId'
-      })
-      .nonempty({ message: 'Người tham gia phải có ít nhất một người.' })
+    participants: z.array(z.string().trim().regex(CONSTANT_REGEX.ID_MONGO), {
+      message: 'Invalid MongoDB ObjectId'
+    })
   })
   .refine(
     (data) => {
@@ -32,7 +30,7 @@ export const CreateConversationDtoSchema = z
       return true
     },
     {
-      message: 'Cuộc trò chuyện riêng tư phải có đúng 2 người tham gia.',
+      message: 'Cuộc trò chuyện riêng tư phải có đúng 2 thành viên.',
       path: ['participants']
     }
   )
@@ -44,7 +42,7 @@ export const CreateConversationDtoSchema = z
       return true
     },
     {
-      message: 'Cuộc trò chuyện công khai phải có ít nhất 3 người tham gia.',
+      message: 'Cuộc trò chuyện công khai phải có ít nhất 3 thành viên.',
       path: ['participants']
     }
   )
