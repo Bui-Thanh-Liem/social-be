@@ -10,12 +10,21 @@ import { initializeSocket } from './socket'
 const port = envs.SERVER_PORT
 const host = envs.SERVER_HOST
 
+// Danh sách các origin được phép
+const allowedOrigins = [
+  envs.CLIENT_DOMAIN || 'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:8080',
+  'http://127.0.0.1:3000'
+  // Thêm các domain production của bạn
+]
+
 const httpServer = createServer(app)
 
 // Socket.IO setup
 const io = new Server(httpServer, {
   cors: {
-    origin: envs.CLIENT_DOMAIN || 'http://localhost:3000',
+    origin: allowedOrigins,
     methods: ['GET', 'POST']
   },
   pingTimeout: 60000, // Thời gian chờ PONG là 60s => disconnect

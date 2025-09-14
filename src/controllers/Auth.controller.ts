@@ -60,6 +60,7 @@ class AuthController {
   async updateMe(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await AuthServices.updateMe(user_id, req.body)
+    console.log('updateMe - result :::', result)
     res.json(new OkResponse('Cập nhật thông tin thành côngcông', result))
   }
 }

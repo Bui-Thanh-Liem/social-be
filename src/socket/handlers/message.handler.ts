@@ -11,12 +11,13 @@ export async function messageHandler(io: Server, socket: Socket) {
     CONSTANT_EVENT_NAMES.SEND_MESSAGE,
     withValidationDataFromClient(sendMessageDtoSchema, socket, async (data, socket) => {
       const { content, conversation, sender } = data
-      console.log('Co ai do gui tin nhan ::', content)
+      console.log('Có ai đó gửi tin nhắn :::', content)
 
       //
       const newMessage = await MessagesService.create(sender, { content, conversation })
 
       // broadcast tin nhắn cho room / người nhận
+      console.log('messageHandler - broadcast - conversationId:::', data.conversation)
       io.to(data.conversation).emit(CONSTANT_EVENT_NAMES.NEW_MESSAGE, newMessage)
     })
   )

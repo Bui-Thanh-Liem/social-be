@@ -20,6 +20,9 @@ const app = express()
 // Tin tưởng 1 proxy (nginx/traefik)
 app.set('trust proxy', 1)
 
+// CORS
+app.use(corsMiddleware)
+
 // Cookie
 // app.use(session({
 //   secret: "keyboard cat",
@@ -36,7 +39,7 @@ app.use(
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.socket.io'],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", 'data:', 'https:']
+        imgSrc: ["'self'", 'data:', 'https:', 'http:']
       }
     }
   })
@@ -49,9 +52,6 @@ app.use(hpp()) // page=1&page=4 => thì lấy page=4
 //
 app.use(morgan('dev'))
 app.use(loggerMiddleware)
-
-// CORS
-app.use(corsMiddleware)
 
 // Rate limiting
 app.use(rateLimitMiddleware)
