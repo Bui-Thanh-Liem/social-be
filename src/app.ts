@@ -14,6 +14,7 @@ import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/con
 import morgan from 'morgan'
 import { loggerMiddleware } from './middlewares/logger.middleware'
 import { logger } from './utils/logger.util'
+import { envs } from './configs/env.config'
 
 const app = express()
 
@@ -21,7 +22,7 @@ const app = express()
 app.set('trust proxy', 1)
 
 // CORS
-app.use(corsMiddleware)
+app.use(corsMiddleware) // Kiểm tra origin, chờ response (gắn vào headers)
 
 // Cookie
 // app.use(session({
@@ -31,7 +32,7 @@ app.use(corsMiddleware)
 //   cookie: { secure: true }  // chỉ gửi cookie qua HTTPS
 // }))
 
-// Security middleware
+// Security middleware (set nhiều headers bảo mật cho res, trước khi gửi về client)
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -67,8 +68,25 @@ app.use((req, res, next) => {
 app.use(express.urlencoded({ extended: true, limit: '10mb' })) // application/x-www-form-urlencoded
 
 // Static files
-app.use(express.static(UPLOAD_IMAGE_FOLDER_PATH)) // Static file serving
-app.use(express.static(UPLOAD_VIDEO_FOLDER_PATH)) // Static file serving
+app.use(
+  express.static(UPLOAD_VIDEO_FOLDER_PATH, {
+    setHeaders: (res, path) => {
+      // Thêm CORS headers cho static files
+      res.set('Access-Control-Allow-Origin', envs.CLIENT_DOMAIN)
+      res.set('Cross-Origin-Resource-Policy', 'cross-origin')
+    }
+  })
+)
+
+app.use(
+  express.static(UPLOAD_IMAGE_FOLDER_PATH, {
+    setHeaders: (res, path) => {
+      // Thêm CORS headers cho static files
+      res.set('Access-Control-Allow-Origin', envs.CLIENT_DOMAIN) // domain có thể gửi request đến server này và nhận được response.  (fetch)
+      res.set('Cross-Origin-Resource-Policy', 'cross-origin') // cho phép tài nguyên (vd: ảnh, video, file…) được nhúng hoặc load từ bất kỳ origin nào. (<img src="" />)
+    }
+  })
+)
 
 // API documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))

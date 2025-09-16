@@ -27,6 +27,12 @@ class UsersController {
     res.json(new OkResponse('Kiểm tra mail để xác minh tài khoản.', result))
   }
 
+  async getTopFollowedUsers(req: Request, res: Response, next: NextFunction) {
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const result = await UsersServices.getTopFollowedUsers({ query: req.query, user_id })
+    res.json(new OkResponse('Lấy người dùng có nhiều người theo dõi thành công', result))
+  }
+
   async getOneByUsername(req: Request, res: Response, next: NextFunction) {
     const { username } = req.params
     const { user_id } = req.decoded_authorization as IJwtPayload

@@ -22,11 +22,19 @@ usersRoute.post(
 usersRoute.post('/resend-verify-email', verifyAccessToken, wrapAsyncHandler(UsersControllers.resendVerifyEmail))
 
 usersRoute.get('/username/:username', verifyAccessToken, wrapAsyncHandler(UsersControllers.getOneByUsername))
+
 usersRoute.get(
   '/followed',
   verifyAccessToken,
   requestQueryValidate(QueryDtoSchema),
   wrapAsyncHandler(UsersControllers.getFollowedUsersBasic)
+)
+
+usersRoute.get(
+  '/top-followed',
+  verifyAccessToken,
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(UsersControllers.getTopFollowedUsers)
 )
 
 usersRoute.post(

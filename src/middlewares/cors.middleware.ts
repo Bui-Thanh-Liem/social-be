@@ -2,16 +2,15 @@ import cors from 'cors'
 import { envs } from '../configs/env.config'
 
 // Danh sách các origin được phép
-const allowedOrigins = [
-  envs.CLIENT_DOMAIN || 'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:8080',
-  'http://127.0.0.1:3000'
-  // Thêm các domain production của bạn
-]
+export const allowedOrigins = [envs.CLIENT_DOMAIN]
 
 export const corsMiddleware = cors({
   origin: (origin, callback) => {
+    if (!origin) {
+      console.log('✅ No origin - allowed (direct access or same-origin)')
+      return callback(null, true)
+    }
+
     // Cho phép requests không có origin (mobile apps, postman, etc.)
     if (!origin) return callback(null, true)
 

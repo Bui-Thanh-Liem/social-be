@@ -10,12 +10,12 @@ import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { ETokenType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
+import { ResMultiType } from '~/shared/types/response.type'
 import { hashPassword } from '~/utils/crypto.util'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 import { signToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
 import FollowsService from './Follows.service'
-import { ResMultiType } from '~/shared/types/response.type'
 
 class UsersService {
   async verifyEmail(user_id: string) {
@@ -179,6 +179,77 @@ class UsersService {
       total_page: Math.ceil(total / limit),
       items: users
     }
+  }
+
+  async getTopFollowedUsers({
+    query,
+    user_id
+  }: {
+    query: IQuery<IUser>
+    user_id: string
+  }): Promise<ResMultiType<IUser>> {
+    //
+    const { skip, limit } = getPaginationAndSafeQuery<IUser>(query)
+
+    const users = await UserCollection.aggregate<UserSchema>([
+      // bỏ chính mình
+      {
+        $match: {
+          _id: { $ne: new ObjectId(user_id) }
+        }
+      },
+      // lấy số lượng follower của user
+      {
+        $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'followed_user_id',
+          as: 'followers'
+        }
+      },
+      {
+        $addFields: {
+          followersCount: { $size: '$followers' }
+        }
+      },
+      // check xem current user có follow họ không
+      {
+        $lookup: {
+          from: 'followers',
+          let: { targetId: '$_id', currentUser: new ObjectId(user_id) },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ['$followed_user_id', '$$targetId'] }, { $eq: ['$user_id', '$$currentUser'] }]
+                }
+              }
+            }
+          ],
+          as: 'alreadyFollowed'
+        }
+      },
+      // loại bỏ user mà mình đã follow
+      {
+        $match: {
+          alreadyFollowed: { $size: 0 }
+        }
+      },
+      { $sort: { followersCount: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          name: 1,
+          username: 1,
+          verify: 1,
+          avatar: 1,
+          followersCount: 1
+        }
+      }
+    ]).toArray()
+
+    return { items: users, total_page: 1, total: users?.length }
   }
 
   async changePassword(user_id: string, new_password: string) {

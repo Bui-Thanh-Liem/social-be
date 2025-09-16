@@ -3,21 +3,13 @@ import { Server } from 'socket.io'
 import database from '~/configs/database.config'
 import app from './app'
 import { envs } from './configs/env.config'
-import { logger } from './utils/logger.util'
+import { allowedOrigins } from './middlewares/cors.middleware'
 import { initializeSocket } from './socket'
+import { logger } from './utils/logger.util'
 
 //
 const port = envs.SERVER_PORT
 const host = envs.SERVER_HOST
-
-// Danh sách các origin được phép
-const allowedOrigins = [
-  envs.CLIENT_DOMAIN || 'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:8080',
-  'http://127.0.0.1:3000'
-  // Thêm các domain production của bạn
-]
 
 const httpServer = createServer(app)
 
