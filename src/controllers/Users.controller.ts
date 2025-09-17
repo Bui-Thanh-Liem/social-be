@@ -37,7 +37,7 @@ class UsersController {
     const { username } = req.params
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await UsersServices.getOneByUsername(username, user_id)
-    res.json(new OkResponse(`${result} Success`, result))
+    res.json(new OkResponse(`${result} Thành công`, result))
   }
 
   async getFollowedUsersBasic(req: Request, res: Response, next: NextFunction) {

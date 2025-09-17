@@ -188,7 +188,6 @@ class UsersService {
     query: IQuery<IUser>
     user_id: string
   }): Promise<ResMultiType<IUser>> {
-    //
     const { skip, limit } = getPaginationAndSafeQuery<IUser>(query)
 
     const users = await UserCollection.aggregate<UserSchema>([
@@ -235,7 +234,13 @@ class UsersService {
           alreadyFollowed: { $size: 0 }
         }
       },
-      { $sort: { followersCount: -1 } },
+      // ✅ Sắp xếp ổn định với 2 tiêu chí
+      {
+        $sort: {
+          followersCount: -1, // Theo số followers giảm dần
+          _id: 1 // Theo _id tăng dần (làm tie-breaker)
+        }
+      },
       { $skip: skip },
       { $limit: limit },
       {
@@ -249,7 +254,45 @@ class UsersService {
       }
     ]).toArray()
 
-    return { items: users, total_page: 1, total: users?.length }
+    // ✅ Tính total chính xác cho pagination
+    const totalCount = await UserCollection.aggregate([
+      {
+        $match: {
+          _id: { $ne: new ObjectId(user_id) }
+        }
+      },
+      {
+        $lookup: {
+          from: 'followers',
+          let: { targetId: '$_id', currentUser: new ObjectId(user_id) },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ['$followed_user_id', '$$targetId'] }, { $eq: ['$user_id', '$$currentUser'] }]
+                }
+              }
+            }
+          ],
+          as: 'alreadyFollowed'
+        }
+      },
+      {
+        $match: {
+          alreadyFollowed: { $size: 0 }
+        }
+      },
+      { $count: 'total' }
+    ]).toArray()
+
+    const total = totalCount[0]?.total || 0
+    const total_page = Math.ceil(total / limit)
+
+    return {
+      items: users,
+      total_page,
+      total
+    }
   }
 
   async changePassword(user_id: string, new_password: string) {

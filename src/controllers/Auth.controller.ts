@@ -14,7 +14,7 @@ class AuthController {
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await AuthServices.login(req.body)
-      res.json(new OkResponse('Login Success', result))
+      res.json(new OkResponse('Đăng nhập thành công', result))
     } catch (error) {
       next(error)
     }
@@ -31,14 +31,14 @@ class AuthController {
     const { refresh_token } = req.body
     const { user_id } = req.decoded_refresh_token as IJwtPayload
     const result = await AuthServices.logout({ refresh_token, user_id })
-    res.json(new OkResponse('Logout Success', !!result.deletedCount))
+    res.json(new OkResponse('Đăng xuất thành công', !!result.deletedCount))
   }
 
   async refreshToken(req: Request, res: Response, next: NextFunction) {
     const { refresh_token } = req.body
     const { user_id, exp } = req.decoded_refresh_token as IJwtPayload
     const result = await AuthServices.refreshToken({ user_id, token: refresh_token, exp })
-    res.json(new OkResponse('Refresh token Success', result))
+    res.json(new OkResponse('Làm mới token thành công', result))
   }
 
   async forgotPassword(req: Request, res: Response, next: NextFunction) {
@@ -48,20 +48,19 @@ class AuthController {
 
   async resetPassword(req: Request, res: Response, next: NextFunction) {
     const result = await AuthServices.resetPassword(req?.user?._id as ObjectId, req.body)
-    res.json(new OkResponse('Reset password Success', result))
+    res.json(new OkResponse('Thay đổi mật khẩu thành công', result))
   }
 
   async getMe(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await AuthServices.getMe(user_id)
-    res.json(new OkResponse('Get Me Success', result))
+    res.json(new OkResponse('Lấy thông tin của chính mình thành công', result))
   }
 
   async updateMe(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await AuthServices.updateMe(user_id, req.body)
-    console.log('updateMe - result :::', result)
-    res.json(new OkResponse('Cập nhật thông tin thành côngcông', result))
+    res.json(new OkResponse('Cập nhật thông tin thành công', result))
   }
 }
 
