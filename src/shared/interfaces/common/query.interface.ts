@@ -3,7 +3,7 @@ export interface IQuery<T> {
   page?: string
   sort?: Partial<Record<keyof T, 1 | -1>>
   q?: string
-  f?: string // media type
+  f?: '1' // trả về những tweet có media
   pf?: string // people follow
 
   // Profile
