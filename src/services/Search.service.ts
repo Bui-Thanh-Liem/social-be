@@ -14,9 +14,11 @@ import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
+import { slug } from '~/utils/slug.util'
 
 class SearchService {
-  private async create(text: string) {
+  async create(text: string) {
+    
     let _hashtag = undefined
     if (text.includes('#')) {
       const [_id] = await HashtagsService.checkHashtags([text.replace('#', '').trim()])
@@ -28,7 +30,11 @@ class SearchService {
       $or: []
     }
 
-    if (text) query.$or.push({ text })
+    // Hiển thị cho người xem là text còn slug là để tìm kiếm và đồng bộ tìm kiếm, cập nhật dữ liệu
+    if (text) {
+      const _slug = slug(text)
+      query.$or.push({ slug: _slug })
+    }
     if (_hashtag) query.$or.push({ hashtag: _hashtag })
 
     // nếu không có text và hashtag => throw

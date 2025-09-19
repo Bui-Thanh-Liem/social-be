@@ -1,9 +1,11 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { ISearchSuggest } from '~/shared/interfaces/schemas/searchSuggest.interface'
 import { BaseSchema } from './Base.schema'
+import { slug } from '~/utils/slug.util'
 
 export class SearchSuggestSchema extends BaseSchema implements ISearchSuggest {
-  text: string
+  text?: string | undefined
+  slug?: string | undefined
   hashtag: ObjectId
   searchCount: number
 
@@ -12,6 +14,7 @@ export class SearchSuggestSchema extends BaseSchema implements ISearchSuggest {
     this.text = search.text || ''
     this.hashtag = search.hashtag || new ObjectId()
     this.searchCount = search.searchCount || 1
+    if (search.text) this.slug = slug(this.text)
   }
 }
 

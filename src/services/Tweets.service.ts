@@ -10,12 +10,27 @@ import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
+import SearchService from './Search.service'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
     const { audience, type, content, parent_id, mentions, media } = payload
+
+    // Tạo hashtags chop tweet
     const hashtags = await HashtagsService.checkHashtags(payload.hashtags)
 
+    // Thêm hashtag vào searchSuggest
+    if (payload?.hashtags?.length) {
+      await Promise.all(payload.hashtags.map((hashtagName) => SearchService.create(`#${hashtagName}`)))
+    }
+
+    // Thêm từ khóa vào searchSuggest (những từ trong content, nhưng được viết in hoa)
+    if (content) {
+      const keyWords = content.match(/\b[A-Z][a-zA-Z0-9]*\b/g) || []
+      await Promise.all(keyWords.map((w) => SearchService.create(w)))
+    }
+
+    //
     const result = await TweetCollection.insertOne(
       new TweetSchema({
         user_id: new ObjectId(user_id),

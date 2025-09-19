@@ -1,13 +1,15 @@
 import { ObjectId } from 'mongodb'
 import { HashtagCollection, HashtagSchema } from '~/models/schemas/Hashtag.schema'
+import { slug } from '~/utils/slug.util'
 
 class HashtagsService {
   async checkHashtags(names: string[] | undefined) {
     if (!names || names.length === 0) return []
     const results = await Promise.all(
       names.map((name) => {
+        const _slug = slug(name)
         return HashtagCollection.findOneAndUpdate(
-          { name },
+          { slug: _slug },
           { $setOnInsert: new HashtagSchema({ name }) },
           { upsert: true, returnDocument: 'after' }
         )
