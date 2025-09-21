@@ -1,8 +1,10 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import StreamVideoController from '~/controllers/StreamVideo.controller'
+import { startFaker } from '~/utils/faker.util'
 import authRoute from './auth.routes'
 import bookmarksRoute from './bookmarks.routes'
 import conversationsRoute from './conversations.routes'
+import exploreRoute from './explore.routes'
 import followsRoute from './follows.routes'
 import likesRoute from './likes.routes'
 import messagesRoute from './messages.routes'
@@ -10,7 +12,6 @@ import searchRoute from './search.route'
 import tweetsRoute from './tweets.routes'
 import uploadsRoute from './uploads.routes'
 import usersRoute from './users.routes'
-import { startFaker } from '~/utils/faker.util'
 
 const rootRoute = Router()
 
@@ -21,6 +22,7 @@ rootRoute.use('/tweets', tweetsRoute)
 rootRoute.use('/follows', followsRoute)
 rootRoute.use('/uploads', uploadsRoute)
 rootRoute.use('/search', searchRoute)
+rootRoute.use('/explore', exploreRoute)
 rootRoute.use('/bookmarks', bookmarksRoute)
 rootRoute.use('/conversations', conversationsRoute)
 rootRoute.use('/messages', messagesRoute)

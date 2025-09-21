@@ -1,7 +1,7 @@
-import { ISearchSuggest } from '~/shared/interfaces/schemas/searchSuggest.interface'
+import { ITrending } from '~/shared/interfaces/schemas/trending.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 
 export interface ResSearchPending {
-  search: ISearchSuggest[]
+  trending: ITrending[]
   users: IUser[]
 }

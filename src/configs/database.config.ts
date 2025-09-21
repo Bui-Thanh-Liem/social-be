@@ -7,7 +7,7 @@ import { initHashtagCollection } from '~/models/schemas/Hashtag.schema'
 import { initLikeCollection } from '~/models/schemas/Like.schema'
 import { initMessageCollection } from '~/models/schemas/Message.schema'
 import { initRefreshTokenCollection, RefreshTokenCollection } from '~/models/schemas/RefreshToken.schema'
-import { initSearchSuggestCollection } from '~/models/schemas/SearchSuggest.schema'
+import { initTrendingCollection, TrendingCollection } from '~/models/schemas/Trending.schema'
 import { initTweetCollection, TweetCollection } from '~/models/schemas/Tweet.schema'
 import { initUserCollection, UserCollection } from '~/models/schemas/User.schema'
 import { initVideoCollection } from '~/models/schemas/Video.schema'
@@ -53,7 +53,7 @@ class DatabaseConfig {
     initLikeCollection(this.db)
     initConversationCollection(this.db)
     initMessageCollection(this.db)
-    initSearchSuggestCollection(this.db)
+    initTrendingCollection(this.db)
   }
 
   async initialIndex() {
@@ -72,6 +72,9 @@ class DatabaseConfig {
 
     // Tweet - default_language: 'none' -> cho phép sử dụng stop words
     TweetCollection.createIndex({ content: 'text' }, { default_language: 'none' })
+
+    // Trending
+    TrendingCollection.createIndex({ slug: 1 }, { unique: true })
   }
 
   getDb() {

@@ -1,93 +1,25 @@
 import { ObjectId } from 'mongodb'
-import { SearchSuggestCollection, SearchSuggestSchema } from '~/models/schemas/SearchSuggest.schema'
+import { TrendingCollection, TrendingSchema } from '~/models/schemas/Trending.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
-import { BadRequestError } from '~/shared/classes/error.class'
 import { ResSearchPending } from '~/shared/dtos/res/search.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EMediaType, ETweetType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { ISearchSuggest } from '~/shared/interfaces/schemas/searchSuggest.interface'
+import { ITrending } from '~/shared/interfaces/schemas/trending.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import ExploreService from './Explore.service'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
 import { slug } from '~/utils/slug.util'
 
 class SearchService {
-  async create(text: string) {
-    
-    let _hashtag = undefined
-    if (text.includes('#')) {
-      const [_id] = await HashtagsService.checkHashtags([text.replace('#', '').trim()])
-      _hashtag = _id
-    }
-
-    // tìm document theo text hoặc hashtag
-    const query: any = {
-      $or: []
-    }
-
-    // Hiển thị cho người xem là text còn slug là để tìm kiếm và đồng bộ tìm kiếm, cập nhật dữ liệu
-    if (text) {
-      const _slug = slug(text)
-      query.$or.push({ slug: _slug })
-    }
-    if (_hashtag) query.$or.push({ hashtag: _hashtag })
-
-    // nếu không có text và hashtag => throw
-    if (query.$or.length === 0) {
-      throw new BadRequestError('Payload phải có ít nhất text hoặc hashtag')
-    }
-
-    const result = await SearchSuggestCollection.findOneAndUpdate(
-      query,
-      {
-        $setOnInsert: { text, hashtag: _hashtag },
-        $inc: { searchCount: 1 } // tăng nếu tìm thấy
-      },
-      { upsert: true, returnDocument: 'after' }
-    )
-
-    return result
-  }
-
-  // Sử dụng cho card what happen (từ khoá hay hashtag tìm kiếm nhiều nhất)
-  async getTrending({ query }: { query: IQuery<ISearchSuggest> }): Promise<ResMultiType<ISearchSuggest>> {
-    const { skip, limit } = getPaginationAndSafeQuery<ISearchSuggest>(query)
-
-    const search = await SearchSuggestCollection.aggregate<SearchSuggestSchema>([
-      {
-        $lookup: {
-          from: 'hashtags',
-          localField: 'hashtag',
-          foreignField: '_id',
-          as: 'hashtag',
-          pipeline: [
-            {
-              $project: {
-                name: 1
-              }
-            }
-          ]
-        }
-      },
-      { $unwind: { path: '$hashtag', preserveNullAndEmptyArrays: true } },
-      { $sort: { searchCount: -1 } },
-      { $skip: skip },
-      { $limit: limit }
-    ]).toArray()
-
-    const total = await SearchSuggestCollection.countDocuments()
-
-    return { total, total_page: Math.ceil(total / limit), items: search }
-  }
-
   //
-  async searchPending({ query }: { query: IQuery<ISearchSuggest> }): Promise<ResSearchPending> {
-    const { skip, limit, sort, q } = getPaginationAndSafeQuery<ISearchSuggest>(query)
+  async searchPending({ query }: { query: IQuery<ITrending> }): Promise<ResSearchPending> {
+    const { skip, limit, sort, q } = getPaginationAndSafeQuery<ITrending>(query)
 
     let _hashtag = undefined
     if (q.includes('#')) {
@@ -95,10 +27,10 @@ class SearchService {
       _hashtag = _id
     }
 
-    const search = await SearchSuggestCollection.aggregate<SearchSuggestSchema>([
+    const trending = await TrendingCollection.aggregate<TrendingSchema>([
       {
         $match: {
-          $or: [{ text: q }, { hashtag: _hashtag }]
+          $or: [{ slug: slug(q) }, { hashtag: _hashtag }]
         }
       },
       { $sort: sort },
@@ -117,7 +49,7 @@ class SearchService {
       { $limit: limit }
     ]).toArray()
 
-    return { search, users }
+    return { trending, users }
   }
 
   // Sử dụng cho thanh tìm kiếm search
@@ -376,8 +308,8 @@ class SearchService {
       )
     ])
 
-    // Cập nhật lại searchSuggest
-    await this.create(q)
+    // Cập nhật lại trending
+    await ExploreService.createTrending(q)
 
     //
     return { total, total_page: Math.ceil(total / limit), items: tweets }

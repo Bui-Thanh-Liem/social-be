@@ -42,7 +42,17 @@ export const QueryDtoSchema = z.object({
       message: 'Invalid MongoDB ObjectId'
     })
     .optional(),
-  ishl: z.enum(['0', '1']).default('0')
+  ishl: z.enum(['0', '1']).default('0'),
+  sd: z
+    .string()
+    .datetime({ offset: true }) // bắt buộc ISO 8601 có timezone (Z hoặc +07:00)
+    .transform((val) => new Date(val))
+    .optional(),
+  ed: z
+    .string()
+    .datetime({ offset: true })
+    .transform((val) => new Date(val))
+    .optional()
 })
 
 export type QueryDto = z.infer<typeof QueryDtoSchema>

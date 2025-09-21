@@ -28,7 +28,7 @@ class UsersService {
     await this.resetUserActive(user_id)
 
     //
-    return await UserCollection.updateOne(
+    await UserCollection.updateOne(
       { _id: new ObjectId(user._id) },
       {
         $set: {
@@ -40,6 +40,9 @@ class UsersService {
         }
       }
     )
+
+    await this.resetUserActive(user_id)
+    return await this.getUserActive(user_id)
   }
 
   async resendVerifyEmail(id: string) {

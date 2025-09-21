@@ -8,9 +8,9 @@ import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import ExploreService from './Explore.service'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
-import SearchService from './Search.service'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
@@ -19,15 +19,15 @@ class TweetsService {
     // Tạo hashtags chop tweet
     const hashtags = await HashtagsService.checkHashtags(payload.hashtags)
 
-    // Thêm hashtag vào searchSuggest
+    // Thêm hashtag vào trending
     if (payload?.hashtags?.length) {
-      await Promise.all(payload.hashtags.map((hashtagName) => SearchService.create(`#${hashtagName}`)))
+      await Promise.all(payload.hashtags.map((hashtagName) => ExploreService.createTrending(`#${hashtagName}`)))
     }
 
-    // Thêm từ khóa vào searchSuggest (những từ trong content, nhưng được viết in hoa)
+    // Thêm từ khóa vào trending (những từ trong content, nhưng được viết in hoa)
     if (content) {
       const keyWords = content.match(/\b[A-Z][a-zA-Z0-9]*\b/g) || []
-      await Promise.all(keyWords.map((w) => SearchService.create(w)))
+      await Promise.all(keyWords.map((w) => ExploreService.createTrending(w)))
     }
 
     //

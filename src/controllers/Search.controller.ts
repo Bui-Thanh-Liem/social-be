@@ -4,14 +4,6 @@ import { OkResponse } from '~/shared/classes/response.class'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class SearchController {
-  async getTrending(req: Request, res: Response) {
-    const results = await SearchService.getTrending({
-      query: req.query
-    })
-
-    res.status(200).json(new OkResponse('Get trending Success', results))
-  }
-
   async searchPending(req: Request, res: Response) {
     const results = await SearchService.searchPending({
       query: req.query

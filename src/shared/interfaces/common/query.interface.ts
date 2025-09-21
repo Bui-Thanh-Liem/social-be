@@ -5,6 +5,8 @@ export interface IQuery<T> {
   q?: string
   f?: '1' // trả về những tweet có media
   pf?: string // people follow
+  sd?: Date
+  ed?: Date
 
   // Profile
   profile_id?: string
