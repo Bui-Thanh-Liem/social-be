@@ -3,7 +3,7 @@ import { envs } from '~/configs/env.config'
 import { initBookmarkCollection } from '~/models/schemas/Bookmark.schema'
 import { initConversationCollection } from '~/models/schemas/Conversation.schema'
 import { initFollowerCollection } from '~/models/schemas/Follower.schema'
-import { initHashtagCollection } from '~/models/schemas/Hashtag.schema'
+import { HashtagCollection, HashtagSchema, initHashtagCollection } from '~/models/schemas/Hashtag.schema'
 import { initLikeCollection } from '~/models/schemas/Like.schema'
 import { initMessageCollection } from '~/models/schemas/Message.schema'
 import { initRefreshTokenCollection, RefreshTokenCollection } from '~/models/schemas/RefreshToken.schema'
@@ -60,21 +60,35 @@ class DatabaseConfig {
     const indexUser = await UserCollection.indexExists(['email_1', 'username_1'])
     const indexRefresh = await RefreshTokenCollection.indexExists(['token_1', 'exp_1'])
     const indexTweet = await TweetCollection.indexExists(['content_text'])
-    if (indexUser && indexRefresh && indexTweet) return
+    const indexTrending = await TweetCollection.indexExists(['slug_1'])
+    const indexHashtag = await HashtagCollection.indexExists(['slug_1'])
 
     // User
-    UserCollection.createIndex({ email: 1 }, { unique: true })
-    UserCollection.createIndex({ username: 1 }, { unique: true })
+    if (!indexUser) {
+      UserCollection.createIndex({ email: 1 }, { unique: true })
+      UserCollection.createIndex({ username: 1 }, { unique: true })
+    }
 
     // Refresh
-    RefreshTokenCollection.createIndex({ token: 1 }, { unique: true })
-    RefreshTokenCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
+    if (!indexRefresh) {
+      RefreshTokenCollection.createIndex({ token: 1 }, { unique: true })
+      RefreshTokenCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
+    }
 
     // Tweet - default_language: 'none' -> cho phép sử dụng stop words
-    TweetCollection.createIndex({ content: 'text' }, { default_language: 'none' })
+    if (!indexTweet) {
+      TweetCollection.createIndex({ content: 'text' }, { default_language: 'none' }) // Hoạt động trên đoạn văn tốt => q=word
+    }
 
     // Trending
-    TrendingCollection.createIndex({ slug: 1 }, { unique: true })
+    if (!indexTrending) {
+      TrendingCollection.createIndex({ slug: 1 }, { unique: true })
+    }
+
+    // Hashtag
+    if (!indexHashtag) {
+      HashtagCollection.createIndex({ slug: 1 }, { unique: true })
+    }
   }
 
   getDb() {
