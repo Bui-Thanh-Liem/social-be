@@ -22,6 +22,7 @@ usersRoute.post(
 usersRoute.post('/resend-verify-email', verifyAccessToken, wrapAsyncHandler(UsersControllers.resendVerifyEmail))
 
 usersRoute.get('/username/:username', verifyAccessToken, wrapAsyncHandler(UsersControllers.getOneByUsername))
+usersRoute.get('/mentions/:username', verifyAccessToken, wrapAsyncHandler(UsersControllers.getMultiForMentions))
 
 usersRoute.get(
   '/followed',

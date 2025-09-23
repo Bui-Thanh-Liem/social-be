@@ -499,23 +499,21 @@ class TweetsService {
           userFollowCheck: 0 // xoá field tạm
         }
       },
-
-      //
-      {
-        $lookup: {
-          from: 'hashtags',
-          localField: 'hashtags',
-          foreignField: '_id',
-          as: 'hashtags',
-          pipeline: [
-            {
-              $project: {
-                name: 1
-              }
-            }
-          ]
-        }
-      },
+      // {
+      //   $lookup: {
+      //     from: 'hashtags',
+      //     localField: 'hashtags',
+      //     foreignField: '_id',
+      //     as: 'hashtags',
+      //     pipeline: [
+      //       {
+      //         $project: {
+      //           name: 1
+      //         }
+      //       }
+      //     ]
+      //   }
+      // },
       {
         $lookup: {
           from: 'users',
@@ -525,7 +523,11 @@ class TweetsService {
           pipeline: [
             {
               $project: {
-                name: 1
+                name: 1,
+                username: 1,
+                avatar: 1,
+                verify: 1,
+                bio: 1
               }
             }
           ]
@@ -692,7 +694,7 @@ class TweetsService {
     }
   }
 
-  async increaseView(tweet_id: ObjectId, user_id: string | null) {
+  private async increaseView(tweet_id: ObjectId, user_id: string | null) {
     const inc = user_id ? { user_view: 1 } : { guest_view: 1 }
 
     const result = await TweetCollection.findOneAndUpdate(
@@ -837,21 +839,21 @@ class TweetsService {
           preserveNullAndEmptyArrays: true
         }
       },
-      {
-        $lookup: {
-          from: 'hashtags',
-          localField: 'hashtags',
-          foreignField: '_id',
-          as: 'hashtags',
-          pipeline: [
-            {
-              $project: {
-                name: 1
-              }
-            }
-          ]
-        }
-      },
+      // {
+      //   $lookup: {
+      //     from: 'hashtags',
+      //     localField: 'hashtags',
+      //     foreignField: '_id',
+      //     as: 'hashtags',
+      //     pipeline: [
+      //       {
+      //         $project: {
+      //           name: 1
+      //         }
+      //       }
+      //     ]
+      //   }
+      // },
       {
         $lookup: {
           from: 'users',
@@ -861,7 +863,11 @@ class TweetsService {
           pipeline: [
             {
               $project: {
-                name: 1
+                name: 1,
+                username: 1,
+                avatar: 1,
+                verify: 1,
+                bio: 1
               }
             }
           ]
@@ -1162,21 +1168,21 @@ class TweetsService {
           preserveNullAndEmptyArrays: true
         }
       },
-      {
-        $lookup: {
-          from: 'hashtags',
-          localField: 'hashtags',
-          foreignField: '_id',
-          as: 'hashtags',
-          pipeline: [
-            {
-              $project: {
-                name: 1
-              }
-            }
-          ]
-        }
-      },
+      // {
+      //   $lookup: {
+      //     from: 'hashtags',
+      //     localField: 'hashtags',
+      //     foreignField: '_id',
+      //     as: 'hashtags',
+      //     pipeline: [
+      //       {
+      //         $project: {
+      //           name: 1
+      //         }
+      //       }
+      //     ]
+      //   }
+      // },
       {
         $lookup: {
           from: 'users',
@@ -1186,7 +1192,11 @@ class TweetsService {
           pipeline: [
             {
               $project: {
-                name: 1
+                name: 1,
+                username: 1,
+                avatar: 1,
+                verify: 1,
+                bio: 1
               }
             }
           ]

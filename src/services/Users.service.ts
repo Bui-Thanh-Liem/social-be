@@ -138,6 +138,27 @@ class UsersService {
     return user
   }
 
+  async getMultiForMentions(username: string) {
+    const users = await UserCollection.aggregate<IUser>([
+      {
+        $match: {
+          username: { $regex: username, $options: 'i' }
+        }
+      },
+      { $skip: 0 },
+      { $limit: 20 },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          username: 1
+        }
+      }
+    ]).toArray()
+
+    return users
+  }
+
   async getFollowedUsersBasic({
     user_id_active,
     query

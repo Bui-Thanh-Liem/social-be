@@ -11,7 +11,7 @@ import { EMediaType, ETweetType } from '~/shared/enums/type.enum'
 import { hashPassword } from './crypto.util'
 import { logger } from './logger.util'
 
-const MY_ID = new ObjectId('68d252e1bb958d64c2c88ad6')
+const MY_ID = new ObjectId('68d2b707ae7635511ddc5edb')
 
 function generateRandomTweet(): string {
   const openers = [
@@ -350,7 +350,7 @@ async function createRandomUsers() {
     const name = faker.internet.username()
     return {
       name: name,
-      username: _.snakeCase(name),
+      username: `@${_.snakeCase(name)}`,
       email: faker.internet.email(),
       password: hashPassword(pass),
       day_of_birth: faker.date.birthdate(),

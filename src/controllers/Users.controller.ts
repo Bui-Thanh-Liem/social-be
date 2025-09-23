@@ -40,6 +40,12 @@ class UsersController {
     res.json(new OkResponse(`${result} Thành công`, result))
   }
 
+  async getMultiForMentions(req: Request, res: Response, next: NextFunction) {
+    const { username } = req.params
+    const result = await UsersServices.getMultiForMentions(username)
+    res.json(new OkResponse(`${result} Thành công`, result))
+  }
+
   async getFollowedUsersBasic(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await UsersServices.getFollowedUsersBasic({ user_id_active: user_id, query: req.query })
