@@ -28,7 +28,7 @@ class ExploreService {
     }
 
     // Hiển thị cho người xem là keyword còn slug là để tìm kiếm và đồng bộ tìm kiếm, cập nhật dữ liệu
-    if (keyword && keyword.length >= 3) {
+    if (keyword && keyword.length >= 4) {
       const _slug = slug(keyword)
       query.$or.push({ slug: _slug })
     }
@@ -36,14 +36,19 @@ class ExploreService {
 
     // nếu không có keyword và hashtag => throw
     if (query.$or.length === 0) {
-      console.log('Payload phải có ít nhất key hoặc hashtag')
+      console.log('Không tạo trending do không có keyword hoặc hashtag')
       return
     }
 
     await TrendingCollection.findOneAndUpdate(
       query,
       {
-        $setOnInsert: { keyword, hashtag: _hashtag, slug: slug(keyword), created_at: new Date() },
+        $setOnInsert: {
+          keyword: keyword.replace('#', '').trim(),
+          hashtag: _hashtag,
+          slug: slug(keyword),
+          created_at: new Date()
+        },
         $inc: { count: 1 }, // tăng nếu tìm thấy
         $currentDate: { updated_at: true }
       },
@@ -53,9 +58,9 @@ class ExploreService {
     return true
   }
 
-  // Sử dụng cho card what happen (từ khoá hay hashtag tìm kiếm nhiều nhất)
+  // Sử dụng cho what happen (từ khoá hay hashtag tìm kiếm nhiều nhất) (có count mỗi item)
   async getTrending({ query }: { query: IQuery<ITrending> }): Promise<ResMultiType<ITrending>> {
-    const { skip, limit, sd, ed } = getPaginationAndSafeQuery<ITrending>(query)
+    const { skip, limit, sd, ed, q } = getPaginationAndSafeQuery<ITrending>(query)
     const match = {} as any
 
     //
@@ -68,6 +73,11 @@ class ExploreService {
     // Kiểm tra tính hợp lệ của sd và ed
     if (sd && ed && sd > ed) {
       throw new BadRequestError('Ngày bắt đầu phải lớn hơn ngày kết thúc')
+    }
+
+    //
+    if (q) {
+      match.slug = { $regex: q, $options: 'i' }
     }
 
     //
@@ -85,7 +95,8 @@ class ExploreService {
           pipeline: [
             {
               $project: {
-                name: 1
+                name: 1,
+                slug: 1
               }
             }
           ]
@@ -99,7 +110,7 @@ class ExploreService {
     return { total, total_page: Math.ceil(total / limit), items: trending }
   }
 
-  // Sử dụng cho card today news (từ khoá hay hashtag tìm kiếm nhiều nhất)
+  // Sử dụng cho today news (từ khoá hay hashtag tìm kiếm nhiều nhất hôm nay)
   // Lấy trending keyword/hash xu hướng  (query: page: 1, limit: 20)
   // Dùng trending lấy (500) tweets thỏa keywords/hashtags nổi bật hôm nay (nhiều lượt like/view)
   // Rồi group (trên node) theo keyword/hashtag , trả về cho client

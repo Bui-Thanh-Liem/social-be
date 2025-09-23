@@ -6,6 +6,7 @@ import bookmarksRoute from './bookmarks.routes'
 import conversationsRoute from './conversations.routes'
 import exploreRoute from './explore.routes'
 import followsRoute from './follows.routes'
+import hashtagsRoute from './hashtags.routes'
 import likesRoute from './likes.routes'
 import messagesRoute from './messages.routes'
 import searchRoute from './search.route'
@@ -22,10 +23,11 @@ rootRoute.use('/tweets', tweetsRoute)
 rootRoute.use('/follows', followsRoute)
 rootRoute.use('/uploads', uploadsRoute)
 rootRoute.use('/search', searchRoute)
-rootRoute.use('/explore', exploreRoute)
+rootRoute.use('/hashtags', hashtagsRoute)
 rootRoute.use('/bookmarks', bookmarksRoute)
-rootRoute.use('/conversations', conversationsRoute)
+rootRoute.use('/explore', exploreRoute)
 rootRoute.use('/messages', messagesRoute)
+rootRoute.use('/conversations', conversationsRoute)
 rootRoute.get('/videos-streaming/:filename', StreamVideoController.streamVideo)
 rootRoute.get('/videos-hls/:foldername/master.m3u8', StreamVideoController.streamMaster)
 rootRoute.get('/videos-hls/:foldername/:v/:segment', StreamVideoController.streamSegment)
