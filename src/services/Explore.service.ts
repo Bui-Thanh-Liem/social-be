@@ -55,7 +55,7 @@ class ExploreService {
 
   // Sử dụng cho card what happen (từ khoá hay hashtag tìm kiếm nhiều nhất)
   async getTrending({ query }: { query: IQuery<ITrending> }): Promise<ResMultiType<ITrending>> {
-    const { skip, limit, sd, ed } = getPaginationAndSafeQuery<ITrending>(query)
+    const { skip, limit, sd, ed, q } = getPaginationAndSafeQuery<ITrending>(query)
     const match = {} as any
 
     //
@@ -71,11 +71,16 @@ class ExploreService {
     }
 
     //
+    let hashtag = ''
+    if (q.includes('#')) {
+      hashtag = q
+    } else {
+      match.slug = { $regex: slug(q), $options: 'i' }
+    }
+
+    //
     const trending = await TrendingCollection.aggregate<TrendingSchema>([
       { $match: match },
-      { $sort: { count: -1 } },
-      { $skip: skip },
-      { $limit: limit },
       {
         $lookup: {
           from: 'hashtags',
@@ -91,10 +96,30 @@ class ExploreService {
           ]
         }
       },
-      { $unwind: { path: '$hashtag', preserveNullAndEmptyArrays: true } }
+      { $unwind: { path: '$hashtag', preserveNullAndEmptyArrays: true } },
+      ...(hashtag ? [{ $match: { 'hashtag.name': hashtag } }] : []),
+      { $sort: { count: -1 } },
+      { $skip: skip },
+      { $limit: limit }
     ]).toArray()
 
-    const total = await TrendingCollection.countDocuments(match)
+    //
+    const totalAgg = await TrendingCollection.aggregate([
+      {
+        $lookup: {
+          from: 'hashtags',
+          localField: 'hashtag',
+          foreignField: '_id',
+          as: 'hashtag',
+          pipeline: [{ $project: { name: 1 } }]
+        }
+      },
+      { $unwind: { path: '$hashtag', preserveNullAndEmptyArrays: false } },
+      ...(hashtag ? [{ $match: { 'hashtag.name': hashtag } }] : []),
+      { $count: 'total' }
+    ]).toArray()
+
+    const total = totalAgg[0]?.total || 0
 
     return { total, total_page: Math.ceil(total / limit), items: trending }
   }
