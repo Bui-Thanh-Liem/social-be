@@ -35,7 +35,7 @@ export const QueryDtoSchema = z.object({
     .trim()
     .optional()
     .refine((val) => !val || val === 'on', { message: 'People follow invalid (on)' }),
-  profile_id: z
+  user_id: z
     .string()
     .trim()
     .regex(CONSTANT_REGEX.ID_MONGO, {

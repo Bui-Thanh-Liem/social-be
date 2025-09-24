@@ -9,6 +9,6 @@ export interface IQuery<T> {
   ed?: Date
 
   // Profile
-  profile_id?: string
+  user_id?: string
   ishl?: '1' | '0'
 }

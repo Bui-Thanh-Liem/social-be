@@ -66,9 +66,9 @@ class TweetsController {
     const result = await TweetsService.getProfileTweets({
       tweet_type,
       query: queries,
-      user_id: user.user_id,
+      user_active_id: user.user_id,
       isHighlight: queries?.ishl === '1',
-      profile_id: queries?.profile_id as string
+      user_id: queries?.user_id as string
     })
     res.status(200).json(new OkResponse('Get profile tweet success', result))
   }
@@ -79,18 +79,28 @@ class TweetsController {
 
     const result = await TweetsService.getProfileMedia({
       query: queries,
-      user_id: user.user_id,
-      profile_id: queries?.profile_id as string
+      user_active_id: user.user_id,
+      user_id: queries?.user_id as string
     })
     res.status(200).json(new OkResponse('Get profile media success', result))
   }
 
-  async getProfileLiked(req: Request, res: Response) {
+  async getTweetLiked(req: Request, res: Response) {
     const queries = req.query as IQuery<ITweet>
 
-    const result = await TweetsService.getProfileLiked({
+    const result = await TweetsService.getTweetLiked({
       query: queries,
-      profile_id: queries?.profile_id as string
+      user_id: queries?.user_id as string
+    })
+    res.status(200).json(new OkResponse('Get profile liked success', result))
+  }
+
+  async getTweetBookmarked(req: Request, res: Response) {
+    const queries = req.query as IQuery<ITweet>
+
+    const result = await TweetsService.getTweetBookmarked({
+      query: queries,
+      user_id: queries?.user_id as string
     })
     res.status(200).json(new OkResponse('Get profile liked success', result))
   }
