@@ -11,6 +11,7 @@ import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.uti
 import ExploreService from './Explore.service'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
+import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
@@ -1119,6 +1120,230 @@ class TweetsService {
         }
       ],
       _id: { $in: likedTweetIds } // Chỉ lấy tweet đã like
+    }
+
+    // Pipeline tổng hợp
+    const tweets = await TweetCollection.aggregate<TweetSchema>([
+      {
+        $match: matchCondition
+      },
+      {
+        $sort: sort
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user_id',
+          pipeline: [
+            {
+              $project: {
+                bio: 1,
+                name: 1,
+                email: 1,
+                username: 1,
+                avatar: 1,
+                verify: 1,
+                cover_photo: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: {
+          path: '$user_id',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: 'hashtags',
+          localField: 'hashtags',
+          foreignField: '_id',
+          as: 'hashtags',
+          pipeline: [
+            {
+              $project: {
+                name: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'mentions',
+          foreignField: '_id',
+          as: 'mentions',
+          pipeline: [
+            {
+              $project: {
+                name: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'bookmarks',
+          localField: '_id',
+          foreignField: 'tweet_id',
+          as: 'bookmarks',
+          pipeline: [
+            {
+              $project: {
+                user_id: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'likes',
+          localField: '_id',
+          foreignField: 'tweet_id',
+          as: 'likes',
+          pipeline: [
+            {
+              $project: {
+                user_id: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'tweets',
+          localField: '_id',
+          foreignField: 'parent_id',
+          as: 'tweets_children'
+        }
+      },
+      {
+        $addFields: {
+          bookmarks_count: { $size: '$bookmarks' },
+          likes_count: { $size: '$likes' },
+          isLike: {
+            $in: [new ObjectId(profile_id), '$likes.user_id']
+          },
+          isBookmark: {
+            $in: [new ObjectId(profile_id), '$bookmarks.user_id']
+          },
+          comments_count: {
+            $size: {
+              $filter: {
+                input: '$tweets_children',
+                as: 'tweet',
+                cond: {
+                  $eq: ['$$tweet.type', ETweetType.Comment]
+                }
+              }
+            }
+          },
+          retweets_count: {
+            $size: {
+              $filter: {
+                input: '$tweets_children',
+                as: 'tweet',
+                cond: {
+                  $eq: ['$$tweet.type', ETweetType.Retweet]
+                }
+              }
+            }
+          },
+          quotes_count: {
+            $size: {
+              $filter: {
+                input: '$tweets_children',
+                as: 'tweet',
+                cond: {
+                  $eq: ['$$tweet.type', ETweetType.QuoteTweet]
+                }
+              }
+            }
+          }
+        }
+      }
+    ]).toArray()
+
+    // Tăng số lượt xem
+    const ids = tweets.map((tweet) => tweet._id as ObjectId)
+    const date = new Date()
+
+    const [total] = await Promise.all([
+      TweetCollection.countDocuments(matchCondition),
+      ids.length > 0
+        ? TweetCollection.updateMany(
+            {
+              _id: { $in: ids }
+            },
+            {
+              $inc: { user_view: 1 },
+              $set: { updated_at: date }
+            }
+          )
+        : Promise.resolve()
+    ])
+
+    // Cập nhật views trong kết quả trả về
+    tweets.forEach((tweet) => {
+      tweet.updated_at = date
+      if (profile_id) {
+        tweet.user_view = (tweet.user_view || 0) + 1
+      } else {
+        tweet.guest_view = (tweet.guest_view || 0) + 1
+      }
+    })
+
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: tweets
+    }
+  }
+
+  async getTweetBookmarks({
+    query,
+    profile_id
+  }: {
+    profile_id: string
+    query: IQuery<TweetSchema>
+  }): Promise<ResMultiType<TweetSchema>> {
+    // Phân trang và truy vấn an toàn
+    const { skip, limit, sort } = getPaginationAndSafeQuery<TweetSchema>(query)
+
+    // Lấy danh sách người dùng mình đang theo dõi
+    const followed_user_ids = await FollowsService.getUserFollowing(profile_id)
+    if (!followed_user_ids.includes(profile_id)) {
+      followed_user_ids.push(profile_id)
+    }
+
+    // Lấy danh sách tweet_id mà user_id đã bookmark
+    const bookmarkedTweetIds = await BookmarkCollection.distinct('tweet_id', {
+      user_id: new ObjectId(profile_id)
+    })
+
+    // Điều kiện lọc tweet
+    const matchCondition: any = {
+      $or: [
+        { audience: ETweetAudience.Everyone },
+        {
+          $and: [{ audience: ETweetAudience.Followers }, { user_id: { $in: followed_user_ids } }]
+        }
+      ],
+      _id: { $in: bookmarkedTweetIds } // Chỉ lấy tweet đã bookmarks
     }
 
     // Pipeline tổng hợp
