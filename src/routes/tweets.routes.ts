@@ -45,19 +45,11 @@ tweetsRoute.get(
 )
 
 tweetsRoute.get(
-  '/profile/media',
+  '/profile-media',
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
   wrapAsyncHandler(TweetsController.getProfileMedia)
-)
-
-tweetsRoute.get(
-  '/profile/liked',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(TweetsController.getProfileLiked)
 )
 
 tweetsRoute.get(
@@ -67,6 +59,22 @@ tweetsRoute.get(
   requestParamsValidate(getProfileTweetDtoSchema),
   requestQueryValidate(QueryDtoSchema),
   wrapAsyncHandler(TweetsController.getProfileTweets)
+)
+
+tweetsRoute.get(
+  '/liked',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(TweetsController.getTweetLiked)
+)
+
+tweetsRoute.get(
+  '/bookmarked',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(TweetsController.getTweetBookmarked)
 )
 
 tweetsRoute.get(

@@ -27,3 +27,9 @@ export enum EConversationType {
   Private,
   Group
 }
+
+export enum ENotificationType {
+  VERIFY = 'verify',
+  MENTION = 'mention',
+  COMMON = 'common'
+}

@@ -6,6 +6,7 @@ import { initFollowerCollection } from '~/models/schemas/Follower.schema'
 import { HashtagCollection, HashtagSchema, initHashtagCollection } from '~/models/schemas/Hashtag.schema'
 import { initLikeCollection } from '~/models/schemas/Like.schema'
 import { initMessageCollection } from '~/models/schemas/Message.schema'
+import { initNotificationCollection } from '~/models/schemas/Notification.schema'
 import { initRefreshTokenCollection, RefreshTokenCollection } from '~/models/schemas/RefreshToken.schema'
 import { initTrendingCollection, TrendingCollection } from '~/models/schemas/Trending.schema'
 import { initTweetCollection, TweetCollection } from '~/models/schemas/Tweet.schema'
@@ -54,6 +55,7 @@ class DatabaseConfig {
     initConversationCollection(this.db)
     initMessageCollection(this.db)
     initTrendingCollection(this.db)
+    initNotificationCollection(this.db)
   }
 
   async initialIndex() {
