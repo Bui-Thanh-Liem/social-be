@@ -17,6 +17,7 @@ export function initializeSocket(io: Server) {
   io.on('connection', async (socket) => {
     _socket = socket
 
+    // Nhận emit từ client
     await connectionHandler(io, socket)
     await roomHandler(io, socket)
     await messageHandler(io, socket)

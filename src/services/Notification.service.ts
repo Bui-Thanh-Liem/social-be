@@ -1,16 +1,14 @@
 import { ObjectId } from 'mongodb'
 import { NotificationCollection, NotificationSchema } from '~/models/schemas/Notification.schema'
-import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 import { CreateNotiDto } from '~/shared/dtos/req/notification.dto'
-import { getIO } from '~/socket'
+import NotificationGateway from '~/socket/gateways/notification.gateway'
 
 class NotificationService {
   async create(payload: CreateNotiDto) {
-    const io = getIO()
     const { content, type, sender: senderId, receiver: receiverId, refId } = payload
 
     //
-    const newNoti = await NotificationCollection.insertOne(
+    const result = await NotificationCollection.insertOne(
       new NotificationSchema({
         content,
         type,
@@ -21,7 +19,12 @@ class NotificationService {
     )
 
     //
-    io.to(receiverId).emit(CONSTANT_EVENT_NAMES.NEW_NOTIFICATION, newNoti)
+    const newNoti = await NotificationCollection.findOne({ _id: result.insertedId })
+
+    //
+    if (receiverId && newNoti) {
+      NotificationGateway.sendNotification(newNoti, receiverId)
+    }
 
     return true
   }

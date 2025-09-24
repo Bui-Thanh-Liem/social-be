@@ -712,7 +712,7 @@ class TweetsService {
     }
   }
 
-  private async increaseView(tweet_id: ObjectId, user_id: string | null) {
+  async increaseView(tweet_id: ObjectId, user_id: string | null) {
     const inc = user_id ? { user_view: 1 } : { guest_view: 1 }
 
     const result = await TweetCollection.findOneAndUpdate(
@@ -1354,7 +1354,7 @@ class TweetsService {
     query: IQuery<TweetSchema>
   }): Promise<ResMultiType<TweetSchema>> {
     // Phân trang và truy vấn an toàn
-    const { skip, limit, sort } = getPaginationAndSafeQuery<TweetSchema>(query)
+    const { skip, limit, sort, q } = getPaginationAndSafeQuery<TweetSchema>(query)
 
     // Lấy danh sách người dùng mình đang theo dõi
     const followed_user_ids = await FollowsService.getUserFollowing(user_id)
@@ -1376,6 +1376,11 @@ class TweetsService {
         }
       ],
       _id: { $in: bookmarkedTweetIds } // Chỉ lấy tweet đã bookmarks
+    }
+
+    //
+    if (q) {
+      matchCondition.$text = { $search: q }
     }
 
     // Pipeline tổng hợp

@@ -2,19 +2,18 @@ import { InsertOneResult, ObjectId } from 'mongodb'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { ConversationCollection, ConversationSchema } from '~/models/schemas/Conversation.schema'
 import { BadRequestError, NotFoundError } from '~/shared/classes/error.class'
-import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 import { CreateConversationDto } from '~/shared/dtos/req/conversation.dto'
 import { EConversationType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IConversation } from '~/shared/interfaces/schemas/conversation.interface'
 import { ResMultiType } from '~/shared/types/response.type'
-import { getIO, getSocket } from '~/socket'
+import { getSocket } from '~/socket'
+import NotificationGateway from '~/socket/gateways/notification.gateway'
 import { createKeyAllConversationIds } from '~/utils/createKeyCache.util'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {
-    const io = getIO()
     const socket = getSocket()
     let _newConversation: InsertOneResult<ConversationSchema> | null = null
     const userObjectId = new ObjectId(user_id)
@@ -37,7 +36,8 @@ class ConversationsService {
       )
       const newCon = await this.getOneById(newData?.insertedId.toString(), user_id)
       if (newCon._id) {
-        socket.join(newCon._id?.toString())
+        socket?.join(newCon._id?.toString())
+        NotificationGateway.sendNewConversation(newCon, participantObjectId.toString())
       }
       return newCon
     }
@@ -59,7 +59,8 @@ class ConversationsService {
 
         const conversation = await this.getOneById(_newConversation?.insertedId.toString() || '', user_id)
 
-        io.to(id).emit(CONSTANT_EVENT_NAMES.NEW_CONVERSATION, conversation)
+        NotificationGateway.sendNewConversation(conversation, id)
+
         await cacheServiceInstance.del(cacheKey)
 
         return conversation

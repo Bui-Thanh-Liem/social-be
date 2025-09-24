@@ -11,13 +11,13 @@ export async function roomHandler(io: Server, socket: Socket) {
   await socket.join(user_id as string)
 
   // Join vào conversation mới
-  socket.on(CONSTANT_EVENT_NAMES.JOIN_ROOM, (ids: string[]) => {
+  socket.on(CONSTANT_EVENT_NAMES.JOIN_CONVERSATION, (ids: string[]) => {
     console.log('Join room:::', ids)
     socket.join(ids)
   })
 
   // Join vào conversation mới
-  socket.on(CONSTANT_EVENT_NAMES.LEAVE_ROOM, (ids: string[]) => {
+  socket.on(CONSTANT_EVENT_NAMES.LEAVE_CONVERSATION, (ids: string[]) => {
     console.log('Leave room:::', ids)
     ids.forEach((id) => socket.leave(id))
   })
