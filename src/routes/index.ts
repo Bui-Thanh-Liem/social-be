@@ -13,6 +13,7 @@ import searchRoute from './search.route'
 import tweetsRoute from './tweets.routes'
 import uploadsRoute from './uploads.routes'
 import usersRoute from './users.routes'
+import notificationRoute from './notification.route'
 
 const rootRoute = Router()
 
@@ -25,6 +26,7 @@ rootRoute.use('/uploads', uploadsRoute)
 rootRoute.use('/search', searchRoute)
 rootRoute.use('/hashtags', hashtagsRoute)
 rootRoute.use('/bookmarks', bookmarksRoute)
+rootRoute.use('/notifications', notificationRoute)
 rootRoute.use('/explore', exploreRoute)
 rootRoute.use('/messages', messagesRoute)
 rootRoute.use('/conversations', conversationsRoute)

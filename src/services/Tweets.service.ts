@@ -18,6 +18,7 @@ import { UserCollection } from '~/models/schemas/User.schema'
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
     const { audience, type, content, parent_id, mentions, media } = payload
+    console.log('mentions:::', mentions)
 
     // Tạo hashtags chop tweet
     const hashtags = await HashtagsService.checkHashtags(payload.hashtags)

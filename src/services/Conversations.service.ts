@@ -8,7 +8,7 @@ import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IConversation } from '~/shared/interfaces/schemas/conversation.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getSocket } from '~/socket'
-import NotificationGateway from '~/socket/gateways/notification.gateway'
+import ConversationGateway from '~/socket/gateways/Conversation.gateway'
 import { createKeyAllConversationIds } from '~/utils/createKeyCache.util'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 
@@ -37,7 +37,7 @@ class ConversationsService {
       const newCon = await this.getOneById(newData?.insertedId.toString(), user_id)
       if (newCon._id) {
         socket?.join(newCon._id?.toString())
-        NotificationGateway.sendNewConversation(newCon, participantObjectId.toString())
+        ConversationGateway.sendNewConversation(newCon, participantObjectId.toString())
       }
       return newCon
     }
@@ -59,7 +59,7 @@ class ConversationsService {
 
         const conversation = await this.getOneById(_newConversation?.insertedId.toString() || '', user_id)
 
-        NotificationGateway.sendNewConversation(conversation, id)
+        ConversationGateway.sendNewConversation(conversation, id)
 
         await cacheServiceInstance.del(cacheKey)
 

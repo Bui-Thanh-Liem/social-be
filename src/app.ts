@@ -65,7 +65,7 @@ app.use((req, res, next) => {
   }
   express.json({ limit: '10mb' })(req, res, next) // application/json
 })
-app.use(express.urlencoded({ extended: true, limit: '10mb' })) // application/x-www-form-urlencoded
+app.use(express.urlencoded({ extended: true, limit: '50mb' })) // application/x-www-form-urlencoded
 
 // Static files
 app.use(

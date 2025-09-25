@@ -16,12 +16,13 @@ import {
   ResetPasswordDto,
   UpdateMeDto
 } from '~/shared/dtos/req/auth.dto'
-import { ETokenType } from '~/shared/enums/type.enum'
+import { ENotificationType, ETokenType } from '~/shared/enums/type.enum'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oauth-google.interface'
 import { generatePassword, hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import UsersService from './Users.service'
+import NotificationService from './Notification.service'
 
 class AuthService {
   async register(payload: RegisterUserDto) {
@@ -72,6 +73,13 @@ class AuthService {
       toEmail: payload.email,
       name: payload.name,
       url: `${envs.CLIENT_DOMAIN}/verify?token=${email_verify_token}`
+    })
+
+    await NotificationService.create({
+      content: 'Kiểm tra mail để xác thực tài khoản của bạn.',
+      receiver: result.insertedId.toString(),
+      sender: result.insertedId.toString(),
+      type: ENotificationType.VERIFY
     })
 
     //

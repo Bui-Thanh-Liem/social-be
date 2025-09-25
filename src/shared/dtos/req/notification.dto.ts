@@ -20,4 +20,9 @@ export const CreateNotiDtoSchema = z.object({
     .optional()
 })
 
+export const GetMultiByTypeNotiDtoSchema = z.object({
+  type: z.nativeEnum(ENotificationType)
+})
+
 export type CreateNotiDto = z.infer<typeof CreateNotiDtoSchema>
+export type GetMultiByTypeNotiDto = z.infer<typeof GetMultiByTypeNotiDtoSchema>

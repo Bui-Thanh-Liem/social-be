@@ -14,7 +14,7 @@ import { slug } from '~/utils/slug.util'
 import HashtagsService from './Hashtags.service'
 
 class ExploreService {
-  // Tạo khi đăng bài - khi tìm kiếm
+  // Tạo khi đăng bài - khi tìm kiếm (>=5)
   async createTrending(keyword: string) {
     let _hashtag = undefined
     if (keyword.includes('#')) {
@@ -28,7 +28,7 @@ class ExploreService {
     }
 
     // Hiển thị cho người xem là keyword còn slug là để tìm kiếm và đồng bộ tìm kiếm, cập nhật dữ liệu
-    if (keyword && keyword.length >= 4) {
+    if (keyword && keyword.length >= 5) {
       const _slug = slug(keyword)
       query.$or.push({ slug: _slug })
     }

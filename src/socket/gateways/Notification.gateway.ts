@@ -1,19 +1,24 @@
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
-import { IConversation } from '~/shared/interfaces/schemas/conversation.interface'
 import { INotification } from '~/shared/interfaces/schemas/notification.interface'
 import { getIO } from '..'
+import NotificationService from '~/services/Notification.service'
 
 class NotificationGateway {
-  sendNotification(noti: INotification, receiverId: string) {
+  async sendNotification(noti: INotification, receiverId: string) {
     const io = getIO()
-    console.log('sendNotification:::', noti)
+    console.log('NotificationGateway - sendNotification:::', noti)
+
+    //
+    await this.sendCountUnreadNoti(receiverId)
+
+    //
     io.to(receiverId).emit(CONSTANT_EVENT_NAMES.NEW_NOTIFICATION, noti)
   }
 
-  sendNewConversation(conversation: IConversation, receiverId: string) {
+  async sendCountUnreadNoti(receiverId: string) {
     const io = getIO()
-    console.log('sendNewConversation:::', conversation)
-    io.to(receiverId).emit(CONSTANT_EVENT_NAMES.NEW_CONVERSATION, conversation)
+    const count = await NotificationService.countUnreadNoti()
+    io.to(receiverId).emit(CONSTANT_EVENT_NAMES.UNREAD_COUNT_NOTIFICATION, count)
   }
 }
 

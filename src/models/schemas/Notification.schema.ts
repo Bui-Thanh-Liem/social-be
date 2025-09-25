@@ -25,5 +25,5 @@ export class NotificationSchema extends BaseSchema implements INotification {
 export let NotificationCollection: Collection<NotificationSchema>
 
 export function initNotificationCollection(db: Db) {
-  NotificationCollection = db.collection<NotificationSchema>('notification')
+  NotificationCollection = db.collection<NotificationSchema>('notifications')
 }

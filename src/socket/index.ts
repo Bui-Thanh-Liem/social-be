@@ -3,6 +3,7 @@ import { connectionHandler } from './handlers/connection.handler'
 import { messageHandler } from './handlers/message.handler'
 import { roomHandler } from './handlers/room.handler'
 import { authMiddleware } from './middlewares/auth.socket'
+import { notificationHandler } from './handlers/notification.handler'
 
 let _io: Server
 let _socket: Socket
@@ -21,6 +22,7 @@ export function initializeSocket(io: Server) {
     await connectionHandler(io, socket)
     await roomHandler(io, socket)
     await messageHandler(io, socket)
+    await notificationHandler(io, socket)
   })
 }
 
