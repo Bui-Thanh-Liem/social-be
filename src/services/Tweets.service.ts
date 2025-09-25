@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb'
 import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
 import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
+import { UserCollection } from '~/models/schemas/User.schema'
 import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EFeedType, ENotificationType, ETweetType } from '~/shared/enums/type.enum'
@@ -13,7 +14,6 @@ import ExploreService from './Explore.service'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
 import NotificationService from './Notification.service'
-import { UserCollection } from '~/models/schemas/User.schema'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
@@ -378,19 +378,19 @@ class TweetsService {
 
   async getNewFeeds({
     query,
-    user_id,
+    user_active_id,
     feed_type
   }: {
     query: IQuery<ITweet>
-    user_id: string
+    user_active_id: string
     feed_type: EFeedType
   }): Promise<ResMultiType<ITweet>> {
     //
     const { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
 
     //
-    const followed_user_ids = await FollowsService.getUserFollowing(user_id)
-    followed_user_ids.push(user_id)
+    const followed_user_ids = await FollowsService.getUserFollowing(user_active_id)
+    followed_user_ids.push(user_active_id)
 
     // Dynamic match condition based on feed type
     let matchCondition: any
@@ -399,7 +399,7 @@ class TweetsService {
       case EFeedType.Following:
         // Chỉ tweets following
         matchCondition = {
-          user_id: { $in: followed_user_ids }
+          user_id: { $in: followed_user_ids.map((id) => new ObjectId(id)) }
         }
         break
       case EFeedType.Everyone:
@@ -500,7 +500,10 @@ class TweetsService {
             {
               $match: {
                 $expr: {
-                  $and: [{ $eq: ['$followed_user_id', '$$targetUserId'] }, { $eq: ['$user_id', new ObjectId(user_id)] }]
+                  $and: [
+                    { $eq: ['$followed_user_id', '$$targetUserId'] },
+                    { $eq: ['$user_id', new ObjectId(user_active_id)] }
+                  ]
                 }
               }
             }
@@ -595,10 +598,10 @@ class TweetsService {
           bookmarks_count: { $size: '$bookmarks' },
           likes_count: { $size: '$likes' },
           isLike: {
-            $in: [new ObjectId(user_id), '$likes.user_id']
+            $in: [new ObjectId(user_active_id), '$likes.user_id']
           },
           isBookmark: {
-            $in: [new ObjectId(user_id), '$bookmarks.user_id']
+            $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
           },
           isRetweet: {
             $gt: [
@@ -610,7 +613,7 @@ class TweetsService {
                     cond: {
                       $and: [
                         { $eq: ['$$child.type', ETweetType.Retweet] },
-                        { $eq: ['$$child.user_id', new ObjectId(user_id)] }
+                        { $eq: ['$$child.user_id', new ObjectId(user_active_id)] }
                       ]
                     }
                   }
@@ -629,7 +632,7 @@ class TweetsService {
                     cond: {
                       $and: [
                         { $eq: ['$$child.type', ETweetType.QuoteTweet] },
-                        { $eq: ['$$child.user_id', new ObjectId(user_id)] }
+                        { $eq: ['$$child.user_id', new ObjectId(user_active_id)] }
                       ]
                     }
                   }
@@ -699,7 +702,7 @@ class TweetsService {
     //
     tweets.forEach((tweet) => {
       tweet.updated_at = date
-      if (user_id) {
+      if (user_active_id) {
         tweet.user_view += 1
       } else {
         tweet.guest_view += 1
@@ -780,25 +783,26 @@ class TweetsService {
     //
     let { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
 
-    //
-    const followed_user_ids = await FollowsService.getUserFollowing(user_active_id)
-    followed_user_ids.push(user_active_id)
-    if (user_active_id !== user_id) {
-      followed_user_ids.push(user_id)
-    }
+    // Lấy danh sách cảu người nào đang theo dõi user_id
+    const followed_user_ids = await FollowsService.getUserFollowers(user_id)
+
+    // ép về string để so sánh cho chắc
+    const isFollowing = followed_user_ids.some((f: ObjectId | string) => f.toString() === user_active_id.toString())
 
     //
     const matchCondition: any = {
-      user_id: new ObjectId(user_id), // ✅ luôn lọc của chủ sở hữu
-      type: tweet_type,
-      $or: [
-        { audience: ETweetAudience.Everyone }, // ai cũng xem
-        {
-          $and: [
-            { audience: ETweetAudience.Followers },
-            { user_id: { $in: followed_user_ids } } // chỉ khi có follow
-          ]
-        }
+      user_id: new ObjectId(user_id),
+      type: tweet_type
+    }
+
+    // Nếu người xem profile là chính chủ
+    if (user_active_id === user_id) {
+      matchCondition.audience = { $in: [ETweetAudience.Everyone, ETweetAudience.Followers] }
+    } else {
+      // Nếu người khác xem profile
+      matchCondition.$or = [
+        { audience: ETweetAudience.Everyone },
+        ...(isFollowing ? [{ audience: ETweetAudience.Followers }] : [])
       ]
     }
 
@@ -809,10 +813,13 @@ class TweetsService {
       sort = { likes_count: -1, total_views: -1 } // Sắp xếp theo likes_count, sau đó total_views
     }
 
+    // Pipeline tổng hợp
     const tweets = await TweetCollection.aggregate<TweetSchema>([
       {
         $match: matchCondition
       },
+
+      // tính total_views nếu cần (ok để trước sort)
       ...(isHighlight
         ? [
             {
@@ -822,6 +829,28 @@ class TweetsService {
             }
           ]
         : []),
+
+      // --- IMPORTANT: lookup likes trước sort để có likes_count ---
+      {
+        $lookup: {
+          from: 'likes',
+          localField: '_id',
+          foreignField: 'tweet_id',
+          as: 'likes',
+          pipeline: [
+            {
+              $project: {
+                user_id: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $addFields: { likes_count: { $size: '$likes' } }
+      },
+
+      // bây giờ sort sẽ hoạt động đúng vì likes_count đã có
       {
         $sort: sort
       },
@@ -909,21 +938,6 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'likes',
-          localField: '_id',
-          foreignField: 'tweet_id',
-          as: 'likes',
-          pipeline: [
-            {
-              $project: {
-                user_id: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
           from: 'tweets',
           localField: '_id',
           foreignField: 'parent_id',
@@ -933,7 +947,6 @@ class TweetsService {
       {
         $addFields: {
           bookmarks_count: { $size: '$bookmarks' },
-          likes_count: { $size: '$likes' },
           isLike: {
             $in: [new ObjectId(user_active_id), '$likes.user_id']
           },
@@ -1034,25 +1047,26 @@ class TweetsService {
     // Phân trang và truy vấn an toàn
     const { skip, limit, sort } = getPaginationAndSafeQuery<TweetSchema>(query)
 
-    // Lấy danh sách người dùng mình đang theo dõi
-    const followed_user_ids = await FollowsService.getUserFollowing(user_active_id)
-    if (!followed_user_ids.includes(user_active_id)) {
-      followed_user_ids.push(user_active_id)
-    }
-    if (user_active_id !== user_id && !followed_user_ids.includes(user_id)) {
-      followed_user_ids.push(user_id)
+    // Lấy danh sách cảu người nào đang theo dõi user_id
+    const followed_user_ids = await FollowsService.getUserFollowers(user_id)
+
+    // ép về string để so sánh cho chắc
+    const isFollowing = followed_user_ids.some((f: ObjectId | string) => f.toString() === user_active_id.toString())
+
+    //
+    const matchCondition: any = {
+      user_id: new ObjectId(user_id),
+      media: { $ne: null }
     }
 
-    // Điều kiện lọc tweet
-    const matchCondition: any = {
-      // type: ETweetType.Tweet,
-      user_id: new ObjectId(user_id),
-      media: { $ne: null },
-      $or: [
+    // Nếu người xem profile là chính chủ
+    if (user_active_id === user_id) {
+      matchCondition.audience = { $in: [ETweetAudience.Everyone, ETweetAudience.Followers] }
+    } else {
+      // Nếu người khác xem profile
+      matchCondition.$or = [
         { audience: ETweetAudience.Everyone },
-        {
-          $and: [{ audience: ETweetAudience.Followers }, { user_id: { $in: followed_user_ids } }]
-        }
+        ...(isFollowing ? [{ audience: ETweetAudience.Followers }] : [])
       ]
     }
 
@@ -1116,33 +1130,21 @@ class TweetsService {
 
   async getTweetLiked({
     query,
-    user_id
+    user_active_id
   }: {
-    user_id: string
+    user_active_id: string
     query: IQuery<TweetSchema>
   }): Promise<ResMultiType<TweetSchema>> {
     // Phân trang và truy vấn an toàn
     const { skip, limit, sort, q } = getPaginationAndSafeQuery<TweetSchema>(query)
 
-    // Lấy danh sách người dùng mình đang theo dõi
-    const followed_user_ids = await FollowsService.getUserFollowing(user_id)
-    if (!followed_user_ids.includes(user_id)) {
-      followed_user_ids.push(user_id)
-    }
-
     // Lấy danh sách tweet_id mà user_id đã like
     const likedTweetIds = await LikeCollection.distinct('tweet_id', {
-      user_id: new ObjectId(user_id)
+      user_id: new ObjectId(user_active_id)
     })
 
     // Điều kiện lọc tweet
     const matchCondition: any = {
-      $or: [
-        { audience: ETweetAudience.Everyone },
-        {
-          $and: [{ audience: ETweetAudience.Followers }, { user_id: { $in: followed_user_ids } }]
-        }
-      ],
       _id: { $in: likedTweetIds } // Chỉ lấy tweet đã like
     }
 
@@ -1269,10 +1271,10 @@ class TweetsService {
           bookmarks_count: { $size: '$bookmarks' },
           likes_count: { $size: '$likes' },
           isLike: {
-            $in: [new ObjectId(user_id), '$likes.user_id']
+            $in: [new ObjectId(user_active_id), '$likes.user_id']
           },
           isBookmark: {
-            $in: [new ObjectId(user_id), '$bookmarks.user_id']
+            $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
           },
           comments_count: {
             $size: {
@@ -1333,7 +1335,7 @@ class TweetsService {
     // Cập nhật views trong kết quả trả về
     tweets.forEach((tweet) => {
       tweet.updated_at = date
-      if (user_id) {
+      if (user_active_id) {
         tweet.user_view = (tweet.user_view || 0) + 1
       } else {
         tweet.guest_view = (tweet.guest_view || 0) + 1
@@ -1349,33 +1351,21 @@ class TweetsService {
 
   async getTweetBookmarked({
     query,
-    user_id
+    user_active_id
   }: {
-    user_id: string
+    user_active_id: string
     query: IQuery<TweetSchema>
   }): Promise<ResMultiType<TweetSchema>> {
     // Phân trang và truy vấn an toàn
     const { skip, limit, sort, q } = getPaginationAndSafeQuery<TweetSchema>(query)
 
-    // Lấy danh sách người dùng mình đang theo dõi
-    const followed_user_ids = await FollowsService.getUserFollowing(user_id)
-    if (!followed_user_ids.includes(user_id)) {
-      followed_user_ids.push(user_id)
-    }
-
     // Lấy danh sách tweet_id mà user_id đã bookmark
     const bookmarkedTweetIds = await BookmarkCollection.distinct('tweet_id', {
-      user_id: new ObjectId(user_id)
+      user_id: new ObjectId(user_active_id)
     })
 
     // Điều kiện lọc tweet
     const matchCondition: any = {
-      $or: [
-        { audience: ETweetAudience.Everyone },
-        {
-          $and: [{ audience: ETweetAudience.Followers }, { user_id: { $in: followed_user_ids } }]
-        }
-      ],
       _id: { $in: bookmarkedTweetIds } // Chỉ lấy tweet đã bookmarks
     }
 
@@ -1498,10 +1488,10 @@ class TweetsService {
           bookmarks_count: { $size: '$bookmarks' },
           likes_count: { $size: '$likes' },
           isLike: {
-            $in: [new ObjectId(user_id), '$likes.user_id']
+            $in: [new ObjectId(user_active_id), '$likes.user_id']
           },
           isBookmark: {
-            $in: [new ObjectId(user_id), '$bookmarks.user_id']
+            $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
           },
           comments_count: {
             $size: {
@@ -1562,7 +1552,7 @@ class TweetsService {
     // Cập nhật views trong kết quả trả về
     tweets.forEach((tweet) => {
       tweet.updated_at = date
-      if (user_id) {
+      if (user_active_id) {
         tweet.user_view = (tweet.user_view || 0) + 1
       } else {
         tweet.guest_view = (tweet.guest_view || 0) + 1

@@ -53,7 +53,7 @@ class TweetsController {
     const result = await TweetsService.getNewFeeds({
       feed_type,
       query: req.query,
-      user_id: user.user_id
+      user_active_id: user.user_id
     })
     res.status(200).json(new OkResponse('Get new feeds success', result))
   }
@@ -86,21 +86,21 @@ class TweetsController {
   }
 
   async getTweetLiked(req: Request, res: Response) {
-    const queries = req.query as IQuery<ITweet>
+    const { user_id } = req.decoded_authorization as IJwtPayload
 
     const result = await TweetsService.getTweetLiked({
-      query: queries,
-      user_id: queries?.user_id as string
+      query: req.query,
+      user_active_id: user_id
     })
     res.status(200).json(new OkResponse('Get profile liked success', result))
   }
 
   async getTweetBookmarked(req: Request, res: Response) {
-    const queries = req.query as IQuery<ITweet>
+    const { user_id } = req.decoded_authorization as IJwtPayload
 
     const result = await TweetsService.getTweetBookmarked({
-      query: queries,
-      user_id: queries?.user_id as string
+      query: req.query,
+      user_active_id: user_id
     })
     res.status(200).json(new OkResponse('Get profile liked success', result))
   }

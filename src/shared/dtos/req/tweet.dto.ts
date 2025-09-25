@@ -18,7 +18,7 @@ export const CreateTweetDtoSchema = z.object({
       message: 'Invalid MongoDB ObjectId'
     })
     .optional(),
-  content: z.string().trim(),
+  content: z.string().max(280, 'Nội dung tối đa 280 kí tự').trim(),
   hashtags: z.array(z.string().trim()).optional(), // client gửi lên name
   mentions: z
     .array(
