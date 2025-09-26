@@ -15,7 +15,6 @@ import {
   getNewFeedTypeDtoSchema,
   GetOneTweetByIdDtoSchema,
   getProfileTweetDtoSchema,
-  getTweetChildrenDtoSchemaBody,
   getTweetChildrenDtoSchemaParams
 } from '~/shared/dtos/req/tweet.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
@@ -78,11 +77,10 @@ tweetsRoute.get(
 )
 
 tweetsRoute.get(
-  '/:tweet_id/children',
+  '/:tweet_id/:tweet_type/children',
   optionLogin(verifyAccessToken),
   optionLogin(verifyUserEmail),
   requestParamsValidate(getTweetChildrenDtoSchemaParams),
-  requestBodyValidate(getTweetChildrenDtoSchemaBody),
   requestQueryValidate(QueryDtoSchema),
   checkTweetParamsId, // chỉ  kiểm tra tồn tại và lấy audience cho checkAudience
   checkAudience,

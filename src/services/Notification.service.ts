@@ -162,7 +162,7 @@ class NotificationService {
     ]).toArray()
 
     //
-    const total = await NotificationCollection.countDocuments({ type })
+    const total = await NotificationCollection.countDocuments({ type, receiver: new ObjectId(user_id) })
 
     //
     return {
@@ -176,8 +176,8 @@ class NotificationService {
     await NotificationCollection.updateOne({ _id: new ObjectId(id) }, { $set: { isRead: true } })
   }
 
-  async countUnreadNoti() {
-    return await NotificationCollection.countDocuments({ isRead: false })
+  async countUnreadNoti(user_id: string) {
+    return await NotificationCollection.countDocuments({ isRead: false, receiver: new ObjectId(user_id) })
   }
 }
 

@@ -1,12 +1,7 @@
 import { Request, Response } from 'express'
 import TweetsService from '~/services/Tweets.service'
 import { CreatedResponse, OkResponse } from '~/shared/classes/response.class'
-import {
-  getNewFeedTypeDto,
-  getProfileTweetDto,
-  getTweetChildrenDtoBody,
-  getTweetChildrenDtoParams
-} from '~/shared/dtos/req/tweet.dto'
+import { getNewFeedTypeDto, getProfileTweetDto, getTweetChildrenDtoParams } from '~/shared/dtos/req/tweet.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
@@ -32,8 +27,7 @@ class TweetsController {
   }
 
   async getTweetChildren(req: Request, res: Response) {
-    const { tweet_type } = req.body as getTweetChildrenDtoBody
-    const { tweet_id } = req.params as getTweetChildrenDtoParams
+    const { tweet_id, tweet_type } = req.params as unknown as getTweetChildrenDtoParams
     const user = req?.decoded_authorization as IJwtPayload
 
     const tweets = await TweetsService.getTweetChildren({

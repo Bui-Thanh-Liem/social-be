@@ -12,7 +12,6 @@ const notificationRoute = Router()
 notificationRoute.get(
   '/:type',
   verifyAccessToken,
-  // verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
   requestParamsValidate(GetMultiByTypeNotiDtoSchema),
   wrapAsyncHandler(NotificationsController.getMultiByType)

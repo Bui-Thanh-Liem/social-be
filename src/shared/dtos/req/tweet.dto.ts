@@ -39,13 +39,13 @@ export const GetOneTweetByIdDtoSchema = z.object({
 export const getTweetChildrenDtoSchemaParams = z.object({
   tweet_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'Invalid MongoDB ObjectId'
-  })
-})
-
-export const getTweetChildrenDtoSchemaBody = z.object({
-  tweet_type: z.nativeEnum(ETweetType, {
-    errorMap: () => ({ message: 'Invalid Tweet Type' })
-  })
+  }),
+  tweet_type: z.preprocess(
+    (val) => (typeof val === 'string' ? parseInt(val, 10) : val), // Chuyển chuỗi thành số
+    z.nativeEnum(ETweetType, {
+      errorMap: () => ({ message: 'Invalid Tweet Type' })
+    })
+  )
 })
 
 export const getNewFeedTypeDtoSchema = z.object({
@@ -66,6 +66,5 @@ export const getProfileTweetDtoSchema = z.object({
 export type GetOneTweetByIdDto = z.infer<typeof GetOneTweetByIdDtoSchema>
 export type CreateTweetDto = z.infer<typeof CreateTweetDtoSchema>
 export type getTweetChildrenDtoParams = z.infer<typeof getTweetChildrenDtoSchemaParams>
-export type getTweetChildrenDtoBody = z.infer<typeof getTweetChildrenDtoSchemaBody>
 export type getNewFeedTypeDto = z.infer<typeof getNewFeedTypeDtoSchema>
 export type getProfileTweetDto = z.infer<typeof getProfileTweetDtoSchema>

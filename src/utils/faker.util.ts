@@ -11,7 +11,7 @@ import { EMediaType, ETweetType } from '~/shared/enums/type.enum'
 import { hashPassword } from './crypto.util'
 import { logger } from './logger.util'
 
-const MY_ID = new ObjectId('68d2b707ae7635511ddc5edb')
+const MY_ID = new ObjectId('68d50b939ce24b410c9b918b')
 
 function generateRandomTweet(): string {
   const openers = [

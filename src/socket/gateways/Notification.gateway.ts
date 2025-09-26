@@ -17,7 +17,7 @@ class NotificationGateway {
 
   async sendCountUnreadNoti(receiverId: string) {
     const io = getIO()
-    const count = await NotificationService.countUnreadNoti()
+    const count = await NotificationService.countUnreadNoti(receiverId)
     io.to(receiverId).emit(CONSTANT_EVENT_NAMES.UNREAD_COUNT_NOTIFICATION, count)
   }
 }
