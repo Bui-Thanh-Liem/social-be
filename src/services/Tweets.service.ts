@@ -187,6 +187,9 @@ class TweetsService {
     const { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
 
     //
+    console.log('tweet_id:::', tweet_id)
+    console.log('tweet_type:::', tweet_type)
+
     const tweets = await TweetCollection.aggregate<TweetSchema>([
       {
         $match: {
@@ -229,10 +232,9 @@ class TweetsService {
             {
               $project: {
                 name: 1,
-                email: 1,
                 username: 1,
                 avatar: 1,
-                cover_photo: 1
+                verify: 1
               }
             }
           ]

@@ -302,7 +302,7 @@ class AuthService {
   private async checkExistByName(name: string) {
     const isExist = (await UserCollection.countDocuments({ name })) > 0
     if (isExist) {
-      throw new ConflictError('Tên đã tồn tại')
+      throw new ConflictError('Tên người dùng đã tồn tại')
     }
   }
 
