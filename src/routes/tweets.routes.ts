@@ -9,6 +9,7 @@ import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middl
 import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
+import { ParamDtoSchema } from '~/shared/dtos/req/param.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import {
   CreateTweetDtoSchema,
@@ -27,6 +28,14 @@ tweetsRoute.post(
   verifyUserEmail,
   requestBodyValidate(CreateTweetDtoSchema),
   wrapAsyncHandler(TweetsController.create)
+)
+
+tweetsRoute.delete(
+  '/:tweet_id',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestParamsValidate(ParamDtoSchema),
+  wrapAsyncHandler(TweetsController.delete)
 )
 
 /*

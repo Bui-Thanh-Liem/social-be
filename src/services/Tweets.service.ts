@@ -14,6 +14,7 @@ import ExploreService from './Explore.service'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
 import NotificationService from './Notification.service'
+import { NotFoundError } from '~/shared/classes/error.class'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
@@ -604,10 +605,12 @@ class TweetsService {
           isBookmark: {
             $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
           },
-          isRetweet: {
-            $gt: [
-              {
-                $size: {
+
+          // lấy id retweet của user (1 cái đầu tiên hoặc null)
+          retweet: {
+            $let: {
+              vars: {
+                matched: {
                   $filter: {
                     input: '$tweets_children',
                     as: 'child',
@@ -620,13 +623,14 @@ class TweetsService {
                   }
                 }
               },
-              0
-            ]
+              in: { $arrayElemAt: ['$$matched._id', 0] }
+            }
           },
-          isQuote: {
-            $gt: [
-              {
-                $size: {
+          // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
+          quote: {
+            $let: {
+              vars: {
+                matched: {
                   $filter: {
                     input: '$tweets_children',
                     as: 'child',
@@ -639,8 +643,8 @@ class TweetsService {
                   }
                 }
               },
-              0
-            ]
+              in: { $arrayElemAt: ['$$matched._id', 0] }
+            }
           },
           comments_count: {
             $size: {
@@ -1565,6 +1569,15 @@ class TweetsService {
       total_page: Math.ceil(total / limit),
       items: tweets
     }
+  }
+
+  async delete(tweet_id: string) {
+    const result = await TweetCollection.deleteOne({ _id: new ObjectId(tweet_id) })
+
+    if (result.deletedCount === 0) {
+      throw new NotFoundError('Không tìm thấy bài viết để xóa')
+    }
+    return true
   }
 }
 
