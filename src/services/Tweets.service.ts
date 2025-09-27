@@ -18,7 +18,6 @@ import NotificationService from './Notification.service'
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
     const { audience, type, content, parent_id, mentions, media } = payload
-    console.log('mentions:::', mentions)
 
     // Tạo hashtags chop tweet
     const hashtags = await HashtagsService.checkHashtags(payload.hashtags)
@@ -523,21 +522,21 @@ class TweetsService {
           userFollowCheck: 0 // xoá field tạm
         }
       },
-      // {
-      //   $lookup: {
-      //     from: 'hashtags',
-      //     localField: 'hashtags',
-      //     foreignField: '_id',
-      //     as: 'hashtags',
-      //     pipeline: [
-      //       {
-      //         $project: {
-      //           name: 1
-      //         }
-      //       }
-      //     ]
-      //   }
-      // },
+      {
+        $lookup: {
+          from: 'hashtags',
+          localField: 'hashtags',
+          foreignField: '_id',
+          as: 'hashtags',
+          pipeline: [
+            {
+              $project: {
+                name: 1
+              }
+            }
+          ]
+        }
+      },
       {
         $lookup: {
           from: 'users',
