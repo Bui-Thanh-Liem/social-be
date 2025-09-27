@@ -18,7 +18,7 @@ import { logger } from '~/utils/logger.util'
 import FollowsService from './Follows.service'
 
 class UsersService {
-  async verifyEmail(user_id: string) {
+  async verifyEmail(user_id: string): Promise<EUserVerifyStatus> {
     //
     const user = await UserCollection.findOne({ _id: new ObjectId(user_id) })
     if (!user) {
@@ -41,8 +41,7 @@ class UsersService {
       }
     )
 
-    await this.resetUserActive(user_id)
-    return await this.getUserActive(user_id)
+    return EUserVerifyStatus.Verified
   }
 
   async resendVerifyEmail(id: string) {
