@@ -21,7 +21,11 @@ class MessagesService {
     // Khi có tin nhắn mới thì cập nhật lastMessage trong
     // conversation db và emit về client
     if (newMessage) {
-      await ConversationsService.updateLastMessage(payload.conversation, newMessage.insertedId.toString())
+      await ConversationsService.updateLastMessageAndStatus({
+        sender_id: sender_id,
+        conversation_id: payload.conversation,
+        message_id: newMessage.insertedId.toString()
+      })
     }
 
     //

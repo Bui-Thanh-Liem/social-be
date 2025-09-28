@@ -29,7 +29,8 @@ export enum EConversationType {
 }
 
 export enum ENotificationType {
+  ALL = 'all',
   VERIFY = 'verify',
   MENTION = 'mention',
-  COMMON = 'common'
+  OTHER = 'other'
 }

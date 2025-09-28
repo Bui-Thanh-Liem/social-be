@@ -4,7 +4,7 @@ import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import NotificationGateway from '../gateways/Notification.gateway'
 
 // Xử lý join/leave room
-export async function roomHandler(io: Server, socket: Socket) {
+export async function conversationHandler(io: Server, socket: Socket) {
   //
   const { user_id } = socket.decoded_authorization as IJwtPayload // đã qua middleware rồi thì chắc chắn có
 
@@ -14,13 +14,18 @@ export async function roomHandler(io: Server, socket: Socket) {
 
   // Join vào conversation mới
   socket.on(CONSTANT_EVENT_NAMES.JOIN_CONVERSATION, (ids: string[]) => {
-    console.log('Join room:::', ids)
+    console.log('Join conversation:::', ids)
     socket.join(ids)
+  })
+
+  // Join vào conversation mới
+  socket.on(CONSTANT_EVENT_NAMES.READ_CONVERSATION, (conversation_id: string) => {
+    console.log('Read conversation - conversation_id:::', conversation_id)
   })
 
   // Leave vào conversation
   socket.on(CONSTANT_EVENT_NAMES.LEAVE_CONVERSATION, (ids: string[]) => {
-    console.log('Leave room:::', ids)
+    console.log('Leave conversation:::', ids)
     ids.forEach((id) => socket.leave(id))
   })
 }

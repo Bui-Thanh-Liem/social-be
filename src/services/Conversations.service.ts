@@ -331,47 +331,44 @@ class ConversationsService {
     return conversation
   }
 
-  // async getAllIds(user_id: string): Promise<string[]> {
-  //   const cacheKey = createKeyAllConversationIds(user_id)
-  //   const dataInCache = await cacheServiceInstance.getCache<string[]>(cacheKey)
-
-  //   if (!dataInCache) {
-  //     // Tìm trong db
-  //     const conversations = await ConversationCollection.aggregate<ConversationSchema>([
-  //       {
-  //         $match: {
-  //           participants: {
-  //             $in: [new ObjectId(user_id)]
-  //           }
-  //         }
-  //       },
-  //       {
-  //         $project: {
-  //           _id: 1
-  //         }
-  //       }
-  //     ]).toArray()
-
-  //     // Gán cache
-  //     const ids = conversations?.map((x) => x._id!.toString())
-  //     await cacheServiceInstance.setCache(cacheKey, ids)
-  //     return ids
-  //   } else {
-  //     return dataInCache
-  //   }
-  // }
-
-  async updateLastMessage(conversation_id: string, message_id: string) {
-    return await ConversationCollection.findOneAndUpdate(
+  async updateLastMessageAndStatus({
+    sender_id,
+    message_id,
+    conversation_id
+  }: {
+    sender_id: string
+    message_id: string
+    conversation_id: string
+  }) {
+    //
+    await ConversationCollection.findOneAndUpdate(
       { _id: new ObjectId(conversation_id) },
-      {
-        $set: {
-          lastMessage: new ObjectId(message_id),
-          updatedAt: new Date()
+      [
+        {
+          $set: {
+            lastMessage: new ObjectId(message_id),
+            readStatus: {
+              $map: {
+                input: {
+                  $filter: {
+                    input: '$participants',
+                    cond: { $ne: ['$$this', new ObjectId(sender_id)] }
+                  }
+                },
+                as: 'id',
+                in: '$$id'
+              }
+            },
+            updatedAt: '$$NOW'
+          }
         }
-      },
-      { returnDocument: 'after' } // để trả về doc mới
+      ],
+      { returnDocument: 'after' }
     )
+  }
+
+  async readConversation({ user_id, conversation_id }: { conversation_id: string; user_id: string }) {
+    await ConversationCollection.updateOne({ _id: new ObjectId(conversation_id) }, { $pull: { statusRead: user_id } })
   }
 }
 

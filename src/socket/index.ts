@@ -1,9 +1,9 @@
 import { Server, Socket } from 'socket.io'
 import { connectionHandler } from './handlers/connection.handler'
+import { conversationHandler } from './handlers/conversation.handler'
 import { messageHandler } from './handlers/message.handler'
-import { roomHandler } from './handlers/room.handler'
-import { authMiddleware } from './middlewares/auth.socket'
 import { notificationHandler } from './handlers/notification.handler'
+import { authMiddleware } from './middlewares/auth.socket'
 
 let _io: Server
 let _socket: Socket
@@ -20,7 +20,7 @@ export function initializeSocket(io: Server) {
 
     // Nhận emit từ client
     await connectionHandler(io, socket)
-    await roomHandler(io, socket)
+    await conversationHandler(io, socket)
     await messageHandler(io, socket)
     await notificationHandler(io, socket)
   })

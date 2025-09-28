@@ -187,9 +187,6 @@ class TweetsService {
     const { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
 
     //
-    console.log('tweet_id:::', tweet_id)
-    console.log('tweet_type:::', tweet_type)
-
     const tweets = await TweetCollection.aggregate<TweetSchema>([
       {
         $match: {
@@ -273,34 +270,54 @@ class TweetsService {
       {
         $addFields: {
           bookmark_count: { $size: '$bookmarks' },
-          like_count: { $size: '$likes' },
-          views: {
-            $add: ['$guest_view', '$user_view']
+          likes_count: { $size: '$likes' },
+          isLike: {
+            $in: [new ObjectId(user_id), '$likes.user_id']
           },
-          mentions: {
-            $map: {
-              input: '$mentions',
-              as: 'm', // alias
-              in: {
-                _id: '$m._id',
-                name: '$m.name',
-                email: '$m.email',
-                username: '$m.username'
-              }
-            }
+          isBookmark: {
+            $in: [new ObjectId(user_id), '$bookmarks.user_id']
           },
+          // lấy id retweet của user (1 cái đầu tiên hoặc null)
           retweet: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.Retweet]
+            $let: {
+              vars: {
+                matched: {
+                  $filter: {
+                    input: '$tweets_children',
+                    as: 'child',
+                    cond: {
+                      $and: [
+                        { $eq: ['$$child.type', ETweetType.Retweet] },
+                        { $eq: ['$$child.user_id', new ObjectId(user_id)] }
+                      ]
+                    }
+                  }
                 }
-              }
+              },
+              in: { $arrayElemAt: ['$$matched._id', 0] }
             }
           },
-          comment_count: {
+          // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
+          quote: {
+            $let: {
+              vars: {
+                matched: {
+                  $filter: {
+                    input: '$tweets_children',
+                    as: 'child',
+                    cond: {
+                      $and: [
+                        { $eq: ['$$child.type', ETweetType.QuoteTweet] },
+                        { $eq: ['$$child.user_id', new ObjectId(user_id)] }
+                      ]
+                    }
+                  }
+                }
+              },
+              in: { $arrayElemAt: ['$$matched._id', 0] }
+            }
+          },
+          comments_count: {
             $size: {
               $filter: {
                 input: '$tweets_children',
@@ -311,7 +328,18 @@ class TweetsService {
               }
             }
           },
-          quote_count: {
+          retweets_count: {
+            $size: {
+              $filter: {
+                input: '$tweets_children',
+                as: 'tweet',
+                cond: {
+                  $eq: ['$$tweet.type', ETweetType.Retweet]
+                }
+              }
+            }
+          },
+          quotes_count: {
             $size: {
               $filter: {
                 input: '$tweets_children',
@@ -597,7 +625,7 @@ class TweetsService {
       },
       {
         $addFields: {
-          bookmarks_count: { $size: '$bookmarks' },
+          // bookmarks_count: { $size: '$bookmarks' },
           likes_count: { $size: '$likes' },
           isLike: {
             $in: [new ObjectId(user_active_id), '$likes.user_id']
@@ -951,7 +979,7 @@ class TweetsService {
       },
       {
         $addFields: {
-          bookmarks_count: { $size: '$bookmarks' },
+          // bookmarks_count: { $size: '$bookmarks' },
           isLike: {
             $in: [new ObjectId(user_active_id), '$likes.user_id']
           },
@@ -1273,7 +1301,7 @@ class TweetsService {
       },
       {
         $addFields: {
-          bookmarks_count: { $size: '$bookmarks' },
+          // bookmarks_count: { $size: '$bookmarks' },
           likes_count: { $size: '$likes' },
           isLike: {
             $in: [new ObjectId(user_active_id), '$likes.user_id']
@@ -1490,7 +1518,7 @@ class TweetsService {
       },
       {
         $addFields: {
-          bookmarks_count: { $size: '$bookmarks' },
+          // bookmarks_count: { $size: '$bookmarks' },
           likes_count: { $size: '$likes' },
           isLike: {
             $in: [new ObjectId(user_active_id), '$likes.user_id']

@@ -83,7 +83,16 @@ class NotificationService {
   }): Promise<ResMultiType<INotification>> {
     const { skip, limit, sort } = getPaginationAndSafeQuery<INotification>(query)
 
+    const match: {
+      type?: ENotificationType
+      receiver: ObjectId
+    } = { type, receiver: new ObjectId(user_id) }
     // let lookup = {}
+
+    // Nếu type là ALL
+    if (type === ENotificationType.ALL) {
+      if (match.type) delete match.type
+    }
 
     // Nếu type là mentions thì refId là tweet
     // if (type === ENotificationType.MENTION) {
@@ -105,10 +114,7 @@ class NotificationService {
     //
     const notis = await NotificationCollection.aggregate<NotificationSchema>([
       {
-        $match: {
-          type: type,
-          receiver: new ObjectId(user_id)
-        }
+        $match: match
       },
       {
         $sort: sort
