@@ -8,6 +8,12 @@ class ConversationGateway {
     console.log('ConversationGateway - sendNewConversation:::', conversation)
     io.to(receiverId).emit(CONSTANT_EVENT_NAMES.NEW_CONVERSATION, conversation)
   }
+
+  changeConversation(conversation: IConversation, receiverId: string) {
+    const io = getIO()
+    console.log('ConversationGateway - changeConversation:::', conversation)
+    io.to(receiverId).emit(CONSTANT_EVENT_NAMES.CHANGE_CONVERSATION, conversation)
+  }
 }
 
 export default new ConversationGateway()

@@ -6,6 +6,7 @@ import { CreateConversationDto } from '~/shared/dtos/req/conversation.dto'
 import { EConversationType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IConversation } from '~/shared/interfaces/schemas/conversation.interface'
+import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getSocket } from '~/socket'
 import ConversationGateway from '~/socket/gateways/Conversation.gateway'
@@ -341,7 +342,7 @@ class ConversationsService {
     conversation_id: string
   }) {
     //
-    await ConversationCollection.findOneAndUpdate(
+    const updated = await ConversationCollection.findOneAndUpdate(
       { _id: new ObjectId(conversation_id) },
       [
         {
@@ -365,10 +366,112 @@ class ConversationsService {
       ],
       { returnDocument: 'after' }
     )
+
+    //
+    const full = await ConversationCollection.aggregate<ConversationSchema>([
+      { $match: { _id: updated?._id } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'participants',
+          foreignField: '_id',
+          as: 'participants',
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                avatar: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'messages',
+          localField: 'lastMessage',
+          foreignField: '_id',
+          as: 'lastMessage',
+          pipeline: [
+            {
+              $project: {
+                created_at: 1,
+                sender: 1,
+                content: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: { path: '$lastMessage', preserveNullAndEmptyArrays: true } }
+    ]).next()
+
+    //
+    if (full?.readStatus) {
+      ;(full?.readStatus as unknown as IUser[])?.forEach((user) => {
+        if (user._id) {
+          ConversationGateway.changeConversation(full, user._id.toString())
+        }
+      })
+    }
+
+    return full
   }
 
   async readConversation({ user_id, conversation_id }: { conversation_id: string; user_id: string }) {
-    await ConversationCollection.updateOne({ _id: new ObjectId(conversation_id) }, { $pull: { statusRead: user_id } })
+    //
+    const updated = await ConversationCollection.findOneAndUpdate(
+      { _id: new ObjectId(conversation_id) },
+      { $pull: { statusRead: user_id } },
+      { returnDocument: 'after' }
+    )
+
+    //
+    const full = await ConversationCollection.aggregate<ConversationSchema>([
+      { $match: { _id: updated?._id } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'participants',
+          foreignField: '_id',
+          as: 'participants',
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                avatar: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'messages',
+          localField: 'lastMessage',
+          foreignField: '_id',
+          as: 'lastMessage',
+          pipeline: [
+            {
+              $project: {
+                created_at: 1,
+                sender: 1,
+                content: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: { path: '$lastMessage', preserveNullAndEmptyArrays: true } }
+    ]).next()
+
+    //
+    if (full) {
+      ConversationGateway.changeConversation(full, user_id)
+    }
+
+    //
+    return full
   }
 }
 
