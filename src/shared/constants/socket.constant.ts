@@ -13,7 +13,7 @@ export const CONSTANT_EVENT_NAMES = {
   READ_NOTIFICATION: 'notification:read',
 
   // CONVERSATION
-  UNREAD_CONVERSATION: 'conversation:unread',
+  UNREAD_COUNT_CONVERSATION: 'conversation:unread:count',
   NEW_CONVERSATION: 'conversation:new',
   JOIN_CONVERSATION: 'conversation:join',
   CHANGE_CONVERSATION: 'conversation:change',
