@@ -96,6 +96,10 @@ class DatabaseConfig {
   getDb() {
     return this.db
   }
+
+  getClient() {
+    return this.client
+  }
 }
 
 const database = new DatabaseConfig()

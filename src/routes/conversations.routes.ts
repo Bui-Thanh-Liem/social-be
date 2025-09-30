@@ -6,7 +6,7 @@ import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middl
 import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
-import { CreateConversationDtoSchema, ReadConversationDtoSchema } from '~/shared/dtos/req/conversation.dto'
+import { CreateConversationDtoSchema, ConversationIdDtoSchema } from '~/shared/dtos/req/conversation.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 
@@ -31,8 +31,15 @@ conversationsRoute.get(
 conversationsRoute.patch(
   '/read/:conversation_id',
   verifyAccessToken,
-  requestParamsValidate(ReadConversationDtoSchema),
+  requestParamsValidate(ConversationIdDtoSchema),
   wrapAsyncHandler(ConversationsController.readConversation)
+)
+
+conversationsRoute.delete(
+  '/:conversation_id',
+  verifyAccessToken,
+  requestParamsValidate(ConversationIdDtoSchema),
+  wrapAsyncHandler(ConversationsController.delete)
 )
 
 export default conversationsRoute

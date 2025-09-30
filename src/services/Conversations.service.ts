@@ -1,6 +1,8 @@
 import { InsertOneResult, ObjectId } from 'mongodb'
+import database from '~/configs/database.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { ConversationCollection, ConversationSchema } from '~/models/schemas/Conversation.schema'
+import { MessageCollection } from '~/models/schemas/Message.schema'
 import { BadRequestError, NotFoundError } from '~/shared/classes/error.class'
 import { CreateConversationDto } from '~/shared/dtos/req/conversation.dto'
 import { EConversationType } from '~/shared/enums/type.enum'
@@ -930,6 +932,39 @@ class ConversationsService {
 
   async countUnreadConv(user_id: string) {
     return await ConversationCollection.countDocuments({ readStatus: { $in: [new ObjectId(user_id)] } })
+  }
+
+  async delete({ user_id, conversation_id }: { conversation_id: string; user_id: string }) {
+    const session = database.getClient().startSession()
+
+    try {
+      await session.withTransaction(async () => {
+        // Pull user ra khỏi participants
+        const updated = await ConversationCollection.findOneAndUpdate(
+          { _id: new ObjectId(conversation_id) },
+          { $pull: { participants: new ObjectId(user_id) } },
+          { returnDocument: 'after', projection: { participants: 1 }, session }
+        )
+
+        // Nếu không tìm thấy => conversation_id không hợp lệ
+        if (!updated) {
+          throw new BadRequestError('Conversation không tồn tại')
+        }
+
+        // Nếu participants rỗng => xoá luôn conversation + messages
+        if (updated.participants.length === 0) {
+          await MessageCollection.deleteMany({ conversation: new ObjectId(conversation_id) }, { session })
+          await ConversationCollection.deleteOne({ _id: new ObjectId(conversation_id) }, { session })
+        }
+      })
+
+      return true
+    } catch (err) {
+      console.error('Transaction failed:', err)
+      throw err
+    } finally {
+      await session.endSession()
+    }
   }
 }
 
