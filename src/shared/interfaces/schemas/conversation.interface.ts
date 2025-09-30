@@ -8,6 +8,8 @@ export interface IConversation extends IBase {
   type: EConversationType
   participants: ObjectId[]
   deletedFor: ObjectId[]
+  pinnedFor: ObjectId[]
+  pinnedAt: Record<string, Date>[]
 
   //
   lastMessage: ObjectId | null

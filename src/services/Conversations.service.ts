@@ -1,3 +1,4 @@
+import { count } from 'console'
 import { InsertOneResult, ObjectId } from 'mongodb'
 import database from '~/configs/database.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
@@ -211,6 +212,9 @@ class ConversationsService {
     const total = await ConversationCollection.countDocuments({
       participants: {
         $in: [new ObjectId(user_id)]
+      },
+      deletedFor: {
+        $nin: [new ObjectId(user_id)]
       }
     })
 
@@ -937,7 +941,12 @@ class ConversationsService {
   }
 
   async countUnreadConv(user_id: string) {
-    return await ConversationCollection.countDocuments({ readStatus: { $in: [new ObjectId(user_id)] } })
+    return await ConversationCollection.countDocuments({
+      readStatus: { $in: [new ObjectId(user_id)] },
+      deletedFor: {
+        $nin: [new ObjectId(user_id)]
+      }
+    })
   }
 
   async delete({ user_id, conversation_id }: { conversation_id: string; user_id: string }) {
@@ -948,7 +957,7 @@ class ConversationsService {
         const updated = await ConversationCollection.findOneAndUpdate(
           { _id: new ObjectId(conversation_id) },
           { $push: { deletedFor: new ObjectId(user_id) } },
-          { returnDocument: 'after', projection: { participants: 1 }, session }
+          { returnDocument: 'after', projection: { participants: 1, deletedFor: 1 }, session }
         )
 
         // Nếu không tìm thấy => conversation_id không hợp lệ
@@ -957,7 +966,13 @@ class ConversationsService {
         }
 
         // Nếu participants rỗng => xoá luôn conversation + messages
-        if (updated.participants.length === 0) {
+        console.log('updated:::', updated)
+        console.log(
+          'updated.deletedFor?.length === updated.participants?.length:::',
+          updated.deletedFor?.length === updated.participants?.length
+        )
+
+        if (updated.deletedFor?.length === updated.participants?.length) {
           await MessageCollection.deleteMany({ conversation: new ObjectId(conversation_id) }, { session })
           await ConversationCollection.deleteOne({ _id: new ObjectId(conversation_id) }, { session })
         }

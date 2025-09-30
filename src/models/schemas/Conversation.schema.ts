@@ -7,16 +7,20 @@ export class ConversationSchema extends BaseSchema implements IConversation {
   type: EConversationType
   participants: ObjectId[]
   deletedFor: ObjectId[]
+  pinnedFor: ObjectId[]
   lastMessage: null | ObjectId
   name: string | null
   avatar: string | string[] | null
   readStatus: ObjectId[] | null
+  pinnedAt: Record<string, Date>[]
 
   constructor(conversation: Partial<IConversation>) {
     super()
     this.type = conversation.type || EConversationType.Private
     this.participants = conversation.participants || [new ObjectId()]
     this.deletedFor = conversation.deletedFor || [new ObjectId()]
+    this.pinnedFor = conversation.pinnedFor || [new ObjectId()]
+    this.pinnedAt = conversation.pinnedAt || [{ '': new Date() }]
     this.lastMessage = conversation.lastMessage || null
     this.name = conversation.name || null
     this.avatar = conversation.avatar || null
