@@ -27,8 +27,8 @@ class ConversationsController {
   async delete(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const { conversation_id } = req.params as DeleteConversationDto
-    const result = await ConversationsService.readConversation({ user_id, conversation_id })
-    res.json(new OkResponse(`Lấy nhiều cuộc trò chuyện thành công`, result))
+    const result = await ConversationsService.delete({ user_id, conversation_id })
+    res.json(new OkResponse(`Xoá cuộc trò chuyện thành công`, result))
   }
 }
 

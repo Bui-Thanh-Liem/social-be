@@ -90,6 +90,9 @@ class ConversationsService {
         $match: {
           participants: {
             $in: [new ObjectId(user_id)]
+          },
+          deletedFor: {
+            $nin: [new ObjectId(user_id)]
           }
         }
       },
@@ -590,6 +593,8 @@ class ConversationsService {
       }
     ]).next()
 
+    await this.updateConvDeleted(id)
+
     if (!conversation) {
       throw new NotFoundError('Không tìm thấy cuộc trò chuyện')
     }
@@ -613,6 +618,7 @@ class ConversationsService {
         {
           $set: {
             lastMessage: new ObjectId(message_id),
+            deletedFor: [],
             readStatus: {
               $map: {
                 input: {
@@ -936,13 +942,12 @@ class ConversationsService {
 
   async delete({ user_id, conversation_id }: { conversation_id: string; user_id: string }) {
     const session = database.getClient().startSession()
-
     try {
       await session.withTransaction(async () => {
         // Pull user ra khỏi participants
         const updated = await ConversationCollection.findOneAndUpdate(
           { _id: new ObjectId(conversation_id) },
-          { $pull: { participants: new ObjectId(user_id) } },
+          { $push: { deletedFor: new ObjectId(user_id) } },
           { returnDocument: 'after', projection: { participants: 1 }, session }
         )
 
@@ -965,6 +970,10 @@ class ConversationsService {
     } finally {
       await session.endSession()
     }
+  }
+
+  private async updateConvDeleted(conv_id: string) {
+    await ConversationCollection.updateOne({ _id: new ObjectId(conv_id) }, { $set: { deletedFor: [] } })
   }
 }
 

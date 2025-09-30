@@ -6,6 +6,7 @@ import { BaseSchema } from './Base.schema'
 export class ConversationSchema extends BaseSchema implements IConversation {
   type: EConversationType
   participants: ObjectId[]
+  deletedFor: ObjectId[]
   lastMessage: null | ObjectId
   name: string | null
   avatar: string | string[] | null
@@ -15,6 +16,7 @@ export class ConversationSchema extends BaseSchema implements IConversation {
     super()
     this.type = conversation.type || EConversationType.Private
     this.participants = conversation.participants || [new ObjectId()]
+    this.deletedFor = conversation.deletedFor || [new ObjectId()]
     this.lastMessage = conversation.lastMessage || null
     this.name = conversation.name || null
     this.avatar = conversation.avatar || null
