@@ -25,7 +25,7 @@ class ConversationGateway {
   //
   async sendCountUnreadConv(receiverId: string) {
     const io = getIO()
-    const count = await ConversationsService.countUnreadConv(receiverId)
+    const count = await ConversationsService.countUnread(receiverId)
     io.to(receiverId).emit(CONSTANT_EVENT_NAMES.UNREAD_COUNT_CONVERSATION, count)
   }
 }

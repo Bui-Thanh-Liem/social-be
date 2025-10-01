@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import ConversationsService from '~/services/Conversations.service'
 import { OkResponse } from '~/shared/classes/response.class'
-import { DeleteConversationDto, ReadConversationDto } from '~/shared/dtos/req/conversation.dto'
+import { DeleteConversationDto, PinConversationDto, ReadConversationDto } from '~/shared/dtos/req/conversation.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class ConversationsController {
@@ -17,17 +17,24 @@ class ConversationsController {
     res.json(new OkResponse(`Lấy nhiều cuộc trò chuyện thành công`, result))
   }
 
-  async readConversation(req: Request, res: Response, next: NextFunction) {
+  async read(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const { conversation_id } = req.params as ReadConversationDto
-    const result = await ConversationsService.readConversation({ user_id, conversation_id })
-    res.json(new OkResponse(`Lấy nhiều cuộc trò chuyện thành công`, result))
+    const { conv_id } = req.params as ReadConversationDto
+    const result = await ConversationsService.read({ user_id, conv_id })
+    res.json(new OkResponse(`Đọc cuộc trò chuyện thành công`, result))
+  }
+
+  async togglePinConv(req: Request, res: Response, next: NextFunction) {
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const { conv_id } = req.params as PinConversationDto
+    const mess = await ConversationsService.togglePinConv({ user_id, conv_id })
+    res.json(new OkResponse(`${mess} cuộc trò chuyện thành công`, true))
   }
 
   async delete(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const { conversation_id } = req.params as DeleteConversationDto
-    const result = await ConversationsService.delete({ user_id, conversation_id })
+    const { conv_id } = req.params as DeleteConversationDto
+    const result = await ConversationsService.delete({ user_id, conv_id })
     res.json(new OkResponse(`Xoá cuộc trò chuyện thành công`, result))
   }
 }

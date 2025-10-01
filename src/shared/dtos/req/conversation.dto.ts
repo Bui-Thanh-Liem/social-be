@@ -48,11 +48,12 @@ export const CreateConversationDtoSchema = z
   )
 
 export const ConversationIdDtoSchema = z.object({
-  conversation_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+  conv_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'Invalid MongoDB ObjectId'
   })
 })
 
 export type CreateConversationDto = z.infer<typeof CreateConversationDtoSchema>
 export type ReadConversationDto = z.infer<typeof ConversationIdDtoSchema>
+export type PinConversationDto = z.infer<typeof ConversationIdDtoSchema>
 export type DeleteConversationDto = z.infer<typeof ConversationIdDtoSchema>

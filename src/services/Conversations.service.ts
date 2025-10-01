@@ -1,4 +1,3 @@
-import { count } from 'console'
 import { InsertOneResult, ObjectId } from 'mongodb'
 import database from '~/configs/database.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
@@ -224,270 +223,6 @@ class ConversationsService {
       items: conversations
     }
   }
-
-  // async getOneById(id: string, user_id: string) {
-  //   if (!id) throw new BadRequestError('Id không hợp lệ')
-
-  //   const conversation = await ConversationCollection.aggregate<ConversationSchema>([
-  //     {
-  //       $match: {
-  //         _id: new ObjectId(id)
-  //       }
-  //     },
-  //     {
-  //       $lookup: {
-  //         from: 'messages',
-  //         localField: 'lastMessage',
-  //         foreignField: '_id',
-  //         as: 'lastMessage',
-  //         pipeline: [
-  //           {
-  //             $project: {
-  //               sender: 1,
-  //               content: 1,
-  //               created_at: 1
-  //             }
-  //           }
-  //         ]
-  //       }
-  //     },
-  //     {
-  //       $lookup: {
-  //         from: 'users',
-  //         localField: 'participants',
-  //         foreignField: '_id',
-  //         as: 'participants',
-  //         pipeline: [
-  //           {
-  //             $project: {
-  //               _id: 1,
-  //               name: 1,
-  //               avatar: 1
-  //             }
-  //           }
-  //         ]
-  //       }
-  //     },
-  //     {
-  //       $unwind: {
-  //         path: '$lastMessage',
-  //         preserveNullAndEmptyArrays: true
-  //       }
-  //     },
-  //     {
-  //       $addFields: {
-  //         name: {
-  //           $cond: {
-  //             if: { $eq: ['$type', EConversationType.Private] }, // Kiểm tra nếu type = Private
-  //             then: {
-  //               $let: {
-  //                 vars: {
-  //                   otherParticipant: {
-  //                     $arrayElemAt: [
-  //                       {
-  //                         $filter: {
-  //                           input: '$participants',
-  //                           as: 'participant',
-  //                           cond: { $ne: ['$$participant._id', new ObjectId(user_id)] }
-  //                         }
-  //                       },
-  //                       0
-  //                     ]
-  //                   }
-  //                 },
-  //                 in: '$$otherParticipant.name' // Lấy name của participant không phải user_id
-  //               }
-  //             },
-  //             else: '$name' // Giữ nguyên name nếu type != Private
-  //           }
-  //         },
-  //         avatar: {
-  //           $cond: {
-  //             if: { $eq: ['$type', EConversationType.Private] },
-  //             then: {
-  //               $let: {
-  //                 vars: {
-  //                   otherParticipant: {
-  //                     $arrayElemAt: [
-  //                       {
-  //                         $filter: {
-  //                           input: '$participants',
-  //                           as: 'participant',
-  //                           cond: { $ne: ['$$participant._id', new ObjectId(user_id)] }
-  //                         }
-  //                       },
-  //                       0
-  //                     ]
-  //                   }
-  //                 },
-  //                 in: '$$otherParticipant.avatar'
-  //               }
-  //             },
-  //             else: {
-  //               $map: {
-  //                 input: '$participants',
-  //                 as: 'participant',
-  //                 in: '$$participant.avatar' // Lấy tất cả avatar của participants (mảng chuỗi)
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   ]).next()
-
-  //   if (!conversation) {
-  //     throw new NotFoundError('Không tìm thấy cuộc trò chuyện')
-  //   }
-
-  //   return conversation
-  // }
-
-  // async updateLastMessageAndStatus({
-  //   sender_id,
-  //   message_id,
-  //   conversation_id
-  // }: {
-  //   sender_id: string
-  //   message_id: string
-  //   conversation_id: string
-  // }) {
-  //   //
-  //   const updated = await ConversationCollection.findOneAndUpdate(
-  //     { _id: new ObjectId(conversation_id) },
-  //     [
-  //       {
-  //         $set: {
-  //           lastMessage: new ObjectId(message_id),
-  //           readStatus: {
-  //             $map: {
-  //               input: {
-  //                 $filter: {
-  //                   input: '$participants',
-  //                   cond: { $ne: ['$$this', new ObjectId(sender_id)] }
-  //                 }
-  //               },
-  //               as: 'id',
-  //               in: '$$id'
-  //             }
-  //           },
-  //           updatedAt: '$$NOW'
-  //         }
-  //       }
-  //     ],
-  //     { returnDocument: 'after' }
-  //   )
-
-  //   //
-  //   const full = await ConversationCollection.aggregate<ConversationSchema>([
-  //     { $match: { _id: updated?._id } },
-  //     {
-  //       $lookup: {
-  //         from: 'users',
-  //         localField: 'participants',
-  //         foreignField: '_id',
-  //         as: 'participants',
-  //         pipeline: [
-  //           {
-  //             $project: {
-  //               name: 1,
-  //               avatar: 1
-  //             }
-  //           }
-  //         ]
-  //       }
-  //     },
-  //     {
-  //       $lookup: {
-  //         from: 'messages',
-  //         localField: 'lastMessage',
-  //         foreignField: '_id',
-  //         as: 'lastMessage',
-  //         pipeline: [
-  //           {
-  //             $project: {
-  //               created_at: 1,
-  //               sender: 1,
-  //               content: 1
-  //             }
-  //           }
-  //         ]
-  //       }
-  //     },
-  //     { $unwind: { path: '$lastMessage', preserveNullAndEmptyArrays: true } },
-  //     {
-  //       $addFields: {
-  //         name: {
-  //           $cond: {
-  //             if: { $eq: ['$type', EConversationType.Private] }, // Kiểm tra nếu type = Private
-  //             then: {
-  //               $let: {
-  //                 vars: {
-  //                   otherParticipant: {
-  //                     $arrayElemAt: [
-  //                       {
-  //                         $filter: {
-  //                           input: '$participants',
-  //                           as: 'participant',
-  //                           cond: { $ne: ['$$participant._id', new ObjectId(sender_id)] }
-  //                         }
-  //                       },
-  //                       0
-  //                     ]
-  //                   }
-  //                 },
-  //                 in: '$$otherParticipant.name' // Lấy name của participant không phải user_id
-  //               }
-  //             },
-  //             else: '$name' // Giữ nguyên name nếu type != Private
-  //           }
-  //         },
-  //         avatar: {
-  //           $cond: {
-  //             if: { $eq: ['$type', EConversationType.Private] },
-  //             then: {
-  //               $let: {
-  //                 vars: {
-  //                   otherParticipant: {
-  //                     $arrayElemAt: [
-  //                       {
-  //                         $filter: {
-  //                           input: '$participants',
-  //                           as: 'participant',
-  //                           cond: { $ne: ['$$participant._id', new ObjectId(sender_id)] }
-  //                         }
-  //                       },
-  //                       0
-  //                     ]
-  //                   }
-  //                 },
-  //                 in: '$$otherParticipant.avatar'
-  //               }
-  //             },
-  //             else: {
-  //               $map: {
-  //                 input: '$participants',
-  //                 as: 'participant',
-  //                 in: '$$participant.avatar' // Lấy tất cả avatar của participants (mảng chuỗi)
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   ]).next()
-
-  //   //
-  //   if (full?.readStatus) {
-  //     full?.readStatus?.forEach((userId) => {
-  //       if (userId) {
-  //         ConversationGateway.changeConversation(full, userId.toString())
-  //       }
-  //     })
-  //   }
-
-  //   return full
-  // }
 
   async getOneById(id: string, user_id: string) {
     if (!id) throw new BadRequestError('Id không hợp lệ')
@@ -824,10 +559,10 @@ class ConversationsService {
     return conversationForSender
   }
 
-  async readConversation({ user_id, conversation_id }: { conversation_id: string; user_id: string }) {
+  async read({ user_id, conv_id }: { conv_id: string; user_id: string }) {
     //
     const updated = await ConversationCollection.findOneAndUpdate(
-      { _id: new ObjectId(conversation_id) },
+      { _id: new ObjectId(conv_id) },
       { $pull: { readStatus: new ObjectId(user_id) } },
       { returnDocument: 'after' }
     )
@@ -940,7 +675,7 @@ class ConversationsService {
     return full
   }
 
-  async countUnreadConv(user_id: string) {
+  async countUnread(user_id: string) {
     return await ConversationCollection.countDocuments({
       readStatus: { $in: [new ObjectId(user_id)] },
       deletedFor: {
@@ -949,13 +684,13 @@ class ConversationsService {
     })
   }
 
-  async delete({ user_id, conversation_id }: { conversation_id: string; user_id: string }) {
+  async delete({ user_id, conv_id }: { conv_id: string; user_id: string }) {
     const session = database.getClient().startSession()
     try {
       await session.withTransaction(async () => {
         // Pull user ra khỏi participants
         const updated = await ConversationCollection.findOneAndUpdate(
-          { _id: new ObjectId(conversation_id) },
+          { _id: new ObjectId(conv_id) },
           { $push: { deletedFor: new ObjectId(user_id) } },
           { returnDocument: 'after', projection: { participants: 1, deletedFor: 1 }, session }
         )
@@ -973,8 +708,8 @@ class ConversationsService {
         )
 
         if (updated.deletedFor?.length === updated.participants?.length) {
-          await MessageCollection.deleteMany({ conversation: new ObjectId(conversation_id) }, { session })
-          await ConversationCollection.deleteOne({ _id: new ObjectId(conversation_id) }, { session })
+          await MessageCollection.deleteMany({ conversation: new ObjectId(conv_id) }, { session })
+          await ConversationCollection.deleteOne({ _id: new ObjectId(conv_id) }, { session })
         }
       })
 
@@ -987,6 +722,32 @@ class ConversationsService {
     }
   }
 
+  async togglePinConv({ user_id, conv_id }: { user_id: string; conv_id: string }): Promise<'Ghim' | 'Gỡ ghim'> {
+    const conv = await ConversationCollection.findOne({ _id: new ObjectId(conv_id) })
+    if (!conv) throw new Error('Không tìm thấy cuộc trò chuyện')
+
+    const userObjectId = new ObjectId(user_id)
+
+    const alreadyPinned = conv.pinned?.some((p) => p.user_id.equals(userObjectId))
+
+    if (alreadyPinned) {
+      // unpin
+      await ConversationCollection.updateOne(
+        { _id: new ObjectId(conv_id) },
+        { $pull: { pinned: { user_id: userObjectId } } }
+      )
+      return 'Gỡ ghim'
+    } else {
+      // pin
+      await ConversationCollection.updateOne(
+        { _id: new ObjectId(conv_id) },
+        { $push: { pinned: { user_id: userObjectId, at: new Date() } } }
+      )
+      return 'Ghim'
+    }
+  }
+
+  // Cập nhật lại deleteFor = [] khi có tin nhắn mới
   private async updateConvDeleted(conv_id: string) {
     await ConversationCollection.updateOne({ _id: new ObjectId(conv_id) }, { $set: { deletedFor: [] } })
   }

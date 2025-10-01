@@ -6,6 +6,10 @@ export class CacheService {
   private defaultTTL: number = 600 // 10 minutes in seconds
   private isConnected: boolean = false
 
+  //
+  private onlineSetKey = 'online_users'
+  private lastSeenHashKey = 'last_seen'
+
   constructor() {
     this.client = createClient({
       url: process.env.REDIS_URL || 'redis://localhost:6379',
@@ -120,6 +124,48 @@ export class CacheService {
     } catch (err) {
       console.error('Error during Redis shutdown:', err)
     }
+  }
+
+  /**
+   * Đánh dấu user online (thêm vào Redis Set)
+   */
+  async markUserOnline(userId: string): Promise<void> {
+    await this.connect()
+    await this.client.sAdd(this.onlineSetKey, userId)
+  }
+
+  /**
+   * Đánh dấu user offline (xóa khỏi online set, lưu lastSeen)
+   */
+  async markUserOffline(userId: string): Promise<void> {
+    await this.connect()
+    await this.client.sRem(this.onlineSetKey, userId)
+    await this.client.hSet(this.lastSeenHashKey, userId, Date.now().toString())
+  }
+
+  /**
+   * Kiểm tra user có đang online không
+   */
+  async isUserOnline(userId: string): Promise<boolean> {
+    await this.connect()
+    return (await this.client.sIsMember(this.onlineSetKey, userId)) === 1
+  }
+
+  /**
+   * Lấy lastSeen của user
+   */
+  async getUserLastSeen(userId: string): Promise<Date | null> {
+    await this.connect()
+    const ts = await this.client.hGet(this.lastSeenHashKey, userId)
+    return ts ? new Date(Number(ts)) : null
+  }
+
+  /**
+   * Lấy toàn bộ user đang online (cẩn thận performance nếu >100k)
+   */
+  async getAllOnlineUsers(): Promise<string[]> {
+    await this.connect()
+    return await this.client.sMembers(this.onlineSetKey)
   }
 }
 

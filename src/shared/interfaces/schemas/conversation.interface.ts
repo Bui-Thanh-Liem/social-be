@@ -8,10 +8,15 @@ export interface IConversation extends IBase {
   type: EConversationType
   participants: ObjectId[]
   deletedFor: ObjectId[]
-  pinnedFor: ObjectId[]
-  pinnedAt: Record<string, Date>[]
+  pinned: IPinned[]
 
   //
   lastMessage: ObjectId | null
   readStatus: ObjectId[] | null
+}
+
+//
+export interface IPinned {
+  user_id: ObjectId
+  at: Date
 }

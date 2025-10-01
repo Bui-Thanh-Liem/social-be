@@ -1,6 +1,6 @@
 export const CONSTANT_EVENT_NAMES = {
   // USER
-  STATUS_USER: 'status-user',
+  USER_ONLINE: 'user:online',
 
   // MESSAGE
   SEND_MESSAGE: 'message:send',
@@ -17,5 +17,8 @@ export const CONSTANT_EVENT_NAMES = {
   NEW_CONVERSATION: 'conversation:new',
   JOIN_CONVERSATION: 'conversation:join',
   CHANGE_CONVERSATION: 'conversation:change',
-  LEAVE_CONVERSATION: 'conversation:leave'
+  LEAVE_CONVERSATION: 'conversation:leave',
+
+  //
+  ERROR: 'error'
 }
