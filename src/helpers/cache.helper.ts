@@ -152,6 +152,25 @@ export class CacheService {
   }
 
   /**
+   * Kiểm tra nhiều users có đang online không (dùng Redis SMISMEMBER)
+   */
+  async areUsersOnline(userIds: string[]): Promise<Record<string, boolean>> {
+    if (!userIds || userIds.length === 0) return {}
+
+    await this.connect()
+    const results = await this.client.sendCommand<number[]>(['SMISMEMBER', this.onlineSetKey, ...userIds])
+
+    // Map lại { userId: true/false }
+    return userIds.reduce(
+      (acc, userId, idx) => {
+        acc[userId] = results[idx] === 1
+        return acc
+      },
+      {} as Record<string, boolean>
+    )
+  }
+
+  /**
    * Lấy lastSeen của user
    */
   async getUserLastSeen(userId: string): Promise<Date | null> {
