@@ -24,5 +24,12 @@ export const GetMultiByTypeNotiDtoSchema = z.object({
   type: z.nativeEnum(ENotificationType)
 })
 
+export const DelNotiDtoSchema = z.object({
+  noti_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+    message: 'Invalid MongoDB ObjectId'
+  })
+})
+
 export type CreateNotiDto = z.infer<typeof CreateNotiDtoSchema>
 export type GetMultiByTypeNotiDto = z.infer<typeof GetMultiByTypeNotiDtoSchema>
+export type DelNotiDto = z.infer<typeof DelNotiDtoSchema>

@@ -185,6 +185,11 @@ class NotificationService {
   async countUnreadNoti(user_id: string) {
     return await NotificationCollection.countDocuments({ isRead: false, receiver: new ObjectId(user_id) })
   }
+
+  async delete(noti_id: string) {
+    await NotificationCollection.deleteOne({ _id: new ObjectId(noti_id) })
+    return true
+  }
 }
 
 export default new NotificationService()
