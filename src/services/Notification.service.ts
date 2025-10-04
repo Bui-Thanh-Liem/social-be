@@ -60,6 +60,21 @@ class NotificationService {
           ]
         }
       },
+      // chỉ thêm khi có lookup (tạm thời type All lấy ref là tweet)
+      ...(type === ENotificationType.MENTION || type === ENotificationType.ALL
+        ? [
+            {
+              $lookup: {
+                from: 'tweets',
+                localField: 'refId',
+                foreignField: '_id',
+                as: 'refId',
+                pipeline: [{ $project: { type: 1, parent_id: 1 } }]
+              }
+            }
+          ]
+        : []),
+      { $unwind: { path: '$refId', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$receiver', preserveNullAndEmptyArrays: true } }
     ]).next()
@@ -87,29 +102,11 @@ class NotificationService {
       type?: ENotificationType
       receiver: ObjectId
     } = { type, receiver: new ObjectId(user_id) }
-    // let lookup = {}
 
     // Nếu type là ALL
     if (type === ENotificationType.ALL) {
       if (match.type) delete match.type
     }
-
-    // Nếu type là mentions thì refId là tweet
-    // if (type === ENotificationType.MENTION) {
-    //   lookup = {
-    //     from: 'tweets',
-    //     localField: 'refId',
-    //     foreignField: '_id',
-    //     as: 'refId',
-    //     pipeline: [
-    //       {
-    //         $project: {
-    //           content: 1
-    //         }
-    //       }
-    //     ]
-    //   }
-    // }
 
     //
     const notis = await NotificationCollection.aggregate<NotificationSchema>([
@@ -159,12 +156,23 @@ class NotificationService {
           ]
         }
       },
-      {
-        $unwind: { path: '$sender', preserveNullAndEmptyArrays: true }
-      },
-      {
-        $unwind: { path: '$receiver', preserveNullAndEmptyArrays: true }
-      }
+      // chỉ thêm khi có lookup (tạm thời cho type All là tweet)
+      ...(type === ENotificationType.MENTION || type === ENotificationType.ALL
+        ? [
+            {
+              $lookup: {
+                from: 'tweets',
+                localField: 'refId',
+                foreignField: '_id',
+                as: 'refId',
+                pipeline: [{ $project: { type: 1, parent_id: 1 } }]
+              }
+            }
+          ]
+        : []),
+      { $unwind: { path: '$refId', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$receiver', preserveNullAndEmptyArrays: true } }
     ]).toArray()
 
     //

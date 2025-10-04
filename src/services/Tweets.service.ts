@@ -3,18 +3,19 @@ import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
 import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
+import { NotFoundError } from '~/shared/classes/error.class'
 import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
-import { EFeedType, ENotificationType, ETweetType } from '~/shared/enums/type.enum'
+import { EFeedType, EMediaType, ENotificationType, ETweetType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import { deleteImage, deleteVideo } from '~/utils/upload.util'
 import ExploreService from './Explore.service'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
 import NotificationService from './Notification.service'
-import { NotFoundError } from '~/shared/classes/error.class'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
@@ -51,9 +52,10 @@ class TweetsService {
     // Mentions
     if (mentions?.length) {
       const sender = await UserCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { name: 1 } })
+
       for (let i = 0; i < mentions.length; i++) {
         await NotificationService.create({
-          content: `${sender?.name} đã nhắc đến bạn trong một bài viết.`,
+          content: `${sender?.name} đã nhắc đến bạn trong một ${type === ETweetType.Comment ? 'bình luận' : 'bài viết'}.`,
           type: ENotificationType.MENTION,
           sender: user_id,
           receiver: mentions[i],
@@ -65,7 +67,7 @@ class TweetsService {
     return newTweet
   }
 
-  async getOneById(tweet_id: string) {
+  async getOneById(user_active_id: string, tweet_id: string) {
     const result = await TweetCollection.aggregate<TweetSchema>([
       {
         $match: {
@@ -81,7 +83,8 @@ class TweetsService {
           pipeline: [
             {
               $project: {
-                name: 1
+                name: 1,
+                username: 1
               }
             }
           ]
@@ -160,11 +163,95 @@ class TweetsService {
         }
       },
       {
+        $lookup: {
+          from: 'tweets',
+          localField: '_id',
+          foreignField: 'parent_id',
+          as: 'tweets_children'
+        }
+      },
+      {
         $addFields: {
-          bookmark_count: { $size: '$bookmarks' },
-          like_count: { $size: '$likes' },
-          views: {
-            $add: ['$guest_view', '$user_view']
+          // bookmarks_count: { $size: '$bookmarks' },
+          likes_count: { $size: '$likes' },
+          isLike: {
+            $in: [new ObjectId(user_active_id), '$likes.user_id']
+          },
+          isBookmark: {
+            $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
+          },
+          // lấy id retweet của user (1 cái đầu tiên hoặc null)
+          retweet: {
+            $let: {
+              vars: {
+                matched: {
+                  $filter: {
+                    input: '$tweets_children',
+                    as: 'child',
+                    cond: {
+                      $and: [
+                        { $eq: ['$$child.type', ETweetType.Retweet] },
+                        { $eq: ['$$child.user_id', new ObjectId(user_active_id)] }
+                      ]
+                    }
+                  }
+                }
+              },
+              in: { $arrayElemAt: ['$$matched._id', 0] }
+            }
+          },
+          // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
+          quote: {
+            $let: {
+              vars: {
+                matched: {
+                  $filter: {
+                    input: '$tweets_children',
+                    as: 'child',
+                    cond: {
+                      $and: [
+                        { $eq: ['$$child.type', ETweetType.QuoteTweet] },
+                        { $eq: ['$$child.user_id', new ObjectId(user_active_id)] }
+                      ]
+                    }
+                  }
+                }
+              },
+              in: { $arrayElemAt: ['$$matched._id', 0] }
+            }
+          },
+          comments_count: {
+            $size: {
+              $filter: {
+                input: '$tweets_children',
+                as: 'tweet',
+                cond: {
+                  $eq: ['$$tweet.type', ETweetType.Comment]
+                }
+              }
+            }
+          },
+          retweets_count: {
+            $size: {
+              $filter: {
+                input: '$tweets_children',
+                as: 'tweet',
+                cond: {
+                  $eq: ['$$tweet.type', ETweetType.Retweet]
+                }
+              }
+            }
+          },
+          quotes_count: {
+            $size: {
+              $filter: {
+                input: '$tweets_children',
+                as: 'tweet',
+                cond: {
+                  $eq: ['$$tweet.type', ETweetType.QuoteTweet]
+                }
+              }
+            }
           }
         }
       }
@@ -633,7 +720,6 @@ class TweetsService {
           isBookmark: {
             $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
           },
-
           // lấy id retweet của user (1 cái đầu tiên hoặc null)
           retweet: {
             $let: {
@@ -1600,11 +1686,40 @@ class TweetsService {
   }
 
   async delete(tweet_id: string) {
-    const result = await TweetCollection.deleteOne({ _id: new ObjectId(tweet_id) })
+    // Lấy tweet trước
+    const tweet = await TweetCollection.findOne({ _id: new ObjectId(tweet_id) })
 
+    if (!tweet) {
+      throw new NotFoundError('Không tìm thấy bài viết để xóa')
+    }
+
+    // Xoá DB trước
+    const result = await TweetCollection.deleteOne({ _id: new ObjectId(tweet_id) })
     if (result.deletedCount === 0) {
       throw new NotFoundError('Không tìm thấy bài viết để xóa')
     }
+
+    if (tweet?.media && tweet?.media?.type === EMediaType.Image) {
+      // Lấy filename từ url: http://domain/images/abc.png => abc.png
+      const filename = tweet.media?.url.split('/').pop()
+      if (filename) {
+        await deleteImage(filename).catch((err) => {
+          console.log('Tweet - delete - media - img:::', err)
+        })
+      }
+    }
+
+    if (tweet?.media && tweet?.media?.type === EMediaType.Video) {
+      // Lấy folderName: http://localhost:9000/videos-hls/RXhw4s21AEzt_-VpjWIin/master.m3u8
+      const parts = tweet.media?.url.split('/')
+      const folderName = parts[parts.length - 2] // "RXhw4s21AEzt_-VpjWIin"
+      if (folderName) {
+        await deleteVideo(folderName).catch((err) => {
+          console.log('Tweet - delete - media - video:::', err)
+        })
+      }
+    }
+
     return true
   }
 }

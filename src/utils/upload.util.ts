@@ -9,15 +9,14 @@ import { envs } from '~/configs/env.config'
 import { compressionQueue } from '~/libs/bull/queues'
 import VideosService from '~/services/Videos.service'
 import { BadRequestError } from '~/shared/classes/error.class'
-import { CONSTANT_JOB } from '~/shared/constants'
-import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from '~/shared/constants/path-static.constant'
-import { compressionFile } from './compression.util'
 import {
-  MAX_LENGTH_IMAGE_UPLOAD,
+  CONSTANT_JOB, MAX_LENGTH_IMAGE_UPLOAD,
   MAX_LENGTH_VIDEO_UPLOAD,
   MAX_SIZE_IMAGE_UPLOAD,
   MAX_SIZE_VIDEO_UPLOAD
 } from '~/shared/constants'
+import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from '~/shared/constants/path-static.constant'
+import { compressionFile } from './compression.util'
 import { logger } from './logger.util'
 
 // class Queue {
@@ -183,6 +182,53 @@ export function uploadVideos(req: Request): Promise<string[]> {
           rej(error)
         }
       })()
+    })
+  })
+}
+
+/**
+ * Xoá 1 ảnh đã upload
+ * @param filename Tên file ảnh (ví dụ: abc.png)
+ */
+export function deleteImage(filename: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const filePath = path.join(UPLOAD_IMAGE_FOLDER_PATH, filename)
+
+    if (!fs.existsSync(filePath)) {
+      return reject(new BadRequestError('Image not found'))
+    }
+
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        logger.error(`❌ Delete image ${filename} failed:`, err)
+        return reject(new BadRequestError('Delete image failed'))
+      }
+      logger.info(`✅ Delete image ${filename} success`)
+      resolve()
+    })
+  })
+}
+
+/**
+ * Xoá 1 video (xoá cả folder chứa file gốc & HLS)
+ * @param folderName Tên folder video (ví dụ: m6kQ0q4q2vbJIduXCAssl)
+ */
+export function deleteVideo(folderName: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const folderPath = path.join(UPLOAD_VIDEO_FOLDER_PATH, folderName)
+
+    if (!fs.existsSync(folderPath)) {
+      return reject(new BadRequestError('Video not found'))
+    }
+
+    // Xoá nguyên folder
+    fs.rm(folderPath, { recursive: true, force: true }, (err) => {
+      if (err) {
+        logger.error(`❌ Delete video ${folderName} failed:`, err)
+        return reject(new BadRequestError('Delete video failed'))
+      }
+      logger.info(`✅ Delete video ${folderName} success`)
+      resolve()
     })
   })
 }

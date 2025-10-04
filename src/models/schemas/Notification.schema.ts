@@ -1,8 +1,8 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { ENotificationType } from '~/shared/enums/type.enum'
 import { INotification } from '~/shared/interfaces/schemas/notification.interface'
-import { BaseSchema } from './Base.schema'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
+import { BaseSchema } from './Base.schema'
 
 export class NotificationSchema extends BaseSchema implements INotification {
   content: string
@@ -14,11 +14,12 @@ export class NotificationSchema extends BaseSchema implements INotification {
 
   constructor(noti: Partial<INotification>) {
     super()
+    this.isRead = false
     this.content = noti.content || ''
-    this.type = noti.type || ENotificationType.COMMON
+    this.refId = noti.refId || new ObjectId()
     this.sender = noti.sender || new ObjectId()
     this.receiver = noti.receiver || new ObjectId()
-    this.isRead = false
+    this.type = noti.type || ENotificationType.OTHER
   }
 }
 
