@@ -12,7 +12,7 @@ import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 import { deleteImage, deleteVideo } from '~/utils/upload.util'
-import ExploreService from './Explore.service'
+import TrendingService from './Trending.service'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
 import NotificationService from './Notification.service'
@@ -26,13 +26,13 @@ class TweetsService {
 
     // Thêm hashtag vào trending
     if (payload?.hashtags?.length) {
-      await Promise.all(payload.hashtags.map((hashtagName) => ExploreService.createTrending(`#${hashtagName}`)))
+      await Promise.all(payload.hashtags.map((hashtagName) => TrendingService.createTrending(`#${hashtagName}`)))
     }
 
     // Thêm từ khóa vào trending (những từ trong content, nhưng được viết in hoa)
     if (content) {
       const keyWords = content.match(/\b[A-Z][a-zA-Z0-9]*\b/g) || []
-      await Promise.all(keyWords.map((w) => ExploreService.createTrending(w)))
+      await Promise.all(keyWords.map((w) => TrendingService.createTrending(w)))
     }
 
     //
@@ -50,13 +50,14 @@ class TweetsService {
     )
 
     // Mentions
-    if (mentions?.length) {
-      const sender = await UserCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { name: 1 } })
+    const sender = await UserCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { name: 1 } })
 
+    // Gửi thông báo cho ai mà người comment nhắc đến
+    if (mentions?.length) {
       for (let i = 0; i < mentions.length; i++) {
         await NotificationService.create({
           content: `${sender?.name} đã nhắc đến bạn trong một ${type === ETweetType.Comment ? 'bình luận' : 'bài viết'}.`,
-          type: ENotificationType.MENTION,
+          type: ENotificationType.MENTION_LIKE,
           sender: user_id,
           receiver: mentions[i],
           refId: newTweet.insertedId.toString()
@@ -64,15 +65,45 @@ class TweetsService {
       }
     }
 
+    // Gửi thông báo cho chủ bài viết là có người bình luận
+    if (type === ETweetType.Comment && parent_id) {
+      const tw = await TweetCollection.findOne({ _id: new ObjectId(parent_id) }, { projection: { user_id: 1 } })
+      await NotificationService.create({
+        content: `${sender?.name} đã bình luận bài viết của bạn.`,
+        type: ENotificationType.MENTION_LIKE,
+        sender: user_id,
+        receiver: tw!.user_id.toString(),
+        refId: tw?._id.toString()
+      })
+    }
+
     return newTweet
   }
 
   async getOneById(user_active_id: string, tweet_id: string) {
+    //
+    const followed_user_ids = await FollowsService.getUserFollowing(user_active_id)
+    followed_user_ids.push(user_active_id)
+
+    // Dynamic match condition based on feed type
+    const matchCondition = {
+      _id: new ObjectId(tweet_id),
+      $or: [
+        { audience: ETweetAudience.Everyone },
+        {
+          audience: ETweetAudience.Followers,
+          user_id: { $in: followed_user_ids }
+        },
+        {
+          audience: ETweetAudience.Mentions,
+          mentions: { $in: [user_active_id] }
+        }
+      ]
+    }
+
     const result = await TweetCollection.aggregate<TweetSchema>([
       {
-        $match: {
-          _id: new ObjectId(tweet_id)
-        }
+        $match: matchCondition
       },
       {
         $lookup: {
@@ -495,8 +526,8 @@ class TweetsService {
 
   async getNewFeeds({
     query,
-    user_active_id,
-    feed_type
+    feed_type,
+    user_active_id
   }: {
     query: IQuery<ITweet>
     user_active_id: string
@@ -543,6 +574,10 @@ class TweetsService {
                   }
                 }
               ]
+            },
+            {
+              audience: ETweetAudience.Mentions,
+              mentions: { $in: [user_active_id] }
             }
           ]
         }

@@ -1,27 +1,35 @@
 import { Router } from 'express'
-import ExploreController from '~/controllers/Explore.controller'
+import TrendingController from '~/controllers/Trending.controller'
 import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 
-const exploreRoute = Router()
+const trendingRoute = Router()
 
-exploreRoute.get(
-  '/trending',
+trendingRoute.get(
+  '/',
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(ExploreController.getTrending)
+  wrapAsyncHandler(TrendingController.getTrending)
 )
 
-exploreRoute.get(
+trendingRoute.get(
   '/today-news',
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(ExploreController.getTodayNews)
+  wrapAsyncHandler(TrendingController.getTodayNews)
 )
 
-export default exploreRoute
+trendingRoute.get(
+  '/outstanding-this-week',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(TrendingController.getOutStandingThisWeekNews)
+)
+
+export default trendingRoute

@@ -1,6 +1,9 @@
 import { ObjectId } from 'mongodb'
 import { FollowerCollection } from '~/models/schemas/Follower.schema'
+import { UserCollection } from '~/models/schemas/User.schema'
 import { ResToggleFollow } from '~/shared/dtos/res/follow.dto'
+import NotificationService from './Notification.service'
+import { ENotificationType } from '~/shared/enums/type.enum'
 
 class FollowsService {
   async toggleFollow(user_id: string, followed_user_id: string): Promise<ResToggleFollow> {
@@ -24,6 +27,17 @@ class FollowsService {
         user_id: userIdObjectId,
         followed_user_id: followedUserIdObjectId
       })
+
+      // Gửi thông báo
+      const sender = await UserCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { name: 1 } })
+      await NotificationService.create({
+        content: `${sender?.name} đang theo dõi bạn.`,
+        type: ENotificationType.FOLLOW,
+        sender: user_id,
+        receiver: followed_user_id,
+        refId: user_id
+      })
+
       return { status: 'Follow', _id: inserted.insertedId.toString() }
     }
   }

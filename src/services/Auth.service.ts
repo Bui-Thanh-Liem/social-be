@@ -4,7 +4,7 @@ import { ObjectId } from 'mongodb'
 import { StringValue } from 'ms'
 import { envs } from '~/configs/env.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
-import { sendEmailQueue } from '~/libs/bull/queues'
+import { sendEmailQueue, sendNotiQueue } from '~/libs/bull/queues'
 import { RefreshTokenCollection, RefreshTokenSchema } from '~/models/schemas/RefreshToken.schema'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '~/shared/classes/error.class'
@@ -21,8 +21,8 @@ import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oauth-google.interface'
 import { generatePassword, hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
-import UsersService from './Users.service'
 import NotificationService from './Notification.service'
+import UsersService from './Users.service'
 
 class AuthService {
   async register(payload: RegisterUserDto) {
@@ -75,11 +75,17 @@ class AuthService {
       url: `${envs.CLIENT_DOMAIN}/verify?token=${email_verify_token}`
     })
 
+    //
     await NotificationService.create({
       content: 'Kiểm tra mail để xác thực tài khoản của bạn.',
       receiver: result.insertedId.toString(),
       sender: result.insertedId.toString(),
       type: ENotificationType.VERIFY
+    })
+
+    // Sau 5s chờ người ổn định socket rồi mới gửi số lượng thông báo chưa đọc
+    await sendNotiQueue.add(CONSTANT_JOB.UNREAD_NOTI, {
+      user_id: result.insertedId.toString()
     })
 
     //

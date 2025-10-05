@@ -4,17 +4,17 @@ import { BaseSchema } from './Base.schema'
 import { slug } from '~/utils/slug.util'
 
 export class TrendingSchema extends BaseSchema implements ITrending {
-  keyword?: string | undefined
+  topic?: string | undefined
   slug?: string | undefined
   hashtag: ObjectId
   count: number
 
   constructor(search: Partial<ITrending>) {
     super()
-    this.keyword = search.keyword || ''
+    this.topic = search.topic || ''
     this.hashtag = search.hashtag || new ObjectId()
     this.count = search.count || 1
-    if (search.keyword) this.slug = slug(this.keyword)
+    if (search.topic) this.slug = slug(this.topic)
   }
 }
 

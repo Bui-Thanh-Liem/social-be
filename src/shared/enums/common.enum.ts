@@ -1,4 +1,5 @@
 export enum ETweetAudience {
   Everyone,
-  Followers
+  Followers,
+  Mentions
 }

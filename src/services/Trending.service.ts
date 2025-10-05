@@ -13,30 +13,30 @@ import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.uti
 import { slug } from '~/utils/slug.util'
 import HashtagsService from './Hashtags.service'
 
-class ExploreService {
+class TrendingService {
   // Tạo khi đăng bài - khi tìm kiếm (>=5)
-  async createTrending(keyword: string) {
+  async createTrending(topic: string) {
     let _hashtag = undefined
-    if (keyword.includes('#')) {
-      const [_id] = await HashtagsService.checkHashtags([keyword.replace('#', '').trim()])
+    if (topic.includes('#')) {
+      const [_id] = await HashtagsService.checkHashtags([topic.replace('#', '').trim()])
       _hashtag = _id
     }
 
-    // tìm document theo keyword hoặc hashtag
+    // tìm document theo topic hoặc hashtag
     const query: any = {
       $or: []
     }
 
-    // Hiển thị cho người xem là keyword còn slug là để tìm kiếm và đồng bộ tìm kiếm, cập nhật dữ liệu
-    if (keyword && keyword.length >= 5) {
-      const _slug = slug(keyword)
+    // Hiển thị cho người xem là topic còn slug là để tìm kiếm và đồng bộ tìm kiếm, cập nhật dữ liệu
+    if (topic && topic.length >= 5) {
+      const _slug = slug(topic)
       query.$or.push({ slug: _slug })
     }
     if (_hashtag) query.$or.push({ hashtag: _hashtag })
 
-    // nếu không có keyword và hashtag => throw
+    // nếu không có topic và hashtag => throw
     if (query.$or.length === 0) {
-      console.log('Không tạo trending do không có keyword hoặc hashtag')
+      console.log('Không tạo trending do không có topic hoặc hashtag')
       return
     }
 
@@ -44,9 +44,9 @@ class ExploreService {
       query,
       {
         $setOnInsert: {
-          keyword: keyword.replace('#', '').trim(),
+          topic: topic.replace('#', '').trim(),
           hashtag: _hashtag,
-          slug: slug(keyword),
+          slug: slug(topic),
           created_at: new Date()
         },
         $inc: { count: 1 }, // tăng nếu tìm thấy
@@ -130,10 +130,10 @@ class ExploreService {
     return { total, total_page: Math.ceil(total / limit), items: trending }
   }
 
-  // Sử dụng cho today news (từ khoá hay hashtag tìm kiếm nhiều nhất hôm nay)
-  // Lấy trending keyword/hash xu hướng  (query: page: 1, limit: 20)
-  // Dùng trending lấy (500) tweets thỏa keywords/hashtags nổi bật hôm nay (nhiều lượt like/view)
-  // Rồi group (trên node) theo keyword/hashtag , trả về cho client
+  // Sử dụng cho today news (từ khoá hay hashtag tìm kiếm nhiều nhất tuần không tính ngày hôm qua)
+  // Lấy trending topic/hashtag xu hướng  (query: page: 1, limit: 20)
+  // Dùng trending lấy (1000) tweets thỏa topics/hashtags nổi bật hôm nay (nhiều lượt like/view)
+  // Rồi group (trên node) theo topic/hashtag , trả về cho client
   async getTodayNews({ query }: { query: IQuery<ITrending> }): Promise<IResTodayNews[]> {
     // Today range
     const startDay = new Date()
@@ -145,13 +145,12 @@ class ExploreService {
     const trending = await this.getTrending({
       query: { ...query, sd: startDay, ed: endDay }
     })
-    console.log('trending.items.length', trending.items.length)
 
     //
-    const [trending_keywords, trending_hashtags] = trending.items.reduce<[string[], ObjectId[]]>(
+    const [trending_topics, trending_hashtags] = trending.items.reduce<[string[], ObjectId[]]>(
       (acc, current) => {
-        if (current?.keyword) {
-          acc[0].push(current.keyword)
+        if (current?.topic) {
+          acc[0].push(current.topic)
         }
 
         if (current?.hashtag) {
@@ -163,11 +162,8 @@ class ExploreService {
       [[], []]
     )
 
-    console.log('trending_keywords::', trending_keywords)
-    console.log('trending_hashtags::', trending_hashtags)
-
     // Build search string (OR mode)
-    const searchString = trending_keywords.join(' ')
+    const searchString = trending_topics.join(' ')
 
     // Base pipeline for $lookup, $addFields, $sort, $project
     const basePipeline = [
@@ -258,9 +254,133 @@ class ExploreService {
       (tweet, index, self) => index === self.findIndex((t) => t._id?.equals(tweet._id))
     )
 
-    // console.log('textSearchTweets.length', textSearchTweets.length)
-    // console.log('hashtagTweets.length', hashtagTweets.length)
-    // console.log('tweets.length', tweets.length)
+    return this.grouped(trending.items, tweets)
+  }
+
+  async getOutStandingThisWeekNews({ query }: { query: IQuery<ITrending> }): Promise<IResTodayNews[]> {
+    // Today range
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const endDay = new Date(today)
+    endDay.setMilliseconds(-1) // 23:59:59.999 hôm qua
+
+    const startDay = new Date(today)
+    startDay.setDate(today.getDate() - 7) // cách đây 7 ngày
+    startDay.setHours(0, 0, 0, 0)
+
+    // Trending data
+    const trending = await this.getTrending({
+      query: { ...query, sd: startDay, ed: endDay }
+    })
+
+    //
+    const [trending_topics, trending_hashtags] = trending.items.reduce<[string[], ObjectId[]]>(
+      (acc, current) => {
+        if (current?.topic) {
+          acc[0].push(current.topic)
+        }
+
+        if (current?.hashtag) {
+          acc[1].push((current.hashtag as any)._id)
+        }
+
+        return acc
+      },
+      [[], []]
+    )
+
+    // Build search string (OR mode)
+    const searchString = trending_topics.join(' ')
+
+    // Base pipeline for $lookup, $addFields, $sort, $project
+    const basePipeline = [
+      { $limit: 500 },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user_id',
+          pipeline: [{ $project: { avatar: 1 } }]
+        }
+      },
+      { $unwind: { path: '$user_id', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'likes',
+          localField: '_id',
+          foreignField: 'tweet_id',
+          as: 'likes',
+          pipeline: [{ $project: { user_id: 1 } }]
+        }
+      },
+      {
+        $addFields: {
+          likes_count: { $size: '$likes' },
+          total_views: { $add: ['$user_view', '$guest_view'] }
+        }
+      },
+      {
+        $sort: {
+          likes_count: -1,
+          total_views: -1
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          content: 1,
+          media: 1,
+          user_id: 1,
+          hashtags: 1,
+          created_at: 1
+        }
+      }
+    ]
+
+    // Query 1: Text search (if searchString exists)
+    const textSearchTweets = searchString
+      ? await TweetCollection.aggregate<ITweet>([
+          {
+            $match: {
+              $text: { $search: searchString },
+              created_at: { $gte: startDay, $lte: endDay },
+              audience: ETweetAudience.Everyone
+            }
+          },
+          {
+            $addFields: {
+              score: { $meta: 'textScore' }
+            }
+          },
+          {
+            $sort: {
+              score: { $meta: 'textScore' }
+            }
+          },
+          ...basePipeline
+        ]).toArray()
+      : []
+
+    // Query 2: Hashtag search (if trending_hashtags exists)
+    const hashtagTweets = trending_hashtags.length
+      ? await TweetCollection.aggregate<ITweet>([
+          {
+            $match: {
+              hashtags: { $in: trending_hashtags },
+              created_at: { $gte: startDay, $lte: endDay },
+              audience: ETweetAudience.Everyone
+            }
+          },
+          ...basePipeline
+        ]).toArray()
+      : []
+
+    // Merge and deduplicate tweets
+    const tweets = [...textSearchTweets, ...hashtagTweets].filter(
+      (tweet, index, self) => index === self.findIndex((t) => t._id?.equals(tweet._id))
+    )
 
     return this.grouped(trending.items, tweets)
   }
@@ -270,7 +390,7 @@ class ExploreService {
 
     const grouped = trending.flatMap((t) => {
       //
-      const t_key = t.keyword || ''
+      const t_key = t.topic || ''
       const t_hashtag = t?.hashtag
 
       //
@@ -302,4 +422,4 @@ class ExploreService {
   // Sẽ xóa các trending cũ trong vòng 30 ngày và có count ít hơn 10
 }
 
-export default new ExploreService()
+export default new TrendingService()

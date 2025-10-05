@@ -2,7 +2,6 @@ import { Server, Socket } from 'socket.io'
 import { connectionHandler } from './handlers/connection.handler'
 import { conversationHandler } from './handlers/conversation.handler'
 import { messageHandler } from './handlers/message.handler'
-import { notificationHandler } from './handlers/notification.handler'
 import { authMiddleware } from './middlewares/auth.socket'
 
 let _io: Server
@@ -22,7 +21,6 @@ export function initializeSocket(io: Server) {
     await connectionHandler(io, socket)
     await conversationHandler(io, socket)
     await messageHandler(io, socket)
-    await notificationHandler(io, socket)
   })
 }
 

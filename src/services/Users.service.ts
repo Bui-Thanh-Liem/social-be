@@ -150,6 +150,8 @@ class UsersService {
         $project: {
           _id: 1,
           name: 1,
+          avatar: 1,
+          verify: 1,
           username: 1
         }
       }

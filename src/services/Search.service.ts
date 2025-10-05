@@ -11,42 +11,73 @@ import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
-import ExploreService from './Explore.service'
-import FollowsService from './Follows.service'
-import HashtagsService from './Hashtags.service'
 import { slug } from '~/utils/slug.util'
+import FollowsService from './Follows.service'
+import TrendingService from './Trending.service'
+// import HashtagsService from './Hashtags.service'
 
 class SearchService {
   //
   async searchPending({ query }: { query: IQuery<ITrending> }): Promise<ResSearchPending> {
     const { skip, limit, sort, q } = getPaginationAndSafeQuery<ITrending>(query)
 
-    let _hashtag = undefined
-    if (q.includes('#')) {
-      const [_id] = await HashtagsService.checkHashtags([q])
-      _hashtag = _id
-    }
+    // let _hashtag = undefined
+    // if (q.includes('#')) {
+    //   const [_id] = await HashtagsService.checkHashtags([q])
+    //   _hashtag = _id
+    // }
 
     const trending = await TrendingCollection.aggregate<TrendingSchema>([
       {
         $match: {
-          $or: [{ slug: slug(q) }, { hashtag: _hashtag }]
+          $or: [{ slug: { $regex: slug(q), $options: 'i' } }]
         }
       },
-      { $sort: sort },
+      { $sort: { ...sort, count: -1 } },
       { $skip: skip },
-      { $limit: limit }
+      { $limit: limit },
+      {
+        $lookup: {
+          from: 'hashtags',
+          localField: 'hashtag',
+          foreignField: '_id',
+          as: 'hashtag',
+          pipeline: [
+            {
+              $project: {
+                name: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: { path: '$hashtag', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          slug: 1,
+          topic: 1,
+          hashtag: '$hashtag.name'
+        }
+      }
     ]).toArray()
 
     const users = await UserCollection.aggregate<UserSchema>([
       {
         $match: {
-          $or: [{ name: q }, { username: q }]
+          $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }]
         }
       },
       { $sort: sort },
       { $skip: skip },
-      { $limit: limit }
+      { $limit: limit },
+      {
+        $project: {
+          name: 1,
+          username: 1,
+          avatar: 1,
+          verify: 1
+        }
+      }
     ]).toArray()
 
     return { trending, users }
@@ -309,21 +340,40 @@ class SearchService {
     ])
 
     // Cập nhật lại trending
-    await ExploreService.createTrending(q)
+    await TrendingService.createTrending(q)
 
     //
     return { total, total_page: Math.ceil(total / limit), items: tweets }
   }
 
-  // Sử dụng cho thanh tìm kiếm search
-  async searchUser({ query, user_id }: { query: IQuery<ITweet>; user_id: string }): Promise<ResMultiType<IUser>> {
+  // Sử dụng cho tìm kiếm
+  async searchUser({ query }: { query: IQuery<IUser> }): Promise<ResMultiType<IUser>> {
     //
-    const { skip, limit, q, f, pf, sort } = getPaginationAndSafeQuery<IUser>(query)
+    const { skip, limit, q } = getPaginationAndSafeQuery<IUser>(query)
 
     //
-    const users = await UserCollection.aggregate<UserSchema>([{}]).toArray()
+    const users = await UserCollection.aggregate<UserSchema>([
+      {
+        $match: {
+          $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }]
+        }
+      },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          name: 1,
+          username: 1,
+          avatar: 1,
+          verify: 1,
+          bio: 1
+        }
+      }
+    ]).toArray()
 
-    const total = await UserCollection.countDocuments({})
+    const total = await UserCollection.countDocuments({
+      $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }]
+    })
 
     return { total, total_page: Math.ceil(total / limit), items: users }
   }

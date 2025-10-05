@@ -60,21 +60,38 @@ class NotificationService {
           ]
         }
       },
-      // chỉ thêm khi có lookup (tạm thời type All lấy ref là tweet)
-      ...(type === ENotificationType.MENTION || type === ENotificationType.ALL
+      // chỉ thêm khi có lookup (tạm thời cho type All là tweet)
+      ...(type === ENotificationType.MENTION_LIKE || type === ENotificationType.ALL
         ? [
             {
               $lookup: {
                 from: 'tweets',
                 localField: 'refId',
                 foreignField: '_id',
-                as: 'refId',
+                as: 'tweetRef',
                 pipeline: [{ $project: { type: 1, parent_id: 1 } }]
+              }
+            },
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'refId',
+                foreignField: '_id',
+                as: 'userRef',
+                pipeline: [
+                  {
+                    $project: {
+                      username: 1
+                    }
+                  }
+                ]
               }
             }
           ]
         : []),
       { $unwind: { path: '$refId', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$tweetRef', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$userRef', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$receiver', preserveNullAndEmptyArrays: true } }
     ]).next()
@@ -122,6 +139,7 @@ class NotificationService {
       {
         $limit: limit
       },
+      // Lookup for sender
       {
         $lookup: {
           from: 'users',
@@ -139,6 +157,7 @@ class NotificationService {
           ]
         }
       },
+      // Lookup for receiver
       {
         $lookup: {
           from: 'users',
@@ -157,26 +176,46 @@ class NotificationService {
         }
       },
       // chỉ thêm khi có lookup (tạm thời cho type All là tweet)
-      ...(type === ENotificationType.MENTION || type === ENotificationType.ALL
+      ...(type === ENotificationType.MENTION_LIKE || type === ENotificationType.ALL
         ? [
             {
               $lookup: {
                 from: 'tweets',
                 localField: 'refId',
                 foreignField: '_id',
-                as: 'refId',
+                as: 'tweetRef',
                 pipeline: [{ $project: { type: 1, parent_id: 1 } }]
+              }
+            },
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'refId',
+                foreignField: '_id',
+                as: 'userRef',
+                pipeline: [
+                  {
+                    $project: {
+                      username: 1
+                    }
+                  }
+                ]
               }
             }
           ]
         : []),
       { $unwind: { path: '$refId', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$tweetRef', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$userRef', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$receiver', preserveNullAndEmptyArrays: true } }
     ]).toArray()
 
     //
-    const total = await NotificationCollection.countDocuments({ type, receiver: new ObjectId(user_id) })
+    const total = await NotificationCollection.countDocuments({
+      ...(type === ENotificationType.ALL ? {} : { type }),
+      receiver: new ObjectId(user_id)
+    })
 
     //
     return {
@@ -186,16 +225,19 @@ class NotificationService {
     }
   }
 
-  async readNoti(id: string) {
-    await NotificationCollection.updateOne({ _id: new ObjectId(id) }, { $set: { isRead: true } })
+  async read(noti_id: string, user_id: string) {
+    await NotificationCollection.updateOne({ _id: new ObjectId(noti_id) }, { $set: { isRead: true } })
+    await NotificationGateway.sendCountUnreadNoti(user_id)
+    return true
   }
 
   async countUnreadNoti(user_id: string) {
     return await NotificationCollection.countDocuments({ isRead: false, receiver: new ObjectId(user_id) })
   }
 
-  async delete(noti_id: string) {
+  async delete(noti_id: string, user_id: string) {
     await NotificationCollection.deleteOne({ _id: new ObjectId(noti_id) })
+    await NotificationGateway.sendCountUnreadNoti(user_id)
     return true
   }
 }

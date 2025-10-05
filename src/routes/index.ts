@@ -4,7 +4,7 @@ import { startFaker } from '~/utils/faker.util'
 import authRoute from './auth.routes'
 import bookmarksRoute from './bookmarks.routes'
 import conversationsRoute from './conversations.routes'
-import exploreRoute from './explore.routes'
+import trendingRoute from './trending.routes'
 import followsRoute from './follows.routes'
 import hashtagsRoute from './hashtags.routes'
 import likesRoute from './likes.routes'
@@ -27,7 +27,7 @@ rootRoute.use('/search', searchRoute)
 rootRoute.use('/hashtags', hashtagsRoute)
 rootRoute.use('/bookmarks', bookmarksRoute)
 rootRoute.use('/notifications', notificationRoute)
-rootRoute.use('/explore', exploreRoute)
+rootRoute.use('/trending', trendingRoute)
 rootRoute.use('/messages', messagesRoute)
 rootRoute.use('/conversations', conversationsRoute)
 rootRoute.get('/videos-streaming/:filename', StreamVideoController.streamVideo)

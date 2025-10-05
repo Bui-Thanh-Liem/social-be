@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongodb'
 import { ENotificationType } from '~/shared/enums/type.enum'
 import { IBase } from './base.interface'
+import { ITweet } from './tweet.interface'
 import { IUser } from './user.interface'
 
 export interface INotification extends IBase {
@@ -10,4 +11,7 @@ export interface INotification extends IBase {
   receiver: IUser | ObjectId
   isRead: boolean
   refId: ObjectId | undefined
+
+  tweetRef?: ITweet
+  userRef?: IUser
 }

@@ -12,7 +12,7 @@ export async function conversationHandler(io: Server, socket: Socket) {
   // Join vào conversation riêng của user để nhận thông báo cá nhân
   await socket.join(user_id as string)
   await NotificationGateway.sendCountUnreadNoti(user_id) // Gửi số lượng thông báo chưa đọc
-  await ConversationGateway.sendCountUnreadConv(user_id)
+  await ConversationGateway.sendCountUnreadConv(user_id) // Gửi số lượng cuộc trò chuyện chưa đọc
 
   // Join vào conversation mới
   socket.on(CONSTANT_EVENT_NAMES.JOIN_CONVERSATION, (ids: string[]) => {

@@ -31,6 +31,6 @@ export enum EConversationType {
 export enum ENotificationType {
   ALL = 'all',
   VERIFY = 'verify',
-  MENTION = 'mention',
-  OTHER = 'other'
+  MENTION_LIKE = 'mention-like',
+  FOLLOW = 'follow'
 }

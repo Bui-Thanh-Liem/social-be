@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
-import ExploreService from '~/services/Explore.service'
+import ExploreService from '~/services/Trending.service'
 import { OkResponse } from '~/shared/classes/response.class'
 
-class ExploreController {
+class TrendingController {
   async getTrending(req: Request, res: Response) {
     const results = await ExploreService.getTrending({
       query: req.query
@@ -18,6 +18,14 @@ class ExploreController {
 
     res.status(200).json(new OkResponse('Get today news Success', results))
   }
+
+  async getOutStandingThisWeekNews(req: Request, res: Response) {
+    const results = await ExploreService.getOutStandingThisWeekNews({
+      query: req.query
+    })
+
+    res.status(200).json(new OkResponse('Get outstanding this week Success', results))
+  }
 }
 
-export default new ExploreController()
+export default new TrendingController()

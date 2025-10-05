@@ -1,11 +1,13 @@
-import { CONSTANT_JOB } from '~/shared/constants'
 import mailServiceInstance from '~/helpers/mail.helper'
 import VideosService from '~/services/Videos.service'
 import { BadRequestError } from '~/shared/classes/error.class'
+import { CONSTANT_JOB } from '~/shared/constants'
 import { EVideoStatus } from '~/shared/enums/status.enum'
+import ConversationGateway from '~/socket/gateways/Conversation.gateway'
 import { compressionVideo } from '~/utils/compression.util'
-import { compressionQueue, sendEmailQueue } from '../queues'
 import { logger } from '~/utils/logger.util'
+import { compressionQueue, sendEmailQueue } from '../queues'
+import { sendNotiQueue } from '../queues/sendNotiQueue'
 
 // Worker xử lý gửi email xác thực
 sendEmailQueue.process(CONSTANT_JOB.VERIFY_MAIL, 5, async (job, done) => {
@@ -45,5 +47,17 @@ compressionQueue.process(CONSTANT_JOB.COMPRESSION_HLS, 5, async (job, done) => {
   } catch (error) {
     logger.info('error::', error)
     done(new BadRequestError(`Encode video ${path} error`))
+  }
+})
+
+// Worker xử lý gửi số lượng thông báo chưa đọc sau khi đăng kí tàì khoản
+sendNotiQueue.process(CONSTANT_JOB.UNREAD_NOTI, 5, async (job, done) => {
+  try {
+    const { user_id } = job.data
+    await ConversationGateway.sendCountUnreadConv(user_id)
+    logger.info('Sent count noti to', user_id)
+    done()
+  } catch (error) {
+    done(new Error('Send count noti after register failed'))
   }
 })

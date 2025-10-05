@@ -23,7 +23,8 @@ class SearchController {
   }
 
   async searchUser(req: Request, res: Response) {
-    res.status(200).json(new OkResponse('Search tweets Success', true))
+    const users = await SearchService.searchUser({ query: req.query })
+    res.status(200).json(new OkResponse('Search users Success', users))
   }
 }
 

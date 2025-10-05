@@ -3,7 +3,7 @@ import NotificationsController from '~/controllers/Notifications.controller'
 import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middleware'
 import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
-import { DelNotiDtoSchema, GetMultiByTypeNotiDtoSchema } from '~/shared/dtos/req/notification.dto'
+import { ParamIdNotiDtoSchema, GetMultiByTypeNotiDtoSchema } from '~/shared/dtos/req/notification.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 
@@ -17,10 +17,17 @@ notificationRoute.get(
   wrapAsyncHandler(NotificationsController.getMultiByType)
 )
 
+notificationRoute.patch(
+  '/read/:noti_id',
+  verifyAccessToken,
+  requestParamsValidate(ParamIdNotiDtoSchema),
+  wrapAsyncHandler(NotificationsController.read)
+)
+
 notificationRoute.delete(
   '/:noti_id',
   verifyAccessToken,
-  requestParamsValidate(DelNotiDtoSchema),
+  requestParamsValidate(ParamIdNotiDtoSchema),
   wrapAsyncHandler(NotificationsController.delete)
 )
 
