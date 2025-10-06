@@ -53,14 +53,6 @@ tweetsRoute.get(
 )
 
 tweetsRoute.get(
-  '/profile-media',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(TweetsController.getProfileMedia)
-)
-
-tweetsRoute.get(
   '/profile/:tweet_type',
   verifyAccessToken,
   verifyUserEmail,

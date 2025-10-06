@@ -68,18 +68,6 @@ class TweetsController {
     res.status(200).json(new OkResponse('Get profile tweet success', result))
   }
 
-  async getProfileMedia(req: Request, res: Response) {
-    const user = req?.decoded_authorization as IJwtPayload
-    const queries = req.query as IQuery<ITweet>
-
-    const result = await TweetsService.getProfileMedia({
-      query: queries,
-      user_active_id: user.user_id,
-      user_id: queries?.user_id as string
-    })
-    res.status(200).json(new OkResponse('Get profile media success', result))
-  }
-
   async getTweetLiked(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
 

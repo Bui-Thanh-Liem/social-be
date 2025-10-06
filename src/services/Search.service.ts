@@ -89,7 +89,8 @@ class SearchService {
     const { skip, limit, q, f, pf, sort } = getPaginationAndSafeQuery<ITweet>(query)
 
     //
-    const followed_user_ids = await FollowsService.getUserFollowers(user_id)
+    const followed_user_ids = await FollowsService.getUserFollowing(user_id)
+    followed_user_ids.push(user_id)
 
     //
     const hasQ = { query: {}, projection: {}, sort: {}, score: {} }
@@ -158,11 +159,23 @@ class SearchService {
           ...hasPf.query
         }
       },
+      { $skip: skip },
+      { $limit: limit },
       {
-        $skip: skip
+        $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'followed_user_id',
+          as: 'followers'
+        }
       },
       {
-        $limit: limit
+        $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'user_id',
+          as: 'following'
+        }
       },
       {
         $lookup: {
@@ -173,10 +186,12 @@ class SearchService {
           pipeline: [
             {
               $project: {
+                bio: 1,
                 name: 1,
                 email: 1,
                 username: 1,
                 avatar: 1,
+                verify: 1,
                 cover_photo: 1
               }
             }
@@ -187,6 +202,33 @@ class SearchService {
         $unwind: {
           path: '$user_id',
           preserveNullAndEmptyArrays: true
+        }
+      },
+      // lookup để kiểm tra user hiện tại có follow user_id không
+      {
+        $lookup: {
+          from: 'followers',
+          let: { targetUserId: '$user_id._id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ['$followed_user_id', '$$targetUserId'] }, { $eq: ['$user_id', new ObjectId(user_id)] }]
+                }
+              }
+            }
+          ],
+          as: 'userFollowCheck'
+        }
+      },
+      {
+        $addFields: {
+          'user_id.isFollow': { $gt: [{ $size: '$userFollowCheck' }, 0] }
+        }
+      },
+      {
+        $project: {
+          userFollowCheck: 0 // xoá field tạm
         }
       },
       {
@@ -213,7 +255,11 @@ class SearchService {
           pipeline: [
             {
               $project: {
-                name: 1
+                name: 1,
+                username: 1,
+                avatar: 1,
+                verify: 1,
+                bio: 1
               }
             }
           ]
@@ -259,31 +305,55 @@ class SearchService {
       },
       {
         $addFields: {
-          bookmark_count: { $size: '$bookmarks' },
-          like_count: { $size: '$likes' },
-          // mentions: {
-          //   $map: {
-          //     input: '$mentions',
-          //     as: 'm',
-          //     in: {
-          //       _id: '$m._id',
-          //       name: '$m.name',
-          //       username: '$m.username'
-          //     }
-          //   }
-          // },
+          // bookmarks_count: { $size: '$bookmarks' },
+          likes_count: { $size: '$likes' },
+          isLike: {
+            $in: [new ObjectId(user_id), '$likes.user_id']
+          },
+          isBookmark: {
+            $in: [new ObjectId(user_id), '$bookmarks.user_id']
+          },
+          // lấy id retweet của user (1 cái đầu tiên hoặc null)
           retweet: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.Retweet]
+            $let: {
+              vars: {
+                matched: {
+                  $filter: {
+                    input: '$tweets_children',
+                    as: 'child',
+                    cond: {
+                      $and: [
+                        { $eq: ['$$child.type', ETweetType.Retweet] },
+                        { $eq: ['$$child.user_id', new ObjectId(user_id)] }
+                      ]
+                    }
+                  }
                 }
-              }
+              },
+              in: { $arrayElemAt: ['$$matched._id', 0] }
             }
           },
-          comment_count: {
+          // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
+          quote: {
+            $let: {
+              vars: {
+                matched: {
+                  $filter: {
+                    input: '$tweets_children',
+                    as: 'child',
+                    cond: {
+                      $and: [
+                        { $eq: ['$$child.type', ETweetType.QuoteTweet] },
+                        { $eq: ['$$child.user_id', new ObjectId(user_id)] }
+                      ]
+                    }
+                  }
+                }
+              },
+              in: { $arrayElemAt: ['$$matched._id', 0] }
+            }
+          },
+          comments_count: {
             $size: {
               $filter: {
                 input: '$tweets_children',
@@ -294,7 +364,18 @@ class SearchService {
               }
             }
           },
-          quote_count: {
+          retweets_count: {
+            $size: {
+              $filter: {
+                input: '$tweets_children',
+                as: 'tweet',
+                cond: {
+                  $eq: ['$$tweet.type', ETweetType.Retweet]
+                }
+              }
+            }
+          },
+          quotes_count: {
             $size: {
               $filter: {
                 input: '$tweets_children',
@@ -304,12 +385,8 @@ class SearchService {
                 }
               }
             }
-          },
-          ...hasQ.score
+          }
         }
-      },
-      {
-        $sort: hasQ.sort
       }
     ]).toArray()
 
@@ -347,19 +424,54 @@ class SearchService {
   }
 
   // Sử dụng cho tìm kiếm
-  async searchUser({ query }: { query: IQuery<IUser> }): Promise<ResMultiType<IUser>> {
+  async searchUser({ query, user_id }: { query: IQuery<IUser>; user_id: string }): Promise<ResMultiType<IUser>> {
     //
-    const { skip, limit, q } = getPaginationAndSafeQuery<IUser>(query)
+    const { skip, limit, q, pf } = getPaginationAndSafeQuery<IUser>(query)
+    const hasPf = {
+      query: {}
+    }
+
+    //
+    if (pf) {
+      const followed_user_ids = await FollowsService.getUserFollowing(user_id)
+      hasPf.query = { _id: { $in: followed_user_ids } }
+    }
 
     //
     const users = await UserCollection.aggregate<UserSchema>([
       {
         $match: {
-          $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }]
+          $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }],
+          ...hasPf.query
         }
       },
       { $skip: skip },
       { $limit: limit },
+      {
+        $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'followed_user_id',
+          as: 'followers'
+        }
+      },
+      {
+        $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'user_id',
+          as: 'following'
+        }
+      },
+      {
+        $addFields: {
+          follower_count: { $size: '$followers' },
+          following_count: { $size: '$following' },
+          isFollow: {
+            $in: [new ObjectId(user_id), '$followers.user_id']
+          }
+        }
+      },
       {
         $project: {
           name: 1,

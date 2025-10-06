@@ -13,17 +13,18 @@ class SearchController {
   }
 
   async searchTweet(req: Request, res: Response) {
-    const user = req?.decoded_authorization as IJwtPayload
+    const { user_id } = req?.decoded_authorization as IJwtPayload
     const tweets = await SearchService.searchTweet({
       query: req.query,
-      user_id: user.user_id
+      user_id: user_id
     })
 
     res.status(200).json(new OkResponse('Search tweets Success', tweets))
   }
 
   async searchUser(req: Request, res: Response) {
-    const users = await SearchService.searchUser({ query: req.query })
+    const { user_id } = req?.decoded_authorization as IJwtPayload
+    const users = await SearchService.searchUser({ query: req.query, user_id })
     res.status(200).json(new OkResponse('Search users Success', users))
   }
 }
