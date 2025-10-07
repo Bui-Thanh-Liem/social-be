@@ -22,14 +22,7 @@ export const QueryDtoSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(2).max(100).default(10),
   q: z.string().trim().optional(),
-  f: z
-    .preprocess(
-      (val) => Number(val),
-      z.nativeEnum(EMediaType, {
-        errorMap: () => ({ message: 'Invalid Media Type' })
-      })
-    )
-    .optional(),
+  f: z.string().trim().optional(),
   pf: z
     .string()
     .trim()

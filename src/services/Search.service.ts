@@ -16,6 +16,7 @@ import FollowsService from './Follows.service'
 import TrendingService from './Trending.service'
 // import HashtagsService from './Hashtags.service'
 
+// Những hàm search sẽ ưu tiên sort sau limit
 class SearchService {
   //
   async searchPending({ query }: { query: IQuery<ITrending> }): Promise<ResSearchPending> {
@@ -86,7 +87,7 @@ class SearchService {
   // Sử dụng cho thanh tìm kiếm search
   async searchTweet({ query, user_id }: { query: IQuery<ITweet>; user_id: string }): Promise<ResMultiType<ITweet>> {
     //
-    const { skip, limit, q, f, pf, sort } = getPaginationAndSafeQuery<ITweet>(query)
+    const { skip, limit, q, f, pf, sort, t } = getPaginationAndSafeQuery<ITweet>(query)
 
     //
     const followed_user_ids = await FollowsService.getUserFollowing(user_id)
@@ -97,6 +98,9 @@ class SearchService {
     const hasF = { query: {} }
     const hasPf = {
       query: {}
+    }
+    const hasTop = {
+      query: []
     }
 
     //
@@ -117,10 +121,10 @@ class SearchService {
     }
 
     //
-    if (!Number.isNaN(f)) {
+    if (f) {
       hasF.query = {
         'media.type': {
-          $or: [EMediaType.Image, EMediaType.Video]
+          $in: [EMediaType.Image, EMediaType.Video]
         }
       }
     }
@@ -150,6 +154,68 @@ class SearchService {
       }
     }
 
+    if (t) {
+      console.log('top ? :::', t)
+
+      hasTop.query = [
+        {
+          $lookup: {
+            from: 'likes',
+            let: { tid: '$_id' },
+            pipeline: [{ $match: { $expr: { $eq: ['$tweet_id', '$$tid'] } } }, { $count: 'count' }],
+            as: 'likes_count_arr'
+          }
+        },
+
+        // lightweight lookup -> children counts grouped by type
+        {
+          $lookup: {
+            from: 'tweets',
+            let: { tid: '$_id' },
+            pipeline: [
+              { $match: { $expr: { $eq: ['$parent_id', '$$tid'] } } },
+              {
+                $group: {
+                  _id: '$parent_id',
+                  comments_count: { $sum: { $cond: [{ $eq: ['$type', ETweetType.Comment] }, 1, 0] } },
+                  retweets_count: { $sum: { $cond: [{ $eq: ['$type', ETweetType.Retweet] }, 1, 0] } },
+                  quotes_count: { $sum: { $cond: [{ $eq: ['$type', ETweetType.QuoteTweet] }, 1, 0] } }
+                }
+              },
+              { $project: { comments_count: 1, retweets_count: 1, quotes_count: 1 } }
+            ],
+            as: 'children_counts'
+          }
+        },
+
+        // normalize counts to numbers
+        {
+          $addFields: {
+            likes_count: { $ifNull: [{ $arrayElemAt: ['$likes_count_arr.count', 0] }, 0] },
+            comments_count: { $ifNull: [{ $arrayElemAt: ['$children_counts.comments_count', 0] }, 0] },
+            retweets_count: { $ifNull: [{ $arrayElemAt: ['$children_counts.retweets_count', 0] }, 0] },
+            quotes_count: { $ifNull: [{ $arrayElemAt: ['$children_counts.quotes_count', 0] }, 0] }
+          }
+        },
+
+        // engagement score + sort
+        {
+          $addFields: {
+            engagement_score: {
+              $add: [
+                '$likes_count',
+                '$retweets_count',
+                '$comments_count',
+                '$quotes_count',
+                { $ifNull: ['$user_view', 0] }
+              ]
+            }
+          }
+        },
+        { $sort: { engagement_score: -1, created_at: -1 } }
+      ] as any
+    }
+
     //
     const tweets = await TweetCollection.aggregate<TweetSchema>([
       {
@@ -159,6 +225,7 @@ class SearchService {
           ...hasPf.query
         }
       },
+      ...hasTop.query,
       { $skip: skip },
       { $limit: limit },
       {
@@ -426,7 +493,7 @@ class SearchService {
   // Sử dụng cho tìm kiếm
   async searchUser({ query, user_id }: { query: IQuery<IUser>; user_id: string }): Promise<ResMultiType<IUser>> {
     //
-    const { skip, limit, q, pf } = getPaginationAndSafeQuery<IUser>(query)
+    const { skip, limit, q, pf, t } = getPaginationAndSafeQuery<IUser>(query)
     const hasPf = {
       query: {}
     }
@@ -445,8 +512,6 @@ class SearchService {
           ...hasPf.query
         }
       },
-      { $skip: skip },
-      { $limit: limit },
       {
         $lookup: {
           from: 'followers',
@@ -472,13 +537,24 @@ class SearchService {
           }
         }
       },
+      ...(t === 'top'
+        ? [
+            // 👇 Sắp xếp trước khi phân trang
+            { $sort: { follower_count: -1, _id: 1 } },
+            { $skip: skip },
+            { $limit: limit }
+          ]
+        : [{ $skip: skip }, { $limit: limit }]),
       {
         $project: {
           name: 1,
           username: 1,
           avatar: 1,
           verify: 1,
-          bio: 1
+          bio: 1,
+          follower_count: 1,
+          following_count: 1,
+          isFollow: 1
         }
       }
     ]).toArray()
