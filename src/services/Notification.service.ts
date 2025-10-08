@@ -240,6 +240,36 @@ class NotificationService {
     await NotificationGateway.sendCountUnreadNoti(user_id)
     return true
   }
+
+  async cleanupOldNotifications() {
+    const fifteenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
+
+    // Lấy danh sách tất cả người nhận có thông báo cũ
+    const users = await NotificationCollection.aggregate([
+      { $match: { created_at: { $lt: fifteenDaysAgo } } },
+      { $group: { _id: '$receiver' } }
+    ]).toArray()
+
+    for (const u of users) {
+      const receiverId = u._id as ObjectId
+
+      // Lấy 200 notification mới nhất của user đó
+      const latest = await NotificationCollection.find({ receiver: receiverId })
+        .sort({ created_at: -1 })
+        .limit(200)
+        .project({ _id: 1 })
+        .toArray()
+
+      const keepIds = latest.map((n) => n._id)
+
+      // Xoá các thông báo cũ hơn 15 ngày và không nằm trong top 200
+      await NotificationCollection.deleteMany({
+        receiver: receiverId,
+        created_at: { $lt: fifteenDaysAgo },
+        _id: { $nin: keepIds }
+      })
+    }
+  }
 }
 
 export default new NotificationService()

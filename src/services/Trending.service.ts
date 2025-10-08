@@ -419,7 +419,49 @@ class TrendingService {
     return grouped
   }
 
-  // Sẽ xóa các trending cũ trong vòng 30 ngày và có count ít hơn 10
+  async cleanupOldTrending() {
+    try {
+      const latest100 = await TrendingCollection.find({})
+        .sort({ created_at: -1 })
+        .limit(100)
+        .project({ _id: 1 })
+        .toArray()
+
+      const keepIds = latest100.map((t) => t._id)
+
+      await TrendingCollection.deleteMany({
+        _id: { $nin: keepIds }
+      })
+    } catch (error) {
+      console.error('[CRON-15D] ❌ Cleanup trending failed', error)
+    }
+  }
+
+  async report(id: string) {
+    await TrendingCollection.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $inc: { count: -1 }, // giảm khi bị báo cáo
+        $currentDate: { updated_at: true }
+      }
+    )
+    return true
+  }
+
+  async cleanupWeakTrending() {
+    try {
+      const now = new Date()
+      const threeDaysAgo = new Date(now)
+      threeDaysAgo.setDate(now.getDate() - 3)
+
+      await TrendingCollection.deleteMany({
+        created_at: { $gte: threeDaysAgo },
+        count: { $lt: 10 }
+      })
+    } catch (error) {
+      console.error('[CRON-3D] ❌ Cleanup weak trending failed', error)
+    }
+  }
 }
 
 export default new TrendingService()

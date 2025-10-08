@@ -492,26 +492,29 @@ class SearchService {
 
   // Sử dụng cho tìm kiếm
   async searchUser({ query, user_id }: { query: IQuery<IUser>; user_id: string }): Promise<ResMultiType<IUser>> {
-    //
     const { skip, limit, q, pf, t } = getPaginationAndSafeQuery<IUser>(query)
+
     const hasPf = {
       query: {}
     }
 
-    //
     if (pf) {
       const followed_user_ids = await FollowsService.getUserFollowing(user_id)
       hasPf.query = { _id: { $in: followed_user_ids } }
     }
 
     //
-    const users = await UserCollection.aggregate<UserSchema>([
-      {
-        $match: {
-          $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }],
-          ...hasPf.query
-        }
-      },
+    // --- 1️⃣ Truy vấn theo name / username (regex)
+    //
+    const regexMatch = {
+      $match: {
+        $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }],
+        ...hasPf.query
+      }
+    }
+
+    const basePipeline = [
+      regexMatch,
       {
         $lookup: {
           from: 'followers',
@@ -538,12 +541,7 @@ class SearchService {
         }
       },
       ...(t === 'top'
-        ? [
-            // 👇 Sắp xếp trước khi phân trang
-            { $sort: { follower_count: -1, _id: 1 } },
-            { $skip: skip },
-            { $limit: limit }
-          ]
+        ? [{ $sort: { follower_count: -1, _id: 1 } }, { $skip: skip }, { $limit: limit }]
         : [{ $skip: skip }, { $limit: limit }]),
       {
         $project: {
@@ -557,13 +555,46 @@ class SearchService {
           isFollow: 1
         }
       }
-    ]).toArray()
+    ]
 
+    let users = await UserCollection.aggregate<UserSchema>(basePipeline).toArray()
+
+    //
+    // --- 2️⃣ Nếu không có kết quả => fallback sang $text (chỉ bio)
+    //
+    if (users.length === 0 && q) {
+      const textPipeline = [
+        {
+          $match: {
+            $text: { $search: q },
+            ...hasPf.query
+          }
+        },
+        {
+          $addFields: { score: { $meta: 'textScore' } }
+        },
+        {
+          $sort: { score: -1 }
+        },
+        ...basePipeline.slice(1) // dùng lại phần lookup, addFields, project
+      ]
+
+      users = await UserCollection.aggregate<UserSchema>(textPipeline).toArray()
+    }
+
+    //
+    // --- 3️⃣ Tổng số kết quả (dựa trên regex)
+    //
     const total = await UserCollection.countDocuments({
-      $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }]
+      $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }],
+      ...hasPf.query
     })
 
-    return { total, total_page: Math.ceil(total / limit), items: users }
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: users
+    }
   }
 }
 

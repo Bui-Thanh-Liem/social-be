@@ -17,7 +17,8 @@ export const RegisterUserDtoSchema = z
         return new Date(arg)
       }
       return arg
-    }, z.date())
+    }, z.date()),
+    avatar: z.string().trim().optional()
   })
   .refine((data) => data.password === data.confirm_password, {
     path: ['confirm_password'],

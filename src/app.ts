@@ -5,16 +5,19 @@ import hpp from 'hpp'
 import swaggerUi from 'swagger-ui-express'
 
 //
+import morgan from 'morgan'
+import { envs } from './configs/env.config'
 import { swaggerSpec } from './configs/swagger'
 import { corsMiddleware } from './middlewares/cors.middleware'
 import { errorHandler } from './middlewares/errorhandler.middleware'
+import { loggerMiddleware } from './middlewares/logger.middleware'
 import { rateLimitMiddleware } from './middlewares/ratelimit.middleware'
 import rootRoute from './routes'
 import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/constants'
-import morgan from 'morgan'
-import { loggerMiddleware } from './middlewares/logger.middleware'
 import { logger } from './utils/logger.util'
-import { envs } from './configs/env.config'
+
+//
+import './tasks/cleanup.task'
 
 const app = express()
 

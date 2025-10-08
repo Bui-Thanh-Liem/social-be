@@ -5,7 +5,7 @@ import { initConversationCollection } from '~/models/schemas/Conversation.schema
 import { initFollowerCollection } from '~/models/schemas/Follower.schema'
 import { HashtagCollection, initHashtagCollection } from '~/models/schemas/Hashtag.schema'
 import { initLikeCollection } from '~/models/schemas/Like.schema'
-import { initMessageCollection } from '~/models/schemas/Message.schema'
+import { initMessageCollection, MessageCollection } from '~/models/schemas/Message.schema'
 import { initNotificationCollection } from '~/models/schemas/Notification.schema'
 import { initRefreshTokenCollection, RefreshTokenCollection } from '~/models/schemas/RefreshToken.schema'
 import { initTrendingCollection, TrendingCollection } from '~/models/schemas/Trending.schema'
@@ -59,16 +59,18 @@ class DatabaseConfig {
   }
 
   async initialIndex() {
-    const indexUser = await UserCollection.indexExists(['email_1', 'username_1'])
+    const indexUser = await UserCollection.indexExists(['email_1', 'username_1', 'bio_text'])
     const indexRefresh = await RefreshTokenCollection.indexExists(['token_1', 'exp_1'])
     const indexTweet = await TweetCollection.indexExists(['content_text'])
-    const indexTrending = await TweetCollection.indexExists(['slug_1'])
+    const indexTrending = await TweetCollection.indexExists(['slug_1', 'created_at_-1'])
     const indexHashtag = await HashtagCollection.indexExists(['slug_1'])
+    const indexMessage = await HashtagCollection.indexExists(['conversation_id_1_created_at_-1'])
 
     // User
     if (!indexUser) {
       UserCollection.createIndex({ email: 1 }, { unique: true })
       UserCollection.createIndex({ username: 1 }, { unique: true })
+      UserCollection.createIndex({ bio: 'text' }, { default_language: 'none' })
     }
 
     // Refresh
@@ -85,11 +87,17 @@ class DatabaseConfig {
     // Trending
     if (!indexTrending) {
       TrendingCollection.createIndex({ slug: 1 }, { unique: true })
+      TrendingCollection.createIndex({ created_at: -1 })
     }
 
     // Hashtag
     if (!indexHashtag) {
       HashtagCollection.createIndex({ slug: 1 }, { unique: true })
+    }
+
+    // Message
+    if (indexMessage) {
+      MessageCollection.createIndex({ conversation_id: 1, created_at: -1 })
     }
   }
 

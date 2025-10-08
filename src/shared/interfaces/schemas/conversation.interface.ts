@@ -13,6 +13,9 @@ export interface IConversation extends IBase {
   //
   lastMessage: ObjectId | null
   readStatus: ObjectId[] | null
+
+  //
+  username?: string // Đơn giản hóa tính năng xem trang cá nhân tại cuộc trò chuyện (type === private)
 }
 
 //

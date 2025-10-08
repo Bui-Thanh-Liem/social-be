@@ -135,6 +135,8 @@ class AuthService {
 
     //
     const exist = await this.findOneByEmail(userInfo?.email)
+
+    // Nếu đã đăng nhập rồi thì tạo token gửi về client
     if (exist) {
       const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
         payload: { user_id: exist._id.toString() }
@@ -159,7 +161,8 @@ class AuthService {
       name: userInfo.name,
       day_of_birth: new Date(),
       confirm_password: newPass,
-      password: newPass
+      password: newPass,
+      avatar: userInfo.picture
     })
 
     return {

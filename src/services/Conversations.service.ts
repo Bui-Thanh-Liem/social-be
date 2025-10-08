@@ -133,6 +133,7 @@ class ConversationsService {
               $project: {
                 _id: 1,
                 name: 1,
+                username: 1,
                 avatar: 1
               }
             }
@@ -170,6 +171,31 @@ class ConversationsService {
                 }
               },
               else: '$name' // Giữ nguyên name nếu type != Private
+            }
+          },
+          username: {
+            $cond: {
+              if: { $eq: ['$type', EConversationType.Private] }, // Kiểm tra nếu type = Private
+              then: {
+                $let: {
+                  vars: {
+                    otherParticipant: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: '$participants',
+                            as: 'participant',
+                            cond: { $ne: ['$$participant._id', new ObjectId(user_id)] }
+                          }
+                        },
+                        0
+                      ]
+                    }
+                  },
+                  in: '$$otherParticipant.username' // Lấy username của participant không phải user_id
+                }
+              },
+              else: '$username' // Giữ nguyên username nếu type != Private
             }
           },
           avatar: {
@@ -263,6 +289,7 @@ class ConversationsService {
               $project: {
                 _id: 1,
                 name: 1,
+                username: 1,
                 avatar: 1
               }
             }
@@ -295,6 +322,31 @@ class ConversationsService {
                 }
               },
               else: '$name'
+            }
+          },
+          username: {
+            $cond: {
+              if: { $eq: ['$type', EConversationType.Private] },
+              then: {
+                $let: {
+                  vars: {
+                    other: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: '$participants',
+                            as: 'p',
+                            cond: { $ne: ['$$p._id', new ObjectId(user_id)] }
+                          }
+                        },
+                        0
+                      ]
+                    }
+                  },
+                  in: '$$other.username'
+                }
+              },
+              else: '$username'
             }
           },
           avatar: {
