@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import TrendingService from '~/services/Trending.service'
 import { OkResponse } from '~/shared/classes/response.class'
 import { ReportTrendingDto } from '~/shared/dtos/req/trending.dto'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class TrendingController {
   async getTrending(req: Request, res: Response) {
@@ -13,17 +14,15 @@ class TrendingController {
   }
 
   async getTodayNews(req: Request, res: Response) {
-    const results = await TrendingService.getTodayNews({
-      query: req.query
-    })
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const results = await TrendingService.getTodayNews({ user_id, query: req.query })
 
     res.status(200).json(new OkResponse('Get today news Success', results))
   }
 
   async getOutStandingThisWeekNews(req: Request, res: Response) {
-    const results = await TrendingService.getOutStandingThisWeekNews({
-      query: req.query
-    })
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const results = await TrendingService.getOutStandingThisWeekNews({ user_id, query: req.query })
 
     res.status(200).json(new OkResponse('Get outstanding this week Success', results))
   }

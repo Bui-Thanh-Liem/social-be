@@ -22,6 +22,11 @@ class BookmarksService {
       return { status: 'Bookmark', _id: inserted.insertedId.toString() }
     }
   }
+
+  async deleteByTweetId(tweet_id: string) {
+    await BookmarkCollection.deleteMany({ tweet_id: new ObjectId(tweet_id) })
+    return true
+  }
 }
 
 export default new BookmarksService()

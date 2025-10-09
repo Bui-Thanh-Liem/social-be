@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongodb'
+import database from '~/configs/database.config'
 import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
 import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
@@ -12,10 +13,12 @@ import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 import { deleteImage, deleteVideo } from '~/utils/upload.util'
-import TrendingService from './Trending.service'
+import BookmarksService from './Bookmarks.service'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
+import LikesService from './Likes.service'
 import NotificationService from './Notification.service'
+import TrendingService from './Trending.service'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
@@ -1500,7 +1503,8 @@ class TweetsService {
           pipeline: [
             {
               $project: {
-                name: 1
+                name: 1,
+                username: 1
               }
             }
           ]
@@ -1628,41 +1632,56 @@ class TweetsService {
   }
 
   async delete(tweet_id: string) {
-    // Lấy tweet trước
-    const tweet = await TweetCollection.findOne({ _id: new ObjectId(tweet_id) })
+    const session = database.getClient().startSession()
+    try {
+      await session.withTransaction(async () => {
+        // Lấy tweet trước
+        const tweet = await TweetCollection.findOne({ _id: new ObjectId(tweet_id) })
 
-    if (!tweet) {
-      throw new NotFoundError('Không tìm thấy bài viết để xóa')
+        if (!tweet) {
+          throw new NotFoundError('Không tìm thấy bài viết để xóa')
+        }
+
+        // Xoá DB trước
+        const result = await TweetCollection.deleteOne({ _id: new ObjectId(tweet_id) })
+        if (result.deletedCount === 0) {
+          throw new NotFoundError('Không tìm thấy bài viết để xóa')
+        }
+
+        // Xóa ảnh
+        if (tweet?.media && tweet?.media?.type === EMediaType.Image) {
+          // Lấy filename từ url: http://domain/images/abc.png => abc.png
+          const filename = tweet.media?.url.split('/').pop()
+          if (filename) {
+            await deleteImage(filename).catch((err) => {
+              console.log('Tweet - delete - media - img:::', err)
+            })
+          }
+        }
+
+        // Xóa video
+        if (tweet?.media && tweet?.media?.type === EMediaType.Video) {
+          // Lấy folderName: http://localhost:9000/videos-hls/RXhw4s21AEzt_-VpjWIin/master.m3u8
+          const parts = tweet.media?.url.split('/')
+          const folderName = parts[parts.length - 2] // "RXhw4s21AEzt_-VpjWIin"
+          if (folderName) {
+            await deleteVideo(folderName).catch((err) => {
+              console.log('Tweet - delete - media - video:::', err)
+            })
+          }
+        }
+
+        // Xóa các record của bookmark/like
+        await BookmarksService.deleteByTweetId(tweet_id)
+        await LikesService.deleteByTweetId(tweet_id)
+      })
+      return true
+    } catch (error) {
+      console.error('Transaction failed:', error)
+      throw error
+    } finally {
+      session.endSession()
     }
-
-    // Xoá DB trước
-    const result = await TweetCollection.deleteOne({ _id: new ObjectId(tweet_id) })
-    if (result.deletedCount === 0) {
-      throw new NotFoundError('Không tìm thấy bài viết để xóa')
-    }
-
-    if (tweet?.media && tweet?.media?.type === EMediaType.Image) {
-      // Lấy filename từ url: http://domain/images/abc.png => abc.png
-      const filename = tweet.media?.url.split('/').pop()
-      if (filename) {
-        await deleteImage(filename).catch((err) => {
-          console.log('Tweet - delete - media - img:::', err)
-        })
-      }
-    }
-
-    if (tweet?.media && tweet?.media?.type === EMediaType.Video) {
-      // Lấy folderName: http://localhost:9000/videos-hls/RXhw4s21AEzt_-VpjWIin/master.m3u8
-      const parts = tweet.media?.url.split('/')
-      const folderName = parts[parts.length - 2] // "RXhw4s21AEzt_-VpjWIin"
-      if (folderName) {
-        await deleteVideo(folderName).catch((err) => {
-          console.log('Tweet - delete - media - video:::', err)
-        })
-      }
-    }
-
-    return true
   }
 }
 

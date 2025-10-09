@@ -50,6 +50,11 @@ class LikesService {
 
     return { status, _id: id, likes_count: likesCount }
   }
+
+  async deleteByTweetId(tweet_id: string) {
+    await LikeCollection.deleteMany({ tweet_id: new ObjectId(tweet_id) })
+    return true
+  }
 }
 
 export default new LikesService()

@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb'
 import { TrendingCollection, TrendingSchema } from '~/models/schemas/Trending.schema'
 import { TweetCollection } from '~/models/schemas/Tweet.schema'
 import { BadRequestError } from '~/shared/classes/error.class'
-import { IResTodayNews } from '~/shared/dtos/res/explore.dto'
+import { IResTodayNewsOrOutstanding } from '~/shared/dtos/res/trending.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ITrending } from '~/shared/interfaces/schemas/trending.interface'
@@ -134,7 +134,13 @@ class TrendingService {
   // Lấy trending topic/hashtag xu hướng  (query: page: 1, limit: 20)
   // Dùng trending lấy (1000) tweets thỏa topics/hashtags nổi bật hôm nay (nhiều lượt like/view)
   // Rồi group (trên node) theo topic/hashtag , trả về cho client
-  async getTodayNews({ query }: { query: IQuery<ITrending> }): Promise<IResTodayNews[]> {
+  async getTodayNews({
+    query,
+    user_id
+  }: {
+    query: IQuery<ITrending>
+    user_id: string
+  }): Promise<IResTodayNewsOrOutstanding[]> {
     // Today range
     const startDay = new Date()
     startDay.setHours(0, 0, 0, 0)
@@ -170,14 +176,38 @@ class TrendingService {
       { $limit: 500 },
       {
         $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'followed_user_id',
+          as: 'followers'
+        }
+      },
+      {
+        $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'user_id',
+          as: 'following'
+        }
+      },
+      {
+        $lookup: {
           from: 'users',
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
-          pipeline: [{ $project: { avatar: 1 } }]
+          pipeline: [{ $project: { avatar: 1, name: 1, username: 1, verify: 1 } }]
         }
       },
       { $unwind: { path: '$user_id', preserveNullAndEmptyArrays: true } },
+      // 👇 thêm isFollow vào trong user_id
+      {
+        $addFields: {
+          'user_id.isFollow': {
+            $in: [new ObjectId(user_id), '$followers.user_id']
+          }
+        }
+      },
       {
         $lookup: {
           from: 'likes',
@@ -254,10 +284,16 @@ class TrendingService {
       (tweet, index, self) => index === self.findIndex((t) => t._id?.equals(tweet._id))
     )
 
-    return this.grouped(trending.items, tweets)
+    return this.grouped(trending.items, tweets, 'Tin tức')
   }
 
-  async getOutStandingThisWeekNews({ query }: { query: IQuery<ITrending> }): Promise<IResTodayNews[]> {
+  async getOutStandingThisWeekNews({
+    query,
+    user_id
+  }: {
+    query: IQuery<ITrending>
+    user_id: string
+  }): Promise<IResTodayNewsOrOutstanding[]> {
     // Today range
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -298,14 +334,38 @@ class TrendingService {
       { $limit: 500 },
       {
         $lookup: {
+          from: 'followers',
+          localField: 'user_id',
+          foreignField: 'followed_user_id',
+          as: 'followers'
+        }
+      },
+      {
+        $lookup: {
+          from: 'followers',
+          localField: 'user_id',
+          foreignField: 'user_id',
+          as: 'following'
+        }
+      },
+      {
+        $lookup: {
           from: 'users',
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
-          pipeline: [{ $project: { avatar: 1 } }]
+          pipeline: [{ $project: { avatar: 1, name: 1, username: 1, verify: 1 } }]
         }
       },
       { $unwind: { path: '$user_id', preserveNullAndEmptyArrays: true } },
+      // 👇 thêm isFollow vào trong user_id
+      {
+        $addFields: {
+          'user_id.isFollow': {
+            $in: [new ObjectId(user_id), '$followers.user_id']
+          }
+        }
+      },
       {
         $lookup: {
           from: 'likes',
@@ -382,10 +442,10 @@ class TrendingService {
       (tweet, index, self) => index === self.findIndex((t) => t._id?.equals(tweet._id))
     )
 
-    return this.grouped(trending.items, tweets)
+    return this.grouped(trending.items, tweets, 'Nổi bật')
   }
 
-  private grouped(trending: ITrending[], tweets: ITweet[]): IResTodayNews[] {
+  private grouped(trending: ITrending[], tweets: ITweet[], category: string): IResTodayNewsOrOutstanding[] {
     if (!trending?.length || !tweets?.length) return []
 
     const grouped = trending.flatMap((t) => {
@@ -402,18 +462,30 @@ class TrendingService {
 
       if (!relatedTweets.length) return []
 
-      const highlighTweet = relatedTweets[0]
+      const relatedTweet = relatedTweets.length
+      const highlightTweet = [...relatedTweets]
+        .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
+        .slice(0, relatedTweet > 4 ? 3 : 2)
 
       return {
         trending: t,
-        category: 'Tin tức',
-        media: highlighTweet.media,
-        posts: relatedTweets.length,
-        id: highlighTweet._id as any,
-        title: highlighTweet.content,
-        time: highlighTweet.created_at,
-        avatars: relatedTweets.slice(0, 3).map((tw) => (tw.user_id as unknown as IUser).avatar)
-      } as IResTodayNews
+        category: category,
+        media: highlightTweet[0].media,
+        posts: relatedTweet,
+        id: highlightTweet[0]._id as any,
+        time: highlightTweet[0].created_at,
+        relevantIds: relatedTweets.map((tw) => tw._id),
+        highlight: highlightTweet.map((tw) => ({
+          content: tw.content,
+          created_at: tw.created_at,
+          _id: (tw.user_id as unknown as IUser)._id,
+          name: (tw.user_id as unknown as IUser).name,
+          avatar: (tw.user_id as unknown as IUser).avatar,
+          verify: (tw.user_id as unknown as IUser).verify,
+          username: (tw.user_id as unknown as IUser).username,
+          isFollow: (tw.user_id as unknown as IUser).isFollow
+        }))
+      } as IResTodayNewsOrOutstanding
     })
 
     return grouped

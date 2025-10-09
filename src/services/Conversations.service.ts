@@ -752,13 +752,7 @@ class ConversationsService {
           throw new BadRequestError('Conversation không tồn tại')
         }
 
-        // Nếu participants rỗng => xoá luôn conversation + messages
-        console.log('updated:::', updated)
-        console.log(
-          'updated.deletedFor?.length === updated.participants?.length:::',
-          updated.deletedFor?.length === updated.participants?.length
-        )
-
+        // Nếu participants bằng deletedFor => xoá luôn conversation + messages
         if (updated.deletedFor?.length === updated.participants?.length) {
           await MessageCollection.deleteMany({ conversation: new ObjectId(conv_id) }, { session })
           await ConversationCollection.deleteOne({ _id: new ObjectId(conv_id) }, { session })
