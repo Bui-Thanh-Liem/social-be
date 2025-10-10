@@ -1,6 +1,5 @@
 import z from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
-import { EMediaType } from '~/shared/enums/type.enum'
 
 export const QueryDtoSchema = z.object({
   // page: z

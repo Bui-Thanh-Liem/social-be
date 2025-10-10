@@ -8,6 +8,8 @@ import { compressionVideo } from '~/utils/compression.util'
 import { logger } from '~/utils/logger.util'
 import { compressionQueue, sendEmailQueue } from '../queues'
 import { sendNotiQueue } from '../queues/sendNotiQueue'
+import database from '~/configs/database.config'
+import { initializeSocket } from '~/socket'
 
 // Worker xử lý gửi email xác thực
 sendEmailQueue.process(CONSTANT_JOB.VERIFY_MAIL, 5, async (job, done) => {
@@ -42,7 +44,12 @@ compressionQueue.process(CONSTANT_JOB.COMPRESSION_HLS, 5, async (job, done) => {
     logger.info(`Encoding video - ${path}`)
     await compressionVideo(path)
     logger.info(`Encode video ${path} success`)
+
+    //
+    await database.connect()
+    database.initialCollections()
     await VideosService.changeStatus(_id.toString(), EVideoStatus.Success)
+    // await database.disconnect()  // không dis trong worker , khiến connect cũ expired
     done()
   } catch (error) {
     logger.info('error::', error)

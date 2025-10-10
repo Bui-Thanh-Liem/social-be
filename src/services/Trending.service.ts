@@ -1,9 +1,10 @@
 import { ObjectId } from 'mongodb'
 import { TrendingCollection, TrendingSchema } from '~/models/schemas/Trending.schema'
-import { TweetCollection } from '~/models/schemas/Tweet.schema'
+import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import { BadRequestError } from '~/shared/classes/error.class'
 import { IResTodayNewsOrOutstanding } from '~/shared/dtos/res/trending.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
+import { ETweetType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ITrending } from '~/shared/interfaces/schemas/trending.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
@@ -11,6 +12,7 @@ import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 import { slug } from '~/utils/slug.util'
+import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
 
 class TrendingService {
@@ -467,6 +469,25 @@ class TrendingService {
         .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
         .slice(0, relatedTweet > 4 ? 3 : 2)
 
+      //
+      const highlight = Array.from(
+        new Map(
+          highlightTweet.map((tw) => [
+            (tw.user_id as any)._id?.toString(),
+            {
+              content: tw.content,
+              created_at: tw.created_at,
+              _id: (tw.user_id as unknown as IUser)._id,
+              name: (tw.user_id as unknown as IUser).name,
+              avatar: (tw.user_id as unknown as IUser).avatar,
+              verify: (tw.user_id as unknown as IUser).verify,
+              username: (tw.user_id as unknown as IUser).username,
+              isFollow: (tw.user_id as unknown as IUser).isFollow
+            }
+          ])
+        ).values()
+      )
+
       return {
         trending: t,
         category: category,
@@ -475,16 +496,7 @@ class TrendingService {
         id: highlightTweet[0]._id as any,
         time: highlightTweet[0].created_at,
         relevantIds: relatedTweets.map((tw) => tw._id),
-        highlight: highlightTweet.map((tw) => ({
-          content: tw.content,
-          created_at: tw.created_at,
-          _id: (tw.user_id as unknown as IUser)._id,
-          name: (tw.user_id as unknown as IUser).name,
-          avatar: (tw.user_id as unknown as IUser).avatar,
-          verify: (tw.user_id as unknown as IUser).verify,
-          username: (tw.user_id as unknown as IUser).username,
-          isFollow: (tw.user_id as unknown as IUser).isFollow
-        }))
+        highlight: highlight
       } as IResTodayNewsOrOutstanding
     })
 
@@ -507,6 +519,327 @@ class TrendingService {
     } catch (error) {
       console.error('[CRON-15D] ❌ Cleanup trending failed', error)
     }
+  }
+
+  async getTweetsByIds({ query, user_active_id }: { query: IQuery<ITweet>; user_active_id: string }) {
+    //
+    const { ids } = query
+    const { sort } = getPaginationAndSafeQuery<ITweet>(query)
+
+    let safeIds = typeof ids === 'object' ? [...ids] : []
+    if (typeof ids === 'string') {
+      safeIds = [...(ids as any).split(',')]
+    }
+
+    //
+    const followed_user_ids = await FollowsService.getUserFollowing(user_active_id)
+    followed_user_ids.push(user_active_id)
+
+    // condition
+    const matchCondition = {
+      $or: [
+        {
+          audience: ETweetAudience.Everyone
+        },
+        {
+          $and: [
+            {
+              audience: ETweetAudience.Followers
+            },
+            {
+              user_id: {
+                $in: followed_user_ids
+              }
+            }
+          ]
+        },
+        {
+          audience: ETweetAudience.Mentions,
+          mentions: { $in: [user_active_id] }
+        }
+      ]
+    } as any
+
+    //
+    const tweets = await TweetCollection.aggregate<TweetSchema>([
+      {
+        $match: matchCondition
+      },
+      {
+        $match: { type: { $ne: ETweetType.Comment }, _id: { $in: safeIds.map((id) => new ObjectId(id)) } }
+      },
+      {
+        $sort: sort
+      },
+      {
+        $skip: 0
+      },
+      {
+        $limit: safeIds.length
+      },
+      {
+        $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'followed_user_id',
+          as: 'followers'
+        }
+      },
+      {
+        $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'user_id',
+          as: 'following'
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user_id',
+          pipeline: [
+            {
+              $project: {
+                bio: 1,
+                name: 1,
+                email: 1,
+                username: 1,
+                avatar: 1,
+                verify: 1,
+                cover_photo: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: {
+          path: '$user_id',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+
+      // lookup để kiểm tra user hiện tại có follow user_id không
+      {
+        $lookup: {
+          from: 'followers',
+          let: { targetUserId: '$user_id._id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$followed_user_id', '$$targetUserId'] },
+                    { $eq: ['$user_id', new ObjectId(user_active_id)] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: 'userFollowCheck'
+        }
+      },
+      {
+        $addFields: {
+          'user_id.isFollow': { $gt: [{ $size: '$userFollowCheck' }, 0] }
+        }
+      },
+      {
+        $project: {
+          userFollowCheck: 0 // xoá field tạm
+        }
+      },
+      {
+        $lookup: {
+          from: 'hashtags',
+          localField: 'hashtags',
+          foreignField: '_id',
+          as: 'hashtags',
+          pipeline: [
+            {
+              $project: {
+                name: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'mentions',
+          foreignField: '_id',
+          as: 'mentions',
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                username: 1,
+                avatar: 1,
+                verify: 1,
+                bio: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'bookmarks',
+          localField: '_id',
+          foreignField: 'tweet_id',
+          as: 'bookmarks',
+          pipeline: [
+            {
+              $project: {
+                user_id: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'likes',
+          localField: '_id',
+          foreignField: 'tweet_id',
+          as: 'likes',
+          pipeline: [
+            {
+              $project: {
+                user_id: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'tweets',
+          localField: '_id',
+          foreignField: 'parent_id',
+          as: 'tweets_children'
+        }
+      },
+      {
+        $addFields: {
+          // bookmarks_count: { $size: '$bookmarks' },
+          likes_count: { $size: '$likes' },
+          isLike: {
+            $in: [new ObjectId(user_active_id), '$likes.user_id']
+          },
+          isBookmark: {
+            $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
+          },
+          // lấy id retweet của user (1 cái đầu tiên hoặc null)
+          retweet: {
+            $let: {
+              vars: {
+                matched: {
+                  $filter: {
+                    input: '$tweets_children',
+                    as: 'child',
+                    cond: {
+                      $and: [
+                        { $eq: ['$$child.type', ETweetType.Retweet] },
+                        { $eq: ['$$child.user_id', new ObjectId(user_active_id)] }
+                      ]
+                    }
+                  }
+                }
+              },
+              in: { $arrayElemAt: ['$$matched._id', 0] }
+            }
+          },
+          // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
+          quote: {
+            $let: {
+              vars: {
+                matched: {
+                  $filter: {
+                    input: '$tweets_children',
+                    as: 'child',
+                    cond: {
+                      $and: [
+                        { $eq: ['$$child.type', ETweetType.QuoteTweet] },
+                        { $eq: ['$$child.user_id', new ObjectId(user_active_id)] }
+                      ]
+                    }
+                  }
+                }
+              },
+              in: { $arrayElemAt: ['$$matched._id', 0] }
+            }
+          },
+          comments_count: {
+            $size: {
+              $filter: {
+                input: '$tweets_children',
+                as: 'tweet',
+                cond: {
+                  $eq: ['$$tweet.type', ETweetType.Comment]
+                }
+              }
+            }
+          },
+          retweets_count: {
+            $size: {
+              $filter: {
+                input: '$tweets_children',
+                as: 'tweet',
+                cond: {
+                  $eq: ['$$tweet.type', ETweetType.Retweet]
+                }
+              }
+            }
+          },
+          quotes_count: {
+            $size: {
+              $filter: {
+                input: '$tweets_children',
+                as: 'tweet',
+                cond: {
+                  $eq: ['$$tweet.type', ETweetType.QuoteTweet]
+                }
+              }
+            }
+          }
+        }
+      }
+    ]).toArray()
+
+    // Increase views
+    const _ids = tweets.map((tweet) => tweet._id as ObjectId)
+    const date = new Date()
+    await TweetCollection.updateMany(
+      {
+        _id: {
+          $in: _ids
+        }
+      },
+      {
+        $inc: { user_view: 1 },
+        $set: {
+          updated_at: date
+        }
+      }
+    )
+
+    //
+    tweets.forEach((tweet) => {
+      tweet.updated_at = date
+      if (user_active_id) {
+        tweet.user_view += 1
+      } else {
+        tweet.guest_view += 1
+      }
+    })
+
+    console.log('tweets::', tweets)
+
+    return tweets
   }
 
   async report(id: string) {

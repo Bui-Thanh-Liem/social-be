@@ -2,6 +2,8 @@ import { ObjectId } from 'mongodb'
 import { VideoCollection, VideoSchema } from '~/models/schemas/Video.schema'
 import { EVideoStatus } from '~/shared/enums/status.enum'
 import { IPayloadCreateVideo } from '~/shared/interfaces/common/payload-service.interface'
+import NotificationService from './Notification.service'
+import { ENotificationType } from '~/shared/enums/type.enum'
 
 class VideosService {
   async create(payload: IPayloadCreateVideo) {
@@ -16,7 +18,7 @@ class VideosService {
   }
 
   async changeStatus(id: string, status: EVideoStatus) {
-    return await VideoCollection.findOneAndUpdate(
+    const updated = await VideoCollection.findOneAndUpdate(
       { _id: new ObjectId(id) },
       {
         $set: {
@@ -28,13 +30,21 @@ class VideosService {
       },
       {
         returnDocument: 'after',
-        projection: {
-          password: 0,
-          email_verify_token: 0,
-          forgot_password_token: 0
-        }
+        projection: { user_id: 1 }
       }
     )
+
+    //
+    await NotificationService.create({
+      type: ENotificationType.VERIFY,
+      content: 'Video của bạn đã kiểm duyệt thành công.',
+      receiver: updated?.user_id.toString() || '',
+      sender: updated?.user_id.toString() || ''
+    })
+  }
+
+  async delete(name: string) {
+    await VideoCollection.deleteOne({ name })
   }
 }
 

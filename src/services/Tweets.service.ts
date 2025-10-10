@@ -28,12 +28,12 @@ class TweetsService {
     const hashtags = await HashtagsService.checkHashtags(payload.hashtags)
 
     // Thêm hashtag vào trending
-    if (payload?.hashtags?.length) {
+    if (payload?.hashtags?.length && type !== ETweetType.Comment) {
       await Promise.all(payload.hashtags.map((hashtagName) => TrendingService.createTrending(`#${hashtagName}`)))
     }
 
     // Thêm từ khóa vào trending (những từ trong content, nhưng được viết in hoa)
-    if (content) {
+    if (content && type !== ETweetType.Comment) {
       const keyWords = content.match(/\b[A-Z][a-zA-Z0-9]*\b/g) || []
       await Promise.all(keyWords.map((w) => TrendingService.createTrending(w)))
     }

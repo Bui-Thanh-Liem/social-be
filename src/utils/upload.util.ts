@@ -10,7 +10,8 @@ import { compressionQueue } from '~/libs/bull/queues'
 import VideosService from '~/services/Videos.service'
 import { BadRequestError } from '~/shared/classes/error.class'
 import {
-  CONSTANT_JOB, MAX_LENGTH_IMAGE_UPLOAD,
+  CONSTANT_JOB,
+  MAX_LENGTH_IMAGE_UPLOAD,
   MAX_LENGTH_VIDEO_UPLOAD,
   MAX_SIZE_IMAGE_UPLOAD,
   MAX_SIZE_VIDEO_UPLOAD
@@ -172,7 +173,7 @@ export function uploadVideos(req: Request): Promise<string[]> {
                 path: video.filepath
               })
 
-              //        http://localhost:9000/videos-hls/m6kQ0q4q2vbJIduXCAssl/master.m3u8
+              // http://localhost:9000/videos-hls/m6kQ0q4q2vbJIduXCAssl/master.m3u8
               return `${envs.SERVER_DOMAIN}/videos-hls/${name}/master.m3u8`
             })
           )
@@ -214,21 +215,26 @@ export function deleteImage(filename: string): Promise<void> {
  * @param folderName Tên folder video (ví dụ: m6kQ0q4q2vbJIduXCAssl)
  */
 export function deleteVideo(folderName: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const folderPath = path.join(UPLOAD_VIDEO_FOLDER_PATH, folderName)
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve, reject) => {
+    try {
+      const folderPath = path.join(UPLOAD_VIDEO_FOLDER_PATH, folderName)
 
-    if (!fs.existsSync(folderPath)) {
-      return reject(new BadRequestError('Video not found'))
-    }
-
-    // Xoá nguyên folder
-    fs.rm(folderPath, { recursive: true, force: true }, (err) => {
-      if (err) {
-        logger.error(`❌ Delete video ${folderName} failed:`, err)
-        return reject(new BadRequestError('Delete video failed'))
+      if (!fs.existsSync(folderPath)) {
+        return reject(new BadRequestError('Video not found'))
       }
+
+      // Xoá folder
+      await fs.promises.rm(folderPath, { recursive: true, force: true })
       logger.info(`✅ Delete video ${folderName} success`)
+
+      // Xoá trong DB
+      await VideosService.delete(folderName)
+
       resolve()
-    })
+    } catch (err) {
+      logger.error(`❌ Delete video ${folderName} failed:`, err)
+      reject(new BadRequestError('Delete video failed'))
+    }
   })
 }

@@ -91,7 +91,7 @@ class TweetsController {
   async delete(req: Request, res: Response) {
     const { tweet_id } = req.params as ParamDto
     const result = await TweetsService.delete(tweet_id)
-    res.status(200).json(new OkResponse('Xóa bài viết thành công', result))
+    res.status(200).json(new OkResponse('Gỡ bài viết thành công', result))
   }
 }
 

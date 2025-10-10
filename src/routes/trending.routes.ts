@@ -34,6 +34,15 @@ trendingRoute.get(
   wrapAsyncHandler(TrendingController.getOutStandingThisWeekNews)
 )
 
+// Nếu mở rộng thì chuyển sang POST (không theo chuẩn RESTFul api)
+trendingRoute.get(
+  '/tweets-by-ids',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(TrendingController.getTweetsByIds)
+)
+
 trendingRoute.patch(
   '/report/:trending_id',
   verifyAccessToken,

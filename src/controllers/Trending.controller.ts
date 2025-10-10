@@ -23,8 +23,13 @@ class TrendingController {
   async getOutStandingThisWeekNews(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const results = await TrendingService.getOutStandingThisWeekNews({ user_id, query: req.query })
-
     res.status(200).json(new OkResponse('Get outstanding this week Success', results))
+  }
+
+  async getTweetsByIds(req: Request, res: Response) {
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const results = await TrendingService.getTweetsByIds({ user_active_id: user_id, query: req.query })
+    res.status(200).json(new OkResponse('Get tweets by ids Success', results))
   }
 
   async report(req: Request, res: Response) {

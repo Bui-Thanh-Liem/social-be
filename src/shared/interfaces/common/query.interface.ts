@@ -12,4 +12,5 @@ export interface IQuery<T> {
   // Profile
   user_id?: string
   ishl?: '1' | '0'
+  ids?: string[]
 }
