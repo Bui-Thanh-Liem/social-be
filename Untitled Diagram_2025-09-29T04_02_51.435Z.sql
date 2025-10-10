@@ -2,7 +2,7 @@
 
 -- 2. Thiết kế database để đáp ứng 100% yêu cầu (nghĩ đơn giản nhất)
 
--- 3. Đánh giá mô database về hiệu xuất, khả năng mở rộng
+-- 3. Đánh giá database về hiệu xuất, khả năng mở rộng
 
 -- 4. Thiết kế lại database hoặc nâng cấp database ở bước 2 lên
 

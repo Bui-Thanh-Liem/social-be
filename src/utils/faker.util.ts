@@ -13,7 +13,7 @@ import { logger } from './logger.util'
 
 const MY_ID = new ObjectId('68e26fa9b4786efc6ea42778')
 
-function generateRandomTweet(): string {
+function generateRandomTweet(hashtags: string[]): string {
   const openers = [
     // Lập trình viên
     'Sáng nay tôi',
@@ -157,7 +157,19 @@ function generateRandomTweet(): string {
 
   const random = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)]
 
-  return `${random(openers)} ${random(middles)} ${random(closers)}`
+  const parts = [random(openers), random(middles), random(closers)]
+
+  // chọn 1–2 hashtag ngẫu nhiên để chèn vào giữa nội dung
+  const pickedTags = hashtags
+    .sort(() => 0.5 - Math.random())
+    .slice(0, Math.floor(Math.random() * 2) + 1)
+    .map((h) => (h.startsWith('#') ? h : `#${h}`))
+
+  // chọn vị trí chèn ngẫu nhiên, tránh đầu & cuối quá sớm
+  const insertIndex = Math.floor(Math.random() * (parts.length - 1)) + 1
+  parts.splice(insertIndex, 0, pickedTags.join(' '))
+
+  return parts.join(' ')
 }
 
 function generateRandomBio(): string {
@@ -392,50 +404,56 @@ function getRandomMentions(user_ids: ObjectId[]) {
   return shuffled.slice(0, 3).map((id) => id.toString())
 }
 
-// Tạo 300 tweet (1 user tạo 3 tweet)
+// Tạo 500 tweet (1 user tạo 5 tweet)
 async function createRandomTweets(user_ids: ObjectId[]) {
   logger.info('Start create tweet...')
 
   await Promise.all(
     user_ids.map(async (id) => {
+      const ht1 = [randomHashtag(), randomHashtag(), randomHashtag()]
+      const ht2 = [randomHashtag(), randomHashtag(), randomHashtag()]
+      const ht3 = [randomHashtag(), randomHashtag(), randomHashtag()]
+      const ht4 = [randomHashtag(), randomHashtag(), randomHashtag()]
+      const ht5 = [randomHashtag(), randomHashtag(), randomHashtag()]
+
       await Promise.all([
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
           audience: ETweetAudience.Everyone,
-          content: generateRandomTweet(),
-          hashtags: [randomHashtag(), randomHashtag(), randomHashtag()],
+          content: generateRandomTweet(ht1),
+          hashtags: ht1,
           mentions: getRandomMentions(user_ids),
           media: { url: faker.image.avatar(), type: EMediaType.Image }
         }),
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
           audience: ETweetAudience.Everyone,
-          content: generateRandomTweet(),
-          hashtags: [randomHashtag(), randomHashtag(), randomHashtag()],
+          content: generateRandomTweet(ht2),
+          hashtags: ht2,
           mentions: getRandomMentions(user_ids),
           media: { url: faker.image.avatar(), type: EMediaType.Image }
         }),
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
           audience: ETweetAudience.Everyone,
-          content: generateRandomTweet(),
-          hashtags: [randomHashtag(), randomHashtag(), randomHashtag()],
+          content: generateRandomTweet(ht3),
+          hashtags: ht3,
           mentions: getRandomMentions(user_ids),
           media: { url: faker.image.avatar(), type: EMediaType.Image }
         }),
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
           audience: ETweetAudience.Everyone,
-          content: generateRandomTweet(),
-          hashtags: [randomHashtag(), randomHashtag(), randomHashtag()],
+          content: generateRandomTweet(ht4),
+          hashtags: ht4,
           mentions: getRandomMentions(user_ids),
           media: { url: faker.image.avatar(), type: EMediaType.Image }
         }),
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
           audience: ETweetAudience.Everyone,
-          content: generateRandomTweet(),
-          hashtags: [randomHashtag(), randomHashtag(), randomHashtag()],
+          content: generateRandomTweet(ht5),
+          hashtags: ht5,
           mentions: getRandomMentions(user_ids),
           media: { url: faker.image.avatar(), type: EMediaType.Image }
         })

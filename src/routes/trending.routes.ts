@@ -18,6 +18,11 @@ trendingRoute.get(
   wrapAsyncHandler(TrendingController.getTrending)
 )
 
+/**
+ * Sẽ tạo cron tổng hợp trending lưu lại
+ * Mỗi lần người dùng GET thì lấy từ database lên
+ * Cách hiện tại mỗi lần GET thì query rất nhiều tweet rồi tổng hợp lại (không tối ưu)
+ */
 trendingRoute.get(
   '/today-news',
   verifyAccessToken,
@@ -26,6 +31,11 @@ trendingRoute.get(
   wrapAsyncHandler(TrendingController.getTodayNews)
 )
 
+/**
+ * Sẽ tạo cron tổng hợp trending lưu lại
+ * Mỗi lần người dùng GET thì lấy từ database lên
+ * Cách hiện tại mỗi lần GET thì query rất nhiều tweet rồi tổng hợp lại (không tối ưu)
+ */
 trendingRoute.get(
   '/outstanding-this-week',
   verifyAccessToken,
