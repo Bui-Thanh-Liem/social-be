@@ -59,7 +59,7 @@ class TweetsService {
     // Mentions
     const sender = await UserCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { name: 1 } })
 
-    // Gửi thông báo cho ai mà người comment nhắc đến
+    // Gửi thông báo cho ai mà người comment/tweet nhắc đến
     if (mentions?.length) {
       for (let i = 0; i < mentions.length; i++) {
         await NotificationService.create({
