@@ -1,8 +1,8 @@
 import { Server, Socket } from 'socket.io'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
-import NotificationGateway from '../gateways/Notification.gateway'
 import ConversationGateway from '../gateways/Conversation.gateway'
+import NotificationGateway from '../gateways/Notification.gateway'
 
 // Xử lý join/leave conversation
 export async function conversationHandler(io: Server, socket: Socket) {
@@ -12,6 +12,7 @@ export async function conversationHandler(io: Server, socket: Socket) {
   // Join vào conversation riêng của user để nhận thông báo cá nhân
   await socket.join(user_id as string)
   await NotificationGateway.sendCountUnreadNoti(user_id) // Gửi số lượng thông báo chưa đọc
+  await NotificationGateway.sendCountUnreadNotiByType(user_id) // Gửi số lượng thông báo chưa đọc theo type
   await ConversationGateway.sendCountUnreadConv(user_id) // Gửi số lượng cuộc trò chuyện chưa đọc
 
   // Join vào conversation mới

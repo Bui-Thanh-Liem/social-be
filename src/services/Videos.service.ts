@@ -4,6 +4,7 @@ import { EVideoStatus } from '~/shared/enums/status.enum'
 import { IPayloadCreateVideo } from '~/shared/interfaces/common/payload-service.interface'
 import NotificationService from './Notification.service'
 import { ENotificationType } from '~/shared/enums/type.enum'
+import { deleteVideo } from '~/utils/upload.util'
 
 class VideosService {
   async create(payload: IPayloadCreateVideo) {
@@ -36,15 +37,21 @@ class VideosService {
 
     //
     await NotificationService.create({
-      type: ENotificationType.VERIFY,
-      content: 'Video của bạn đã kiểm duyệt thành công.',
+      type: ENotificationType.REVIEW,
+      content: 'Video của bạn đã được kiểm duyệt.',
       receiver: updated?.user_id.toString() || '',
       sender: updated?.user_id.toString() || ''
     })
   }
 
   async delete(name: string) {
-    await VideoCollection.deleteOne({ name })
+    try {
+      await VideoCollection.deleteOne({ name })
+
+      await deleteVideo(name)
+    } catch (error) {
+      console.log('Tweet - delete - media - video:::', error)
+    }
   }
 }
 

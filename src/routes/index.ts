@@ -4,16 +4,17 @@ import { startFaker } from '~/utils/faker.util'
 import authRoute from './auth.routes'
 import bookmarksRoute from './bookmarks.routes'
 import conversationsRoute from './conversations.routes'
-import trendingRoute from './trending.routes'
 import followsRoute from './follows.routes'
 import hashtagsRoute from './hashtags.routes'
 import likesRoute from './likes.routes'
 import messagesRoute from './messages.routes'
+import notificationRoute from './notification.route'
+import reportTweetRoute from './report-tweet.routes'
 import searchRoute from './search.route'
+import trendingRoute from './trending.routes'
 import tweetsRoute from './tweets.routes'
 import uploadsRoute from './uploads.routes'
 import usersRoute from './users.routes'
-import notificationRoute from './notification.route'
 
 const rootRoute = Router()
 
@@ -26,6 +27,7 @@ rootRoute.use('/uploads', uploadsRoute)
 rootRoute.use('/search', searchRoute)
 rootRoute.use('/hashtags', hashtagsRoute)
 rootRoute.use('/bookmarks', bookmarksRoute)
+rootRoute.use('/report-tweet', reportTweetRoute)
 rootRoute.use('/notifications', notificationRoute)
 rootRoute.use('/trending', trendingRoute)
 rootRoute.use('/messages', messagesRoute)

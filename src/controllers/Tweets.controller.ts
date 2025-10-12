@@ -1,8 +1,12 @@
 import { Request, Response } from 'express'
 import TweetsService from '~/services/Tweets.service'
 import { CreatedResponse, OkResponse } from '~/shared/classes/response.class'
-import { ParamDto } from '~/shared/dtos/req/param.dto'
-import { getNewFeedTypeDto, getProfileTweetDto, getTweetChildrenDtoParams } from '~/shared/dtos/req/tweet.dto'
+import {
+  getNewFeedTypeDto,
+  getProfileTweetDto,
+  getTweetChildrenDtoParams,
+  ParamIdTweetDto
+} from '~/shared/dtos/req/tweet.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
@@ -89,7 +93,7 @@ class TweetsController {
   }
 
   async delete(req: Request, res: Response) {
-    const { tweet_id } = req.params as ParamDto
+    const { tweet_id } = req.params as ParamIdTweetDto
     const result = await TweetsService.delete(tweet_id)
     res.status(200).json(new OkResponse('Gỡ bài viết thành công', result))
   }

@@ -3,6 +3,8 @@ import MessagesService from '~/services/Messages.service'
 import NotificationService from '~/services/Notification.service'
 import TrendingService from '~/services/Trending.service'
 
+// Sẽ làm trong worker sau ()
+
 /**
  * 🧹 JOB 1 — Mỗi 15 ngày: Giữ lại 100 trending mới nhất
  */

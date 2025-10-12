@@ -1,15 +1,14 @@
 import mailServiceInstance from '~/helpers/mail.helper'
-import VideosService from '~/services/Videos.service'
+import pubSubServiceInstance from '~/helpers/pub_sub.helper'
+import TweetsService from '~/services/Tweets.service'
 import { BadRequestError } from '~/shared/classes/error.class'
 import { CONSTANT_JOB } from '~/shared/constants'
-import { EVideoStatus } from '~/shared/enums/status.enum'
 import ConversationGateway from '~/socket/gateways/Conversation.gateway'
 import { compressionVideo } from '~/utils/compression.util'
 import { logger } from '~/utils/logger.util'
 import { compressionQueue, sendEmailQueue } from '../queues'
+import { deleteChildrenTweet } from '../queues/deleteChildrenTweet'
 import { sendNotiQueue } from '../queues/sendNotiQueue'
-import database from '~/configs/database.config'
-import { initializeSocket } from '~/socket'
 
 // Worker xử lý gửi email xác thực
 sendEmailQueue.process(CONSTANT_JOB.VERIFY_MAIL, 5, async (job, done) => {
@@ -38,6 +37,7 @@ sendEmailQueue.process(CONSTANT_JOB.FORGOT_PASSWORD, 5, async (job, done) => {
 })
 
 // Worker xử lý hls
+export const DONE_CONVERT_VIDEO = 'done-convert-video'
 compressionQueue.process(CONSTANT_JOB.COMPRESSION_HLS, 5, async (job, done) => {
   const { path, _id } = job.data
   try {
@@ -45,11 +45,9 @@ compressionQueue.process(CONSTANT_JOB.COMPRESSION_HLS, 5, async (job, done) => {
     await compressionVideo(path)
     logger.info(`Encode video ${path} success`)
 
-    //
-    await database.connect()
-    database.initialCollections()
-    await VideosService.changeStatus(_id.toString(), EVideoStatus.Success)
-    // await database.disconnect()  // không dis trong worker , khiến connect cũ expired
+    // Khi chuyển đổi xong, publish vào redis -> app.js subscribe
+    // Chuyển đổi trạng thái video, gửi thông báo client
+    await pubSubServiceInstance.publish(DONE_CONVERT_VIDEO, { video_id: _id.toString() })
     done()
   } catch (error) {
     logger.info('error::', error)
@@ -66,5 +64,16 @@ sendNotiQueue.process(CONSTANT_JOB.UNREAD_NOTI, 5, async (job, done) => {
     done()
   } catch (error) {
     done(new Error('Send count noti after register failed'))
+  }
+})
+
+deleteChildrenTweet.process(CONSTANT_JOB.DELETE_CHILDREN_TWEET, 5, async (job, done) => {
+  try {
+    const { parent_id } = job.data
+    await TweetsService.deleteChildrenTweet(parent_id)
+    logger.info('Deleted children tweet of ', parent_id)
+    done()
+  } catch (error) {
+    done(new Error('delete children tweet failed'))
   }
 })

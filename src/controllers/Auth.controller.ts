@@ -43,7 +43,7 @@ class AuthController {
 
   async forgotPassword(req: Request, res: Response, next: NextFunction) {
     const result = await AuthServices.forgotPassword(req.body)
-    res.json(new OkResponse('Forgot password Success', result))
+    res.json(new OkResponse('Kiểm tra email để đặt lại mật khẩu.', result))
   }
 
   async resetPassword(req: Request, res: Response, next: NextFunction) {

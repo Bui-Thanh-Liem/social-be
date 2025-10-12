@@ -213,7 +213,7 @@ class AuthService {
     //
     const user = await UserCollection.findOne({ email })
     if (!user) {
-      throw new NotFoundError('User not exist')
+      throw new NotFoundError('Người dùng không tồn tại.')
     }
 
     //
@@ -240,7 +240,7 @@ class AuthService {
     await sendEmailQueue.add(CONSTANT_JOB.FORGOT_PASSWORD, {
       toEmail: user?.email,
       name: user?.name,
-      url: `${envs.CLIENT_DOMAIN}/reset-password?token=${forgot_password_token}`
+      url: `${envs.CLIENT_DOMAIN}#reset-password?token=${forgot_password_token}`
     })
 
     await UsersService.resetUserActive(user._id.toString())

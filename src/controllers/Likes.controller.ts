@@ -1,13 +1,13 @@
 import { Request, Response } from 'express'
-import { ToggleLikeDto } from '~/shared/dtos/req/like.dto'
 import LikesService from '~/services/Likes.service'
 import { CreatedResponse } from '~/shared/classes/response.class'
+import { ParamIdTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class LikesController {
   async toggleLike(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await LikesService.toggleLike(user_id, req.params as ToggleLikeDto)
+    const result = await LikesService.toggleLike(user_id, req.params as ParamIdTweetDto)
     res.status(201).json(new CreatedResponse('Toggle Like Success', result))
   }
 }

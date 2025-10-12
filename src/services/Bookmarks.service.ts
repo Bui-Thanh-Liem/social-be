@@ -1,10 +1,10 @@
 import { ObjectId } from 'mongodb'
 import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
-import { ToggleBookmarkDto } from '~/shared/dtos/req/bookmark.dto'
+import { ParamIdTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ResToggleBookmark } from '~/shared/dtos/res/bookmark.dto'
 
 class BookmarksService {
-  async toggleBookmark(user_id: string, payload: ToggleBookmarkDto): Promise<ResToggleBookmark> {
+  async toggleBookmark(user_id: string, payload: ParamIdTweetDto): Promise<ResToggleBookmark> {
     const userObjectId = new ObjectId(user_id)
     const tweetObjectId = new ObjectId(payload.tweet_id)
 

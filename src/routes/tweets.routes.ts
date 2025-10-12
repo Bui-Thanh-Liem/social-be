@@ -9,14 +9,14 @@ import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middl
 import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
-import { ParamDtoSchema } from '~/shared/dtos/req/param.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import {
   CreateTweetDtoSchema,
   getNewFeedTypeDtoSchema,
   GetOneTweetByIdDtoSchema,
   getProfileTweetDtoSchema,
-  getTweetChildrenDtoSchemaParams
+  getTweetChildrenDtoSchemaParams,
+  paramIdTweetDtoSchema
 } from '~/shared/dtos/req/tweet.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 
@@ -34,7 +34,7 @@ tweetsRoute.delete(
   '/:tweet_id',
   verifyAccessToken,
   verifyUserEmail,
-  requestParamsValidate(ParamDtoSchema),
+  requestParamsValidate(paramIdTweetDtoSchema),
   wrapAsyncHandler(TweetsController.delete)
 )
 

@@ -6,6 +6,10 @@ import { envs } from './configs/env.config'
 import { allowedOrigins } from './middlewares/cors.middleware'
 import { initializeSocket } from './socket'
 import { logger } from './utils/logger.util'
+import pubSubServiceInstance from './helpers/pub_sub.helper'
+import { DONE_CONVERT_VIDEO } from './libs/bull/workers/workers'
+import { EVideoStatus } from './shared/enums/status.enum'
+import VideosService from './services/Videos.service'
 
 //
 const port = envs.SERVER_PORT
@@ -39,6 +43,12 @@ async function bootstrap() {
     initializeSocket(io)
     logger.info('Socket.IO initialized!')
 
+    // Subscribe từ redis
+    await pubSubServiceInstance.subscribe(DONE_CONVERT_VIDEO, async (payload) => {
+      await VideosService.changeStatus(payload.video_id, EVideoStatus.Success)
+    })
+
+    //
     httpServer.listen(port, host, () => {
       logger.info(`App listening on ${host}:${port}`)
     })

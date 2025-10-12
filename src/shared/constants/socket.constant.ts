@@ -9,6 +9,7 @@ export const CONSTANT_EVENT_NAMES = {
   // NOTIFICATION
   NEW_NOTIFICATION: 'notification:new',
   UNREAD_COUNT_NOTIFICATION: 'notification:unread:count',
+  UNREAD_COUNT_NOTIFICATION_BY_TYPE: 'notification:unread:count:by:type',
 
   // CONVERSATION
   UNREAD_COUNT_CONVERSATION: 'conversation:unread:count',

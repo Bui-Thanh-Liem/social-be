@@ -8,6 +8,7 @@ import { initLikeCollection } from '~/models/schemas/Like.schema'
 import { initMessageCollection, MessageCollection } from '~/models/schemas/Message.schema'
 import { initNotificationCollection } from '~/models/schemas/Notification.schema'
 import { initRefreshTokenCollection, RefreshTokenCollection } from '~/models/schemas/RefreshToken.schema'
+import { initReportTweetCollection, ReportTweetCollection } from '~/models/schemas/ReportTweet.schema'
 import { initTrendingCollection, TrendingCollection } from '~/models/schemas/Trending.schema'
 import { initTweetCollection, TweetCollection } from '~/models/schemas/Tweet.schema'
 import { initUserCollection, UserCollection } from '~/models/schemas/User.schema'
@@ -56,10 +57,12 @@ class DatabaseConfig {
     initMessageCollection(this.db)
     initTrendingCollection(this.db)
     initNotificationCollection(this.db)
+    initReportTweetCollection(this.db)
   }
 
   async initialIndex() {
     const indexUser = await UserCollection.indexExists(['email_1', 'username_1', 'bio_text'])
+    const indexReportTweet = await ReportTweetCollection.indexExists(['tweet_id_1'])
     const indexRefresh = await RefreshTokenCollection.indexExists(['token_1', 'exp_1'])
     const indexTweet = await TweetCollection.indexExists(['content_text'])
     const indexTrending = await TweetCollection.indexExists(['slug_1', 'created_at_-1'])
@@ -71,6 +74,11 @@ class DatabaseConfig {
       UserCollection.createIndex({ email: 1 }, { unique: true })
       UserCollection.createIndex({ username: 1 }, { unique: true })
       UserCollection.createIndex({ bio: 'text' }, { default_language: 'none' })
+    }
+
+    // Report
+    if (!indexReportTweet) {
+      ReportTweetCollection.createIndex({ tweet_id: 1 }, { unique: true })
     }
 
     // Refresh

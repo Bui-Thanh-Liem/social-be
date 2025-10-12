@@ -1,7 +1,7 @@
+import NotificationService from '~/services/Notification.service'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 import { INotification } from '~/shared/interfaces/schemas/notification.interface'
 import { getIO } from '..'
-import NotificationService from '~/services/Notification.service'
 
 class NotificationGateway {
   async sendNotification(noti: INotification, receiverId: string) {
@@ -10,6 +10,7 @@ class NotificationGateway {
 
     //
     await this.sendCountUnreadNoti(receiverId)
+    await this.sendCountUnreadNotiByType(receiverId)
 
     //
     io.to(receiverId).emit(CONSTANT_EVENT_NAMES.NEW_NOTIFICATION, noti)
@@ -19,6 +20,13 @@ class NotificationGateway {
     const io = getIO()
     const count = await NotificationService.countUnreadNoti(receiverId)
     io.to(receiverId).emit(CONSTANT_EVENT_NAMES.UNREAD_COUNT_NOTIFICATION, count)
+  }
+
+  // Gửi sô lượng thông báo chưa đọc theo từng loại
+  async sendCountUnreadNotiByType(receiverId: string) {
+    const io = getIO()
+    const count = await NotificationService.countUnreadNotiByType(receiverId)
+    io.to(receiverId).emit(CONSTANT_EVENT_NAMES.UNREAD_COUNT_NOTIFICATION_BY_TYPE, count)
   }
 }
 

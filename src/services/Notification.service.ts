@@ -60,8 +60,8 @@ class NotificationService {
           ]
         }
       },
-      // chỉ thêm khi có lookup (tạm thời cho type All là tweet)
-      ...(type === ENotificationType.MENTION_LIKE || type === ENotificationType.ALL
+      // chỉ thêm khi có lookup
+      ...(type === ENotificationType.MENTION_LIKE
         ? [
             {
               $lookup: {
@@ -120,11 +120,6 @@ class NotificationService {
       receiver: ObjectId
     } = { type, receiver: new ObjectId(user_id) }
 
-    // Nếu type là ALL
-    if (type === ENotificationType.ALL) {
-      if (match.type) delete match.type
-    }
-
     //
     const notis = await NotificationCollection.aggregate<NotificationSchema>([
       {
@@ -175,8 +170,8 @@ class NotificationService {
           ]
         }
       },
-      // chỉ thêm khi có lookup (tạm thời cho type All là tweet)
-      ...(type === ENotificationType.MENTION_LIKE || type === ENotificationType.ALL
+      // chỉ thêm khi có lookup
+      ...(type === ENotificationType.MENTION_LIKE
         ? [
             {
               $lookup: {
@@ -213,7 +208,7 @@ class NotificationService {
 
     //
     const total = await NotificationCollection.countDocuments({
-      ...(type === ENotificationType.ALL ? {} : { type }),
+      type,
       receiver: new ObjectId(user_id)
     })
 
@@ -228,11 +223,40 @@ class NotificationService {
   async read(noti_id: string, user_id: string) {
     await NotificationCollection.updateOne({ _id: new ObjectId(noti_id) }, { $set: { isRead: true } })
     await NotificationGateway.sendCountUnreadNoti(user_id)
+    await NotificationGateway.sendCountUnreadNotiByType(user_id)
     return true
   }
 
   async countUnreadNoti(user_id: string) {
     return await NotificationCollection.countDocuments({ isRead: false, receiver: new ObjectId(user_id) })
+  }
+
+  async countUnreadNotiByType(user_id: string) {
+    const result = await NotificationCollection.aggregate([
+      {
+        $match: {
+          isRead: false,
+          receiver: new ObjectId(user_id)
+        }
+      },
+      {
+        $group: {
+          _id: '$type',
+          count: { $sum: 1 }
+        }
+      }
+    ]).toArray()
+
+    // Chuyển về dạng dễ dùng
+    const counts = result.reduce(
+      (acc, cur) => {
+        acc[cur._id] = cur.count
+        return acc
+      },
+      {} as Record<string, number>
+    )
+
+    return counts
   }
 
   async delete(noti_id: string, user_id: string) {

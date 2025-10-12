@@ -63,6 +63,13 @@ export const getProfileTweetDtoSchema = z.object({
   )
 })
 
+export const paramIdTweetDtoSchema = z.object({
+  tweet_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+    message: 'Invalid MongoDB ObjectId'
+  })
+})
+
+export type ParamIdTweetDto = z.infer<typeof paramIdTweetDtoSchema>
 export type GetOneTweetByIdDto = z.infer<typeof GetOneTweetByIdDtoSchema>
 export type CreateTweetDto = z.infer<typeof CreateTweetDtoSchema>
 export type getTweetChildrenDtoParams = z.infer<typeof getTweetChildrenDtoSchemaParams>

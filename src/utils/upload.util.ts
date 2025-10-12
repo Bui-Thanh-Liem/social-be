@@ -161,6 +161,10 @@ export function uploadVideos(req: Request): Promise<string[]> {
               //
               const user_id = new ObjectId(req.decoded_authorization?.user_id)
               const name = video.newFilename.split('/')[0]
+
+              //
+              console.log('taojk vidfeo ::', user_id)
+              console.log('req.decoded_authorization ::', req.decoded_authorization)
               const newVideo = await VideosService.create({
                 name,
                 user_id,
@@ -227,9 +231,6 @@ export function deleteVideo(folderName: string): Promise<void> {
       // Xoá folder
       await fs.promises.rm(folderPath, { recursive: true, force: true })
       logger.info(`✅ Delete video ${folderName} success`)
-
-      // Xoá trong DB
-      await VideosService.delete(folderName)
 
       resolve()
     } catch (err) {

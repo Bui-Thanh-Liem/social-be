@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import LikesController from '~/controllers/Likes.controller'
+import ReportTweetController from '~/controllers/ReportTweet.controller'
 import { checkTweetByIdParams } from '~/middlewares/checkTweetParams.middleware'
 import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
@@ -7,15 +7,15 @@ import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
 import { paramIdTweetDtoSchema } from '~/shared/dtos/req/tweet.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 
-const likesRoute = Router()
+const reportTweetRoute = Router()
 
-likesRoute.post(
-  '/toggle/:tweet_id',
+reportTweetRoute.post(
+  '/:tweet_id',
   verifyAccessToken,
   verifyUserEmail,
   requestParamsValidate(paramIdTweetDtoSchema),
   checkTweetByIdParams,
-  wrapAsyncHandler(LikesController.toggleLike)
+  wrapAsyncHandler(ReportTweetController.report)
 )
 
-export default likesRoute
+export default reportTweetRoute

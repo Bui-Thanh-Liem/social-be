@@ -1,24 +1,28 @@
 import { ObjectId } from 'mongodb'
 import database from '~/configs/database.config'
+import { deleteChildrenTweet } from '~/libs/bull/queues/deleteChildrenTweet'
 import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
 import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
 import { NotFoundError } from '~/shared/classes/error.class'
+import { CONSTANT_JOB } from '~/shared/constants'
 import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EFeedType, EMediaType, ENotificationType, ETweetType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { ResMultiType } from '~/shared/types/response.type'
+import { chunkArray } from '~/utils/chunkArray'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
-import { deleteImage, deleteVideo } from '~/utils/upload.util'
+import { deleteImage } from '~/utils/upload.util'
 import BookmarksService from './Bookmarks.service'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
 import LikesService from './Likes.service'
 import NotificationService from './Notification.service'
 import TrendingService from './Trending.service'
+import VideosService from './Videos.service'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
@@ -1665,15 +1669,12 @@ class TweetsService {
           const parts = tweet.media?.url.split('/')
           const folderName = parts[parts.length - 2] // "RXhw4s21AEzt_-VpjWIin"
           if (folderName) {
-            await deleteVideo(folderName).catch((err) => {
-              console.log('Tweet - delete - media - video:::', err)
-            })
+            await VideosService.delete(folderName)
           }
         }
 
-        // Xóa các record của bookmark/like
-        await BookmarksService.deleteByTweetId(tweet_id)
-        await LikesService.deleteByTweetId(tweet_id)
+        // Xóa các record của bookmark/like/comment
+        await deleteChildrenTweet.add(CONSTANT_JOB.DELETE_CHILDREN_TWEET, { parent_id: tweet_id })
       })
       return true
     } catch (error) {
@@ -1682,6 +1683,43 @@ class TweetsService {
     } finally {
       session.endSession()
     }
+  }
+
+  // Hàm xóa tất cả tweet con của 1 tweet cha (comment)
+  async deleteChildrenTweet(parent_id: string) {
+    //
+    await BookmarksService.deleteByTweetId(parent_id)
+    await LikesService.deleteByTweetId(parent_id)
+
+    //
+    const childrenIds = await TweetCollection.find(
+      { parent_id: new ObjectId(parent_id), type: ETweetType.Comment },
+      { projection: { _id: 1 } }
+    ).toArray()
+
+    // tránh đẹ quy vô tận
+    if (!childrenIds.length) {
+      console.log('Không có comment cần xóa')
+      return
+    }
+
+    const ids = childrenIds.map((tw) => tw._id.toString())
+
+    // Chia nhỏ để tránh nghẽn — ví dụ mỗi chunk 100 tweet
+    const chunks = chunkArray(ids, 100)
+
+    for (const [index, batch] of chunks.entries()) {
+      console.log(`🔹 Deleting batch ${index + 1}/${chunks.length} (${batch.length} items)`)
+
+      // Giới hạn số lượng promise chạy song song (ví dụ 10 mỗi lần)
+      const CONCURRENCY = 10
+      for (let i = 0; i < batch.length; i += CONCURRENCY) {
+        const group = batch.slice(i, i + CONCURRENCY)
+        await Promise.allSettled(group.map((id) => this.delete(id)))
+      }
+    }
+
+    console.log(`✅ Finished deleting ${ids.length} children of ${parent_id}`)
   }
 }
 
