@@ -18,6 +18,11 @@ export const CONSTANT_EVENT_NAMES = {
   CHANGE_CONVERSATION: 'conversation:change',
   LEAVE_CONVERSATION: 'conversation:leave',
 
+  // COMMENT
+  NEW_COMMENT: 'comment:new',
+  JOIN_COMMENT: 'comment:join',
+  LEAVE_COMMENT: 'comment:leave',
+
   //
   ERROR: 'error'
 }

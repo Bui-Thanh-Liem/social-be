@@ -3,10 +3,13 @@ import { connectionHandler } from './handlers/connection.handler'
 import { conversationHandler } from './handlers/conversation.handler'
 import { messageHandler } from './handlers/message.handler'
 import { authMiddleware } from './middlewares/auth.socket'
+import { commentHandler } from './handlers/comment.handler'
 
 let _io: Server
 let _socket: Socket
 
+// handlers lắng nghe client emit lên (bị động 90%)
+// gateways emit về client (chủ động)
 export function initializeSocket(io: Server) {
   //
   _io = io
@@ -21,6 +24,7 @@ export function initializeSocket(io: Server) {
     await connectionHandler(io, socket)
     await conversationHandler(io, socket)
     await messageHandler(io, socket)
+    await commentHandler(io, socket)
   })
 }
 

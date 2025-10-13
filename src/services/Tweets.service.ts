@@ -13,6 +13,7 @@ import { EFeedType, EMediaType, ENotificationType, ETweetType } from '~/shared/e
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { ResMultiType } from '~/shared/types/response.type'
+import CommentGateway from '~/socket/gateways/Comment.gateway'
 import { chunkArray } from '~/utils/chunkArray'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 import { deleteImage } from '~/utils/upload.util'
@@ -73,6 +74,8 @@ class TweetsService {
     }
 
     // Gửi thông báo cho chủ bài viết là có người bình luận
+    // ---
+    // Emit comment mới về bài viết parent
     if (type === ETweetType.Comment && parent_id) {
       const tw = await TweetCollection.findOne({ _id: new ObjectId(parent_id) }, { projection: { user_id: 1 } })
       await NotificationService.create({
@@ -82,6 +85,12 @@ class TweetsService {
         receiver: tw!.user_id.toString(),
         refId: tw?._id.toString()
       })
+
+      //
+      const newTw = await this.getOneById(user_id, newTweet.insertedId.toString())
+      if (newTw && tw) {
+        await CommentGateway.sendNewComment(newTw, tw._id.toString())
+      }
     }
 
     return newTweet

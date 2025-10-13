@@ -21,7 +21,7 @@ export async function conversationHandler(io: Server, socket: Socket) {
     socket.join(ids)
   })
 
-  // Leave vào conversation
+  // Leave ra conversation
   socket.on(CONSTANT_EVENT_NAMES.LEAVE_CONVERSATION, (ids: string[]) => {
     console.log('Leave conversation:::', ids)
     ids.forEach((id) => socket.leave(id))
