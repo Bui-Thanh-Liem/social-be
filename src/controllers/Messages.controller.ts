@@ -7,7 +7,7 @@ class MessagesController {
   async getMultiByConversation(req: Request, res: Response, next: NextFunction) {
     const { conversation_id } = req.params as GetMultiMessageByConversationDto
     const result = await MessagesService.getMultiByConversation({ conversation_id, query: req.query })
-    res.json(new OkResponse(`Get multi conversation Success`, result))
+    res.json(new OkResponse(`Get multi by conversation Success`, result))
   }
 }
 

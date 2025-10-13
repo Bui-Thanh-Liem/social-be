@@ -2,13 +2,13 @@ import { ObjectId } from 'mongodb'
 import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection } from '~/models/schemas/Tweet.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
-import { ToggleLikeDto } from '~/shared/dtos/req/like.dto'
 import { ResToggleLike } from '~/shared/dtos/res/like.dto'
 import { ENotificationType } from '~/shared/enums/type.enum'
 import NotificationService from './Notification.service'
+import { ParamIdTweetDto } from '~/shared/dtos/req/tweet.dto'
 
 class LikesService {
-  async toggleLike(user_id: string, payload: ToggleLikeDto): Promise<ResToggleLike> {
+  async toggleLike(user_id: string, payload: ParamIdTweetDto): Promise<ResToggleLike> {
     const userObjectId = new ObjectId(user_id)
     const tweetObjectId = new ObjectId(payload.tweet_id)
 

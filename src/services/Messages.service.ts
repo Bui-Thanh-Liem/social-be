@@ -19,8 +19,7 @@ class MessagesService {
       })
     )
 
-    // Khi có tin nhắn mới thì cập nhật lastMessage trong
-    // conversation db và emit về client
+    // Khi có tin nhắn mới thì cập nhật lastMessage trong conversation db và emit về client
     if (newMessage) {
       await ConversationsService.updateLastMessageAndStatus({
         sender_id: sender_id,
