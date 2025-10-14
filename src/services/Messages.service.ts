@@ -12,10 +12,10 @@ class MessagesService {
     //
     const newMessage = await MessageCollection.insertOne(
       new MessageSchema({
-        sender: new ObjectId(sender_id),
-        conversation: new ObjectId(payload.conversation),
         content: payload.content,
-        attachments: payload.attachments
+        sender: new ObjectId(sender_id),
+        attachments: payload.attachments,
+        conversation: new ObjectId(payload.conversation)
       })
     )
 

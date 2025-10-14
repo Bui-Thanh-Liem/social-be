@@ -3,7 +3,7 @@ import { CONSTANT_REGEX } from '~/shared/constants'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EFeedType, EMediaType, ETweetType } from '~/shared/enums/type.enum'
 
-const MediaSchema = z.object({
+export const MediaSchema = z.object({
   url: z.string().url({ message: 'Invalid media URL' }),
   type: z.nativeEnum(EMediaType)
 })
