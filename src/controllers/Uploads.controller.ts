@@ -9,14 +9,14 @@ class UploadsController {
     res.status(200).json(new OkResponse('Thành công', result))
   }
 
-  async remoteImages(req: Request, res: Response, next: NextFunction) {
-    const { urls } = req.body as RemoteImagesDto
-    const result = await UploadsService.remoteImages(urls)
+  async uploadVideos(req: Request, res: Response, next: NextFunction) {
+    const result = await UploadsService.uploadVideos(req)
     res.status(200).json(new OkResponse('Thành công', result))
   }
 
-  async uploadVideos(req: Request, res: Response, next: NextFunction) {
-    const result = await UploadsService.uploadVideos(req)
+  async removeImages(req: Request, res: Response, next: NextFunction) {
+    const { urls } = req.body as RemoteImagesDto
+    const result = await UploadsService.removeImages(urls)
     res.status(200).json(new OkResponse('Thành công', result))
   }
 }

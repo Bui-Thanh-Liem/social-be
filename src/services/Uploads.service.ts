@@ -4,11 +4,23 @@ import path from 'path'
 import { envs } from '~/configs/env.config'
 import { BadRequestError } from '~/shared/classes/error.class'
 import { UPLOAD_IMAGE_FOLDER_PATH } from '~/shared/constants'
+import { ResUpload } from '~/shared/dtos/res/upload.dto'
+import { EMediaType } from '~/shared/enums/type.enum'
 import { logger } from '~/utils/logger.util'
 import { uploadImages, uploadVideos } from '~/utils/upload.util'
 
 class UploadsService {
-  async remoteImages(urls: string[]) {
+  async uploadImages(req: Request): Promise<ResUpload[]> {
+    const urls = await uploadImages(req)
+    return urls.map((url) => ({ type: EMediaType.Image, url }))
+  }
+
+  async uploadVideos(req: Request): Promise<ResUpload[]> {
+    const urls = await uploadVideos(req)
+    return urls.map((url) => ({ type: EMediaType.Video, url }))
+  }
+
+  async removeImages(urls: string[]) {
     return new Promise((resolve, reject) => {
       try {
         // Validate that the image URLs are provided
@@ -41,20 +53,6 @@ class UploadsService {
         reject(new BadRequestError((error as any)?.message || 'Error removing images'))
       }
     })
-  }
-
-  async uploadImages(req: Request) {
-    const files = await uploadImages(req)
-    return files
-  }
-
-  async uploadVideos(req: Request) {
-    logger.info('UploadsService:::')
-
-    const videos = await uploadVideos(req)
-    logger.info('videos:::', videos)
-
-    return videos
   }
 }
 

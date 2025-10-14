@@ -9,6 +9,6 @@ export const sendNotiQueue = new Queue(CONSTANT_QUEUE.SEND_NOTI, {
     backoff: { type: 'exponential', delay: 1000 }, // Delay tăng dần
     removeOnComplete: true,
     removeOnFail: false,
-    delay: 5_000
+    delay: 5000
   }
 })

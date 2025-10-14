@@ -8,11 +8,11 @@ import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 const uploadsRoute = Router()
 
 uploadsRoute.post('/images', verifyAccessToken, wrapAsyncHandler(UploadsControllers.uploadImages))
-uploadsRoute.post(
-  '/remote/images',
-  requestBodyValidate(remoteImagesDtoSchema),
-  wrapAsyncHandler(UploadsControllers.remoteImages)
-)
 uploadsRoute.post('/videos', verifyAccessToken, wrapAsyncHandler(UploadsControllers.uploadVideos))
+uploadsRoute.delete(
+  '/remove/images',
+  requestBodyValidate(remoteImagesDtoSchema),
+  wrapAsyncHandler(UploadsControllers.removeImages)
+)
 
 export default uploadsRoute
