@@ -3,6 +3,7 @@ import database from '~/configs/database.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { ConversationCollection, ConversationSchema } from '~/models/schemas/Conversation.schema'
 import { MessageCollection } from '~/models/schemas/Message.schema'
+import { UserCollection } from '~/models/schemas/User.schema'
 import { BadRequestError, NotFoundError } from '~/shared/classes/error.class'
 import { CreateConversationDto } from '~/shared/dtos/req/conversation.dto'
 import { EConversationType } from '~/shared/enums/type.enum'
@@ -82,7 +83,17 @@ class ConversationsService {
     user_id: string
     query: IQuery<IConversation>
   }): Promise<ResMultiType<IConversation>> {
-    const { skip, limit, sort } = getPaginationAndSafeQuery<IConversation>(query)
+    const { skip, limit, sort, q } = getPaginationAndSafeQuery<IConversation>(query)
+
+    //
+    let userIds: ObjectId[] = []
+    if (q) {
+      const matchedUsers = await UserCollection.find(
+        { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] },
+        { projection: { _id: 1 } }
+      ).toArray()
+      userIds = matchedUsers.map((u) => u._id)
+    }
 
     //
     const conversations = await ConversationCollection.aggregate<ConversationSchema>([
@@ -93,7 +104,12 @@ class ConversationsService {
           },
           deletedFor: {
             $nin: [new ObjectId(user_id)]
-          }
+          },
+          ...(q
+            ? {
+                $or: [{ name: { $regex: q, $options: 'i' } }, { participants: { $in: userIds } }]
+              }
+            : {})
         }
       },
       {

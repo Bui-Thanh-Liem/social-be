@@ -1,7 +1,7 @@
 import { Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { initBookmarkCollection } from '~/models/schemas/Bookmark.schema'
-import { initConversationCollection } from '~/models/schemas/Conversation.schema'
+import { ConversationCollection, initConversationCollection } from '~/models/schemas/Conversation.schema'
 import { initFollowerCollection } from '~/models/schemas/Follower.schema'
 import { HashtagCollection, initHashtagCollection } from '~/models/schemas/Hashtag.schema'
 import { initLikeCollection } from '~/models/schemas/Like.schema'
@@ -68,6 +68,7 @@ class DatabaseConfig {
     const indexTrending = await TweetCollection.indexExists(['slug_1', 'created_at_-1'])
     const indexHashtag = await HashtagCollection.indexExists(['slug_1'])
     const indexMessage = await HashtagCollection.indexExists(['conversation_id_1_created_at_-1'])
+    const indexConversation = await HashtagCollection.indexExists(['name_1'])
 
     // User
     if (!indexUser) {
@@ -104,8 +105,13 @@ class DatabaseConfig {
     }
 
     // Message
-    if (indexMessage) {
+    if (!indexMessage) {
       MessageCollection.createIndex({ conversation_id: 1, created_at: -1 })
+    }
+
+    // Conversation
+    if (!indexConversation) {
+      ConversationCollection.createIndex({ name: 1 })
     }
   }
 

@@ -149,14 +149,16 @@ class SearchService {
                 }
               }
             ]
+          },
+          {
+            audience: ETweetAudience.Mentions,
+            mentions: { $in: [user_id] }
           }
         ]
       }
     }
 
     if (t) {
-      console.log('top ? :::', t)
-
       hasTop.query = [
         {
           $lookup: {

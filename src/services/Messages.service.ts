@@ -1,11 +1,15 @@
 import { ObjectId } from 'mongodb'
+import pLimit from 'p-limit'
 import { MessageCollection, MessageSchema } from '~/models/schemas/Message.schema'
 import { CreateMessageDto } from '~/shared/dtos/req/message.dto'
+import { EMediaType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IMessage } from '~/shared/interfaces/schemas/message.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import { deleteImage } from '~/utils/upload.util'
 import ConversationsService from './Conversations.service'
+import VideosService from './Videos.service'
 
 class MessagesService {
   async create(sender_id: string, payload: CreateMessageDto) {
@@ -69,8 +73,8 @@ class MessagesService {
 
   async cleanupOldMessages() {
     const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+    const limit = pLimit(10) // chỉ cho phép 10 task xóa chạy song song
 
-    // Lấy danh sách conversation có tin nhắn cũ hơn 3 ngày
     const conversations = await MessageCollection.aggregate([
       { $match: { created_at: { $lt: threeDaysAgo } } },
       { $group: { _id: '$conversation_id' } }
@@ -79,7 +83,6 @@ class MessagesService {
     for (const conv of conversations) {
       const convId = conv._id
 
-      // Lấy 500 message mới nhất
       const latestMessages = await MessageCollection.find({ conversation_id: convId })
         .sort({ created_at: -1 })
         .limit(500)
@@ -88,7 +91,38 @@ class MessagesService {
 
       const keepIds = latestMessages.map((m) => m._id)
 
-      // Xóa message còn lại (cũ hơn 3 ngày và không nằm trong top 50)
+      // Lấy danh sách message sẽ bị xóa
+      const oldMessages = await MessageCollection.find({
+        conversation_id: convId,
+        created_at: { $lt: threeDaysAgo },
+        _id: { $nin: keepIds }
+      }).toArray()
+
+      // Xóa media song song có giới hạn
+      await Promise.all(
+        oldMessages.map((msg) =>
+          limit(async () => {
+            if (msg.attachments?.length) {
+              for (const file of msg.attachments) {
+                try {
+                  if (file.type === EMediaType.Image) {
+                    const filename = file.url.split('/').pop()
+                    if (filename) await deleteImage(filename)
+                  } else if (file.type === EMediaType.Video) {
+                    const parts = file.url.split('/')
+                    const folderName = parts[parts.length - 2]
+                    if (folderName) await VideosService.delete(folderName)
+                  }
+                } catch (err) {
+                  console.error('Delete media error:', err)
+                }
+              }
+            }
+          })
+        )
+      )
+
+      // Xóa message trong DB
       await MessageCollection.deleteMany({
         conversation_id: convId,
         created_at: { $lt: threeDaysAgo },
