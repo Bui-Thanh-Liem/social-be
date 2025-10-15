@@ -1,9 +1,19 @@
 import { z } from 'zod'
 import { MediaSchema } from '../tweet.dto'
 
-export const sendMessageDtoSchema = z.object({
-  conversation: z.string().min(1, 'conversationId is required'),
-  sender: z.string().min(1, 'sender is required'),
-  content: z.string().min(1, 'content cannot be empty'),
-  attachments: z.array(MediaSchema).optional()
-})
+export const sendMessageDtoSchema = z
+  .object({
+    conversation: z.string().min(1, 'bắt buộc phải có id cuộc trò chuyện.'),
+    sender: z.string().min(1, 'Người gửi là bắt buộc'),
+    content: z.string().optional(),
+    attachments: z.array(MediaSchema).optional()
+  })
+  .refine(
+    (data) => {
+      return (data.content && data.content.trim().length > 0) || (data.attachments && data.attachments.length > 0)
+    },
+    {
+      message: 'Cần có nội dung hoặc tệp đính kèm.',
+      path: ['content']
+    }
+  )
