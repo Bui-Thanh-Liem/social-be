@@ -46,7 +46,7 @@ class ReportTweetService {
     if (result.report_count > Number(envs.MAX_REPORT_THRESHOLD)) {
       await NotificationService.create({
         content: `Bài viết của bạn đã vi phạm một số quy tắc cộng đồng, sẽ bị gỡ bỏ trong 12 giờ tới.`,
-        type: ENotificationType.REVIEW,
+        type: ENotificationType.Review,
         sender: tweet?.user_id.toString(),
         receiver: tweet?.user_id.toString(),
         refId: tweet?._id.toString()

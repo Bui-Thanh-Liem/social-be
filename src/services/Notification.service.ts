@@ -61,7 +61,7 @@ class NotificationService {
         }
       },
       // chỉ thêm khi có lookup
-      ...(type === ENotificationType.Mention_like
+      ...(type === ENotificationType.Mention_like || type === ENotificationType.Follow
         ? [
             {
               $lookup: {
@@ -171,7 +171,7 @@ class NotificationService {
         }
       },
       // chỉ thêm khi có lookup
-      ...(type === ENotificationType.Mention_like
+      ...(type === ENotificationType.Mention_like || type === ENotificationType.Follow
         ? [
             {
               $lookup: {

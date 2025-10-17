@@ -33,7 +33,29 @@ class MessagesService {
     }
 
     //
-    return await MessageCollection.findOne({ _id: newMessage.insertedId })
+    return await MessageCollection.aggregate([
+      {
+        $match: { _id: newMessage.insertedId }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'sender',
+          foreignField: '_id',
+          as: 'sender',
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                username: 1,
+                avatar: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } }
+    ]).next()
   }
 
   async getMultiByConversation({
@@ -58,7 +80,25 @@ class MessagesService {
       },
       {
         $limit: limit
-      }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'sender',
+          foreignField: '_id',
+          as: 'sender',
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                username: 1,
+                avatar: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } }
     ]).toArray()
 
     //

@@ -37,6 +37,7 @@ class ConversationsService {
       const newData = await ConversationCollection.insertOne(
         new ConversationSchema({
           type: payload.type,
+          avatar: payload?.avatar,
           participants: [userObjectId, participantObjectId]
         })
       )
@@ -54,6 +55,7 @@ class ConversationsService {
       new ConversationSchema({
         type: payload.type,
         name: payload.name,
+        avatar: payload?.avatar,
         participants: [userObjectId, ...participantObjectIds]
       })
     )
@@ -216,31 +218,52 @@ class ConversationsService {
           },
           avatar: {
             $cond: {
-              if: { $eq: ['$type', EConversationType.Private] },
-              then: {
-                $let: {
-                  vars: {
-                    otherParticipant: {
-                      $arrayElemAt: [
-                        {
-                          $filter: {
-                            input: '$participants',
-                            as: 'participant',
-                            cond: { $ne: ['$$participant._id', new ObjectId(user_id)] }
-                          }
-                        },
-                        0
-                      ]
+              if: {
+                $and: [{ $ne: ['$avatar', null] }, { $ne: ['$avatar', ''] }]
+              },
+              then: '$avatar', // nếu conversation có avatar -> dùng nó
+              else: {
+                $cond: {
+                  if: { $eq: ['$type', EConversationType.Private] },
+                  then: {
+                    $let: {
+                      vars: {
+                        otherParticipant: {
+                          $arrayElemAt: [
+                            {
+                              $filter: {
+                                input: '$participants',
+                                as: 'participant',
+                                cond: { $ne: ['$$participant._id', new ObjectId(user_id)] }
+                              }
+                            },
+                            0
+                          ]
+                        }
+                      },
+                      in: '$$otherParticipant.avatar'
                     }
                   },
-                  in: '$$otherParticipant.avatar'
-                }
-              },
-              else: {
-                $map: {
-                  input: '$participants',
-                  as: 'participant',
-                  in: '$$participant.avatar' // Lấy tất cả avatar của participants (mảng chuỗi)
+                  else: {
+                    $map: {
+                      input: {
+                        $slice: [
+                          {
+                            $filter: {
+                              input: '$participants',
+                              as: 'participant',
+                              cond: {
+                                $and: [{ $ne: ['$$participant.avatar', null] }, { $ne: ['$$participant.avatar', ''] }]
+                              }
+                            }
+                          },
+                          4
+                        ]
+                      },
+                      as: 'participant',
+                      in: '$$participant.avatar'
+                    }
+                  }
                 }
               }
             }
@@ -372,31 +395,52 @@ class ConversationsService {
           },
           avatar: {
             $cond: {
-              if: { $eq: ['$type', EConversationType.Private] },
-              then: {
-                $let: {
-                  vars: {
-                    other: {
-                      $arrayElemAt: [
-                        {
-                          $filter: {
-                            input: '$participants',
-                            as: 'p',
-                            cond: { $ne: ['$$p._id', new ObjectId(user_id)] }
-                          }
-                        },
-                        0
-                      ]
+              if: {
+                $and: [{ $ne: ['$avatar', null] }, { $ne: ['$avatar', ''] }]
+              },
+              then: '$avatar', // nếu conversation có avatar -> dùng nó
+              else: {
+                $cond: {
+                  if: { $eq: ['$type', EConversationType.Private] },
+                  then: {
+                    $let: {
+                      vars: {
+                        otherParticipant: {
+                          $arrayElemAt: [
+                            {
+                              $filter: {
+                                input: '$participants',
+                                as: 'participant',
+                                cond: { $ne: ['$$participant._id', new ObjectId(user_id)] }
+                              }
+                            },
+                            0
+                          ]
+                        }
+                      },
+                      in: '$$otherParticipant.avatar'
                     }
                   },
-                  in: '$$other.avatar'
-                }
-              },
-              else: {
-                $map: {
-                  input: '$participants',
-                  as: 'p',
-                  in: '$$p.avatar'
+                  else: {
+                    $map: {
+                      input: {
+                        $slice: [
+                          {
+                            $filter: {
+                              input: '$participants',
+                              as: 'participant',
+                              cond: {
+                                $and: [{ $ne: ['$$participant.avatar', null] }, { $ne: ['$$participant.avatar', ''] }]
+                              }
+                            }
+                          },
+                          4
+                        ]
+                      },
+                      as: 'participant',
+                      in: '$$participant.avatar'
+                    }
+                  }
                 }
               }
             }

@@ -32,7 +32,7 @@ class FollowsService {
       const sender = await UserCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { name: 1 } })
       await NotificationService.create({
         content: `${sender?.name} đang theo dõi bạn.`,
-        type: ENotificationType.FOLLOW,
+        type: ENotificationType.Follow,
         sender: user_id,
         receiver: followed_user_id,
         refId: user_id

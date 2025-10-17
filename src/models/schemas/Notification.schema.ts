@@ -19,7 +19,7 @@ export class NotificationSchema extends BaseSchema implements INotification {
     this.refId = noti.refId || new ObjectId()
     this.sender = noti.sender || new ObjectId()
     this.receiver = noti.receiver || new ObjectId()
-    this.type = noti.type || ENotificationType.VERIFY
+    this.type = noti.type || ENotificationType.Verify
   }
 }
 

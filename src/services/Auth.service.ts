@@ -40,7 +40,7 @@ class AuthService {
 
     //
     const email_verify_token = await signToken({
-      payload: { user_id: '', type: ETokenType.verifyToken },
+      payload: { user_id: '', type: ETokenType.VerifyToken },
       privateKey: envs.JWT_SECRET_TEMP,
       options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
     })
@@ -80,7 +80,7 @@ class AuthService {
       content: 'Kiểm tra mail để xác thực tài khoản của bạn.',
       receiver: result.insertedId.toString(),
       sender: result.insertedId.toString(),
-      type: ENotificationType.VERIFY
+      type: ENotificationType.Verify
     })
 
     // Sau 5s chờ người ổn định socket rồi mới gửi số lượng thông báo chưa đọc
@@ -218,7 +218,7 @@ class AuthService {
 
     //
     const forgot_password_token = await signToken({
-      payload: { user_id: user._id.toString(), type: ETokenType.forgotPasswordToken },
+      payload: { user_id: user._id.toString(), type: ETokenType.ForgotPasswordToken },
       privateKey: envs.JWT_SECRET_TEMP,
       options: { expiresIn: envs.TEMP_TOKEN_EXPIRES_IN as StringValue }
     })
@@ -325,12 +325,12 @@ class AuthService {
   }): Promise<[string, string]> {
     return (await Promise.all([
       signToken({
-        payload: { ...payload, type: ETokenType.accessToken },
+        payload: { ...payload, type: ETokenType.AccessToken },
         privateKey: envs.JWT_SECRET_ACCESS,
         options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
       }),
       signToken({
-        payload: { ...payload, type: ETokenType.refreshToken, exp: exp_refresh },
+        payload: { ...payload, type: ETokenType.RefreshToken, exp: exp_refresh },
         privateKey: envs.JWT_SECRET_REFRESH,
         options: { expiresIn: envs.REFRESH_TOKEN_EXPIRES_IN as StringValue }
       })
