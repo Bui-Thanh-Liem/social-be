@@ -256,7 +256,12 @@ class ConversationsService {
       },
       deletedFor: {
         $nin: [new ObjectId(user_id)]
-      }
+      },
+      ...(q
+        ? {
+            $or: [{ name: { $regex: q, $options: 'i' } }, { participants: { $in: userIds } }]
+          }
+        : {})
     })
 
     return {

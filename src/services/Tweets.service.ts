@@ -65,7 +65,7 @@ class TweetsService {
       for (let i = 0; i < mentions.length; i++) {
         await NotificationService.create({
           content: `${sender?.name} đã nhắc đến bạn trong một ${type === ETweetType.Comment ? 'bình luận' : 'bài viết'}.`,
-          type: ENotificationType.MENTION_LIKE,
+          type: ENotificationType.Mention_like,
           sender: user_id,
           receiver: mentions[i],
           refId: newTweet.insertedId.toString()
@@ -80,7 +80,7 @@ class TweetsService {
       const tw = await TweetCollection.findOne({ _id: new ObjectId(parent_id) }, { projection: { user_id: 1 } })
       await NotificationService.create({
         content: `${sender?.name} đã bình luận bài viết của bạn.`,
-        type: ENotificationType.MENTION_LIKE,
+        type: ENotificationType.Mention_like,
         sender: user_id,
         receiver: tw!.user_id.toString(),
         refId: tw?._id.toString()

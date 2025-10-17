@@ -1,6 +1,16 @@
 import { Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { initBookmarkCollection } from '~/models/schemas/Bookmark.schema'
+import {
+  CommunityCollection,
+  CommunityMemberCollection,
+  CommunityMentorCollection,
+  CommunityPinCollection,
+  initCommunityCollection,
+  initCommunityMemberCollection,
+  initCommunityMentorCollection,
+  initCommunityPinCollection
+} from '~/models/schemas/Community.schema'
 import { ConversationCollection, initConversationCollection } from '~/models/schemas/Conversation.schema'
 import { initFollowerCollection } from '~/models/schemas/Follower.schema'
 import { HashtagCollection, initHashtagCollection } from '~/models/schemas/Hashtag.schema'
@@ -58,6 +68,10 @@ class DatabaseConfig {
     initTrendingCollection(this.db)
     initNotificationCollection(this.db)
     initReportTweetCollection(this.db)
+    initCommunityCollection(this.db)
+    initCommunityMentorCollection(this.db)
+    initCommunityMemberCollection(this.db)
+    initCommunityPinCollection(this.db)
   }
 
   async initialIndex() {
@@ -69,6 +83,10 @@ class DatabaseConfig {
     const indexHashtag = await HashtagCollection.indexExists(['slug_1'])
     const indexMessage = await HashtagCollection.indexExists(['conversation_id_1_created_at_-1'])
     const indexConversation = await HashtagCollection.indexExists(['name_1'])
+    const indexCommunity = await CommunityCollection.indexExists(['name_1', 'bio_text'])
+    const indexCommunityMentor = await CommunityMentorCollection.indexExists(['community_id_1', 'user_id_1'])
+    const indexCommunityMember = await CommunityMemberCollection.indexExists(['community_id_1', 'user_id_1'])
+    const indexCommunityPin = await CommunityPinCollection.indexExists(['community_id_1', 'user_id_1'])
 
     // User
     if (!indexUser) {
@@ -112,6 +130,34 @@ class DatabaseConfig {
     // Conversation
     if (!indexConversation) {
       ConversationCollection.createIndex({ name: 1 })
+    }
+
+    // Community
+    if (!indexCommunity) {
+      CommunityCollection.createIndex({ name: 1 }, { unique: true })
+      CommunityCollection.createIndex({ bio: 'text' }, { default_language: 'none' })
+      // CommunityCollection.createIndex({ category: 'text' }, { default_language: 'none' })
+    }
+
+    // Community mentor
+    if (!indexCommunityMentor) {
+      CommunityMentorCollection.createIndex({ user_id: 1 })
+      CommunityMentorCollection.createIndex({ community_id: 1 })
+      CommunityMentorCollection.createIndex({ community_id: 1, user_id: 1 }, { unique: true })
+    }
+
+    // Community member
+    if (!indexCommunityMember) {
+      CommunityMemberCollection.createIndex({ user_id: 1 })
+      CommunityMemberCollection.createIndex({ community_id: 1 })
+      CommunityMemberCollection.createIndex({ community_id: 1, user_id: 1 }, { unique: true })
+    }
+
+    // Community pin
+    if (!indexCommunityPin) {
+      CommunityPinCollection.createIndex({ user_id: 1 })
+      CommunityPinCollection.createIndex({ community_id: 1 })
+      CommunityPinCollection.createIndex({ community_id: 1, user_id: 1 }, { unique: true })
     }
   }
 

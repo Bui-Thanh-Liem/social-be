@@ -11,10 +11,10 @@ export enum EMediaType {
 }
 
 export enum ETokenType {
-  accessToken,
-  refreshToken,
-  forgotPasswordToken,
-  verifyToken
+  AccessToken,
+  RefreshToken,
+  ForgotPasswordToken,
+  VerifyToken
 }
 
 export enum EFeedType {
@@ -29,8 +29,18 @@ export enum EConversationType {
 }
 
 export enum ENotificationType {
-  VERIFY = 'verify',
-  MENTION_LIKE = 'mention-like',
-  FOLLOW = 'follow',
-  REVIEW = 'review'
+  Verify = 'verify',
+  Mention_like = 'mention-like',
+  Follow = 'follow',
+  Review = 'review'
+}
+
+export enum EMembershipType {
+  Open = 'Mở',
+  Invite_only = 'Chỉ được mời'
+}
+
+export enum EVisibilityType {
+  Public = 'Công cộng',
+  Private = 'Riêng tư'
 }

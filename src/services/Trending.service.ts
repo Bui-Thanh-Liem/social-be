@@ -837,8 +837,6 @@ class TrendingService {
       }
     })
 
-    console.log('tweets::', tweets)
-
     return tweets
   }
 

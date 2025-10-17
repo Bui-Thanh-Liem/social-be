@@ -3,6 +3,7 @@ import StreamVideoController from '~/controllers/StreamVideo.controller'
 import { startFaker } from '~/utils/faker.util'
 import authRoute from './auth.routes'
 import bookmarksRoute from './bookmarks.routes'
+import communitiesRoute from './communities.routes'
 import conversationsRoute from './conversations.routes'
 import followsRoute from './follows.routes'
 import hashtagsRoute from './hashtags.routes'
@@ -32,6 +33,7 @@ rootRoute.use('/notifications', notificationRoute)
 rootRoute.use('/trending', trendingRoute)
 rootRoute.use('/messages', messagesRoute)
 rootRoute.use('/conversations', conversationsRoute)
+rootRoute.use('/communities', communitiesRoute)
 rootRoute.get('/videos-streaming/:filename', StreamVideoController.streamVideo)
 rootRoute.get('/videos-hls/:foldername/master.m3u8', StreamVideoController.streamMaster)
 rootRoute.get('/videos-hls/:foldername/:v/:segment', StreamVideoController.streamSegment)
