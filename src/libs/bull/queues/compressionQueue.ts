@@ -8,6 +8,6 @@ export const compressionQueue = new Queue(CONSTANT_QUEUE.COMPRESSION, {
     attempts: 3, // Thử lại tối đa 3 lần
     backoff: { type: 'exponential', delay: 1000 }, // Delay tăng dần
     removeOnComplete: true,
-    removeOnFail: false
+    removeOnFail: true
   }
 })

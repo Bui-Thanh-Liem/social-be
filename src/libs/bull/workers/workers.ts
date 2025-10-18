@@ -45,7 +45,7 @@ compressionQueue.process(CONSTANT_JOB.COMPRESSION_HLS, 5, async (job, done) => {
     await compressionVideo(path)
     logger.info(`Encode video ${path} success`)
 
-    // Khi chuyển đổi xong, publish vào redis -> app.js subscribe
+    // Khi chuyển đổi xong, publish vào redis -> server.js subscribe
     // Chuyển đổi trạng thái video, gửi thông báo client
     await pubSubServiceInstance.publish(DONE_CONVERT_VIDEO, { video_id: _id.toString() })
     done()

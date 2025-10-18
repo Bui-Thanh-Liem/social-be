@@ -8,7 +8,7 @@ export const sendNotiQueue = new Queue(CONSTANT_QUEUE.SEND_NOTI, {
     attempts: 2, // Thử lại tối đa 2 lần
     backoff: { type: 'exponential', delay: 1000 }, // Delay tăng dần
     removeOnComplete: true,
-    removeOnFail: false,
+    removeOnFail: true,
     delay: 5000
   }
 })
