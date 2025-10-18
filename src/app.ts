@@ -11,7 +11,7 @@ import { swaggerSpec } from './configs/swagger'
 import { corsMiddleware } from './middlewares/cors.middleware'
 import { errorHandler } from './middlewares/errorhandler.middleware'
 import { loggerMiddleware } from './middlewares/logger.middleware'
-import { rateLimitMiddleware } from './middlewares/ratelimit.middleware'
+import { globalRateLimit } from './middlewares/ratelimit.middleware'
 import rootRoute from './routes'
 import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/constants'
 import { logger } from './utils/logger.util'
@@ -58,7 +58,7 @@ app.use(morgan('dev'))
 app.use(loggerMiddleware)
 
 // Rate limiting
-app.use(rateLimitMiddleware)
+app.use(globalRateLimit)
 
 // Body parsing
 app.use((req, res, next) => {
