@@ -12,6 +12,11 @@ class CommunityController {
     res.status(201).json(new CreatedResponse('Tạo cộng đồng thành công.', result))
   }
 
+  async getAllCategories(req: Request, res: Response, next: NextFunction) {
+    const result = await CommunityService.getAllCategories()
+    res.json(new OkResponse(`Lấy nhiều danh mục cộng đồng thành công`, result))
+  }
+
   async getMulti(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await CommunityService.getMulti({ user_id, query: req.query })

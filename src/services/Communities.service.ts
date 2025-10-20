@@ -28,6 +28,10 @@ class CommunityService {
     return community
   }
 
+  async getAllCategories() {
+    return await CommunityCollection.distinct('category')
+  }
+
   async getMulti({
     query,
     user_id

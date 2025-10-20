@@ -18,6 +18,8 @@ communitiesRoute.post(
   wrapAsyncHandler(CommunityController.create)
 )
 
+communitiesRoute.get('/categories', verifyAccessToken, wrapAsyncHandler(CommunityController.getAllCategories))
+
 communitiesRoute.get(
   '/',
   verifyAccessToken,
