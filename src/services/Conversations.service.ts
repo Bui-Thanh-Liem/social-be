@@ -56,6 +56,7 @@ class ConversationsService {
         type: payload.type,
         name: payload.name,
         avatar: payload?.avatar,
+        mentors: [userObjectId],
         participants: [userObjectId, ...participantObjectIds]
       })
     )
@@ -856,6 +857,46 @@ class ConversationsService {
       )
       return 'Ghim'
     }
+  }
+
+  async addParticipants({
+    conv_id,
+    user_id,
+    participants
+  }: {
+    user_id: string
+    conv_id: string
+    participants: string[]
+  }) {
+    //
+    const conv = await ConversationCollection.findOne({ _id: new ObjectId(conv_id) })
+    if (!conv) throw new Error('Không tìm thấy cuộc trò chuyện')
+
+    //
+    const exists = conv.participants.some((p) => p.equals(user_id))
+    if (!exists) {
+      throw new BadRequestError('Bạn không phải là thành viên của cuộc trò chuyện này.')
+    }
+
+    //
+    const currentCount = conv.participants.length
+    const newCount = currentCount + participants.length
+
+    if (newCount > 50) {
+      throw new BadRequestError('Số lượng thành viên không được vượt quá 50 người.')
+    }
+
+    //
+    await ConversationCollection.updateOne(
+      { _id: new ObjectId(conv._id) },
+      {
+        $addToSet: {
+          participants: {
+            $each: participants.map((id) => new ObjectId(id))
+          }
+        }
+      }
+    )
   }
 
   // Cập nhật lại deleteFor = [] khi có tin nhắn mới

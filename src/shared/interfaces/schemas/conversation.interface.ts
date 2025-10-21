@@ -6,6 +6,7 @@ export interface IConversation extends IBase {
   name: string | null // group - có tên, private - lấy tên của participants (không phải mình)
   avatar: string[] | string | null // group - lấy tất cả avatar, private - lấy avatar của participants (không phải mình)
   type: EConversationType
+  mentors: ObjectId[]
   participants: ObjectId[]
   deletedFor: ObjectId[]
   pinned: IPinned[]

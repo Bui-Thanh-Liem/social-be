@@ -1,7 +1,13 @@
 import { NextFunction, Request, Response } from 'express'
 import ConversationsService from '~/services/Conversations.service'
 import { OkResponse } from '~/shared/classes/response.class'
-import { DeleteConversationDto, PinConversationDto, ReadConversationDto } from '~/shared/dtos/req/conversation.dto'
+import {
+  AddParticipantsBodyDto,
+  AddParticipantsParamDto,
+  DeleteConversationDto,
+  PinConversationDto,
+  ReadConversationDto
+} from '~/shared/dtos/req/conversation.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class ConversationsController {
@@ -9,6 +15,18 @@ class ConversationsController {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await ConversationsService.create({ user_id, payload: req.body })
     res.json(new OkResponse(`Tạo cuộc trò chuyện thành công`, result))
+  }
+
+  async addParticipants(req: Request, res: Response, next: NextFunction) {
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const { conv_id } = req.params as AddParticipantsParamDto
+    const { participants } = req.body as AddParticipantsBodyDto
+    const result = await ConversationsService.addParticipants({
+      conv_id,
+      user_id,
+      participants
+    })
+    res.json(new OkResponse(`Thêm thành viên vào cuộc trò chuyện thành công`, result))
   }
 
   async getMulti(req: Request, res: Response, next: NextFunction) {

@@ -47,7 +47,7 @@ class UsersService {
   async resendVerifyEmail(id: string) {
     //
     const email_verify_token = await signToken({
-      payload: { user_id: '', type: ETokenType.verifyToken },
+      payload: { user_id: '', type: ETokenType.VerifyToken },
       privateKey: envs.JWT_SECRET_TEMP,
       options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
     })

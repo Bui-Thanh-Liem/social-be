@@ -1,10 +1,10 @@
 import { ObjectId } from 'mongodb'
 import { envs } from '~/configs/env.config'
-import { ReportTweetCollection, ReportTweetSchema } from '~/models/schemas/ReportTweet.schema'
+import { ReportTweetCollection } from '~/models/schemas/ReportTweet.schema'
 import { TweetCollection } from '~/models/schemas/Tweet.schema'
-import NotificationService from './Notification.service'
-import { ENotificationType } from '~/shared/enums/type.enum'
 import { BadRequestError } from '~/shared/classes/error.class'
+import { ENotificationType } from '~/shared/enums/type.enum'
+import NotificationService from './Notification.service'
 import TweetsService from './Tweets.service'
 
 class ReportTweetService {
@@ -12,23 +12,29 @@ class ReportTweetService {
     const reporterObjectId = new ObjectId(reporter_id)
     const tweetObjectId = new ObjectId(tweet_id)
 
+    // Kiểm tra xem user đã report chưa
+    const existingReport = await ReportTweetCollection.findOne({
+      tweet_id: tweetObjectId,
+      reporter_ids: reporterObjectId
+    })
+
+    if (existingReport) {
+      throw new BadRequestError('Bài viết này đã được báo cáo.')
+    }
+
     // Cập nhật hoặc tạo mới report
     const result = await ReportTweetCollection.findOneAndUpdate(
+      { tweet_id: tweetObjectId },
       {
-        tweet_id: tweetObjectId,
-        reporter_ids: { $ne: reporterObjectId } // chỉ update nếu reporter chưa tồn tại
-      },
-      {
-        $inc: { report_count: 1 }, // tăng report_count thêm 1
-        $push: { reporter_ids: reporterObjectId }, // thêm reporter mới vào danh sách
-        $setOnInsert: new ReportTweetSchema({
+        $inc: { report_count: 1 },
+        $addToSet: { reporter_ids: reporterObjectId }, // dùng $addToSet thay vì $push
+        $setOnInsert: {
           tweet_id: tweetObjectId,
-          report_count: 1,
-          reporter_ids: [reporterObjectId]
-        })
+          created_at: new Date()
+        }
       },
       {
-        upsert: true, // nếu chưa có document nào thì tạo mới
+        upsert: true,
         returnDocument: 'after'
       }
     )
@@ -43,15 +49,16 @@ class ReportTweetService {
       throw new BadRequestError('Không tìm thấy bài viết bạn báo cáo')
     }
 
-    if (result.report_count > Number(envs.MAX_REPORT_THRESHOLD)) {
+    if (result.report_count >= Number(envs.MAX_REPORT_THRESHOLD)) {
       await NotificationService.create({
         content: `Bài viết của bạn đã vi phạm một số quy tắc cộng đồng, sẽ bị gỡ bỏ trong 12 giờ tới.`,
         type: ENotificationType.Review,
-        sender: tweet?.user_id.toString(),
-        receiver: tweet?.user_id.toString(),
-        refId: tweet?._id.toString()
+        sender: tweet.user_id.toString(),
+        receiver: tweet.user_id.toString(),
+        refId: tweet._id.toString()
       })
     }
+
     return result
   }
 

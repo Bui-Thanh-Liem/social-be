@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
 import { CommunityCollection, CommunitySchema } from '~/models/schemas/Community.schema'
 import { BadRequestError, ConflictError } from '~/shared/classes/error.class'
-import { CreateCommunityDto } from '~/shared/dtos/req/community.dto'
+import { AddMembersDto, CreateCommunityDto } from '~/shared/dtos/req/community.dto'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 import { ResMultiType } from '~/shared/types/response.type'
@@ -116,6 +116,13 @@ class CommunityService {
       total_page: Math.ceil(total / limit),
       items: conversations
     }
+  }
+
+  //
+  async addMembers({ user_id, payload }: { user_id: string; payload: AddMembersDto }) {
+    const { member_ids, community_id } = payload
+
+    
   }
 }
 

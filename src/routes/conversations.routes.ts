@@ -6,7 +6,11 @@ import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middl
 import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
-import { ConversationIdDtoSchema, CreateConversationDtoSchema } from '~/shared/dtos/req/conversation.dto'
+import {
+  AddParticipantsDtoSchema,
+  ConversationIdDtoSchema,
+  CreateConversationDtoSchema
+} from '~/shared/dtos/req/conversation.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 
@@ -19,6 +23,16 @@ conversationsRoute.post(
   requestBodyValidate(CreateConversationDtoSchema),
   checkExistParticipants,
   wrapAsyncHandler(ConversationsController.create)
+)
+
+conversationsRoute.post(
+  '/add-participants/:conv_id',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestParamsValidate(ConversationIdDtoSchema),
+  requestBodyValidate(AddParticipantsDtoSchema),
+  checkExistParticipants,
+  wrapAsyncHandler(ConversationsController.addParticipants)
 )
 
 conversationsRoute.get(

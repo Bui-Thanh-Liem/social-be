@@ -4,7 +4,7 @@ import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middlewar
 import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
-import { CreateCommunityDtoSchema } from '~/shared/dtos/req/community.dto'
+import { AddMembersDtoSchema, CreateCommunityDtoSchema } from '~/shared/dtos/req/community.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 
@@ -16,6 +16,14 @@ communitiesRoute.post(
   verifyUserEmail,
   requestBodyValidate(CreateCommunityDtoSchema),
   wrapAsyncHandler(CommunityController.create)
+)
+
+communitiesRoute.post(
+  '/add-members',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestBodyValidate(AddMembersDtoSchema),
+  wrapAsyncHandler(CommunityController.addMembers)
 )
 
 communitiesRoute.get('/categories', verifyAccessToken, wrapAsyncHandler(CommunityController.getAllCategories))

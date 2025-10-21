@@ -6,7 +6,7 @@ import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyTokenVerifyEmail } from '~/middlewares/verifyTokenVerifyEmail.middleware'
 import { verifyUserActiveForChangePassword } from '~/middlewares/verifyUserActiveForChangePassword.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
-import { ChangePasswordDtoSchema, verifyEmailDtoSchema } from '~/shared/dtos/req/user.dto'
+import { ChangePasswordDtoSchema, VerifyEmailDtoSchema } from '~/shared/dtos/req/user.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 
 const usersRoute = Router()
@@ -14,7 +14,7 @@ const usersRoute = Router()
 usersRoute.post(
   '/verify-email',
   verifyAccessToken,
-  requestBodyValidate(verifyEmailDtoSchema),
+  requestBodyValidate(VerifyEmailDtoSchema),
   verifyTokenVerifyEmail,
   wrapAsyncHandler(UsersControllers.verifyEmail)
 )

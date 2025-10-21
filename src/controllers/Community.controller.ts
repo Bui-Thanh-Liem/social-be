@@ -22,6 +22,13 @@ class CommunityController {
     const result = await CommunityService.getMulti({ user_id, query: req.query })
     res.json(new OkResponse(`Lấy nhiều cộng đồng thành công`, result))
   }
+
+  //
+  async addMembers(req: Request, res: Response, next: NextFunction) {
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const result = await CommunityService.addMembers({ user_id, payload: req.body })
+    res.json(new OkResponse(`Lấy nhiều cộng đồng thành công`, result))
+  }
 }
 
 export default new CommunityController()

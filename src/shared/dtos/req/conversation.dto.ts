@@ -7,9 +7,11 @@ export const CreateConversationDtoSchema = z
     type: z.nativeEnum(EConversationType),
     name: z.string().trim().max(16).optional(),
     avatar: z.string().trim().optional(),
-    participants: z.array(z.string().trim().regex(CONSTANT_REGEX.ID_MONGO), {
-      message: 'Invalid MongoDB ObjectId'
-    })
+    participants: z
+      .array(z.string().trim().regex(CONSTANT_REGEX.ID_MONGO), {
+        message: 'Invalid MongoDB ObjectId'
+      })
+      .max(50, { message: 'Tối đa 50 thành viên trong cuộc trò chuyện.' })
   })
   .refine(
     (data) => {
@@ -54,7 +56,19 @@ export const ConversationIdDtoSchema = z.object({
   })
 })
 
+export const AddParticipantsDtoSchema = z.object({
+  participants: z
+    .array(z.string().trim().regex(CONSTANT_REGEX.ID_MONGO), {
+      message: 'Invalid MongoDB ObjectId'
+    })
+    .max(50, { message: 'Tối đa 50 thành viên trong cuộc trò chuyện.' })
+})
+
 export type CreateConversationDto = z.infer<typeof CreateConversationDtoSchema>
 export type ReadConversationDto = z.infer<typeof ConversationIdDtoSchema>
 export type PinConversationDto = z.infer<typeof ConversationIdDtoSchema>
 export type DeleteConversationDto = z.infer<typeof ConversationIdDtoSchema>
+
+//
+export type AddParticipantsBodyDto = z.infer<typeof AddParticipantsDtoSchema>
+export type AddParticipantsParamDto = z.infer<typeof ConversationIdDtoSchema>

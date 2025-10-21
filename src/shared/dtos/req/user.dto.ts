@@ -1,11 +1,11 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
 
-export const verifyEmailDtoSchema = z.object({
+export const VerifyEmailDtoSchema = z.object({
   email_verify_token: z.string().trim()
 })
 
-export const toggleFollowDtoSchema = z.object({
+export const UserIdDtoSchema = z.object({
   user_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'Invalid MongoDB ObjectId'
   })
@@ -19,9 +19,9 @@ export const ChangePasswordDtoSchema = z
   })
   .refine((data) => data.new_password === data.confirm_new_password, {
     path: ['confirm_password'],
-    message: 'New password do not match'
+    message: 'Mật khẩu mới không khớp.'
   })
 
-export type verifyEmailDto = z.infer<typeof verifyEmailDtoSchema>
-export type ToggleFollowDto = z.infer<typeof toggleFollowDtoSchema>
+export type verifyEmailDto = z.infer<typeof VerifyEmailDtoSchema>
+export type ToggleFollowDto = z.infer<typeof UserIdDtoSchema>
 export type ChangePasswordDto = z.infer<typeof ChangePasswordDtoSchema>
