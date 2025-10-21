@@ -25,3 +25,4 @@ export const ChangePasswordDtoSchema = z
 export type verifyEmailDto = z.infer<typeof VerifyEmailDtoSchema>
 export type ToggleFollowDto = z.infer<typeof UserIdDtoSchema>
 export type ChangePasswordDto = z.infer<typeof ChangePasswordDtoSchema>
+export type UserIdDto = z.infer<typeof UserIdDtoSchema>

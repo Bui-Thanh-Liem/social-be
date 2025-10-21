@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb'
 import { UserCollection } from '~/models/schemas/User.schema'
 import UsersServices from '~/services/Users.service'
 import { OkResponse } from '~/shared/classes/response.class'
-import { ChangePasswordDto } from '~/shared/dtos/req/user.dto'
+import { ChangePasswordDto, UserIdDto } from '~/shared/dtos/req/user.dto'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
@@ -47,9 +47,15 @@ class UsersController {
   }
 
   async getFollowedUsersBasic(req: Request, res: Response, next: NextFunction) {
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await UsersServices.getFollowedUsersBasic({ user_id_active: user_id, query: req.query })
+    const { user_id } = req.params as UserIdDto
+    const result = await UsersServices.getFollowedUsersBasic({ user_id, query: req.query })
     res.json(new OkResponse('Lấy người dùng đang theo dõi mình thành công', result))
+  }
+
+  async getFollowingUsersBasic(req: Request, res: Response, next: NextFunction) {
+    const { user_id } = req.params as UserIdDto
+    const result = await UsersServices.getFollowingUsersBasic({ user_id, query: req.query })
+    res.json(new OkResponse('Lấy người dùng mình đang theo dõi thành công', result))
   }
 
   async changePassword(req: Request, res: Response, next: NextFunction) {

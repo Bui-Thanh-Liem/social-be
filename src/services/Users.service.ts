@@ -161,17 +161,17 @@ class UsersService {
   }
 
   async getFollowedUsersBasic({
-    user_id_active,
+    user_id,
     query
   }: {
-    user_id_active: string
+    user_id: string
     query: IQuery<IUser>
   }): Promise<ResMultiType<IUser>> {
     //
     const { skip, limit, sort } = getPaginationAndSafeQuery<IUser>(query)
 
     //
-    const followed_user_ids = await FollowsService.getUserFollowers(user_id_active)
+    const followed_user_ids = await FollowsService.getUserFollowers(user_id)
     const users = await UserCollection.aggregate<UserSchema>([
       {
         $match: {
@@ -188,15 +188,115 @@ class UsersService {
         $limit: limit
       },
       {
+        $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'followed_user_id',
+          as: 'followers'
+        }
+      },
+      {
+        $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'user_id',
+          as: 'following'
+        }
+      },
+      {
+        $addFields: {
+          isFollow: {
+            $in: [new ObjectId(user_id), '$followers.user_id']
+          }
+        }
+      },
+      {
         $project: {
           name: 1,
-          avatar: 1
+          username: 1,
+          verify: 1,
+          avatar: 1,
+          bio: 1,
+          isFollow: 1
         }
       }
     ]).toArray()
 
     const total = await UserCollection.countDocuments({
       _id: { $in: followed_user_ids.map((id) => new ObjectId(id)) }
+    })
+
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: users
+    }
+  }
+
+  async getFollowingUsersBasic({
+    user_id,
+    query
+  }: {
+    user_id: string
+    query: IQuery<IUser>
+  }): Promise<ResMultiType<IUser>> {
+    //
+    const { skip, limit, sort } = getPaginationAndSafeQuery<IUser>(query)
+
+    //
+    const following_user_ids = await FollowsService.getUserFollowing(user_id)
+    const users = await UserCollection.aggregate<UserSchema>([
+      {
+        $match: {
+          _id: { $in: following_user_ids }
+        }
+      },
+      {
+        $sort: sort
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      },
+      {
+        $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'followed_user_id',
+          as: 'followers'
+        }
+      },
+      {
+        $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'user_id',
+          as: 'following'
+        }
+      },
+      {
+        $addFields: {
+          isFollow: {
+            $in: [new ObjectId(user_id), '$followers.user_id']
+          }
+        }
+      },
+      {
+        $project: {
+          name: 1,
+          avatar: 1,
+          username: 1,
+          verify: 1,
+          bio: 1,
+          isFollow: 1
+        }
+      }
+    ]).toArray()
+
+    const total = await UserCollection.countDocuments({
+      _id: { $in: following_user_ids.map((id) => new ObjectId(id)) }
     })
 
     return {

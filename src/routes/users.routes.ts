@@ -1,12 +1,13 @@
 import { Router } from 'express'
 import UsersControllers from '~/controllers/Users.controller'
 import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middleware'
+import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middleware'
 import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyTokenVerifyEmail } from '~/middlewares/verifyTokenVerifyEmail.middleware'
 import { verifyUserActiveForChangePassword } from '~/middlewares/verifyUserActiveForChangePassword.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
-import { ChangePasswordDtoSchema, VerifyEmailDtoSchema } from '~/shared/dtos/req/user.dto'
+import { ChangePasswordDtoSchema, UserIdDtoSchema, VerifyEmailDtoSchema } from '~/shared/dtos/req/user.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 
 const usersRoute = Router()
@@ -25,10 +26,19 @@ usersRoute.get('/username/:username', verifyAccessToken, wrapAsyncHandler(UsersC
 usersRoute.get('/mentions/:username', verifyAccessToken, wrapAsyncHandler(UsersControllers.getMultiForMentions))
 
 usersRoute.get(
-  '/followed',
+  '/followed/:user_id',
   verifyAccessToken,
+  requestParamsValidate(UserIdDtoSchema),
   requestQueryValidate(QueryDtoSchema),
   wrapAsyncHandler(UsersControllers.getFollowedUsersBasic)
+)
+
+usersRoute.get(
+  '/following/:user_id',
+  verifyAccessToken,
+  requestParamsValidate(UserIdDtoSchema),
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(UsersControllers.getFollowingUsersBasic)
 )
 
 usersRoute.get(
