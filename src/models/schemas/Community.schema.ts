@@ -7,9 +7,11 @@ import {
   ICommunityPin
 } from '~/shared/interfaces/schemas/community.interface'
 import { BaseSchema } from './Base.schema'
+import { slug } from '~/utils/slug.util'
 
 export class CommunitySchema extends BaseSchema implements ICommunity {
   name: string
+  slug: string
   cover: string
   desc: string
   bio: string
@@ -22,6 +24,7 @@ export class CommunitySchema extends BaseSchema implements ICommunity {
   constructor(community: Partial<ICommunity>) {
     super()
     this.name = community.name || ''
+    this.slug = slug(this.name)
     this.desc = community.desc || ''
     this.cover = community.cover || ''
     this.bio = community.bio || ''

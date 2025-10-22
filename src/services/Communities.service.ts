@@ -6,10 +6,11 @@ import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import { slug } from '~/utils/slug.util'
 
 class CommunityService {
   async create(user_id: string, payload: CreateCommunityDto): Promise<ICommunity> {
-    const exists = await CommunityCollection.countDocuments({ name: payload.name })
+    const exists = await CommunityCollection.countDocuments({ slug: slug(payload.name) })
 
     if (exists) {
       throw new ConflictError('Tên cộng đồng này đã được sử dụng.')
@@ -121,8 +122,6 @@ class CommunityService {
   //
   async addMembers({ user_id, payload }: { user_id: string; payload: AddMembersDto }) {
     const { member_ids, community_id } = payload
-
-    
   }
 }
 

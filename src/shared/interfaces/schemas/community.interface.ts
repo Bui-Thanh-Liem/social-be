@@ -4,6 +4,7 @@ import { type IBase } from './base.interface'
 
 export interface ICommunity extends IBase {
   name: string
+  slug: string
   desc: string
   cover: string
   bio: string

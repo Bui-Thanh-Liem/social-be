@@ -170,6 +170,35 @@ class MessagesService {
       })
     }
   }
+
+  async deleteConversationMessages(conversationId: string) {
+    // Lấy toàn bộ message trong cuộc hội thoại
+    const messages = await MessageCollection.find({ conversation_id: conversationId }).toArray()
+
+    // Xóa file media trước
+    for (const msg of messages) {
+      if (!msg.attachments?.length) continue
+
+      for (const file of msg.attachments) {
+        try {
+          if (file.type === EMediaType.Image) {
+            const filename = file.url.split('/').pop()
+            if (filename) await deleteImage(filename)
+          } else if (file.type === EMediaType.Video) {
+            const parts = file.url.split('/')
+            const folderName = parts[parts.length - 2]
+            if (folderName) await VideosService.delete(folderName)
+          }
+        } catch (err) {
+          console.error(`❌ Lỗi xóa media của message ${msg._id}:`, err)
+        }
+      }
+    }
+
+    // Xóa toàn bộ message trong DB
+    const { deletedCount } = await MessageCollection.deleteMany({ conversation_id: conversationId })
+    console.log(`🧹 Đã xóa ${deletedCount} message trong conversation ${conversationId}`)
+  }
 }
 
 export default new MessagesService()

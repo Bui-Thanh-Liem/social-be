@@ -27,7 +27,7 @@ class CommunityController {
   async addMembers(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await CommunityService.addMembers({ user_id, payload: req.body })
-    res.json(new OkResponse(`Lấy nhiều cộng đồng thành công`, result))
+    res.json(new OkResponse(`Thêm thành viên vào cộng đồng thành công`, result))
   }
 }
 

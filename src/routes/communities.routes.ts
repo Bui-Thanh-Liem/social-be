@@ -10,6 +10,7 @@ import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 
 const communitiesRoute = Router()
 
+//
 communitiesRoute.post(
   '/',
   verifyAccessToken,
@@ -18,6 +19,7 @@ communitiesRoute.post(
   wrapAsyncHandler(CommunityController.create)
 )
 
+//
 communitiesRoute.post(
   '/add-members',
   verifyAccessToken,
@@ -26,8 +28,10 @@ communitiesRoute.post(
   wrapAsyncHandler(CommunityController.addMembers)
 )
 
+//
 communitiesRoute.get('/categories', verifyAccessToken, wrapAsyncHandler(CommunityController.getAllCategories))
 
+//
 communitiesRoute.get(
   '/',
   verifyAccessToken,

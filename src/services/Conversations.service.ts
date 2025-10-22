@@ -2,7 +2,6 @@ import { InsertOneResult, ObjectId } from 'mongodb'
 import database from '~/configs/database.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { ConversationCollection, ConversationSchema } from '~/models/schemas/Conversation.schema'
-import { MessageCollection } from '~/models/schemas/Message.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
 import { BadRequestError, NotFoundError } from '~/shared/classes/error.class'
 import { CreateConversationDto } from '~/shared/dtos/req/conversation.dto'
@@ -14,6 +13,7 @@ import { getSocket } from '~/socket'
 import ConversationGateway from '~/socket/gateways/Conversation.gateway'
 import { createKeyAllConversationIds } from '~/utils/createKeyCache.util'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import MessagesService from './Messages.service'
 import NotificationService from './Notification.service'
 
 class ConversationsService {
@@ -454,7 +454,7 @@ class ConversationsService {
     await this.updateConvDeleted(id)
 
     if (!conversation) {
-      throw new NotFoundError('Không tìm thấy cuộc trò chuyện')
+      throw new NotFoundError('Không tìm thấy cuộc trò chuyện.')
     }
 
     return conversation
@@ -816,13 +816,13 @@ class ConversationsService {
 
         // Nếu không tìm thấy => conversation_id không hợp lệ
         if (!updated) {
-          throw new BadRequestError('Conversation không tồn tại')
+          throw new BadRequestError('Cuộc trò chuyện không tồn tại')
         }
 
         // Nếu participants bằng deletedFor => xoá luôn conversation + messages
         if (updated.deletedFor?.length === updated.participants?.length) {
-          await MessageCollection.deleteMany({ conversation: new ObjectId(conv_id) }, { session })
-          await ConversationCollection.deleteOne({ _id: new ObjectId(conv_id) }, { session })
+          await MessagesService.deleteConversationMessages(conv_id)
+          await ConversationCollection.deleteOne({ _id: new ObjectId(conv_id) })
         }
       })
 
@@ -944,15 +944,27 @@ class ConversationsService {
     }
 
     // Xoá khỏi participants và mentors
-    await ConversationCollection.updateOne(
+    const updated = await ConversationCollection.findOneAndUpdate(
       { _id: conv._id },
       {
         $pull: {
           participants: participantObjectId,
           mentors: participantObjectId
         }
-      }
+      },
+      { returnDocument: 'after', projection: { participants: 1 } }
     )
+
+    // Nếu không tìm thấy => conversation_id không hợp lệ
+    if (!updated) {
+      throw new BadRequestError('Cuộc trò chuyện không tồn tại.')
+    }
+
+    // Nếu participants trống => xoá luôn conversation + messages
+    if (updated.participants?.length === 0) {
+      await MessagesService.deleteConversationMessages(conv_id)
+      await ConversationCollection.deleteOne({ _id: new ObjectId(conv_id) })
+    }
 
     // Gửi thông báo chỉ khi bị xoá
     if (user_id !== participant) {
