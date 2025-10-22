@@ -99,13 +99,13 @@ class AuthService {
     //
     const exist = await this.findOneByEmail(payload?.email)
     if (!exist) {
-      throw new UnauthorizedError('Email or password not correct')
+      throw new UnauthorizedError('Email hoặc mật khẩu không đúng.')
     }
 
     //
     const verifyPass = verifyPassword(payload.password, exist.password)
     if (!verifyPass) {
-      throw new UnauthorizedError('Email or password not correct')
+      throw new UnauthorizedError('Email hoặc mật khẩu không đúng.')
     }
 
     //
@@ -130,7 +130,7 @@ class AuthService {
 
     //
     if (!userInfo.verified_email) {
-      throw new BadRequestError('Email not verified')
+      throw new BadRequestError('Email của bạn chưa được xác minh.')
     }
 
     //
@@ -311,7 +311,7 @@ class AuthService {
   private async checkExistByName(name: string) {
     const isExist = (await UserCollection.countDocuments({ name })) > 0
     if (isExist) {
-      throw new ConflictError('Tên người dùng đã tồn tại')
+      throw new ConflictError('Tên người dùng đã tồn tại.')
     }
   }
 
@@ -344,7 +344,7 @@ class AuthService {
   async updateMe(user_id: string, payload: UpdateMeDto) {
     const user = await UserCollection.findOne({ username: payload.username, _id: { $ne: new ObjectId(user_id) } })
     if (user) {
-      throw new ConflictError('Username already exist')
+      throw new ConflictError('Tên người dùng đã tồn tại.')
     }
 
     await UsersService.resetUserActive(user_id)

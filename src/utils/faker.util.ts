@@ -2,7 +2,7 @@
 import { faker } from '@faker-js/faker'
 import _ from 'lodash'
 import { ObjectId } from 'mongodb'
-import { FollowerCollection, FollowerSchema } from '~/models/schemas/Follower.schema'
+import { FollowerCollection } from '~/models/schemas/Follower.schema'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import TweetsService from '~/services/Tweets.service'
 import { ETweetAudience } from '~/shared/enums/common.enum'
@@ -11,7 +11,8 @@ import { EMediaType, ETweetType } from '~/shared/enums/type.enum'
 import { hashPassword } from './crypto.util'
 import { logger } from './logger.util'
 
-const MY_ID = new ObjectId('68ee7710e9e1324f33d9e62f')
+const MY_ID = new ObjectId('68f85d17f3c271df6ed8bd6f')
+const PASS = 'User123@'
 
 function generateRandomTweet(hashtags: string[]): string {
   const openers = [
@@ -355,16 +356,13 @@ async function createRandomUsers() {
   logger.info('Start create users...')
 
   //
-  const pass = 'User123@'
-
-  //
   function func() {
     const name = faker.internet.username().slice(0, 15)
     return {
       name: name,
       username: `@${_.snakeCase(name)}`,
       email: faker.internet.email(),
-      password: hashPassword(pass),
+      password: hashPassword(PASS),
       day_of_birth: faker.date.birthdate(),
       avatar: faker.image.avatar(),
       verify: EUserVerifyStatus.Verified,
@@ -464,13 +462,24 @@ async function createRandomTweets(user_ids: ObjectId[]) {
   logger.info('Finish create tweet')
 }
 
-// Hàm Follow 100 users trên
+// Hàm Follow/followed 100 users
 async function follow(user_id: ObjectId, followed_user_ids: ObjectId[]) {
   logger.info('Start following...')
 
-  await Promise.all(
-    followed_user_ids.map((id) => FollowerCollection.insertOne(new FollowerSchema({ user_id, followed_user_id: id })))
-  )
+  const docs: any[] = []
+
+  // Tôi theo dõi 100 user
+  for (const id of followed_user_ids) {
+    docs.push({ user_id, followed_user_id: id })
+  }
+
+  // 100 user theo dõi tôi
+  for (const id of followed_user_ids) {
+    docs.push({ user_id: id, followed_user_id: user_id })
+  }
+
+  // Thêm 1 lần duy nhất
+  await FollowerCollection.insertMany(docs)
 
   logger.info('Finish follow')
 }

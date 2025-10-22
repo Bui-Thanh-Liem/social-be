@@ -6,7 +6,7 @@ import { MessageCollection } from '~/models/schemas/Message.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
 import { BadRequestError, NotFoundError } from '~/shared/classes/error.class'
 import { CreateConversationDto } from '~/shared/dtos/req/conversation.dto'
-import { EConversationType } from '~/shared/enums/type.enum'
+import { EConversationType, ENotificationType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IConversation } from '~/shared/interfaces/schemas/conversation.interface'
 import { ResMultiType } from '~/shared/types/response.type'
@@ -14,6 +14,7 @@ import { getSocket } from '~/socket'
 import ConversationGateway from '~/socket/gateways/Conversation.gateway'
 import { createKeyAllConversationIds } from '~/utils/createKeyCache.util'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import NotificationService from './Notification.service'
 
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {
@@ -897,6 +898,107 @@ class ConversationsService {
         }
       }
     )
+  }
+
+  async removeParticipants({
+    conv_id,
+    user_id,
+    participant
+  }: {
+    user_id: string
+    conv_id: string
+    participant: string
+  }): Promise<string> {
+    let mess = 'Rời'
+
+    const conv = await ConversationCollection.findOne({ _id: new ObjectId(conv_id) })
+    if (!conv) throw new NotFoundError('Không tìm thấy cuộc trò chuyện')
+
+    const userObjectId = new ObjectId(user_id)
+    const participantObjectId = new ObjectId(participant)
+
+    // Kiểm tra user gọi có trong nhóm
+    const exists = conv.participants.some((p) => p.equals(userObjectId))
+    if (!exists) throw new BadRequestError('Bạn không phải là thành viên của cuộc trò chuyện này.')
+
+    // Nếu user xoá người khác → cần là mentor
+    const existMentorCaller = conv.mentors?.some((p) => p.equals(userObjectId)) ?? false
+
+    if (user_id !== participant) {
+      mess = 'Xoá thành viên khỏi'
+
+      const existMentorTarget = conv.mentors?.some((p) => p.equals(participantObjectId)) ?? false
+
+      if (!existMentorCaller) {
+        throw new BadRequestError('Bạn không phải là trưởng nhóm của cuộc trò chuyện này.')
+      }
+
+      if (existMentorTarget) {
+        throw new BadRequestError('Bạn không thể xoá thành viên cùng cấp trưởng nhóm với bạn.')
+      }
+    } else {
+      // Tự rời nhóm
+      if (existMentorCaller && conv.mentors.length === 1) {
+        throw new BadRequestError('Hãy cho một thành viên lên nhóm trưởng trước khi bạn rời cuộc trò chuyện.')
+      }
+    }
+
+    // Xoá khỏi participants và mentors
+    await ConversationCollection.updateOne(
+      { _id: conv._id },
+      {
+        $pull: {
+          participants: participantObjectId,
+          mentors: participantObjectId
+        }
+      }
+    )
+
+    // Gửi thông báo chỉ khi bị xoá
+    if (user_id !== participant) {
+      await NotificationService.create({
+        content: `Bạn đã bị xoá khỏi nhóm ${conv?.name || 'cuộc trò chuyện'}.`,
+        type: ENotificationType.Other,
+        sender: user_id,
+        receiver: participant
+      })
+    }
+
+    return mess
+  }
+
+  async promoteMentor({ conv_id, user_id, participant }: { user_id: string; conv_id: string; participant: string }) {
+    const conv = await ConversationCollection.findOne({ _id: new ObjectId(conv_id) })
+    if (!conv) throw new NotFoundError('Không tìm thấy cuộc trò chuyện')
+
+    const userObjectId = new ObjectId(user_id)
+    const participantObjectId = new ObjectId(participant)
+
+    // Kiểm tra user có trong nhóm
+    const exists = conv.participants.some((p) => p.equals(userObjectId))
+    if (!exists) throw new BadRequestError('Bạn không phải là thành viên của cuộc trò chuyện này.')
+
+    // Không tự promote bản thân
+    if (user_id === participant) throw new BadRequestError('Bạn không thể tự cho bạn là nhóm trưởng.')
+
+    // Kiểm tra quyền người gọi
+    const isMentorCaller = conv.mentors?.some((p) => p.equals(userObjectId)) ?? false
+    if (!isMentorCaller) throw new BadRequestError('Bạn không phải là trưởng nhóm của cuộc trò chuyện này.')
+
+    // Kiểm tra người được promote có phải mentor chưa
+    const alreadyMentor = conv.mentors?.some((p) => p.equals(participantObjectId)) ?? false
+    if (alreadyMentor) throw new BadRequestError('Người này đã là trưởng nhóm rồi.')
+
+    // Cập nhật
+    await ConversationCollection.updateOne({ _id: conv._id }, { $addToSet: { mentors: participantObjectId } })
+
+    // Gửi thông báo
+    await NotificationService.create({
+      content: `Bạn đã trở thành nhóm trưởng của cuộc trò chuyện ${conv?.name || ''}.`,
+      type: ENotificationType.Other,
+      sender: user_id,
+      receiver: participant
+    })
   }
 
   // Cập nhật lại deleteFor = [] khi có tin nhắn mới

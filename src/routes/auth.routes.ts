@@ -1,5 +1,10 @@
 import { Router } from 'express'
 import AuthController from '~/controllers/Auth.controller'
+import { loginRateLimit } from '~/middlewares/ratelimit.middleware'
+import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middleware'
+import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
+import { verifyRefreshToken } from '~/middlewares/verifyRefreshToken.middleware'
+import { verifyTokenForgotPassword } from '~/middlewares/verifyTokenForgotPassword.middleware'
 import {
   ForgotPasswordDtoSchema,
   LoginUserDtoSchema,
@@ -7,18 +12,18 @@ import {
   ResetPasswordDtoSchema,
   UpdateMeDtoSchema
 } from '~/shared/dtos/req/auth.dto'
-import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middleware'
-import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
-import { verifyRefreshToken } from '~/middlewares/verifyRefreshToken.middleware'
-import { verifyTokenForgotPassword } from '~/middlewares/verifyTokenForgotPassword.middleware'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
-import { loginRateLimit } from '~/middlewares/ratelimit.middleware'
 
 const authRoute = Router()
 
 authRoute.post('/register', requestBodyValidate(RegisterUserDtoSchema), wrapAsyncHandler(AuthController.register))
 
-authRoute.post('/login', loginRateLimit, requestBodyValidate(LoginUserDtoSchema), AuthController.login)
+authRoute.post(
+  '/login',
+  wrapAsyncHandler(loginRateLimit),
+  requestBodyValidate(LoginUserDtoSchema),
+  wrapAsyncHandler(AuthController.login)
+)
 
 authRoute.get('/google-login', AuthController.googleLogin)
 

@@ -168,14 +168,24 @@ class UsersService {
     query: IQuery<IUser>
   }): Promise<ResMultiType<IUser>> {
     //
-    const { skip, limit, sort } = getPaginationAndSafeQuery<IUser>(query)
+    const { skip, limit, sort, q } = getPaginationAndSafeQuery<IUser>(query)
+
+    //
+    const hasQ = {
+      query: {}
+    }
+
+    if (q) {
+      hasQ.query = { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] }
+    }
 
     //
     const followed_user_ids = await FollowsService.getUserFollowers(user_id)
     const users = await UserCollection.aggregate<UserSchema>([
       {
         $match: {
-          _id: { $in: followed_user_ids }
+          _id: { $in: followed_user_ids },
+          ...hasQ.query
         }
       },
       {
@@ -241,14 +251,25 @@ class UsersService {
     query: IQuery<IUser>
   }): Promise<ResMultiType<IUser>> {
     //
-    const { skip, limit, sort } = getPaginationAndSafeQuery<IUser>(query)
+    const { skip, limit, sort, q } = getPaginationAndSafeQuery<IUser>(query)
+
+    //
+    const hasQ = {
+      query: {}
+    }
+
+    //
+    if (q) {
+      hasQ.query = { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] }
+    }
 
     //
     const following_user_ids = await FollowsService.getUserFollowing(user_id)
     const users = await UserCollection.aggregate<UserSchema>([
       {
         $match: {
-          _id: { $in: following_user_ids }
+          _id: { $in: following_user_ids },
+          ...hasQ.query
         }
       },
       {

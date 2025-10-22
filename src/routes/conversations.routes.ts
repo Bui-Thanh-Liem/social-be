@@ -7,9 +7,9 @@ import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middlew
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
 import {
-  AddParticipantsDtoSchema,
   ConversationIdDtoSchema,
-  CreateConversationDtoSchema
+  CreateConversationDtoSchema,
+  ParticipantsDtoSchema
 } from '~/shared/dtos/req/conversation.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
@@ -30,9 +30,29 @@ conversationsRoute.post(
   verifyAccessToken,
   verifyUserEmail,
   requestParamsValidate(ConversationIdDtoSchema),
-  requestBodyValidate(AddParticipantsDtoSchema),
+  requestBodyValidate(ParticipantsDtoSchema),
   checkExistParticipants,
   wrapAsyncHandler(ConversationsController.addParticipants)
+)
+
+conversationsRoute.post(
+  '/remove-participants/:conv_id',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestParamsValidate(ConversationIdDtoSchema),
+  requestBodyValidate(ParticipantsDtoSchema),
+  checkExistParticipants,
+  wrapAsyncHandler(ConversationsController.removeParticipants)
+)
+
+conversationsRoute.post(
+  '/promote-mentor/:conv_id',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestParamsValidate(ConversationIdDtoSchema),
+  requestBodyValidate(ParticipantsDtoSchema),
+  checkExistParticipants,
+  wrapAsyncHandler(ConversationsController.promoteMentor)
 )
 
 conversationsRoute.get(

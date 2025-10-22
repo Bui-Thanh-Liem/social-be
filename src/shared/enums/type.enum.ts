@@ -30,9 +30,10 @@ export enum EConversationType {
 
 export enum ENotificationType {
   Verify = 'verify',
+  Review = 'review',
   Mention_like = 'mention-like',
   Follow = 'follow',
-  Review = 'review'
+  Other = 'other'
 }
 
 export enum EMembershipType {
