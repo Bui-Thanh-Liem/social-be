@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import CommunityService from '~/services/Communities.service'
 import { CreatedResponse, OkResponse } from '~/shared/classes/response.class'
-import { CreateCommunityDto } from '~/shared/dtos/req/community.dto'
+import { CreateCommunityDto, GetDetailBySlugDto } from '~/shared/dtos/req/community.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class CommunityController {
@@ -21,6 +21,12 @@ class CommunityController {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await CommunityService.getMulti({ user_id, query: req.query })
     res.json(new OkResponse(`Lấy nhiều cộng đồng thành công`, result))
+  }
+
+  async getOneBySlug(req: Request, res: Response, next: NextFunction) {
+    const { slug } = req.params as GetDetailBySlugDto
+    const result = await CommunityService.getOneBySlug(slug)
+    res.json(new OkResponse(`Lấy cộng đồng bằng slug thành công.`, result))
   }
 
   //

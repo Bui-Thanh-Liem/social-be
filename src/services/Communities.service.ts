@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { CommunityCollection, CommunitySchema } from '~/models/schemas/Community.schema'
-import { BadRequestError, ConflictError } from '~/shared/classes/error.class'
+import { BadRequestError, ConflictError, NotFoundError } from '~/shared/classes/error.class'
 import { AddMembersDto, CreateCommunityDto } from '~/shared/dtos/req/community.dto'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
@@ -40,24 +40,34 @@ class CommunityService {
     user_id: string
     query: IQuery<ICommunity>
   }): Promise<ResMultiType<ICommunity>> {
-    const { skip, limit, sort, q } = getPaginationAndSafeQuery<ICommunity>(query)
+    const { skip, limit, sort, q, qe } = getPaginationAndSafeQuery<ICommunity>(query)
 
     //
-    const conversations = await CommunityCollection.aggregate<CommunitySchema>([
+    const communities = await CommunityCollection.aggregate<CommunitySchema>([
       {
         $match: {
-          $or: [
+          $and: [
             {
-              admin: {
-                $in: [new ObjectId(user_id)]
-              }
-            }
-          ],
-          ...(q
-            ? {
-                $or: [{ name: { $regex: q, $options: 'i' } }, { $text: { $search: q } }]
-              }
-            : {})
+              $or: [{ admin: { $in: [new ObjectId(user_id)] } }]
+            },
+            ...(q
+              ? [
+                  {
+                    $or: [{ name: { $regex: q, $options: 'i' } }, { $text: { $search: q } }]
+                  }
+                ]
+              : []),
+            ...(qe
+              ? [
+                  {
+                    $or: [
+                      { visibilityType: { $regex: qe, $options: 'i' } },
+                      { membershipType: { $regex: qe, $options: 'i' } }
+                    ]
+                  }
+                ]
+              : [])
+          ]
         }
       },
       {
@@ -69,7 +79,68 @@ class CommunityService {
       {
         $limit: limit
       },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'admin',
+          foreignField: '_id',
+          as: 'admin',
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                name: 1,
+                username: 1,
+                avatar: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: {
+          path: '$admin',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          bio: 0,
+          category: 0
+        }
+      }
+    ]).toArray()
 
+    //
+    const total = await CommunityCollection.countDocuments({
+      $or: [
+        {
+          admin: {
+            $in: [new ObjectId(user_id)]
+          }
+        }
+      ],
+      ...(q
+        ? {
+            $or: [{ name: { $regex: q, $options: 'i' } }, { $text: { $search: q } }]
+          }
+        : {})
+    })
+
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: communities
+    }
+  }
+
+  async getOneBySlug(slug: string): Promise<ICommunity> {
+    const community = await CommunityCollection.aggregate<CommunitySchema>([
+      {
+        $match: {
+          slug: slug
+        }
+      },
       {
         $lookup: {
           from: 'users',
@@ -94,29 +165,13 @@ class CommunityService {
           preserveNullAndEmptyArrays: true
         }
       }
-    ]).toArray()
+    ]).next()
 
-    //
-    const total = await CommunityCollection.countDocuments({
-      $or: [
-        {
-          admin: {
-            $in: [new ObjectId(user_id)]
-          }
-        }
-      ],
-      ...(q
-        ? {
-            $or: [{ name: { $regex: q, $options: 'i' } }, { $text: { $search: q } }]
-          }
-        : {})
-    })
-
-    return {
-      total,
-      total_page: Math.ceil(total / limit),
-      items: conversations
+    if (!community) {
+      throw new NotFoundError(`Không tìm thấy cộng đồng với slug ${slug}`)
     }
+
+    return community
   }
 
   //

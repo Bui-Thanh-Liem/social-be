@@ -3,7 +3,7 @@ import { CONSTANT_REGEX } from '~/shared/constants'
 import { EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
 
 export const CreateCommunityDtoSchema = z.object({
-  name: z.string().trim().max(16),
+  name: z.string().trim().max(32),
   cover: z.string().trim().max(200).optional(),
   bio: z.string().trim().max(200).optional(),
   category: z.string().trim().max(16),
@@ -22,5 +22,10 @@ export const AddMembersDtoSchema = z.object({
   })
 })
 
+export const GetDetailBySlugDtoSchema = z.object({
+  slug: z.string().trim()
+})
+
 export type CreateCommunityDto = z.infer<typeof CreateCommunityDtoSchema>
 export type AddMembersDto = z.infer<typeof AddMembersDtoSchema>
+export type GetDetailBySlugDto = z.infer<typeof GetDetailBySlugDtoSchema>

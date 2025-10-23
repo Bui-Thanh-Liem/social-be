@@ -6,8 +6,8 @@ import {
   ICommunityMentor,
   ICommunityPin
 } from '~/shared/interfaces/schemas/community.interface'
-import { BaseSchema } from './Base.schema'
 import { slug } from '~/utils/slug.util'
+import { BaseSchema } from './Base.schema'
 
 export class CommunitySchema extends BaseSchema implements ICommunity {
   name: string
@@ -24,7 +24,7 @@ export class CommunitySchema extends BaseSchema implements ICommunity {
   constructor(community: Partial<ICommunity>) {
     super()
     this.name = community.name || ''
-    this.slug = slug(this.name)
+    this.slug = slug(community?.name || '')
     this.desc = community.desc || ''
     this.cover = community.cover || ''
     this.bio = community.bio || ''

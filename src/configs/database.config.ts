@@ -83,7 +83,7 @@ class DatabaseConfig {
     const indexHashtag = await HashtagCollection.indexExists(['slug_1'])
     const indexMessage = await HashtagCollection.indexExists(['conversation_id_1_created_at_-1'])
     const indexConversation = await HashtagCollection.indexExists(['name_1'])
-    const indexCommunity = await CommunityCollection.indexExists(['name_1', 'bio_text'])
+    const indexCommunity = await CommunityCollection.indexExists(['name_1', 'slug_1', 'bio_text'])
     const indexCommunityMentor = await CommunityMentorCollection.indexExists(['community_id_1', 'user_id_1'])
     const indexCommunityMember = await CommunityMemberCollection.indexExists(['community_id_1', 'user_id_1'])
     const indexCommunityPin = await CommunityPinCollection.indexExists(['community_id_1', 'user_id_1'])
@@ -135,6 +135,7 @@ class DatabaseConfig {
     // Community
     if (!indexCommunity) {
       CommunityCollection.createIndex({ name: 1 }, { unique: true })
+      CommunityCollection.createIndex({ slug: 1 }, { unique: true })
       CommunityCollection.createIndex({ bio: 'text' }, { default_language: 'none' })
       // CommunityCollection.createIndex({ category: 'text' }, { default_language: 'none' })
     }
