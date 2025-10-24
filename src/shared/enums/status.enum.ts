@@ -9,3 +9,8 @@ export enum EVideoStatus {
   Reject,
   Success
 }
+
+export enum EInvitationStatus {
+  Pending,
+  Accepted
+}

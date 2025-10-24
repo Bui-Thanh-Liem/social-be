@@ -1,14 +1,17 @@
 import mailServiceInstance from '~/helpers/mail.helper'
 import pubSubServiceInstance from '~/helpers/pub_sub.helper'
+import NotificationService from '~/services/Communities.service'
 import TweetsService from '~/services/Tweets.service'
 import { BadRequestError } from '~/shared/classes/error.class'
 import { CONSTANT_JOB } from '~/shared/constants'
+import { InvitationMembersDto } from '~/shared/dtos/req/community.dto'
 import ConversationGateway from '~/socket/gateways/Conversation.gateway'
 import { compressionVideo } from '~/utils/compression.util'
 import { logger } from '~/utils/logger.util'
 import { compressionQueue, sendEmailQueue } from '../queues'
 import { deleteChildrenTweet } from '../queues/deleteChildrenTweet'
-import { sendNotiQueue } from '../queues/sendNotiQueue'
+import { inviteQueue } from '../queues/inviteQueue'
+import { sendNotiRegisteredQueue } from '../queues/sendNotiRegisteredQueue'
 
 // Worker xử lý gửi email xác thực
 sendEmailQueue.process(CONSTANT_JOB.VERIFY_MAIL, 5, async (job, done) => {
@@ -56,7 +59,7 @@ compressionQueue.process(CONSTANT_JOB.COMPRESSION_HLS, 5, async (job, done) => {
 })
 
 // Worker xử lý gửi số lượng thông báo chưa đọc sau khi đăng kí tàì khoản
-sendNotiQueue.process(CONSTANT_JOB.UNREAD_NOTI, 5, async (job, done) => {
+sendNotiRegisteredQueue.process(CONSTANT_JOB.UNREAD_NOTI, 5, async (job, done) => {
   try {
     const { user_id } = job.data
     await ConversationGateway.sendCountUnreadConv(user_id)
@@ -75,5 +78,16 @@ deleteChildrenTweet.process(CONSTANT_JOB.DELETE_CHILDREN_TWEET, 5, async (job, d
     done()
   } catch (error) {
     done(new Error('delete children tweet failed'))
+  }
+})
+
+inviteQueue.process(CONSTANT_JOB.INVITE_COMMUNITY, 5, async (job, done) => {
+  try {
+    const payload = job.data as { user_id: string; payload: InvitationMembersDto }
+    await NotificationService.inviteMembers(payload)
+    logger.info('Invited user on community')
+    done()
+  } catch (error) {
+    done(new Error('Invited user on community failed'))
   }
 })

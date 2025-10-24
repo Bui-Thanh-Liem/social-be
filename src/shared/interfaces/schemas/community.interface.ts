@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongodb'
+import { EInvitationStatus } from '~/shared/enums/status.enum'
 import type { EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
 import { type IBase } from './base.interface'
 
@@ -24,3 +25,10 @@ export interface ICommunityMentor extends IBase {
 export interface ICommunityMember extends IBase, ICommunityMentor {}
 
 export interface ICommunityPin extends IBase, ICommunityMentor {}
+
+export interface ICommunityInvitation extends IBase {
+  exp: Date
+  user_id: ObjectId
+  community_id: ObjectId
+  status: EInvitationStatus
+}

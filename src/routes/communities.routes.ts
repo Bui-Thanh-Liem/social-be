@@ -1,14 +1,15 @@
 import { Router } from 'express'
 import CommunityController from '~/controllers/Community.controller'
+import { checkExistMembers } from '~/middlewares/checkExistMembers.middleware'
 import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middleware'
 import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middleware'
 import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
 import {
-  AddMembersDtoSchema,
   CreateCommunityDtoSchema,
-  GetDetailBySlugDtoSchema
+  GetDetailBySlugDtoSchema,
+  InvitationMembersDtoSchema
 } from '~/shared/dtos/req/community.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
@@ -21,16 +22,18 @@ communitiesRoute.post(
   verifyAccessToken,
   verifyUserEmail,
   requestBodyValidate(CreateCommunityDtoSchema),
+  checkExistMembers,
   wrapAsyncHandler(CommunityController.create)
 )
 
 //
 communitiesRoute.post(
-  '/add-members',
+  '/invite-members',
   verifyAccessToken,
   verifyUserEmail,
-  requestBodyValidate(AddMembersDtoSchema),
-  wrapAsyncHandler(CommunityController.addMembers)
+  requestBodyValidate(InvitationMembersDtoSchema),
+  checkExistMembers,
+  wrapAsyncHandler(CommunityController.inviteMembers)
 )
 
 // Lấy categories của từng community (trả về danh sách)

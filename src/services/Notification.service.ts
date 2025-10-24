@@ -115,104 +115,81 @@ class NotificationService {
   }): Promise<ResMultiType<INotification>> {
     const { skip, limit, sort } = getPaginationAndSafeQuery<INotification>(query)
 
-    const match: {
-      type?: ENotificationType
-      receiver: ObjectId
-    } = { type, receiver: new ObjectId(user_id) }
+    const match = { type, receiver: new ObjectId(user_id) }
 
-    //
-    const notis = await NotificationCollection.aggregate<NotificationSchema>([
-      {
-        $match: match
-      },
-      {
-        $sort: sort
-      },
-      {
-        $skip: skip
-      },
-      {
-        $limit: limit
-      },
-      // Lookup for sender
+    const pipeline: any[] = [
+      { $match: match },
+      { $sort: sort },
+      { $skip: skip },
+      { $limit: limit },
       {
         $lookup: {
           from: 'users',
           localField: 'sender',
           foreignField: '_id',
           as: 'sender',
-          pipeline: [
-            {
-              $project: {
-                name: 1,
-                username: 1,
-                avatar: 1
-              }
-            }
-          ]
+          pipeline: [{ $project: { name: 1, username: 1, avatar: 1 } }]
         }
       },
-      // Lookup for receiver
       {
         $lookup: {
           from: 'users',
           localField: 'receiver',
           foreignField: '_id',
           as: 'receiver',
-          pipeline: [
-            {
-              $project: {
-                name: 1,
-                username: 1,
-                avatar: 1
-              }
-            }
-          ]
+          pipeline: [{ $project: { name: 1, username: 1, avatar: 1 } }]
         }
-      },
-      // chỉ thêm khi có lookup
-      ...(type === ENotificationType.Mention_like || type === ENotificationType.Follow
-        ? [
-            {
-              $lookup: {
-                from: 'tweets',
-                localField: 'refId',
-                foreignField: '_id',
-                as: 'tweetRef',
-                pipeline: [{ $project: { type: 1, parent_id: 1 } }]
-              }
-            },
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'refId',
-                foreignField: '_id',
-                as: 'userRef',
-                pipeline: [
-                  {
-                    $project: {
-                      username: 1
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        : []),
-      { $unwind: { path: '$refId', preserveNullAndEmptyArrays: true } },
+      }
+    ]
+
+    if (type === ENotificationType.Mention_like) {
+      pipeline.push({
+        $lookup: {
+          from: 'tweets',
+          localField: 'refId',
+          foreignField: '_id',
+          as: 'tweetRef',
+          pipeline: [{ $project: { type: 1, parent_id: 1 } }]
+        }
+      })
+    }
+
+    if (type === ENotificationType.Follow) {
+      pipeline.push({
+        $lookup: {
+          from: 'users',
+          localField: 'refId',
+          foreignField: '_id',
+          as: 'userRef',
+          pipeline: [{ $project: { username: 1 } }]
+        }
+      })
+    }
+
+    if (type === ENotificationType.Community) {
+      pipeline.push({
+        $lookup: {
+          from: 'community-invitation',
+          localField: 'refId',
+          foreignField: '_id',
+          as: 'communityRef',
+          pipeline: [{ $project: { slug: 1 } }]
+        }
+      })
+    }
+
+    pipeline.push(
+      { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$receiver', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$tweetRef', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$userRef', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$receiver', preserveNullAndEmptyArrays: true } }
-    ]).toArray()
+      { $unwind: { path: '$communityRef', preserveNullAndEmptyArrays: true } }
+    )
 
-    //
-    const total = await NotificationCollection.countDocuments({
-      type,
-      receiver: new ObjectId(user_id)
-    })
+    const notis = await NotificationCollection.aggregate<NotificationSchema>(pipeline).toArray()
 
-    //
+    const total = await NotificationCollection.countDocuments(match)
+
     return {
       total,
       total_page: Math.ceil(total / limit),

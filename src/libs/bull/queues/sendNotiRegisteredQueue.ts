@@ -2,7 +2,7 @@ import Queue from 'bull'
 import { envs } from '~/configs/env.config'
 import { CONSTANT_QUEUE } from '~/shared/constants'
 
-export const sendNotiQueue = new Queue(CONSTANT_QUEUE.SEND_NOTI, {
+export const sendNotiRegisteredQueue = new Queue(CONSTANT_QUEUE.SEND_NOTI, {
   redis: { host: envs.REDIS_HOST, port: envs.REDIS_PORT },
   defaultJobOptions: {
     attempts: 2, // Thử lại tối đa 2 lần

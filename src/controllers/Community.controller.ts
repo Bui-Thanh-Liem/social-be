@@ -14,13 +14,13 @@ class CommunityController {
 
   async getAllCategories(req: Request, res: Response, next: NextFunction) {
     const result = await CommunityService.getAllCategories()
-    res.json(new OkResponse(`Lấy nhiều danh mục cộng đồng thành công`, result))
+    res.json(new OkResponse(`Lấy nhiều danh mục cộng đồng thành công.`, result))
   }
 
   async getMulti(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await CommunityService.getMulti({ user_id, query: req.query })
-    res.json(new OkResponse(`Lấy nhiều cộng đồng thành công`, result))
+    res.json(new OkResponse(`Lấy nhiều cộng đồng thành công.`, result))
   }
 
   async getOneBySlug(req: Request, res: Response, next: NextFunction) {
@@ -30,10 +30,10 @@ class CommunityController {
   }
 
   //
-  async addMembers(req: Request, res: Response, next: NextFunction) {
+  async inviteMembers(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await CommunityService.addMembers({ user_id, payload: req.body })
-    res.json(new OkResponse(`Thêm thành viên vào cộng đồng thành công`, result))
+    const result = await CommunityService.inviteMembersOnQueue({ user_id, payload: req.body })
+    res.json(new OkResponse(`Mời thành viên vào cộng đồng thành công.`, result))
   }
 }
 

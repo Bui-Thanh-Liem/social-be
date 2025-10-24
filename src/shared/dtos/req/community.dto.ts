@@ -8,10 +8,17 @@ export const CreateCommunityDtoSchema = z.object({
   bio: z.string().trim().max(200).optional(),
   category: z.string().trim().max(16),
   visibilityType: z.nativeEnum(EVisibilityType),
-  membershipType: z.nativeEnum(EMembershipType)
+  membershipType: z.nativeEnum(EMembershipType),
+  member_ids: z
+    .array(
+      z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+        message: 'Invalid MongoDB ObjectId'
+      })
+    )
+    .optional()
 })
 
-export const AddMembersDtoSchema = z.object({
+export const InvitationMembersDtoSchema = z.object({
   member_ids: z.array(
     z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
       message: 'Invalid MongoDB ObjectId'
@@ -27,5 +34,5 @@ export const GetDetailBySlugDtoSchema = z.object({
 })
 
 export type CreateCommunityDto = z.infer<typeof CreateCommunityDtoSchema>
-export type AddMembersDto = z.infer<typeof AddMembersDtoSchema>
+export type InvitationMembersDto = z.infer<typeof InvitationMembersDtoSchema>
 export type GetDetailBySlugDto = z.infer<typeof GetDetailBySlugDtoSchema>

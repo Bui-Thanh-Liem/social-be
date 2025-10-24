@@ -1,15 +1,29 @@
 import { ObjectId } from 'mongodb'
-import { CommunityCollection, CommunitySchema } from '~/models/schemas/Community.schema'
+import pLimit from 'p-limit'
+import { inviteQueue } from '~/libs/bull/queues/inviteQueue'
+import {
+  CommunityCollection,
+  CommunityInvitationCollection,
+  CommunityInvitationSchema,
+  CommunityMentorCollection,
+  CommunitySchema
+} from '~/models/schemas/Community.schema'
+import { UserCollection } from '~/models/schemas/User.schema'
 import { BadRequestError, ConflictError, NotFoundError } from '~/shared/classes/error.class'
-import { AddMembersDto, CreateCommunityDto } from '~/shared/dtos/req/community.dto'
+import { CONSTANT_JOB } from '~/shared/constants'
+import { CreateCommunityDto, InvitationMembersDto } from '~/shared/dtos/req/community.dto'
+import { EInvitationStatus } from '~/shared/enums/status.enum'
+import { EMembershipType, ENotificationType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 import { slug } from '~/utils/slug.util'
+import NotificationService from './Notification.service'
+const limit = pLimit(10)
 
 class CommunityService {
-  async create(user_id: string, payload: CreateCommunityDto): Promise<ICommunity> {
+  async create(user_id: string, payload: CreateCommunityDto): Promise<boolean> {
     const exists = await CommunityCollection.countDocuments({ slug: slug(payload.name) })
 
     if (exists) {
@@ -20,13 +34,21 @@ class CommunityService {
       new CommunitySchema({ ...payload, admin: new ObjectId(user_id) })
     )
 
-    const community = await CommunityCollection.findOne({ _id: inserted.insertedId })
-
-    if (!community) {
-      throw new BadRequestError('Có lỗi trong quá trình tạo Cộng Đồng.')
+    if (!inserted.insertedId) {
+      throw new BadRequestError('Không thể tạo cộng đồng, vui lòng thử lại.')
     }
 
-    return community
+    try {
+      if (Array.isArray(payload.member_ids) && payload.member_ids.length > 0) {
+        await inviteQueue.add(CONSTANT_JOB.INVITE_COMMUNITY, {
+          user_id,
+          payload: { community_id: inserted.insertedId.toString(), member_ids: payload.member_ids }
+        })
+      }
+    } catch (err) {
+      throw new BadRequestError('Không thể mời thành viên, vui lòng thử lại.')
+    }
+    return true
   }
 
   async getAllCategories() {
@@ -174,9 +196,77 @@ class CommunityService {
     return community
   }
 
-  //
-  async addMembers({ user_id, payload }: { user_id: string; payload: AddMembersDto }) {
+  // Hàm này sẽ được worker gọi
+  async inviteMembers({ user_id, payload }: { user_id: string; payload: InvitationMembersDto }) {
     const { member_ids, community_id } = payload
+    const userObjId = new ObjectId(user_id)
+    const communityObjId = new ObjectId(community_id)
+
+    const community = await CommunityCollection.findOne(
+      { _id: communityObjId },
+      { projection: { name: 1, membershipType: 1 } }
+    )
+
+    if (community?.membershipType === EMembershipType.Invite_only) {
+      const isMentor = await CommunityMentorCollection.findOne({
+        community_id: communityObjId,
+        user_id: userObjId
+      })
+
+      if (!isMentor) {
+        throw new BadRequestError('Bạn không có quyền mời thành viên vào cộng đồng.')
+      }
+    }
+
+    //
+    const sender = await UserCollection.findOne({ _id: userObjId }, { projection: { name: 1 } })
+
+    // Dừng nếu thiếu dữ liệu
+    if (!sender || !community) {
+      throw new BadRequestError('Invalid sender or community')
+    }
+
+    await Promise.all(
+      member_ids.map((id) =>
+        limit(async () => {
+          const targetUserId = new ObjectId(id)
+
+          // ✅ Kiểm tra nếu đã có lời mời trước đó
+          const alreadyInvited = await CommunityInvitationCollection.findOne({
+            user_id: targetUserId,
+            community_id: communityObjId,
+            status: EInvitationStatus.Pending // chỉ bỏ qua nếu đang chờ
+          })
+
+          if (alreadyInvited) return // 👈 bỏ qua nếu đã tồn tại
+
+          // ✅ Tạo lời mời mới
+          const invitation = new CommunityInvitationSchema({
+            user_id: targetUserId,
+            community_id: communityObjId
+          })
+
+          await Promise.all([
+            CommunityInvitationCollection.insertOne(invitation),
+            NotificationService.create({
+              content: `${sender.name} đã mời bạn vào cộng đồng ${community.name}.`,
+              type: ENotificationType.Community,
+              sender: user_id,
+              receiver: id,
+              refId: community_id
+            })
+          ])
+        })
+      )
+    )
+
+    return true
+  }
+
+  //
+  async inviteMembersOnQueue(payload: { user_id: string; payload: InvitationMembersDto }) {
+    await inviteQueue.add(CONSTANT_JOB.INVITE_COMMUNITY, payload)
+    return true
   }
 }
 

@@ -3,10 +3,12 @@ import { envs } from '~/configs/env.config'
 import { initBookmarkCollection } from '~/models/schemas/Bookmark.schema'
 import {
   CommunityCollection,
+  CommunityInvitationCollection,
   CommunityMemberCollection,
   CommunityMentorCollection,
   CommunityPinCollection,
   initCommunityCollection,
+  initCommunityInvitationCollection,
   initCommunityMemberCollection,
   initCommunityMentorCollection,
   initCommunityPinCollection
@@ -72,6 +74,7 @@ class DatabaseConfig {
     initCommunityMentorCollection(this.db)
     initCommunityMemberCollection(this.db)
     initCommunityPinCollection(this.db)
+    initCommunityInvitationCollection(this.db)
   }
 
   async initialIndex() {
@@ -83,10 +86,17 @@ class DatabaseConfig {
     const indexHashtag = await HashtagCollection.indexExists(['slug_1'])
     const indexMessage = await HashtagCollection.indexExists(['conversation_id_1_created_at_-1'])
     const indexConversation = await HashtagCollection.indexExists(['name_1'])
-    const indexCommunity = await CommunityCollection.indexExists(['name_1', 'slug_1', 'bio_text'])
+    const indexCommunity = await CommunityCollection.indexExists([
+      'name_1',
+      'slug_1',
+      'bio_text',
+      'visibilityType_1',
+      'membershipType_1'
+    ])
     const indexCommunityMentor = await CommunityMentorCollection.indexExists(['community_id_1', 'user_id_1'])
     const indexCommunityMember = await CommunityMemberCollection.indexExists(['community_id_1', 'user_id_1'])
     const indexCommunityPin = await CommunityPinCollection.indexExists(['community_id_1', 'user_id_1'])
+    const indexCommunityInvitation = await CommunityPinCollection.indexExists(['community_id_1', 'user_id_1', 'exp_1'])
 
     // User
     if (!indexUser) {
@@ -134,6 +144,8 @@ class DatabaseConfig {
 
     // Community
     if (!indexCommunity) {
+      CommunityCollection.createIndex({ visibilityType: 1 })
+      CommunityCollection.createIndex({ membershipType: 1 })
       CommunityCollection.createIndex({ name: 1 }, { unique: true })
       CommunityCollection.createIndex({ slug: 1 }, { unique: true })
       CommunityCollection.createIndex({ bio: 'text' }, { default_language: 'none' })
@@ -158,6 +170,14 @@ class DatabaseConfig {
     if (!indexCommunityPin) {
       CommunityPinCollection.createIndex({ user_id: 1 })
       CommunityPinCollection.createIndex({ community_id: 1 })
+      CommunityPinCollection.createIndex({ community_id: 1, user_id: 1 }, { unique: true })
+    }
+
+    // CommunityInvitation
+    if (!indexCommunityInvitation) {
+      CommunityInvitationCollection.createIndex({ user_id: 1 })
+      CommunityPinCollection.createIndex({ community_id: 1 })
+      CommunityInvitationCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
       CommunityPinCollection.createIndex({ community_id: 1, user_id: 1 }, { unique: true })
     }
   }
