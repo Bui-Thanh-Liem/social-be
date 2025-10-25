@@ -15,6 +15,8 @@ export interface ICommunity extends IBase {
 
   category: string
   verify: boolean
+
+  pinned?: boolean
 }
 
 export interface ICommunityMentor extends IBase {

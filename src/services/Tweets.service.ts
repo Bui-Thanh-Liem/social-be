@@ -615,22 +615,7 @@ class TweetsService {
       {
         $limit: limit
       },
-      {
-        $lookup: {
-          from: 'followers',
-          localField: '_id',
-          foreignField: 'followed_user_id',
-          as: 'followers'
-        }
-      },
-      {
-        $lookup: {
-          from: 'followers',
-          localField: '_id',
-          foreignField: 'user_id',
-          as: 'following'
-        }
-      },
+
       {
         $lookup: {
           from: 'users',
@@ -658,7 +643,6 @@ class TweetsService {
           preserveNullAndEmptyArrays: true
         }
       },
-
       // lookup để kiểm tra user hiện tại có follow user_id không
       {
         $lookup: {
@@ -1271,21 +1255,46 @@ class TweetsService {
           preserveNullAndEmptyArrays: true
         }
       },
-      // {
-      //   $lookup: {
-      //     from: 'hashtags',
-      //     localField: 'hashtags',
-      //     foreignField: '_id',
-      //     as: 'hashtags',
-      //     pipeline: [
-      //       {
-      //         $project: {
-      //           name: 1
-      //         }
-      //       }
-      //     ]
-      //   }
-      // },
+      // lookup để kiểm tra user hiện tại có follow user_id không
+      {
+        $lookup: {
+          from: 'followers',
+          let: { targetUserId: '$user_id._id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$followed_user_id', '$$targetUserId'] },
+                    { $eq: ['$user_id', new ObjectId(user_active_id)] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: 'userFollowCheck'
+        }
+      },
+      {
+        $addFields: {
+          'user_id.isFollow': { $gt: [{ $size: '$userFollowCheck' }, 0] }
+        }
+      },
+      {
+        $lookup: {
+          from: 'hashtags',
+          localField: 'hashtags',
+          foreignField: '_id',
+          as: 'hashtags',
+          pipeline: [
+            {
+              $project: {
+                name: 1
+              }
+            }
+          ]
+        }
+      },
       {
         $lookup: {
           from: 'users',
@@ -1484,6 +1493,31 @@ class TweetsService {
               }
             }
           ]
+        }
+      },
+      // lookup để kiểm tra user hiện tại có follow user_id không
+      {
+        $lookup: {
+          from: 'followers',
+          let: { targetUserId: '$user_id._id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$followed_user_id', '$$targetUserId'] },
+                    { $eq: ['$user_id', new ObjectId(user_active_id)] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: 'userFollowCheck'
+        }
+      },
+      {
+        $addFields: {
+          'user_id.isFollow': { $gt: [{ $size: '$userFollowCheck' }, 0] }
         }
       },
       {

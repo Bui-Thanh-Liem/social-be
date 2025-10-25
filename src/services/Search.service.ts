@@ -232,22 +232,6 @@ class SearchService {
       { $limit: limit },
       {
         $lookup: {
-          from: 'followers',
-          localField: '_id',
-          foreignField: 'followed_user_id',
-          as: 'followers'
-        }
-      },
-      {
-        $lookup: {
-          from: 'followers',
-          localField: '_id',
-          foreignField: 'user_id',
-          as: 'following'
-        }
-      },
-      {
-        $lookup: {
           from: 'users',
           localField: 'user_id',
           foreignField: '_id',

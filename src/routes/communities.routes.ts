@@ -8,8 +8,9 @@ import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
 import {
   CreateCommunityDtoSchema,
-  GetDetailBySlugDtoSchema,
-  InvitationMembersDtoSchema
+  GetOneBySlugDtoSchema,
+  InvitationMembersDtoSchema,
+  PinCommunityDtoSchema
 } from '~/shared/dtos/req/community.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
@@ -36,6 +37,15 @@ communitiesRoute.post(
   wrapAsyncHandler(CommunityController.inviteMembers)
 )
 
+//
+communitiesRoute.patch(
+  '/toggle-pin/:community_id',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestParamsValidate(PinCommunityDtoSchema),
+  wrapAsyncHandler(CommunityController.togglePinCommunity)
+)
+
 // Lấy categories của từng community (trả về danh sách)
 communitiesRoute.get('/categories', verifyAccessToken, wrapAsyncHandler(CommunityController.getAllCategories))
 
@@ -43,16 +53,24 @@ communitiesRoute.get('/categories', verifyAccessToken, wrapAsyncHandler(Communit
 communitiesRoute.get(
   '/slug/:slug',
   verifyAccessToken,
-  requestParamsValidate(GetDetailBySlugDtoSchema),
+  requestParamsValidate(GetOneBySlugDtoSchema),
   wrapAsyncHandler(CommunityController.getOneBySlug)
 )
 
 //
 communitiesRoute.get(
-  '/',
+  '/owner',
   verifyAccessToken,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(CommunityController.getMulti)
+  wrapAsyncHandler(CommunityController.getMultiOwner)
+)
+
+//
+communitiesRoute.get(
+  '/joined',
+  verifyAccessToken,
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(CommunityController.getMultiJoined)
 )
 
 export default communitiesRoute

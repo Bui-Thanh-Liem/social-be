@@ -162,7 +162,7 @@ class AuthService {
       day_of_birth: new Date(),
       confirm_password: newPass,
       password: newPass,
-      avatar: userInfo.picture
+      avatar: userInfo.picture,
     })
 
     return {

@@ -19,20 +19,29 @@ export const CreateCommunityDtoSchema = z.object({
 })
 
 export const InvitationMembersDtoSchema = z.object({
-  member_ids: z.array(
-    z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
-      message: 'Invalid MongoDB ObjectId'
-    })
-  ),
+  member_ids: z
+    .array(
+      z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+        message: 'Invalid MongoDB ObjectId'
+      })
+    )
+    .min(1, { message: 'Vui lòng chọn ít nhất một người dùng.' }),
   community_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'Invalid MongoDB ObjectId'
   })
 })
 
-export const GetDetailBySlugDtoSchema = z.object({
+export const PinCommunityDtoSchema = z.object({
+  community_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+    message: 'Invalid MongoDB ObjectId'
+  })
+})
+
+export const GetOneBySlugDtoSchema = z.object({
   slug: z.string().trim()
 })
 
 export type CreateCommunityDto = z.infer<typeof CreateCommunityDtoSchema>
 export type InvitationMembersDto = z.infer<typeof InvitationMembersDtoSchema>
-export type GetDetailBySlugDto = z.infer<typeof GetDetailBySlugDtoSchema>
+export type GetOneBySlugDto = z.infer<typeof GetOneBySlugDtoSchema>
+export type PinCommunityDto = z.infer<typeof PinCommunityDtoSchema>
