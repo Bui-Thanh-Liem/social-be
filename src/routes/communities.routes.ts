@@ -8,8 +8,10 @@ import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
 import {
   CreateCommunityDtoSchema,
+  GetMMByIdDtoSchema,
   GetOneBySlugDtoSchema,
   InvitationMembersDtoSchema,
+  JoinCommunityDtoSchema,
   PinCommunityDtoSchema
 } from '~/shared/dtos/req/community.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
@@ -38,23 +40,33 @@ communitiesRoute.post(
 )
 
 //
+communitiesRoute.post(
+  '/join',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestBodyValidate(JoinCommunityDtoSchema),
+  wrapAsyncHandler(CommunityController.join)
+)
+
+//
 communitiesRoute.patch(
   '/toggle-pin/:community_id',
   verifyAccessToken,
   verifyUserEmail,
   requestParamsValidate(PinCommunityDtoSchema),
-  wrapAsyncHandler(CommunityController.togglePinCommunity)
+  wrapAsyncHandler(CommunityController.togglePin)
 )
 
 // Lấy categories của từng community (trả về danh sách)
 communitiesRoute.get('/categories', verifyAccessToken, wrapAsyncHandler(CommunityController.getAllCategories))
 
-// Lấy chi tiết một community theo slug
+// Lấy những thông tin tổng quát một community theo slug
 communitiesRoute.get(
   '/slug/:slug',
   verifyAccessToken,
+  verifyUserEmail,
   requestParamsValidate(GetOneBySlugDtoSchema),
-  wrapAsyncHandler(CommunityController.getOneBySlug)
+  wrapAsyncHandler(CommunityController.getOneBareInfoBySlug)
 )
 
 //
@@ -63,6 +75,15 @@ communitiesRoute.get(
   verifyAccessToken,
   requestQueryValidate(QueryDtoSchema),
   wrapAsyncHandler(CommunityController.getMultiOwner)
+)
+
+// Lấy thông tin chi tiết members mentors một community theo id
+communitiesRoute.get(
+  '/mm/:id',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestParamsValidate(GetMMByIdDtoSchema),
+  wrapAsyncHandler(CommunityController.getMMById)
 )
 
 //

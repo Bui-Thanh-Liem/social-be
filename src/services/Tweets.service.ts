@@ -1041,21 +1041,51 @@ class TweetsService {
           preserveNullAndEmptyArrays: true
         }
       },
-      // {
-      //   $lookup: {
-      //     from: 'hashtags',
-      //     localField: 'hashtags',
-      //     foreignField: '_id',
-      //     as: 'hashtags',
-      //     pipeline: [
-      //       {
-      //         $project: {
-      //           name: 1
-      //         }
-      //       }
-      //     ]
-      //   }
-      // },
+      // lookup để kiểm tra user hiện tại có follow user_id không
+      {
+        $lookup: {
+          from: 'followers',
+          let: { targetUserId: '$user_id._id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$followed_user_id', '$$targetUserId'] },
+                    { $eq: ['$user_id', new ObjectId(user_active_id)] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: 'userFollowCheck'
+        }
+      },
+      {
+        $addFields: {
+          'user_id.isFollow': { $gt: [{ $size: '$userFollowCheck' }, 0] }
+        }
+      },
+      {
+        $project: {
+          userFollowCheck: 0 // xoá field tạm
+        }
+      },
+      {
+        $lookup: {
+          from: 'hashtags',
+          localField: 'hashtags',
+          foreignField: '_id',
+          as: 'hashtags',
+          pipeline: [
+            {
+              $project: {
+                name: 1
+              }
+            }
+          ]
+        }
+      },
       {
         $lookup: {
           from: 'users',
@@ -1092,6 +1122,21 @@ class TweetsService {
       },
       {
         $lookup: {
+          from: 'likes',
+          localField: '_id',
+          foreignField: 'tweet_id',
+          as: 'likes',
+          pipeline: [
+            {
+              $project: {
+                user_id: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
           from: 'tweets',
           localField: '_id',
           foreignField: 'parent_id',
@@ -1100,24 +1145,44 @@ class TweetsService {
       },
       {
         $addFields: {
-          // bookmarks_count: { $size: '$bookmarks' },
+          likes_count: { $size: '$likes' },
           isLike: {
             $in: [new ObjectId(user_active_id), '$likes.user_id']
           },
           isBookmark: {
             $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
           },
-          // mentions: {
-          //   $map: {
-          //     input: '$mentions',
-          //     as: 'm',
-          //     in: {
-          //       _id: '$m._id',
-          //       name: '$m.name',
-          //       username: '$m.username'
-          //     }
-          //   }
-          // },
+          // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
+          quote: {
+            $let: {
+              vars: {
+                matched: {
+                  $filter: {
+                    input: '$tweets_children',
+                    as: 'child',
+                    cond: {
+                      $and: [
+                        { $eq: ['$$child.type', ETweetType.QuoteTweet] },
+                        { $eq: ['$$child.user_id', new ObjectId(user_active_id)] }
+                      ]
+                    }
+                  }
+                }
+              },
+              in: { $arrayElemAt: ['$$matched._id', 0] }
+            }
+          },
+          mentions: {
+            $map: {
+              input: '$mentions',
+              as: 'm',
+              in: {
+                _id: '$m._id',
+                name: '$m.name',
+                username: '$m.username'
+              }
+            }
+          },
           comments_count: {
             $size: {
               $filter: {
@@ -1362,6 +1427,26 @@ class TweetsService {
           isBookmark: {
             $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
           },
+          // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
+          quote: {
+            $let: {
+              vars: {
+                matched: {
+                  $filter: {
+                    input: '$tweets_children',
+                    as: 'child',
+                    cond: {
+                      $and: [
+                        { $eq: ['$$child.type', ETweetType.QuoteTweet] },
+                        { $eq: ['$$child.user_id', new ObjectId(user_active_id)] }
+                      ]
+                    }
+                  }
+                }
+              },
+              in: { $arrayElemAt: ['$$matched._id', 0] }
+            }
+          },
           comments_count: {
             $size: {
               $filter: {
@@ -1495,6 +1580,12 @@ class TweetsService {
           ]
         }
       },
+      {
+        $unwind: {
+          path: '$user_id',
+          preserveNullAndEmptyArrays: true
+        }
+      },
       // lookup để kiểm tra user hiện tại có follow user_id không
       {
         $lookup: {
@@ -1518,12 +1609,6 @@ class TweetsService {
       {
         $addFields: {
           'user_id.isFollow': { $gt: [{ $size: '$userFollowCheck' }, 0] }
-        }
-      },
-      {
-        $unwind: {
-          path: '$user_id',
-          preserveNullAndEmptyArrays: true
         }
       },
       {
@@ -1597,13 +1682,32 @@ class TweetsService {
       },
       {
         $addFields: {
-          // bookmarks_count: { $size: '$bookmarks' },
           likes_count: { $size: '$likes' },
           isLike: {
             $in: [new ObjectId(user_active_id), '$likes.user_id']
           },
           isBookmark: {
             $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
+          },
+          // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
+          quote: {
+            $let: {
+              vars: {
+                matched: {
+                  $filter: {
+                    input: '$tweets_children',
+                    as: 'child',
+                    cond: {
+                      $and: [
+                        { $eq: ['$$child.type', ETweetType.QuoteTweet] },
+                        { $eq: ['$$child.user_id', new ObjectId(user_active_id)] }
+                      ]
+                    }
+                  }
+                }
+              },
+              in: { $arrayElemAt: ['$$matched._id', 0] }
+            }
           },
           comments_count: {
             $size: {

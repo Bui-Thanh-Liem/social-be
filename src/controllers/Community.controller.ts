@@ -1,7 +1,13 @@
 import { NextFunction, Request, Response } from 'express'
 import CommunityService from '~/services/Communities.service'
 import { CreatedResponse, OkResponse } from '~/shared/classes/response.class'
-import { CreateCommunityDto, GetOneBySlugDto, PinCommunityDto } from '~/shared/dtos/req/community.dto'
+import {
+  CreateCommunityDto,
+  GetMMByIdDto,
+  GetOneBySlugDto,
+  JoinCommunityDto,
+  PinCommunityDto
+} from '~/shared/dtos/req/community.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class CommunityController {
@@ -10,6 +16,13 @@ class CommunityController {
     const payload = req.body as CreateCommunityDto
     const result = await CommunityService.create(user_id, payload)
     res.status(201).json(new CreatedResponse('Tạo cộng đồng thành công.', result))
+  }
+
+  async join(req: Request, res: Response) {
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const { community_id } = req.body as JoinCommunityDto
+    const result = await CommunityService.join({ user_id, community_id })
+    res.status(201).json(new CreatedResponse('Tham gia cộng đồng thành công.', result))
   }
 
   async getAllCategories(req: Request, res: Response, next: NextFunction) {
@@ -29,10 +42,18 @@ class CommunityController {
     res.json(new OkResponse(`Lấy nhiều cộng đồng bạn đã tham gia thành công.`, result))
   }
 
-  async getOneBySlug(req: Request, res: Response, next: NextFunction) {
+  async getOneBareInfoBySlug(req: Request, res: Response, next: NextFunction) {
     const { slug } = req.params as GetOneBySlugDto
-    const result = await CommunityService.getOneBySlug(slug)
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const result = await CommunityService.getOneBareInfoBySlug({ slug, user_id })
     res.json(new OkResponse(`Lấy cộng đồng bằng slug thành công.`, result))
+  }
+
+  async getMMById(req: Request, res: Response, next: NextFunction) {
+    const { id } = req.params as GetMMByIdDto
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const result = await CommunityService.getMMById(id, user_id)
+    res.json(new OkResponse(`Lấy thành viên và quản trị viên cộng đồng bằng id thành công.`, result))
   }
 
   //
@@ -43,10 +64,10 @@ class CommunityController {
   }
 
   //
-  async togglePinCommunity(req: Request, res: Response, next: NextFunction) {
+  async togglePin(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const params = req.params as PinCommunityDto
-    const result = await CommunityService.togglePinCommunity({ user_id, community_id: params.community_id })
+    const result = await CommunityService.togglePin({ user_id, community_id: params.community_id })
     res.json(new OkResponse(`${result.status} cộng đồng thành công.`, result))
   }
 }

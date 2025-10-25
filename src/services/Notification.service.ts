@@ -24,7 +24,7 @@ class NotificationService {
     )
 
     //
-    const newNoti = await NotificationCollection.aggregate<NotificationSchema>([
+    const pipeline: any[] = [
       { $match: { _id: result.insertedId } },
       {
         $lookup: {
@@ -32,15 +32,7 @@ class NotificationService {
           localField: 'sender',
           foreignField: '_id',
           as: 'sender',
-          pipeline: [
-            {
-              $project: {
-                name: 1,
-                username: 1,
-                avatar: 1
-              }
-            }
-          ]
+          pipeline: [{ $project: { name: 1, username: 1, avatar: 1 } }]
         }
       },
       {
@@ -49,52 +41,56 @@ class NotificationService {
           localField: 'receiver',
           foreignField: '_id',
           as: 'receiver',
-          pipeline: [
-            {
-              $project: {
-                name: 1,
-                username: 1,
-                avatar: 1
-              }
-            }
-          ]
+          pipeline: [{ $project: { name: 1, username: 1, avatar: 1 } }]
         }
-      },
-      // chỉ thêm khi có lookup
-      ...(type === ENotificationType.Mention_like || type === ENotificationType.Follow
-        ? [
-            {
-              $lookup: {
-                from: 'tweets',
-                localField: 'refId',
-                foreignField: '_id',
-                as: 'tweetRef',
-                pipeline: [{ $project: { type: 1, parent_id: 1 } }]
-              }
-            },
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'refId',
-                foreignField: '_id',
-                as: 'userRef',
-                pipeline: [
-                  {
-                    $project: {
-                      username: 1
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        : []),
-      { $unwind: { path: '$refId', preserveNullAndEmptyArrays: true } },
+      }
+    ]
+
+    if (type === ENotificationType.Mention_like) {
+      pipeline.push({
+        $lookup: {
+          from: 'tweets',
+          localField: 'refId',
+          foreignField: '_id',
+          as: 'tweetRef',
+          pipeline: [{ $project: { type: 1, parent_id: 1 } }]
+        }
+      })
+    }
+
+    if (type === ENotificationType.Follow) {
+      pipeline.push({
+        $lookup: {
+          from: 'users',
+          localField: 'refId',
+          foreignField: '_id',
+          as: 'userRef',
+          pipeline: [{ $project: { username: 1 } }]
+        }
+      })
+    }
+
+    if (type === ENotificationType.Community) {
+      pipeline.push({
+        $lookup: {
+          from: 'community',
+          localField: 'refId',
+          foreignField: '_id',
+          as: 'communityRef',
+          pipeline: [{ $project: { slug: 1 } }]
+        }
+      })
+    }
+
+    pipeline.push(
+      { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$receiver', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$tweetRef', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$userRef', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$receiver', preserveNullAndEmptyArrays: true } }
-    ]).next()
+      { $unwind: { path: '$communityRef', preserveNullAndEmptyArrays: true } }
+    )
+
+    const newNoti = await NotificationCollection.aggregate<NotificationSchema>(pipeline).next()
 
     //
     if (receiverId && newNoti) {

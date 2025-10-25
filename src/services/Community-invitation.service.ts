@@ -32,9 +32,6 @@ class CommunityInvitationService {
         user_id: userObjId
       })
 
-      console.log('community.admin:::', community.admin)
-      console.log('user_id:::', user_id)
-
       if (!isMentor && !(community.admin as unknown as ObjectId).equals(user_id)) {
         throw new BadRequestError('Bạn không có quyền mời thành viên vào cộng đồng.')
       }
@@ -83,6 +80,17 @@ class CommunityInvitationService {
     )
 
     return true
+  }
+
+  async updateStatus(_id: ObjectId) {
+    await CommunityInvitationCollection.updateOne({ _id: _id }, { $set: { status: EInvitationStatus.Accepted } })
+  }
+
+  async getOneByUserIdAndCommunityId({ user_id, community_id }: { user_id: string; community_id: string }) {
+    return await CommunityInvitationCollection.findOne({
+      user_id: new ObjectId(user_id),
+      community_id: new ObjectId(community_id)
+    })
   }
 }
 

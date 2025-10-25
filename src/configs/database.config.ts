@@ -96,7 +96,12 @@ class DatabaseConfig {
     const indexCommunityMentor = await CommunityMentorCollection.indexExists(['community_id_1', 'user_id_1'])
     const indexCommunityMember = await CommunityMemberCollection.indexExists(['community_id_1', 'user_id_1'])
     const indexCommunityPin = await CommunityPinCollection.indexExists(['community_id_1', 'user_id_1'])
-    const indexCommunityInvitation = await CommunityPinCollection.indexExists(['community_id_1', 'user_id_1', 'exp_1'])
+    const indexCommunityInvitation = await CommunityPinCollection.indexExists([
+      'exp_1',
+      'user_id_1',
+      'community_id_1',
+      'community_id_1_user_id_1'
+    ])
 
     // User
     if (!indexUser) {
@@ -176,9 +181,9 @@ class DatabaseConfig {
     // CommunityInvitation
     if (!indexCommunityInvitation) {
       CommunityInvitationCollection.createIndex({ user_id: 1 })
-      CommunityPinCollection.createIndex({ community_id: 1 })
+      CommunityInvitationCollection.createIndex({ community_id: 1 })
       CommunityInvitationCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
-      CommunityPinCollection.createIndex({ community_id: 1, user_id: 1 }, { unique: true })
+      CommunityInvitationCollection.createIndex({ community_id: 1, user_id: 1 }, { unique: true })
     }
   }
 

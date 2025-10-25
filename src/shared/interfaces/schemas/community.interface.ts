@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
 import type { EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
 import { type IBase } from './base.interface'
+import { IUser } from './user.interface'
 
 export interface ICommunity extends IBase {
   name: string
@@ -17,6 +18,10 @@ export interface ICommunity extends IBase {
   verify: boolean
 
   pinned?: boolean
+  member_count?: number
+
+  members?: IUser[]
+  mentors?: IUser[]
 }
 
 export interface ICommunityMentor extends IBase {
