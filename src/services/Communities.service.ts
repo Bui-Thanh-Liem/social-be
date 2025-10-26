@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongodb'
+import database from '~/configs/database.config'
 import {
   CommunityCollection,
   CommunityMemberCollection,
@@ -6,16 +7,20 @@ import {
   CommunityPinCollection,
   CommunitySchema
 } from '~/models/schemas/Community.schema'
-import { BadRequestError, ConflictError, NotFoundError } from '~/shared/classes/error.class'
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '~/shared/classes/error.class'
 import { CreateCommunityDto, InvitationMembersDto } from '~/shared/dtos/req/community.dto'
-import { EMembershipType } from '~/shared/enums/type.enum'
+import { EInvitationStatus } from '~/shared/enums/status.enum'
+import { EMembershipType, ENotificationType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import { logger } from '~/utils/logger.util'
 import { slug } from '~/utils/slug.util'
 import CommunityInvitationService from './Community-invitation.service'
 import CommunityMemberService from './Community-member.service'
+import CommunityMentorService from './Community-mentor.service'
+import NotificationService from './Notification.service'
 
 class CommunityService {
   async create(user_id: string, payload: CreateCommunityDto): Promise<boolean> {
@@ -33,14 +38,17 @@ class CommunityService {
       throw new BadRequestError('Không thể tạo cộng đồng, vui lòng thử lại.')
     }
 
+    const community = await CommunityCollection.findOne(
+      { _id: inserted.insertedId },
+      { projection: { admin: 1, name: 1, membershipType: 1 } }
+    )
+
     try {
       if (Array.isArray(payload.member_ids) && payload.member_ids.length > 0) {
-        await CommunityInvitationService.invite({
+        await CommunityInvitationService.cerate({
           user_id,
-          payload: {
-            community_id: inserted.insertedId.toString(),
-            member_ids: payload.member_ids
-          }
+          member_ids: payload.member_ids,
+          community: community!
         })
       }
     } catch (err) {
@@ -50,37 +58,13 @@ class CommunityService {
   }
 
   async join({ user_id, community_id }: { user_id: string; community_id: string }) {
-    const userObjId = new ObjectId(user_id)
-    const communityObjId = new ObjectId(community_id)
+    const { community, isJoined } = await this.validateCommunityAndMembership({ user_id, community_id })
 
-    // 1️⃣ Kiểm tra cộng đồng có tồn tại không
-    const community = await CommunityCollection.findOne(
-      { _id: communityObjId },
-      { projection: { membershipType: 1, admin: 1 } }
-    )
-
-    // 2️⃣ Kiểm tra xem đã là thành viên chưa
-    const existingMember = await Promise.all([
-      CommunityMemberCollection.findOne({
-        user_id: userObjId,
-        community_id: communityObjId
-      }),
-      CommunityMentorCollection.findOne({
-        user_id: userObjId,
-        community_id: communityObjId
-      })
-    ])
-
-    if (existingMember.length > 0 || community?.admin.equals(user_id)) {
+    if (isJoined) {
       throw new BadRequestError('Bạn đã là thành viên của cộng đồng này.')
     }
 
-    //
-    if (!community) {
-      throw new NotFoundError('Không tìm thấy hoặc cộng đồng bạn muốn tham gia đã giải tán.')
-    }
-
-    // 3️⃣ Nếu cộng đồng chỉ cho phép mời thì kiểm tra lời mời
+    // Nếu cộng đồng chỉ cho phép mời
     if (community.membershipType === EMembershipType.Invite_only) {
       const invitation = await CommunityInvitationService.getOneByUserIdAndCommunityId({ user_id, community_id })
 
@@ -88,13 +72,112 @@ class CommunityService {
         throw new BadRequestError('Bạn không thể tự tham gia vào cộng đồng này hoặc lời mời đã hết hạn.')
       }
 
-      // ✅ Cập nhật trạng thái lời mời thành "accepted"
-      await CommunityInvitationService.updateStatus(invitation._id)
+      if (invitation?.status !== EInvitationStatus.Pending) {
+        throw new BadRequestError('Lời mời đã hết hiệu lực, vui lòng xin một lời mời mới.')
+      }
+
+      await CommunityInvitationService.updateStatus(invitation._id, EInvitationStatus.Accepted)
     }
 
-    await CommunityMemberService.create({ user_id, community_id })
+    return await CommunityMemberService.create({ user_id, community_id })
+  }
 
-    return true
+  async leave({ user_id, community_id }: { user_id: string; community_id: string }) {
+    const { isJoined, community } = await this.validateCommunityAndMembership({ user_id, community_id })
+
+    if (!isJoined) {
+      throw new BadRequestError('Bạn không phải là thành viên của cộng đồng này.')
+    }
+
+    // Không cho phép admin rời khỏi cộng đồng của chính họ
+    if (community.admin.toString() === user_id) {
+      throw new BadRequestError('Admin không thể rời khỏi cộng đồng của mình.')
+    }
+
+    return await Promise.all([
+      CommunityMemberService.delete({ user_id, community_id }),
+      CommunityMentorService.delete({ user_id, community_id })
+    ])
+  }
+
+  async promoteMentor({
+    target_id,
+    actor_id,
+    community_id
+  }: {
+    actor_id: string
+    community_id: string
+    target_id: string
+  }) {
+    // Người đang cho người khác lên mentor là ai (actor)
+    // Người được cho lên mentor là ai  (target)
+    const [actor, target] = await Promise.all([
+      this.validateCommunityAndMembership({ user_id: actor_id, community_id }),
+      this.validateCommunityAndMembership({ user_id: target_id, community_id })
+    ])
+
+    if (!actor.isAdmin) {
+      throw new ForbiddenError('Chỉ chủ sở hữu mới có thể cho thành viên lên quản trị viên.')
+    }
+
+    if (!target.isJoined) {
+      throw new NotFoundError('Người dùng không tồn tại trong cộng đồng này.')
+    }
+
+    //
+    if (target.isMentor) {
+      throw new ConflictError('Người dùng này đã là quản trị viên.')
+    }
+
+    //
+    if (!target.isMember) {
+      throw new BadRequestError('Người dùng này không phải là thành viên trong cộng đồng.')
+    }
+
+    //
+    await CommunityMentorService.checkLength({ user_id: actor_id, community_id })
+
+    const session = database.getClient().startSession()
+
+    try {
+      await session.withTransaction(async () => {
+        // 1. Xóa member
+        await CommunityMemberService.delete({ user_id: target_id, community_id, session })
+
+        // 2. Tạo mentor
+        await CommunityMentorService.create({ user_id: target_id, community_id, session })
+      })
+    } catch (error) {
+      // ✅ Proper logging với context
+      logger.error('Transaction failed during promote mentor', {
+        target_id,
+        community_id,
+        actor_id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      })
+
+      throw new BadRequestError('Không thể thăng cấp quản trị viên. Vui lòng thử lại.')
+    } finally {
+      await session.endSession()
+    }
+
+    //
+    NotificationService.create({
+      content: `Bạn đã trở thành điều hành viên của cộng đồng ${actor.community.name}.`,
+      type: ENotificationType.Community,
+      sender: actor_id,
+      receiver: target_id,
+      refId: actor.community._id?.toString()
+    }).catch((err) => {
+      // Log nhưng không throw
+      logger.warn('Failed to send promotion notification', {
+        actor_id,
+        target_id,
+        community_id,
+        error: err instanceof Error ? err.message : 'Unknown error'
+      })
+    })
   }
 
   async getAllCategories() {
@@ -115,9 +198,7 @@ class CommunityService {
       {
         $match: {
           $and: [
-            {
-              $or: [{ admin: { $in: [new ObjectId(user_id)] } }]
-            },
+            { admin: { $in: [new ObjectId(user_id)] } },
             ...(q
               ? [
                   {
@@ -216,13 +297,12 @@ class CommunityService {
   }): Promise<ResMultiType<ICommunity>> {
     const { skip, limit, sort, q, qe } = getPaginationAndSafeQuery<ICommunity>(query)
 
-    //
+    // "Cần cache"
     const joined = await Promise.all([
       CommunityMentorCollection.find({ user_id: new ObjectId(user_id) }, { projection: { community_id: 1 } }).toArray(),
       CommunityMemberCollection.find({ user_id: new ObjectId(user_id) }, { projection: { community_id: 1 } }).toArray()
     ])
-
-    console.log('joined:::', joined)
+    const joinedObjIds = joined.flatMap((x) => x).map((x) => x.community_id)
 
     //
     const communities = await CommunityCollection.aggregate<CommunitySchema>([
@@ -230,7 +310,7 @@ class CommunityService {
         $match: {
           $and: [
             {
-              $or: [{ admin: { $in: [new ObjectId(user_id)] } }]
+              _id: { $in: joinedObjIds }
             },
             ...(q
               ? [
@@ -374,23 +454,49 @@ class CommunityService {
         }
       },
 
-      // lookup members count
+      // lookup members count + check if current user is member
       {
         $lookup: {
           from: 'community-member',
-          let: { communityId: '$_id' },
-          pipeline: [{ $match: { $expr: { $eq: ['$community_id', '$$communityId'] } } }, { $count: 'count' }],
-          as: 'membersCount'
+          let: { communityId: '$_id', currentUserId: new ObjectId(user_id) },
+          pipeline: [
+            {
+              $match: { $expr: { $eq: ['$community_id', '$$communityId'] } }
+            },
+            {
+              $group: {
+                _id: null,
+                count: { $sum: 1 },
+                isMember: {
+                  $max: { $eq: ['$user_id', '$$currentUserId'] }
+                }
+              }
+            }
+          ],
+          as: 'membersInfo'
         }
       },
 
-      // lookup mentors count
+      // lookup mentors count + check if current user is mentor
       {
         $lookup: {
           from: 'community-mentor',
-          let: { communityId: '$_id' },
-          pipeline: [{ $match: { $expr: { $eq: ['$community_id', '$$communityId'] } } }, { $count: 'count' }],
-          as: 'mentorsCount'
+          let: { communityId: '$_id', currentUserId: new ObjectId(user_id) },
+          pipeline: [
+            {
+              $match: { $expr: { $eq: ['$community_id', '$$communityId'] } }
+            },
+            {
+              $group: {
+                _id: null,
+                count: { $sum: 1 },
+                isMentor: {
+                  $max: { $eq: ['$user_id', '$$currentUserId'] }
+                }
+              }
+            }
+          ],
+          as: 'mentorsInfo'
         }
       },
 
@@ -398,22 +504,44 @@ class CommunityService {
       {
         $addFields: {
           'admin.isFollow': { $gt: [{ $size: '$userFollowCheck' }, 0] },
+
+          // ✅ Extract individual flags
+          isMember: {
+            $ifNull: [{ $arrayElemAt: ['$membersInfo.isMember', 0] }, false]
+          },
+          isMentor: {
+            $ifNull: [{ $arrayElemAt: ['$mentorsInfo.isMentor', 0] }, false]
+          },
+          isAdmin: {
+            $eq: ['$admin._id', new ObjectId(user_id)]
+          },
+
+          // Total member count
           member_count: {
             $add: [
-              { $ifNull: [{ $arrayElemAt: ['$membersCount.count', 0] }, 0] },
-              { $ifNull: [{ $arrayElemAt: ['$mentorsCount.count', 0] }, 0] },
+              { $ifNull: [{ $arrayElemAt: ['$membersInfo.count', 0] }, 0] },
+              { $ifNull: [{ $arrayElemAt: ['$mentorsInfo.count', 0] }, 0] },
               1 // admin
+            ]
+          },
+
+          // isJoined = isAdmin OR isMember OR isMentor
+          isJoined: {
+            $or: [
+              { $eq: ['$admin._id', new ObjectId(user_id)] },
+              { $ifNull: [{ $arrayElemAt: ['$membersInfo.isMember', 0] }, false] },
+              { $ifNull: [{ $arrayElemAt: ['$mentorsInfo.isMentor', 0] }, false] }
             ]
           }
         }
       },
 
-      // remove unnecessary fields
+      // project cleanup
       {
         $project: {
           userFollowCheck: 0,
-          membersCount: 0,
-          mentorsCount: 0
+          membersInfo: 0,
+          mentorsInfo: 0
         }
       }
     ]).next()
@@ -425,13 +553,23 @@ class CommunityService {
     return community
   }
 
-  // Lấy chi tiết members và mentors
-  async getMMById(id: string, user_id: string): Promise<ICommunity> {
+  async getMMById({
+    id,
+    user_id,
+    queries
+  }: {
+    id: string
+    user_id: string
+    queries: IQuery<ICommunity>
+  }): Promise<ICommunity> {
     const userObjId = new ObjectId(user_id)
     const communityObjId = new ObjectId(id)
+    const { skip, limit, q } = getPaginationAndSafeQuery<ICommunity>(queries)
+
+    // Build match condition cho search
+    const memberMatchCondition: any = { community_id: communityObjId }
 
     const community = await CommunityCollection.aggregate<CommunitySchema>([
-      // match id
       { $match: { _id: communityObjId } },
 
       // mentors list
@@ -490,59 +628,80 @@ class CommunityService {
         }
       },
 
-      // members list
+      // members list - search trước khi lookup user details
       {
         $lookup: {
           from: 'community-member',
-          localField: '_id',
-          foreignField: 'community_id',
-          as: 'members',
+          let: { communityId: '$_id' },
           pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$community_id', '$$communityId'] }
+              }
+            },
+            // Lookup user để có thể search
             {
               $lookup: {
                 from: 'users',
                 localField: 'user_id',
                 foreignField: '_id',
-                as: 'user',
-                pipeline: [
+                as: 'userInfo'
+              }
+            },
+            { $unwind: '$userInfo' },
+            // Apply search filter nếu có
+            ...(q
+              ? [
                   {
-                    $lookup: {
-                      from: 'followers',
-                      let: { targetUserId: '$_id' },
-                      pipeline: [
-                        {
-                          $match: {
-                            $expr: {
-                              $and: [{ $eq: ['$followed_user_id', '$$targetUserId'] }, { $eq: ['$user_id', userObjId] }]
-                            }
-                          }
-                        }
-                      ],
-                      as: 'followCheck'
-                    }
-                  },
-                  {
-                    $addFields: {
-                      isFollow: { $gt: [{ $size: '$followCheck' }, 0] }
-                    }
-                  },
-                  {
-                    $project: {
-                      _id: 1,
-                      name: 1,
-                      bio: 1,
-                      verify: 1,
-                      avatar: 1,
-                      username: 1,
-                      isFollow: 1
+                    $match: {
+                      $or: [
+                        { 'userInfo.name': { $regex: q, $options: 'i' } },
+                        { 'userInfo.username': { $regex: q, $options: 'i' } }
+                      ]
                     }
                   }
                 ]
+              : []),
+            // Pagination sau khi search
+            { $skip: skip },
+            { $limit: limit },
+            // Lookup follow status
+            {
+              $lookup: {
+                from: 'followers',
+                let: { targetUserId: '$userInfo._id' },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [{ $eq: ['$followed_user_id', '$$targetUserId'] }, { $eq: ['$user_id', userObjId] }]
+                      }
+                    }
+                  }
+                ],
+                as: 'followCheck'
               }
             },
-            { $unwind: '$user' },
-            { $replaceRoot: { newRoot: '$user' } }
-          ]
+            {
+              $addFields: {
+                'userInfo.isFollow': { $gt: [{ $size: '$followCheck' }, 0] }
+              }
+            },
+            {
+              $replaceRoot: {
+                newRoot: {
+                  _id: '$userInfo._id',
+                  name: '$userInfo.name',
+                  bio: '$userInfo.bio',
+                  verify: '$userInfo.verify',
+                  avatar: '$userInfo.avatar',
+                  username: '$userInfo.username',
+                  isFollow: '$userInfo.isFollow'
+                }
+              }
+            }
+          ],
+          as: 'members'
         }
       },
 
@@ -562,11 +721,22 @@ class CommunityService {
   }
 
   async inviteMembers({ user_id, payload }: { user_id: string; payload: InvitationMembersDto }) {
-    await CommunityInvitationService.invite({
+    const { community, isAdmin, isMentor } = await this.validateCommunityAndMembership({
       user_id,
-      payload
+      community_id: payload.community_id
     })
-    return true
+
+    if (community?.membershipType === EMembershipType.Invite_only) {
+      if (!isAdmin && !isMentor) {
+        throw new BadRequestError('Bạn không có quyền mời thành viên vào cộng đồng.')
+      }
+    }
+
+    return await CommunityInvitationService.cerate({
+      user_id,
+      community,
+      member_ids: payload.member_ids
+    })
   }
 
   async togglePin({ user_id, community_id }: { user_id: string; community_id: string }) {
@@ -596,6 +766,58 @@ class CommunityService {
     }
 
     return { status, _id: id }
+  }
+
+  // Kiểm tra xem đã là thành viên chưa
+  async checkJoined({
+    user_id,
+    community_id,
+    communityAdmin
+  }: {
+    user_id: string
+    community_id: string
+    communityAdmin: string
+  }): Promise<{ isJoined: boolean; isAdmin: boolean; isMentor: boolean; isMember: boolean }> {
+    //
+    const existing = await Promise.all([
+      CommunityMemberCollection.findOne({
+        user_id: new ObjectId(user_id),
+        community_id: new ObjectId(community_id)
+      }),
+      CommunityMentorCollection.findOne({
+        user_id: new ObjectId(user_id),
+        community_id: new ObjectId(community_id)
+      })
+    ])
+
+    //
+    return {
+      isMentor: !!existing[1],
+      isMember: !!existing[0],
+      isAdmin: communityAdmin === user_id,
+      isJoined: existing.filter(Boolean).length > 0 || communityAdmin === user_id
+    }
+  }
+
+  private async validateCommunityAndMembership({ user_id, community_id }: { user_id: string; community_id: string }) {
+    const communityObjId = new ObjectId(community_id)
+
+    const community = await CommunityCollection.findOne(
+      { _id: communityObjId },
+      { projection: { admin: 1, name: 1, membershipType: 1 } }
+    )
+
+    if (!community) {
+      throw new NotFoundError('Không tìm thấy hoặc cộng đồng bạn muốn tham gia đã giải tán.')
+    }
+
+    const { isJoined, isAdmin, isMentor, isMember } = await this.checkJoined({
+      user_id,
+      community_id,
+      communityAdmin: community.admin.toString()
+    })
+
+    return { community, isJoined, isAdmin, isMentor, isMember }
   }
 }
 

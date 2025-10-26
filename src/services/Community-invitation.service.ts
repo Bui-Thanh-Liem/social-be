@@ -1,51 +1,26 @@
 import { ObjectId } from 'mongodb'
 import pLimit from 'p-limit'
-import {
-  CommunityCollection,
-  CommunityInvitationCollection,
-  CommunityInvitationSchema,
-  CommunityMentorCollection
-} from '~/models/schemas/Community.schema'
+import { CommunityInvitationCollection, CommunityInvitationSchema } from '~/models/schemas/Community.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
-import { BadRequestError } from '~/shared/classes/error.class'
-import { InvitationMembersDto } from '~/shared/dtos/req/community.dto'
+import { NotFoundError } from '~/shared/classes/error.class'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
-import { EMembershipType, ENotificationType } from '~/shared/enums/type.enum'
+import { ENotificationType } from '~/shared/enums/type.enum'
+import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 import NotificationService from './Notification.service'
 const limit = pLimit(10)
 
 class CommunityInvitationService {
-  // Hàm này sẽ được worker gọi
-  async invite({ user_id, payload }: { user_id: string; payload: InvitationMembersDto }) {
-    const { member_ids, community_id } = payload
+  async cerate({ user_id, community, member_ids }: { user_id: string; community: ICommunity; member_ids: string[] }) {
     const userObjId = new ObjectId(user_id)
-    const communityObjId = new ObjectId(community_id)
-
-    const community = await CommunityCollection.findOne(
-      { _id: communityObjId },
-      { projection: { name: 1, membershipType: 1, admin: 1 } }
-    )
-
-    if (community?.membershipType === EMembershipType.Invite_only) {
-      const isMentor = await CommunityMentorCollection.findOne({
-        community_id: communityObjId,
-        user_id: userObjId
-      })
-
-      if (!isMentor && !(community.admin as unknown as ObjectId).equals(user_id)) {
-        throw new BadRequestError('Bạn không có quyền mời thành viên vào cộng đồng.')
-      }
-    }
 
     //
     const sender = await UserCollection.findOne({ _id: userObjId }, { projection: { name: 1 } })
 
-    // Dừng nếu thiếu dữ liệu
-    if (!sender || !community) {
-      throw new BadRequestError('Invalid sender or community')
+    if (!sender) {
+      throw new NotFoundError()
     }
 
-    await Promise.all(
+    const created = await Promise.all(
       member_ids.map((id) =>
         limit(async () => {
           const targetUserId = new ObjectId(id)
@@ -53,7 +28,7 @@ class CommunityInvitationService {
           // ✅ Kiểm tra nếu đã có lời mời trước đó
           const alreadyInvited = await CommunityInvitationCollection.findOne({
             user_id: targetUserId,
-            community_id: communityObjId,
+            community_id: community._id,
             status: EInvitationStatus.Pending // chỉ bỏ qua nếu đang chờ
           })
 
@@ -62,7 +37,7 @@ class CommunityInvitationService {
           // ✅ Tạo lời mời mới
           const invitation = new CommunityInvitationSchema({
             user_id: targetUserId,
-            community_id: communityObjId
+            community_id: community._id
           })
 
           await Promise.all([
@@ -72,18 +47,18 @@ class CommunityInvitationService {
               type: ENotificationType.Community,
               sender: user_id,
               receiver: id,
-              refId: community_id
+              refId: community._id?.toString()
             })
           ])
         })
       )
     )
 
-    return true
+    return created?.length > 0
   }
 
-  async updateStatus(_id: ObjectId) {
-    await CommunityInvitationCollection.updateOne({ _id: _id }, { $set: { status: EInvitationStatus.Accepted } })
+  async updateStatus(_id: ObjectId, status: EInvitationStatus) {
+    await CommunityInvitationCollection.updateOne({ _id: _id }, { $set: { status: status } })
   }
 
   async getOneByUserIdAndCommunityId({ user_id, community_id }: { user_id: string; community_id: string }) {

@@ -11,7 +11,7 @@ import {
   GetMMByIdDtoSchema,
   GetOneBySlugDtoSchema,
   InvitationMembersDtoSchema,
-  JoinCommunityDtoSchema,
+  JoinLeaveCommunityDtoSchema,
   PinCommunityDtoSchema
 } from '~/shared/dtos/req/community.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
@@ -41,11 +41,20 @@ communitiesRoute.post(
 
 //
 communitiesRoute.post(
-  '/join',
+  '/join/:community_id',
   verifyAccessToken,
   verifyUserEmail,
-  requestBodyValidate(JoinCommunityDtoSchema),
+  requestParamsValidate(JoinLeaveCommunityDtoSchema),
   wrapAsyncHandler(CommunityController.join)
+)
+
+//
+communitiesRoute.post(
+  '/leave/:community_id',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestParamsValidate(JoinLeaveCommunityDtoSchema),
+  wrapAsyncHandler(CommunityController.leave)
 )
 
 //
@@ -82,6 +91,7 @@ communitiesRoute.get(
   '/mm/:id',
   verifyAccessToken,
   verifyUserEmail,
+  requestQueryValidate(QueryDtoSchema),
   requestParamsValidate(GetMMByIdDtoSchema),
   wrapAsyncHandler(CommunityController.getMMById)
 )

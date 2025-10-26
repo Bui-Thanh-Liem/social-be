@@ -811,7 +811,11 @@ class ConversationsService {
         const updated = await ConversationCollection.findOneAndUpdate(
           { _id: new ObjectId(conv_id) },
           { $push: { deletedFor: new ObjectId(user_id) } },
-          { returnDocument: 'after', projection: { participants: 1, deletedFor: 1 }, session }
+          {
+            returnDocument: 'after',
+            projection: { participants: 1, deletedFor: 1 },
+            session
+          }
         )
 
         // Nếu không tìm thấy => conversation_id không hợp lệ

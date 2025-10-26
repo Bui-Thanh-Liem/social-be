@@ -19,6 +19,12 @@ export class UnauthorizedError extends AError {
   }
 }
 
+export class ForbiddenError extends AError {
+  constructor(message = 'Forbidden') {
+    super(406, message)
+  }
+}
+
 export class NotFoundError extends AError {
   constructor(message = 'Not Found') {
     super(404, message)

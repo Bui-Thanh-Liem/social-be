@@ -5,10 +5,13 @@ import {
   CreateCommunityDto,
   GetMMByIdDto,
   GetOneBySlugDto,
-  JoinCommunityDto,
-  PinCommunityDto
+  JoinLeaveCommunityDto,
+  PinCommunityDto,
+  PromoteMentorDto
 } from '~/shared/dtos/req/community.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { IQuery } from '~/shared/interfaces/common/query.interface'
+import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 
 class CommunityController {
   async create(req: Request, res: Response) {
@@ -20,9 +23,23 @@ class CommunityController {
 
   async join(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const { community_id } = req.body as JoinCommunityDto
+    const { community_id } = req.params as JoinLeaveCommunityDto
     const result = await CommunityService.join({ user_id, community_id })
     res.status(201).json(new CreatedResponse('Tham gia cộng đồng thành công.', result))
+  }
+
+  async leave(req: Request, res: Response) {
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const { community_id } = req.params as JoinLeaveCommunityDto
+    const result = await CommunityService.leave({ user_id, community_id })
+    res.status(201).json(new CreatedResponse('Rời cộng đồng thành công.', result))
+  }
+
+  async promoteMentor(req: Request, res: Response) {
+    const { user_id: actor_id } = req.decoded_authorization as IJwtPayload
+    const { user_id: target_id, community_id } = req.params as PromoteMentorDto
+    const result = await CommunityService.promoteMentor({ actor_id, target_id, community_id })
+    res.status(201).json(new CreatedResponse('Cho thành viên lên điều hành viên thành công.', result))
   }
 
   async getAllCategories(req: Request, res: Response, next: NextFunction) {
@@ -51,9 +68,10 @@ class CommunityController {
 
   async getMMById(req: Request, res: Response, next: NextFunction) {
     const { id } = req.params as GetMMByIdDto
+    const queries = req.query as IQuery<ICommunity>
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await CommunityService.getMMById(id, user_id)
-    res.json(new OkResponse(`Lấy thành viên và quản trị viên cộng đồng bằng id thành công.`, result))
+    const result = await CommunityService.getMMById({ id, user_id, queries })
+    res.json(new OkResponse(`Lấy thành viên và điều hành viên cộng đồng bằng id thành công.`, result))
   }
 
   //
