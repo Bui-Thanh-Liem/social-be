@@ -4,7 +4,7 @@ import { ObjectId } from 'mongodb'
 import { StringValue } from 'ms'
 import { envs } from '~/configs/env.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
-import { sendEmailQueue, sendNotiRegisteredQueue } from '~/libs/bull/queues'
+import { sendEmailQueue, sendNotiRegisteredQueue } from '~/bull/queues'
 import { RefreshTokenCollection, RefreshTokenSchema } from '~/models/schemas/RefreshToken.schema'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '~/shared/classes/error.class'
@@ -162,7 +162,7 @@ class AuthService {
       day_of_birth: new Date(),
       confirm_password: newPass,
       password: newPass,
-      avatar: userInfo.picture,
+      avatar: userInfo.picture
     })
 
     return {

@@ -8,7 +8,7 @@ import { compressionVideo } from '~/utils/compression.util'
 import { logger } from '~/utils/logger.util'
 import { compressionQueue, sendEmailQueue } from '../queues'
 import { deleteChildrenTweet } from '../queues/deleteChildrenTweet'
-import { sendNotiRegisteredQueue } from '../queues/sendNotiRegisteredQueue'
+import { sendNotiRegisteredQueue } from '../queues/notification.queue'
 
 // Worker xử lý gửi email xác thực
 sendEmailQueue.process(CONSTANT_JOB.VERIFY_MAIL, 5, async (job, done) => {

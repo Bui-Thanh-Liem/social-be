@@ -7,7 +7,7 @@ import { allowedOrigins } from './middlewares/cors.middleware'
 import { initializeSocket } from './socket'
 import { logger } from './utils/logger.util'
 import pubSubServiceInstance from './helpers/pub_sub.helper'
-import { DONE_CONVERT_VIDEO } from './libs/bull/workers/workers'
+import { DONE_CONVERT_VIDEO } from './bull/workers/workers'
 import { EVideoStatus } from './shared/enums/status.enum'
 import VideosService from './services/Videos.service'
 

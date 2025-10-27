@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb'
 import { nanoid } from 'nanoid'
 import path from 'path'
 import { envs } from '~/configs/env.config'
-import { compressionQueue } from '~/libs/bull/queues'
+import { compressionQueue } from '~/bull/queues'
 import VideosService from '~/services/Videos.service'
 import { BadRequestError } from '~/shared/classes/error.class'
 import {

@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import database from '~/configs/database.config'
-import { deleteChildrenTweet } from '~/libs/bull/queues/deleteChildrenTweet'
+import { deleteChildrenTweet } from '~/bull/queues/deleteChildrenTweet'
 import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
 import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
