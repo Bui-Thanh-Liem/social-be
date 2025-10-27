@@ -1,14 +1,13 @@
-import Queue from 'bull'
-import { envs } from '~/configs/env.config'
+import { Queue } from 'bullmq'
+import { redisConnection } from '~/configs/redis.config'
 import { CONSTANT_QUEUE } from '~/shared/constants'
 
-export const sendNotiRegisteredQueue = new Queue(CONSTANT_QUEUE.SEND_NOTI, {
-  redis: { host: envs.REDIS_HOST, port: envs.REDIS_PORT },
+export const notificationQueue = new Queue(CONSTANT_QUEUE.NOTIFICATION, {
+  connection: redisConnection,
   defaultJobOptions: {
-    attempts: 2, // Thử lại tối đa 2 lần
-    backoff: { type: 'exponential', delay: 1000 }, // Delay tăng dần
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 1000 },
     removeOnComplete: true,
-    removeOnFail: true,
-    delay: 5000
+    removeOnFail: true
   }
 })

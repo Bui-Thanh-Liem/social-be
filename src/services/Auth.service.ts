@@ -2,9 +2,9 @@ import axios from 'axios'
 import _ from 'lodash'
 import { ObjectId } from 'mongodb'
 import { StringValue } from 'ms'
+import { emailQueue } from '~/bull/queues'
 import { envs } from '~/configs/env.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
-import { sendEmailQueue, sendNotiRegisteredQueue } from '~/bull/queues'
 import { RefreshTokenCollection, RefreshTokenSchema } from '~/models/schemas/RefreshToken.schema'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '~/shared/classes/error.class'
@@ -19,6 +19,7 @@ import {
 import { ENotificationType, ETokenType } from '~/shared/enums/type.enum'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oauth-google.interface'
+import ConversationGateway from '~/socket/gateways/Conversation.gateway'
 import { generatePassword, hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import NotificationService from './Notification.service'
@@ -69,14 +70,18 @@ class AuthService {
     )
 
     //
-    await sendEmailQueue.add(CONSTANT_JOB.VERIFY_MAIL, {
-      toEmail: payload.email,
-      name: payload.name,
-      url: `${envs.CLIENT_DOMAIN}/verify?token=${email_verify_token}`
-    })
+    await emailQueue.add(
+      CONSTANT_JOB.VERIFY_MAIL,
+      {
+        toEmail: payload.email,
+        name: payload.name,
+        url: `${envs.CLIENT_DOMAIN}/verify?token=${email_verify_token}`
+      },
+      { delay: 5000 }
+    )
 
     //
-    await NotificationService.create({
+    await NotificationService.createInQueue({
       content: 'Kiểm tra mail để xác thực tài khoản của bạn.',
       receiver: result.insertedId.toString(),
       sender: result.insertedId.toString(),
@@ -84,9 +89,9 @@ class AuthService {
     })
 
     // Sau 5s chờ người ổn định socket rồi mới gửi số lượng thông báo chưa đọc
-    await sendNotiRegisteredQueue.add(CONSTANT_JOB.UNREAD_NOTI, {
-      user_id: result.insertedId.toString()
-    })
+    setTimeout(async () => {
+      await ConversationGateway.sendCountUnreadConv(result.insertedId.toString())
+    }, 5000)
 
     //
     return {
@@ -237,7 +242,7 @@ class AuthService {
     )
 
     //
-    await sendEmailQueue.add(CONSTANT_JOB.FORGOT_PASSWORD, {
+    await emailQueue.add(CONSTANT_JOB.FORGOT_PASSWORD, {
       toEmail: user?.email,
       name: user?.name,
       url: `${envs.CLIENT_DOMAIN}#reset-password?token=${forgot_password_token}`

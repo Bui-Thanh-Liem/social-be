@@ -1,16 +1,14 @@
 export const CONSTANT_QUEUE = {
-  SEND_MAIL: 'send-email',
-  COMPRESSION: 'compression',
-  SEND_NOTI: 'send-noti',
-  DELETE_TWEET: 'delete-tweet',
-  INVITE: 'invite'
+  MAIL: 'email-queue',
+  CLEANUP: 'cleanup-queue',
+  COMPRESSION: 'compression-queue',
+  NOTIFICATION: 'notification-queue'
 } as const
 
 export const CONSTANT_JOB = {
+  SEND_NOTI: 'send-noti',
   VERIFY_MAIL: 'verify-email',
   FORGOT_PASSWORD: 'forgot-password',
   COMPRESSION_HLS: 'compression-hls',
-  UNREAD_NOTI: 'unread-noti',
-  DELETE_CHILDREN_TWEET: 'delete-children-tweet',
-  INVITE_COMMUNITY: 'invite-community'
+  DELETE_CHILDREN_TWEET: 'delete-children-tweet'
 } as const

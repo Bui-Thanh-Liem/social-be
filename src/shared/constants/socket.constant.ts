@@ -25,4 +25,4 @@ export const CONSTANT_EVENT_NAMES = {
 
   //
   ERROR: 'error'
-}
+} as const

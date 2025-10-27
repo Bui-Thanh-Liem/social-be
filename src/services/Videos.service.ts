@@ -36,7 +36,7 @@ class VideosService {
     )
 
     //
-    await NotificationService.create({
+    await NotificationService.createInQueue({
       type: ENotificationType.Other,
       content: 'Video của bạn đã được kiểm duyệt.',
       receiver: updated?.user_id.toString() || '',

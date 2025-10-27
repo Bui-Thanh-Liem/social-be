@@ -181,7 +181,7 @@ class CommunityService {
     }
 
     //
-    NotificationService.create({
+    NotificationService.createInQueue({
       content: `Bạn đã trở thành điều hành viên của cộng đồng ${actor.community.name}.`,
       type: ENotificationType.Community,
       sender: actor_id,
@@ -247,7 +247,7 @@ class CommunityService {
     }
 
     //
-    NotificationService.create({
+    NotificationService.createInQueue({
       content: `Bạn không còn là điều hành viên của cộng đồng ${actor.community.name}.`,
       type: ENotificationType.Community,
       sender: actor_id,

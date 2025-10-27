@@ -36,7 +36,7 @@ class LikesService {
       //
       const sender = await UserCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { name: 1 } })
       const tw = await TweetCollection.findOne({ _id: new ObjectId(payload.tweet_id) }, { projection: { user_id: 1 } })
-      await NotificationService.create({
+      await NotificationService.createInQueue({
         content: `${sender?.name} đã thích bài viết của bạn.`,
         type: ENotificationType.Mention_like,
         sender: user_id,

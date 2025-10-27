@@ -1,7 +1,8 @@
 import { ObjectId } from 'mongodb'
+import { cleanupQueue } from '~/bull/queues/cleanup.queue'
 import database from '~/configs/database.config'
-import { deleteChildrenTweet } from '~/bull/queues/deleteChildrenTweet'
 import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
+import { CommunityCollection } from '~/models/schemas/Community.schema'
 import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
@@ -24,7 +25,6 @@ import LikesService from './Likes.service'
 import NotificationService from './Notification.service'
 import TrendingService from './Trending.service'
 import VideosService from './Videos.service'
-import { CommunityCollection } from '~/models/schemas/Community.schema'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
@@ -81,7 +81,7 @@ class TweetsService {
     // Gửi thông báo cho ai mà người comment/tweet nhắc đến
     if (mentions?.length) {
       for (let i = 0; i < mentions.length; i++) {
-        await NotificationService.create({
+        await NotificationService.createInQueue({
           content: `${sender?.name} đã nhắc đến bạn trong một ${type === ETweetType.Comment ? 'bình luận' : 'bài viết'}.`,
           type: ENotificationType.Mention_like,
           sender: user_id,
@@ -96,7 +96,7 @@ class TweetsService {
     // Emit comment mới về bài viết parent
     if (type === ETweetType.Comment && parent_id) {
       const tw = await TweetCollection.findOne({ _id: new ObjectId(parent_id) }, { projection: { user_id: 1 } })
-      await NotificationService.create({
+      await NotificationService.createInQueue({
         content: `${sender?.name} đã bình luận bài viết của bạn.`,
         type: ENotificationType.Mention_like,
         sender: user_id,
@@ -1848,7 +1848,7 @@ class TweetsService {
         }
 
         // Xóa các record của bookmark/like/comment
-        await deleteChildrenTweet.add(CONSTANT_JOB.DELETE_CHILDREN_TWEET, { parent_id: tweet_id })
+        await cleanupQueue.add(CONSTANT_JOB.DELETE_CHILDREN_TWEET, { parent_id: tweet_id })
       })
       return true
     } catch (error) {

@@ -39,7 +39,10 @@ class DatabaseConfig {
           version: ServerApiVersion.v1,
           strict: false,
           deprecationErrors: true
-        }
+        },
+        // Cấu hình connection pool
+        minPoolSize: 5, // tối thiểu 5 kết nối trong pool
+        maxPoolSize: 20 // tối đa 20 kết nối
       }
     )
     this.db = this.client.db(envs.DB_NAME)

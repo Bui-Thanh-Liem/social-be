@@ -43,7 +43,7 @@ class CommunityInvitationService {
 
           await Promise.all([
             CommunityInvitationCollection.insertOne(invitation),
-            NotificationService.create({
+            NotificationService.createInQueue({
               content: `${sender.name} đã mời bạn vào cộng đồng ${community.name}.`,
               type: ENotificationType.Community,
               sender: user_id,
