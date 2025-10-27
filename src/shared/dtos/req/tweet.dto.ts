@@ -15,7 +15,14 @@ export const CreateTweetDtoSchema = z.object({
     .string()
     .trim()
     .regex(CONSTANT_REGEX.ID_MONGO, {
-      message: 'Invalid MongoDB ObjectId'
+      message: 'ObjectId không hợp lệ'
+    })
+    .optional(),
+  community_id: z
+    .string()
+    .trim()
+    .regex(CONSTANT_REGEX.ID_MONGO, {
+      message: 'ObjectId không hợp lệ (community_id)'
     })
     .optional(),
   content: z.string().max(280, 'Nội dung tối đa 280 kí tự').trim(),
@@ -23,7 +30,7 @@ export const CreateTweetDtoSchema = z.object({
   mentions: z
     .array(
       z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
-        message: 'Invalid MongoDB ObjectId'
+        message: 'ObjectId không hợp lệ'
       })
     )
     .optional(),
@@ -32,13 +39,13 @@ export const CreateTweetDtoSchema = z.object({
 
 export const GetOneTweetByIdDtoSchema = z.object({
   tweet_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
-    message: 'Invalid MongoDB ObjectId'
+    message: 'ObjectId không hợp lệ'
   })
 })
 
 export const getTweetChildrenDtoSchemaParams = z.object({
   tweet_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
-    message: 'Invalid MongoDB ObjectId'
+    message: 'ObjectId không hợp lệ'
   }),
   tweet_type: z.preprocess(
     (val) => (typeof val === 'string' ? parseInt(val, 10) : val), // Chuyển chuỗi thành số
@@ -65,7 +72,7 @@ export const getProfileTweetDtoSchema = z.object({
 
 export const paramIdTweetDtoSchema = z.object({
   tweet_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
-    message: 'Invalid MongoDB ObjectId'
+    message: 'ObjectId không hợp lệ'
   })
 })
 

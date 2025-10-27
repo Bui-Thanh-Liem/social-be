@@ -17,6 +17,9 @@ export interface ITweet extends IBase {
   user_view: number
 
   //
+  community_id: null | ObjectId
+
+  //
   likes_count?: number
   comments_count?: number
   shares_count?: number

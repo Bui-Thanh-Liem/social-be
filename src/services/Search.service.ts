@@ -85,6 +85,7 @@ class SearchService {
   }
 
   // Sử dụng cho thanh tìm kiếm search
+  // Những bài viết trong cộng đồng sẽ không tìm kiếm ở thanh search toàn cục
   async searchTweet({ query, user_id }: { query: IQuery<ITweet>; user_id: string }): Promise<ResMultiType<ITweet>> {
     //
     const { skip, limit, q, f, pf, sort, t } = getPaginationAndSafeQuery<ITweet>(query)
@@ -222,6 +223,7 @@ class SearchService {
     const tweets = await TweetCollection.aggregate<TweetSchema>([
       {
         $match: {
+          community_id: { $eq: null },
           ...hasQ.query,
           ...hasF.query,
           ...hasPf.query

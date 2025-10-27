@@ -5,6 +5,7 @@ import { UserCollection } from '~/models/schemas/User.schema'
 import { NotFoundError } from '~/shared/classes/error.class'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
 import { ENotificationType } from '~/shared/enums/type.enum'
+import { ICommonPayload } from '~/shared/interfaces/common/community.interface'
 import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 import NotificationService from './Notification.service'
 const limit = pLimit(10)
@@ -61,7 +62,7 @@ class CommunityInvitationService {
     await CommunityInvitationCollection.updateOne({ _id: _id }, { $set: { status: status } })
   }
 
-  async getOneByUserIdAndCommunityId({ user_id, community_id }: { user_id: string; community_id: string }) {
+  async getOneByUserIdAndCommunityId({ user_id, community_id }: ICommonPayload) {
     return await CommunityInvitationCollection.findOne({
       user_id: new ObjectId(user_id),
       community_id: new ObjectId(community_id)

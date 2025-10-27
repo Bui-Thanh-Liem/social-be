@@ -24,10 +24,11 @@ import LikesService from './Likes.service'
 import NotificationService from './Notification.service'
 import TrendingService from './Trending.service'
 import VideosService from './Videos.service'
+import { CommunityCollection } from '~/models/schemas/Community.schema'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
-    const { audience, type, content, parent_id, mentions, media } = payload
+    const { audience, type, content, parent_id, community_id, mentions, media } = payload
 
     // Tạo hashtags chop tweet
     const hashtags = await HashtagsService.checkHashtags(payload.hashtags)
@@ -44,6 +45,22 @@ class TweetsService {
     }
 
     //
+    if (parent_id) {
+      const exist = await TweetCollection.findOne({ _id: new ObjectId(parent_id) })
+      if (!exist) {
+        throw new NotFoundError('Có lỗi xảy ra vui lòng thử lại (không tìm thấy bài viết cha)')
+      }
+    }
+
+    //
+    if (community_id) {
+      const exist = await CommunityCollection.findOne({ _id: new ObjectId(community_id) })
+      if (!exist) {
+        throw new NotFoundError('Có lỗi xảy ra vui lòng thử lại (không tìm thấy cộng đồng)')
+      }
+    }
+
+    //
     const newTweet = await TweetCollection.insertOne(
       new TweetSchema({
         type: type,
@@ -52,6 +69,7 @@ class TweetsService {
         hashtags: hashtags,
         content: content,
         parent_id: parent_id ? new ObjectId(parent_id) : null,
+        community_id: community_id ? new ObjectId(community_id) : null,
         mentions: mentions ? mentions.map((id) => new ObjectId(id)) : [],
         media: media
       })
@@ -540,6 +558,8 @@ class TweetsService {
     }
   }
 
+  //
+  // Chỉ có những bài viết không trong cộng đồng
   async getNewFeeds({
     query,
     feed_type,
@@ -601,7 +621,10 @@ class TweetsService {
 
     const tweets = await TweetCollection.aggregate<TweetSchema>([
       {
-        $match: matchCondition
+        $match: {
+          community_id: { $eq: null },
+          ...matchCondition
+        }
       },
       {
         $match: { type: { $ne: ETweetType.Comment } }
@@ -921,6 +944,7 @@ class TweetsService {
     ]).next()
   }
 
+  //
   async getProfileTweets({
     query,
     user_active_id,
@@ -937,7 +961,7 @@ class TweetsService {
     //
     let { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
 
-    // Lấy danh sách cảu người nào đang theo dõi user_id
+    // Lấy danh sách của người nào đang theo dõi user_id
     const followed_user_ids = await FollowsService.getUserFollowers(user_id)
 
     // ép về string để so sánh cho chắc
@@ -958,6 +982,9 @@ class TweetsService {
         { audience: ETweetAudience.Everyone },
         ...(isFollowing ? [{ audience: ETweetAudience.Followers }] : [])
       ]
+
+      // Nếu là người khác xem profile của mình thì không cho thấy
+      matchCondition.community_id = { $eq: null }
     }
 
     //

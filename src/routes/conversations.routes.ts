@@ -46,7 +46,7 @@ conversationsRoute.post(
 )
 
 conversationsRoute.post(
-  '/promote-mentor/:conv_id',
+  '/promote/:conv_id',
   verifyAccessToken,
   verifyUserEmail,
   requestParamsValidate(ConversationIdDtoSchema),

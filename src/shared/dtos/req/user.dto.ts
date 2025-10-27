@@ -7,7 +7,7 @@ export const VerifyEmailDtoSchema = z.object({
 
 export const UserIdDtoSchema = z.object({
   user_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
-    message: 'Invalid MongoDB ObjectId'
+    message: 'ObjectId không hợp lệ'
   })
 })
 

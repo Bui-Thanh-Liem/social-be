@@ -9,7 +9,7 @@ export const CreateConversationDtoSchema = z
     avatar: z.string().trim().optional(),
     participants: z
       .array(z.string().trim().regex(CONSTANT_REGEX.ID_MONGO), {
-        message: 'Invalid MongoDB ObjectId'
+        message: 'ObjectId không hợp lệ'
       })
       .max(50, { message: 'Tối đa 50 thành viên trong cuộc trò chuyện.' })
   })
@@ -52,14 +52,14 @@ export const CreateConversationDtoSchema = z
 
 export const ConversationIdDtoSchema = z.object({
   conv_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
-    message: 'Invalid MongoDB ObjectId'
+    message: 'ObjectId không hợp lệ'
   })
 })
 
 export const ParticipantsDtoSchema = z.object({
   participants: z
     .array(z.string().trim().regex(CONSTANT_REGEX.ID_MONGO), {
-      message: 'Invalid MongoDB ObjectId'
+      message: 'ObjectId không hợp lệ'
     })
     .max(50, { message: 'Tối đa 50 thành viên trong cuộc trò chuyện.' })
 })

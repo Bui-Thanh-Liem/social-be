@@ -6,16 +6,16 @@ export const CreateNotiDtoSchema = z.object({
   content: z.string().trim(),
   type: z.nativeEnum(ENotificationType),
   sender: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
-    message: 'Invalid MongoDB ObjectId'
+    message: 'ObjectId không hợp lệ'
   }),
   receiver: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
-    message: 'Invalid MongoDB ObjectId'
+    message: 'ObjectId không hợp lệ'
   }),
   refId: z
     .string()
     .trim()
     .regex(CONSTANT_REGEX.ID_MONGO, {
-      message: 'Invalid MongoDB ObjectId'
+      message: 'ObjectId không hợp lệ'
     })
     .optional()
 })
@@ -26,7 +26,7 @@ export const GetMultiByTypeNotiDtoSchema = z.object({
 
 export const ParamIdNotiDtoSchema = z.object({
   noti_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
-    message: 'Invalid MongoDB ObjectId'
+    message: 'ObjectId không hợp lệ'
   })
 })
 

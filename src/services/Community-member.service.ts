@@ -1,8 +1,9 @@
-import { ClientSession, ObjectId } from 'mongodb'
+import { ObjectId } from 'mongodb'
 import { CommunityMemberCollection, CommunityMemberSchema } from '~/models/schemas/Community.schema'
+import { ICommonPayload } from '~/shared/interfaces/common/community.interface'
 
 class CommunityMemberService {
-  async create({ user_id, community_id }: { user_id: string; community_id: string }) {
+  async create({ user_id, community_id }: ICommonPayload) {
     const created = await CommunityMemberCollection.insertOne(
       new CommunityMemberSchema({ user_id: new ObjectId(user_id), community_id: new ObjectId(community_id) })
     )
@@ -10,7 +11,7 @@ class CommunityMemberService {
     return !!created.insertedId
   }
 
-  async delete({ user_id, community_id, session }: { user_id: string; community_id: string; session?: ClientSession }) {
+  async delete({ user_id, community_id, session }: ICommonPayload) {
     const deleted = await CommunityMemberCollection.deleteOne(
       {
         user_id: new ObjectId(user_id),
