@@ -16,6 +16,7 @@ export class TweetSchema extends BaseSchema implements ITweet {
   media: IMedia | null
   guest_view: number
   user_view: number
+  community_id: ObjectId | null
 
   constructor(tweet: Partial<ITweet>) {
     super()
@@ -29,6 +30,7 @@ export class TweetSchema extends BaseSchema implements ITweet {
     this.media = tweet.media || null
     this.guest_view = tweet.guest_view || 0
     this.user_view = tweet.user_view || 0
+    this.community_id = tweet.community_id || null
   }
 }
 

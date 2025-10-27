@@ -1,0 +1,1 @@
+export const CONSTANT_MAX_LENGTH_MENTOR = 20

@@ -7,19 +7,23 @@ import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middlew
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
 import {
+  ChangeMembershipTypeDtoSchema,
+  ChangeVisibilityTypeDtoSchema,
   CreateCommunityDtoSchema,
+  DemoteMentorDtoSchema,
   GetMMByIdDtoSchema,
   GetOneBySlugDtoSchema,
   InvitationMembersDtoSchema,
   JoinLeaveCommunityDtoSchema,
-  PinCommunityDtoSchema
+  PinCommunityDtoSchema,
+  PromoteMentorDtoSchema
 } from '~/shared/dtos/req/community.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 
 const communitiesRoute = Router()
 
-//
+// Tạo cộng  đồng mới
 communitiesRoute.post(
   '/',
   verifyAccessToken,
@@ -29,7 +33,23 @@ communitiesRoute.post(
   wrapAsyncHandler(CommunityController.create)
 )
 
-//
+// Lấy categories của từng community (trả về danh sách)
+communitiesRoute.get('/categories', verifyAccessToken, wrapAsyncHandler(CommunityController.getAllCategories))
+
+// Lấy danh sách name, id của cộng đồng
+communitiesRoute.get('/bare', verifyAccessToken, verifyUserEmail, wrapAsyncHandler(CommunityController.getAllBare))
+
+// Ghim cộng đồng lên đầu trang
+communitiesRoute.patch(
+  '/toggle-pin/:community_id',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestParamsValidate(PinCommunityDtoSchema),
+  wrapAsyncHandler(CommunityController.togglePin)
+)
+
+// Mời ai đó vào cộng đồng (chỉ là thông báo)
+// Trường hợp cộng đồng là "chỉ được mời" thì bắt buộc phải có
 communitiesRoute.post(
   '/invite-members',
   verifyAccessToken,
@@ -58,32 +78,48 @@ communitiesRoute.post(
 )
 
 //
-communitiesRoute.patch(
-  '/toggle-pin/:community_id',
+communitiesRoute.post(
+  '/promote',
   verifyAccessToken,
   verifyUserEmail,
-  requestParamsValidate(PinCommunityDtoSchema),
-  wrapAsyncHandler(CommunityController.togglePin)
+  requestBodyValidate(PromoteMentorDtoSchema),
+  wrapAsyncHandler(CommunityController.promoteMentor)
 )
 
-// Lấy categories của từng community (trả về danh sách)
-communitiesRoute.get('/categories', verifyAccessToken, wrapAsyncHandler(CommunityController.getAllCategories))
+//
+communitiesRoute.post(
+  '/demote',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestBodyValidate(DemoteMentorDtoSchema),
+  wrapAsyncHandler(CommunityController.demoteMentor)
+)
 
-// Lấy những thông tin tổng quát một community theo slug
+//
+communitiesRoute.post(
+  '/change-membership-type',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestBodyValidate(ChangeMembershipTypeDtoSchema),
+  wrapAsyncHandler(CommunityController.changeMembershipType)
+)
+
+//
+communitiesRoute.post(
+  '/change-visibility-type',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestBodyValidate(ChangeVisibilityTypeDtoSchema),
+  wrapAsyncHandler(CommunityController.changeVisibilityType)
+)
+
+// Lấy thông tin tổng quát một community theo slug
 communitiesRoute.get(
   '/slug/:slug',
   verifyAccessToken,
   verifyUserEmail,
   requestParamsValidate(GetOneBySlugDtoSchema),
   wrapAsyncHandler(CommunityController.getOneBareInfoBySlug)
-)
-
-//
-communitiesRoute.get(
-  '/owner',
-  verifyAccessToken,
-  requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(CommunityController.getMultiOwner)
 )
 
 // Lấy thông tin chi tiết members mentors một community theo id
@@ -96,7 +132,15 @@ communitiesRoute.get(
   wrapAsyncHandler(CommunityController.getMMById)
 )
 
-//
+// Lấy những cộng đồng đã tạo
+communitiesRoute.get(
+  '/owner',
+  verifyAccessToken,
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(CommunityController.getMultiOwner)
+)
+
+// Lấy những cộng đồ đã tham gia
 communitiesRoute.get(
   '/joined',
   verifyAccessToken,

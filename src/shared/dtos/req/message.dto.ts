@@ -5,7 +5,7 @@ import { MediaSchema } from './tweet.dto'
 export const CreateMessageDtoSchema = z.object({
   content: z.string().trim().optional(),
   attachments: z.array(MediaSchema).optional(),
-  conversation: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, { message: 'Invalid MongoDB ObjectId' })
+  conversation: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, { message: 'ObjectId không hợp lệ' })
 })
 
 export const GetMultiMessageByConversationDtoSchema = z.object({
