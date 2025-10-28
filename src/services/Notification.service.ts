@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { notificationQueue } from '~/bull/queues/notification.queue'
+import { notificationQueue } from '~/bull/queues'
 import { NotificationCollection, NotificationSchema } from '~/models/schemas/Notification.schema'
 import { publishNotification } from '~/pubsub/publisher'
 import { CONSTANT_JOB } from '~/shared/constants'

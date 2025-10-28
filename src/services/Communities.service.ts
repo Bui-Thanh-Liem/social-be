@@ -52,7 +52,7 @@ class CommunityService {
 
     try {
       if (Array.isArray(payload.member_ids) && payload.member_ids.length > 0) {
-        await CommunityInvitationService.cerate({
+        await CommunityInvitationService.createInQueue({
           user_id,
           community: community!,
           member_ids: payload.member_ids
@@ -101,7 +101,7 @@ class CommunityService {
       }
     }
 
-    return await CommunityInvitationService.cerate({
+    return await CommunityInvitationService.createInQueue({
       user_id,
       community,
       member_ids: payload.member_ids

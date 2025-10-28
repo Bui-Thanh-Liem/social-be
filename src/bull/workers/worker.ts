@@ -1,5 +1,6 @@
 import database from '~/configs/database.config'
 import { logger } from '~/utils/logger.util'
+import { inviteQueue } from '../queues'
 import { cleanupWorker, compressionWorker, emailWorker, notificationWorker } from './index'
 
 async function bootstrapWorker() {
@@ -17,9 +18,10 @@ async function bootstrapWorker() {
 
     // 4. Log worker status
     logger.info('🚀 Workers are running...')
-    logger.info(`  - Cleanup Worker: ${cleanupWorker.name}`)
-    logger.info(`  - Compression Worker: ${compressionWorker.name}`)
     logger.info(`  - Email Worker: ${emailWorker.name}`)
+    logger.info(`  - Cleanup Worker: ${cleanupWorker.name}`)
+    logger.info(`  - InviteQueue Worker: ${inviteQueue.name}`)
+    logger.info(`  - Compression Worker: ${compressionWorker.name}`)
     logger.info(`  - Notification Worker: ${notificationWorker.name}`)
 
     // 5. Health check (optional)

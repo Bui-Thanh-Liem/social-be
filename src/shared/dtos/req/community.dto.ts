@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
 import { EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
+import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 
 export const CreateCommunityDtoSchema = z.object({
   name: z.string().trim().max(32),
@@ -98,3 +99,8 @@ export type PinCommunityDto = z.infer<typeof PinCommunityDtoSchema>
 export type GetMultiInvitationsDto = z.infer<typeof GetMultiInvitationsDtoSchema>
 export type UpdateDto = z.infer<typeof UpdateDtoSchema>
 export type deleteInvitationDto = z.infer<typeof deleteInvitationDtoSchema>
+export type CreateCommunityInvitationDto = {
+  user_id: string
+  community: ICommunity
+  member_ids: string[]
+}

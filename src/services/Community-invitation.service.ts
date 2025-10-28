@@ -3,7 +3,7 @@ import pLimit from 'p-limit'
 import { CommunityInvitationCollection, CommunityInvitationSchema } from '~/models/schemas/Community.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
 import { ForbiddenError, NotFoundError } from '~/shared/classes/error.class'
-import { deleteInvitationDto } from '~/shared/dtos/req/community.dto'
+import { CreateCommunityInvitationDto, deleteInvitationDto } from '~/shared/dtos/req/community.dto'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
 import { ENotificationType } from '~/shared/enums/type.enum'
 import { ICommonPayload } from '~/shared/interfaces/common/community.interface'
@@ -12,10 +12,12 @@ import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 import CommunitiesService from './Communities.service'
 import NotificationService from './Notification.service'
+import { inviteQueue } from '~/bull/queues'
+import { CONSTANT_JOB } from '~/shared/constants'
 const limit = pLimit(10)
 
 class CommunityInvitationService {
-  async cerate({ user_id, community, member_ids }: { user_id: string; community: ICommunity; member_ids: string[] }) {
+  async create({ user_id, community, member_ids }: CreateCommunityInvitationDto) {
     const userObjId = new ObjectId(user_id)
 
     //
@@ -43,7 +45,7 @@ class CommunityInvitationService {
           const invitation = new CommunityInvitationSchema({
             inviter: userObjId,
             user_id: targetUserId,
-            community_id: community._id,
+            community_id: new ObjectId(community._id),
             exp: new Date(Date.now() + community.inviteExpireDays * 24 * 60 * 60 * 1000)
           })
 
@@ -62,6 +64,10 @@ class CommunityInvitationService {
     )
 
     return created?.length > 0
+  }
+
+  async createInQueue(payload: CreateCommunityInvitationDto) {
+    inviteQueue.add(CONSTANT_JOB.INVITE, payload)
   }
 
   async updateStatus(_id: ObjectId, status: EInvitationStatus) {
