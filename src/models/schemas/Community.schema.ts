@@ -1,4 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb'
+import { CONSTANT_INVITE_EXPIRES } from '~/shared/constants'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
 import { EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
 import {
@@ -19,10 +20,17 @@ export class CommunitySchema extends BaseSchema implements ICommunity {
   desc: string
   bio: string
   admin: ObjectId
-  visibilityType: EVisibilityType
-  membershipType: EMembershipType
   category: string
   verify: boolean
+
+  //
+  visibilityType: EVisibilityType
+  membershipType: EMembershipType
+  showLogForMember: boolean
+  showLogForMentor: boolean
+  showInviteListForMember: boolean
+  showInviteListForMentor: boolean
+  inviteExpireDays: number
 
   constructor(community: Partial<ICommunity>) {
     super()
@@ -32,10 +40,17 @@ export class CommunitySchema extends BaseSchema implements ICommunity {
     this.cover = community.cover || ''
     this.bio = community.bio || ''
     this.admin = community.admin || new ObjectId()
-    this.visibilityType = community.visibilityType || EVisibilityType.Public
-    this.membershipType = community.membershipType || EMembershipType.Open
     this.category = community.category || ''
     this.verify = community.verify || false
+
+    //
+    this.visibilityType = community.visibilityType || EVisibilityType.Public
+    this.membershipType = community.membershipType || EMembershipType.Open
+    this.showLogForMember = community.showLogForMember || false
+    this.showLogForMentor = community.showLogForMentor || false
+    this.showInviteListForMember = community.showInviteListForMember || false
+    this.showInviteListForMentor = community.showInviteListForMentor || false
+    this.inviteExpireDays = community.inviteExpireDays || CONSTANT_INVITE_EXPIRES
   }
 }
 
@@ -78,6 +93,7 @@ export class CommunityPinSchema extends BaseSchema implements ICommunityPin {
 // Những lời mời từ mentor
 export class CommunityInvitationSchema extends BaseSchema implements ICommunityInvitation {
   exp: Date
+  inviter: ObjectId
   user_id: ObjectId
   community_id: ObjectId
   status: EInvitationStatus
@@ -85,8 +101,9 @@ export class CommunityInvitationSchema extends BaseSchema implements ICommunityI
   constructor(invite: Partial<ICommunityInvitation>) {
     super()
     this.community_id = invite.community_id || new ObjectId()
+    this.inviter = invite.inviter || new ObjectId()
     this.user_id = invite.user_id || new ObjectId()
-    this.exp = invite.exp || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 ngày
+    this.exp = invite.exp || new Date(Date.now() + CONSTANT_INVITE_EXPIRES * 24 * 60 * 60 * 1000)
     this.status = invite.status || EInvitationStatus.Pending
   }
 }

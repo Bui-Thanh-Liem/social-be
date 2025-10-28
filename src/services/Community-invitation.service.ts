@@ -2,11 +2,15 @@ import { ObjectId } from 'mongodb'
 import pLimit from 'p-limit'
 import { CommunityInvitationCollection, CommunityInvitationSchema } from '~/models/schemas/Community.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
-import { NotFoundError } from '~/shared/classes/error.class'
+import { ForbiddenError, NotFoundError } from '~/shared/classes/error.class'
+import { deleteInvitationDto } from '~/shared/dtos/req/community.dto'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
 import { ENotificationType } from '~/shared/enums/type.enum'
 import { ICommonPayload } from '~/shared/interfaces/common/community.interface'
+import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
+import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import CommunitiesService from './Communities.service'
 import NotificationService from './Notification.service'
 const limit = pLimit(10)
 
@@ -37,8 +41,10 @@ class CommunityInvitationService {
 
           // ✅ Tạo lời mời mới
           const invitation = new CommunityInvitationSchema({
+            inviter: userObjId,
             user_id: targetUserId,
-            community_id: community._id
+            community_id: community._id,
+            exp: new Date(Date.now() + community.inviteExpireDays * 24 * 60 * 60 * 1000)
           })
 
           await Promise.all([
@@ -62,11 +68,105 @@ class CommunityInvitationService {
     await CommunityInvitationCollection.updateOne({ _id: _id }, { $set: { status: status } })
   }
 
+  async getMultiByCommunityId({ queries, community_id }: { community_id: string; queries: IQuery<ICommunity> }) {
+    const { skip, limit, sort } = getPaginationAndSafeQuery<ICommunity>(queries)
+
+    const invitations = await CommunityInvitationCollection.aggregate([
+      {
+        $match: {
+          community_id: new ObjectId(community_id)
+        }
+      },
+      {
+        $sort: sort
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user_id',
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                name: 1,
+                username: 1,
+                avatar: 1,
+                verify: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'inviter',
+          foreignField: '_id',
+          as: 'inviter',
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                name: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: {
+          path: '$user_id',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $unwind: {
+          path: '$inviter',
+          preserveNullAndEmptyArrays: true
+        }
+      }
+    ]).toArray()
+
+    const total = await CommunityInvitationCollection.countDocuments({ community_id: new ObjectId(community_id) })
+
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: invitations
+    }
+  }
+
   async getOneByUserIdAndCommunityId({ user_id, community_id }: ICommonPayload) {
     return await CommunityInvitationCollection.findOne({
       user_id: new ObjectId(user_id),
       community_id: new ObjectId(community_id)
     })
+  }
+
+  async delete({ user_id, payload }: { user_id: string; payload: deleteInvitationDto }) {
+    const { isAdmin, isJoined, isMentor } = await CommunitiesService.validateCommunityAndMembership({
+      user_id,
+      community_id: payload.community_id
+    })
+
+    if (!isJoined) {
+      throw new ForbiddenError('Bạn chưa tham gia vào cộng đồng.')
+    }
+
+    if (!isAdmin && !isMentor) {
+      throw new ForbiddenError('Chủ sở hữu và điều hành viên mới có thể xoá lời mời (cho dù đó là lời mời của bạn).')
+    }
+
+    const deleted = await CommunityInvitationCollection.deleteOne({ _id: new ObjectId(payload.invitation_id) })
+    return !!deleted.deletedCount
   }
 }
 

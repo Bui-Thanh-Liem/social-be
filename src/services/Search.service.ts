@@ -14,7 +14,6 @@ import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.uti
 import { slug } from '~/utils/slug.util'
 import FollowsService from './Follows.service'
 import TrendingService from './Trending.service'
-// import HashtagsService from './Hashtags.service'
 
 // Những hàm search sẽ ưu tiên sort sau limit
 class SearchService {

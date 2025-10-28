@@ -1,8 +1,8 @@
 import { ObjectId } from 'mongodb'
 import { StringValue } from 'ms'
+import { emailQueue } from '~/bull/queues'
 import { envs } from '~/configs/env.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
-import { sendEmailQueue } from '~/bull/queues'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { NotFoundError } from '~/shared/classes/error.class'
 import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
@@ -74,7 +74,7 @@ class UsersService {
 
     //
     logger.info('resendVerifyEmail - user:::', user)
-    await sendEmailQueue.add(CONSTANT_JOB.VERIFY_MAIL, {
+    await emailQueue.add(CONSTANT_JOB.VERIFY_MAIL, {
       toEmail: user?.email,
       name: user?.name,
       url: `${envs.CLIENT_DOMAIN}/verify?token=${email_verify_token}`

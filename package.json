@@ -29,6 +29,7 @@
     "@types/hpp": "^0.2.6",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/lodash": "^4.17.20",
+    "@types/mongodb": "^4.0.6",
     "@types/morgan": "^1.9.10",
     "@types/node": "^22.14.0",
     "@types/nodemailer": "^6.4.17",

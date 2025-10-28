@@ -11,11 +11,17 @@ export interface ICommunity extends IBase {
   cover: string
   bio: string
   admin: ObjectId
-  visibilityType: EVisibilityType // tất cả mọi người đề thấy nhưng không thể tương tác
-  membershipType: EMembershipType // chỉ members thấy
-
   category: string
   verify: boolean
+
+  //
+  visibilityType: EVisibilityType // tất cả mọi người đề thấy nhưng không thể tương tác
+  membershipType: EMembershipType // chỉ members thấy
+  showLogForMember: boolean
+  showLogForMentor: boolean
+  showInviteListForMember: boolean
+  showInviteListForMentor: boolean
+  inviteExpireDays: number // Lời mời có hiệu lực trong
 
   pinned?: boolean
   isJoined?: boolean
@@ -39,7 +45,8 @@ export interface ICommunityPin extends IBase, ICommunityMentor {}
 
 export interface ICommunityInvitation extends IBase {
   exp: Date
-  user_id: ObjectId
+  inviter: ObjectId // người mời
+  user_id: ObjectId // người nhận
   community_id: ObjectId
   status: EInvitationStatus
 }

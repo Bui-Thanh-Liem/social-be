@@ -48,7 +48,7 @@ export const GetOneBySlugDtoSchema = z.object({
 })
 
 export const GetMMByIdDtoSchema = z.object({
-  id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+  community_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'ObjectId không hợp lệ'
   })
 })
@@ -64,18 +64,27 @@ export const PromoteMentorDtoSchema = z.object({
 
 export const DemoteMentorDtoSchema = PromoteMentorDtoSchema
 
-export const ChangeMembershipTypeDtoSchema = z.object({
-  community_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+export const GetMultiInvitationsDtoSchema = GetMMByIdDtoSchema
+export const deleteInvitationDtoSchema = z.object({
+  invitation_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'ObjectId không hợp lệ'
   }),
-  membershipType: z.nativeEnum(EMembershipType)
+  community_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+    message: 'ObjectId không hợp lệ'
+  })
 })
 
-export const ChangeVisibilityTypeDtoSchema = z.object({
+export const UpdateDtoSchema = z.object({
   community_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'ObjectId không hợp lệ'
   }),
-  visibilityType: z.nativeEnum(EVisibilityType)
+  showLogForMember: z.boolean().optional(),
+  showLogForMentor: z.boolean().optional(),
+  showInviteListForMember: z.boolean().optional(),
+  showInviteListForMentor: z.boolean().optional(),
+  inviteExpireDays: z.number().optional(),
+  membershipType: z.nativeEnum(EMembershipType).optional(),
+  visibilityType: z.nativeEnum(EVisibilityType).optional()
 })
 
 export type CreateCommunityDto = z.infer<typeof CreateCommunityDtoSchema>
@@ -86,5 +95,6 @@ export type DemoteMentorDto = z.infer<typeof DemoteMentorDtoSchema>
 export type GetOneBySlugDto = z.infer<typeof GetOneBySlugDtoSchema>
 export type GetMMByIdDto = z.infer<typeof GetMMByIdDtoSchema>
 export type PinCommunityDto = z.infer<typeof PinCommunityDtoSchema>
-export type ChangeMembershipTypeDto = z.infer<typeof ChangeMembershipTypeDtoSchema>
-export type ChangeVisibilityTypeDto = z.infer<typeof ChangeVisibilityTypeDtoSchema>
+export type GetMultiInvitationsDto = z.infer<typeof GetMultiInvitationsDtoSchema>
+export type UpdateDto = z.infer<typeof UpdateDtoSchema>
+export type deleteInvitationDto = z.infer<typeof deleteInvitationDtoSchema>

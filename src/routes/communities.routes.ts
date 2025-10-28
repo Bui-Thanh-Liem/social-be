@@ -7,16 +7,17 @@ import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middlew
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
 import {
-  ChangeMembershipTypeDtoSchema,
-  ChangeVisibilityTypeDtoSchema,
   CreateCommunityDtoSchema,
+  deleteInvitationDtoSchema,
   DemoteMentorDtoSchema,
   GetMMByIdDtoSchema,
+  GetMultiInvitationsDtoSchema,
   GetOneBySlugDtoSchema,
   InvitationMembersDtoSchema,
   JoinLeaveCommunityDtoSchema,
   PinCommunityDtoSchema,
-  PromoteMentorDtoSchema
+  PromoteMentorDtoSchema,
+  UpdateDtoSchema
 } from '~/shared/dtos/req/community.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
@@ -96,21 +97,12 @@ communitiesRoute.post(
 )
 
 //
-communitiesRoute.post(
-  '/change-membership-type',
+communitiesRoute.patch(
+  '/update',
   verifyAccessToken,
   verifyUserEmail,
-  requestBodyValidate(ChangeMembershipTypeDtoSchema),
-  wrapAsyncHandler(CommunityController.changeMembershipType)
-)
-
-//
-communitiesRoute.post(
-  '/change-visibility-type',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestBodyValidate(ChangeVisibilityTypeDtoSchema),
-  wrapAsyncHandler(CommunityController.changeVisibilityType)
+  requestBodyValidate(UpdateDtoSchema),
+  wrapAsyncHandler(CommunityController.update)
 )
 
 // Lấy thông tin tổng quát một community theo slug
@@ -124,12 +116,30 @@ communitiesRoute.get(
 
 // Lấy thông tin chi tiết members mentors một community theo id
 communitiesRoute.get(
-  '/mm/:id',
+  '/mm/:community_id',
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
   requestParamsValidate(GetMMByIdDtoSchema),
-  wrapAsyncHandler(CommunityController.getMMById)
+  wrapAsyncHandler(CommunityController.getMultiMMById)
+)
+
+// Lấy những lời mời đã mời
+communitiesRoute.get(
+  '/invite/:community_id',
+  verifyAccessToken,
+  requestParamsValidate(GetMultiInvitationsDtoSchema),
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(CommunityController.getMultiInvitations)
+)
+
+// Xoá lời mời (ở cộng đồng "Chỉ được mời" sẽ không vào được)
+communitiesRoute.delete(
+  '/invite/:invitation_id/:community_id',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestParamsValidate(deleteInvitationDtoSchema),
+  wrapAsyncHandler(CommunityController.deleteInvitation)
 )
 
 // Lấy những cộng đồng đã tạo

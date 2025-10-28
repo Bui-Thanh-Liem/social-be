@@ -1,16 +1,18 @@
 import { NextFunction, Request, Response } from 'express'
 import CommunityService from '~/services/Communities.service'
+import CommunityInvitationService from '~/services/Community-invitation.service'
 import { CreatedResponse, OkResponse } from '~/shared/classes/response.class'
 import {
-  ChangeMembershipTypeDto,
-  ChangeVisibilityTypeDto,
   CreateCommunityDto,
+  deleteInvitationDto,
   DemoteMentorDto,
   GetMMByIdDto,
+  GetMultiInvitationsDto,
   GetOneBySlugDto,
   JoinLeaveCommunityDto,
   PinCommunityDto,
-  PromoteMentorDto
+  PromoteMentorDto,
+  UpdateDto
 } from '~/shared/dtos/req/community.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
@@ -52,17 +54,10 @@ class CommunityController {
     res.json(new CreatedResponse('Cho điều hành viên xuống thành viên thành công.', result))
   }
 
-  async changeMembershipType(req: Request, res: Response) {
+  async update(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const { membershipType, community_id } = req.body as ChangeMembershipTypeDto
-    const result = await CommunityService.changeMembershipType({ user_id, membershipType, community_id })
-    res.json(new CreatedResponse('Thay đổi cài đặt tham gia thành công.', result))
-  }
-
-  async changeVisibilityType(req: Request, res: Response) {
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const { visibilityType, community_id } = req.body as ChangeVisibilityTypeDto
-    const result = await CommunityService.changeVisibilityType({ user_id, visibilityType, community_id })
+    const payload = req.body as UpdateDto
+    const result = await CommunityService.update({ payload, user_id })
     res.json(new CreatedResponse('Thay đổi cài đặt tham gia thành công.', result))
   }
 
@@ -96,12 +91,26 @@ class CommunityController {
     res.json(new OkResponse(`Lấy cộng đồng bằng slug thành công.`, result))
   }
 
-  async getMMById(req: Request, res: Response, next: NextFunction) {
-    const { id } = req.params as GetMMByIdDto
+  async getMultiMMById(req: Request, res: Response, next: NextFunction) {
+    const { community_id } = req.params as GetMMByIdDto
     const queries = req.query as IQuery<ICommunity>
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await CommunityService.getMMById({ id, user_id, queries })
+    const result = await CommunityService.getMultiMMById({ community_id, user_id, queries })
     res.json(new OkResponse(`Lấy thành viên và điều hành viên cộng đồng bằng id thành công.`, result))
+  }
+
+  async deleteInvitation(req: Request, res: Response, next: NextFunction) {
+    const payload = req.params as deleteInvitationDto
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const result = await CommunityInvitationService.delete({ user_id, payload })
+    res.json(new OkResponse(`Xoá lời mời thành công.`, result))
+  }
+
+  async getMultiInvitations(req: Request, res: Response, next: NextFunction) {
+    const { community_id } = req.params as GetMultiInvitationsDto
+    const queries = req.query as IQuery<ICommunity>
+    const result = await CommunityInvitationService.getMultiByCommunityId({ community_id, queries })
+    res.json(new OkResponse(`Lấy tất cả lời mời thành công.`, result))
   }
 
   //

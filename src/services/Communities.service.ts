@@ -8,9 +8,9 @@ import {
   CommunitySchema
 } from '~/models/schemas/Community.schema'
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '~/shared/classes/error.class'
-import { CreateCommunityDto, InvitationMembersDto } from '~/shared/dtos/req/community.dto'
+import { CreateCommunityDto, InvitationMembersDto, UpdateDto } from '~/shared/dtos/req/community.dto'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
-import { EMembershipType, ENotificationType, EVisibilityType } from '~/shared/enums/type.enum'
+import { EMembershipType, ENotificationType } from '~/shared/enums/type.enum'
 import { ICommonPayload } from '~/shared/interfaces/common/community.interface'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
@@ -54,14 +54,39 @@ class CommunityService {
       if (Array.isArray(payload.member_ids) && payload.member_ids.length > 0) {
         await CommunityInvitationService.cerate({
           user_id,
-          member_ids: payload.member_ids,
-          community: community!
+          community: community!,
+          member_ids: payload.member_ids
         })
       }
     } catch (err) {
       throw new BadRequestError('Không thể mời thành viên, vui lòng thử lại.')
     }
     return true
+  }
+
+  async update({ user_id, payload }: { payload: UpdateDto; user_id: string }) {
+    const { community_id } = payload
+    const { isAdmin } = await this.validateCommunityAndMembership({ community_id, user_id })
+
+    if (!isAdmin) {
+      throw new ForbiddenError('Chỉ chủ sở hữu mới có thể thay đổi cài đặt.')
+    }
+
+    // Bỏ trường không cần thiết (đã có validate mongodb rồi)
+    const { community_id: x, ...safePayload } = payload
+
+    //
+    const updated = await CommunityCollection.updateOne(
+      { _id: new ObjectId(community_id) },
+      {
+        $set: { ...safePayload },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+
+    return !!updated.modifiedCount
   }
 
   async inviteMembers({ user_id, payload }: { user_id: string; payload: InvitationMembersDto }) {
@@ -264,62 +289,6 @@ class CommunityService {
     })
   }
 
-  async changeMembershipType({
-    user_id,
-    community_id,
-    membershipType
-  }: {
-    user_id: string
-    membershipType: EMembershipType
-    community_id: string
-  }) {
-    const { isAdmin } = await this.validateCommunityAndMembership({ community_id, user_id })
-
-    if (!isAdmin) {
-      throw new ForbiddenError('Chỉ chủ sở hữu mới có thể thay đổi cài đặt.')
-    }
-
-    const updated = await CommunityCollection.updateOne(
-      { _id: new ObjectId(community_id) },
-      {
-        $set: { membershipType: membershipType },
-        $currentDate: {
-          updated_at: true
-        }
-      }
-    )
-
-    return !!updated.modifiedCount
-  }
-
-  async changeVisibilityType({
-    user_id,
-    community_id,
-    visibilityType
-  }: {
-    user_id: string
-    visibilityType: EVisibilityType
-    community_id: string
-  }) {
-    const { isAdmin } = await this.validateCommunityAndMembership({ community_id, user_id })
-
-    if (!isAdmin) {
-      throw new ForbiddenError('Chỉ chủ sở hữu mới có thể thay đổi cài đặt.')
-    }
-
-    const updated = await CommunityCollection.updateOne(
-      { _id: new ObjectId(community_id) },
-      {
-        $set: { visibilityType: visibilityType },
-        $currentDate: {
-          updated_at: true
-        }
-      }
-    )
-
-    return !!updated.modifiedCount
-  }
-
   async getAllCategories() {
     return await CommunityCollection.distinct('category')
   }
@@ -340,7 +309,7 @@ class CommunityService {
     if (joinedObjIds.length > 0) query.$or.push({ _id: { $in: joinedObjIds } })
 
     // Trả về danh sách cộng đồng (chỉ cần name)
-    return CommunityCollection.find(query, { projection: { name: 1 } }).toArray()
+    return CommunityCollection.find(query, { projection: { name: 1, cover: 1 } }).toArray()
   }
 
   async getMultiOwner({
@@ -712,17 +681,17 @@ class CommunityService {
     return community
   }
 
-  async getMMById({
-    id,
+  async getMultiMMById({
+    community_id,
     user_id,
     queries
   }: {
-    id: string
+    community_id: string
     user_id: string
     queries: IQuery<ICommunity>
   }): Promise<ICommunity> {
     const userObjId = new ObjectId(user_id)
-    const communityObjId = new ObjectId(id)
+    const communityObjId = new ObjectId(community_id)
     const { skip, limit, q } = getPaginationAndSafeQuery<ICommunity>(queries)
 
     const community = await CommunityCollection.aggregate<CommunitySchema>([
@@ -870,7 +839,7 @@ class CommunityService {
     ]).next()
 
     if (!community) {
-      throw new NotFoundError(`Không tìm thấy cộng đồng với id ${id}`)
+      throw new NotFoundError(`Không tìm thấy cộng đồng với id ${community_id}`)
     }
 
     return community
@@ -936,12 +905,12 @@ class CommunityService {
     }
   }
 
-  private async validateCommunityAndMembership({ user_id, community_id }: ICommonPayload) {
+  async validateCommunityAndMembership({ user_id, community_id }: ICommonPayload) {
     const communityObjId = new ObjectId(community_id)
 
     const community = await CommunityCollection.findOne(
       { _id: communityObjId },
-      { projection: { admin: 1, name: 1, membershipType: 1 } }
+      { projection: { admin: 1, name: 1, membershipType: 1, inviteExpireDays: 1 } }
     )
 
     if (!community) {
