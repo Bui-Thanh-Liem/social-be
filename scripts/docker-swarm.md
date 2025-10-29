@@ -19,8 +19,18 @@
 docker swarm init --advertise-addr <MANAGER-IP>
 ```
 
-- Lệnh này sẽ trả về token để join worker nodes  
+**Danh sách node:**
+docker node ls
+
+**Rời khỏi node:**
+docker swarm leave
+
+**Rời khỏi node nếu là manager:**
+docker swarm leave --force // nếu node là manager
+
+- Lệnh này sẽ trả về token để join worker nodes
 - Ví dụ:
+
 ```bash
 docker swarm join --token SWMTKN-1-xxxxx <MANAGER-IP>:2377
 ```
@@ -83,27 +93,32 @@ docker service update --image nginx:alpine web
 ## 8. Các lệnh quản lý hữu ích
 
 **Xem thông tin swarm:**
+
 ```bash
 docker info
 ```
 
 **Lấy token join (nếu mất):**
+
 ```bash
 docker swarm join-token worker
 docker swarm join-token manager
 ```
 
 **Promote worker thành manager:**
+
 ```bash
 docker node promote <NODE-ID>
 ```
 
 **Remove node:**
+
 ```bash
 docker node rm <NODE-ID>
 ```
 
 **Leave swarm (từ node đó):**
+
 ```bash
 docker swarm leave
 ```

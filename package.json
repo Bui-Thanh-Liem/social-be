@@ -9,7 +9,7 @@
     "build": "rimraf ./dist && tsc && tsc-alias",
     "start:prod": "concurrently \"npm run start:server:prod\" \"npm run start:worker:prod\"",
     "start:server:prod": "node dist/index.js",
-    "start:worker:prod": "node dist/bull/workers/worker.ts",
+    "start:worker:prod": "node dist/bull/workers/worker.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prettier": "prettier --check .",
