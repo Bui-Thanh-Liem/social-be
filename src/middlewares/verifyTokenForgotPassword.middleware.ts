@@ -17,7 +17,7 @@ export async function verifyTokenForgotPassword(req: Request, res: Response, nex
     const decoded = await verifyToken({ token, privateKey: envs.JWT_SECRET_TEMP })
 
     // Kiểm tra thêm , xem loại token có phải reset password không
-    if (decoded.type !== ETokenType.forgotPasswordToken) {
+    if (decoded.type !== ETokenType.ForgotPasswordToken) {
       throw new BadRequestError('Chúng tôi nhận thấy hành động của bạn không giống người dùng bình thường ?')
     }
 

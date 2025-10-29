@@ -15,7 +15,7 @@ RUN npm install
 COPY . .
 
 # Build TypeScript → dist/
-RUN npm run build
+RUN npm run build && rm -rf node_modules
 
 # ============================================
 # STAGE 2: Production Dependencies
@@ -58,11 +58,11 @@ COPY --chown=nodejs:nodejs package*.json ./
 USER nodejs
 
 # Expose port
-EXPOSE 3000
+EXPOSE 9000
 
 # Environment variables
 ENV NODE_ENV=production \
-    PORT=3000
+    PORT=9000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
