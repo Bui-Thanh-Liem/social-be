@@ -9,6 +9,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install ALL dependencies (cần devDependencies để build)
+RUN npm install -g concurrently
 RUN npm install
 
 # Copy source code

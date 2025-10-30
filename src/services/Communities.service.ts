@@ -25,8 +25,8 @@ import NotificationService from './Notification.service'
 
 interface IPromoteDemote {
   actor_id: string
-  community_id: string
   target_id: string
+  community_id: string
 }
 
 class CommunityService {
@@ -874,7 +874,7 @@ class CommunityService {
     return { status, _id: id }
   }
 
-  // Kiểm tra xem đã là thành viên chưa
+  // Kiểm tra xem đã người dùng hiện tại có chức vụ gì trong cộng đồng
   async checkJoined({
     user_id,
     community_id,
