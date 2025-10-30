@@ -84,6 +84,12 @@ class CommunityController {
     res.json(new OkResponse(`Lấy nhiều cộng đồng bạn đã tham gia thành công.`, result))
   }
 
+  async getMultiExplore(req: Request, res: Response, next: NextFunction) {
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const result = await CommunityService.getMultiExplore({ user_id, query: req.query })
+    res.json(new OkResponse(`Lấy nhiều cộng đồng thành công.`, result))
+  }
+
   async getOneBareInfoBySlug(req: Request, res: Response, next: NextFunction) {
     const { slug } = req.params as GetOneBySlugDto
     const { user_id } = req.decoded_authorization as IJwtPayload

@@ -150,12 +150,20 @@ communitiesRoute.get(
   wrapAsyncHandler(CommunityController.getMultiOwner)
 )
 
-// Lấy những cộng đồ đã tham gia
+// Lấy những cộng đồng đã tham gia
 communitiesRoute.get(
   '/joined',
   verifyAccessToken,
   requestQueryValidate(QueryDtoSchema),
   wrapAsyncHandler(CommunityController.getMultiJoined)
+)
+
+// Lấy những cộng đồng
+communitiesRoute.get(
+  '/explore',
+  verifyAccessToken,
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(CommunityController.getMultiExplore)
 )
 
 export default communitiesRoute

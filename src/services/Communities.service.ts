@@ -529,6 +529,107 @@ class CommunityService {
     }
   }
 
+  async getMultiExplore({
+    query,
+    user_id
+  }: {
+    user_id: string
+    query: IQuery<ICommunity>
+  }): Promise<ResMultiType<ICommunity>> {
+    const { skip, limit, sort, q, qe } = getPaginationAndSafeQuery<ICommunity>(query)
+
+    //
+    const communities = await CommunityCollection.aggregate<CommunitySchema>([
+      {
+        $match: {
+          ...(q
+            ? [
+                {
+                  $or: [{ name: { $regex: q, $options: 'i' } }, { $text: { $search: q } }]
+                }
+              ]
+            : []),
+          ...(qe
+            ? [
+                {
+                  $or: [
+                    { visibilityType: { $regex: qe, $options: 'i' } },
+                    { membershipType: { $regex: qe, $options: 'i' } }
+                  ]
+                }
+              ]
+            : [])
+        }
+      },
+      {
+        $sort: sort
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      },
+      {
+        $lookup: {
+          from: 'community-pin',
+          localField: '_id',
+          foreignField: 'community_id',
+          as: 'pin',
+          pipeline: [
+            {
+              $project: {
+                user_id: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: {
+          path: '$admin',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $addFields: {
+          pinned: {
+            $in: [new ObjectId(user_id), '$pin.user_id']
+          }
+        }
+      },
+      {
+        $project: {
+          bio: 0,
+          category: 0,
+          pin: 0
+        }
+      }
+    ]).toArray()
+
+    //
+    const total = await CommunityCollection.countDocuments({
+      $or: [
+        {
+          admin: {
+            $in: [new ObjectId(user_id)]
+          }
+        }
+      ],
+      ...(q
+        ? {
+            $or: [{ name: { $regex: q, $options: 'i' } }, { $text: { $search: q } }]
+          }
+        : {})
+    })
+
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: communities
+    }
+  }
+
   async getOneBareInfoBySlug({ slug, user_id }: { slug: string; user_id: string }): Promise<ICommunity> {
     const community = await CommunityCollection.aggregate<CommunitySchema>([
       // match slug

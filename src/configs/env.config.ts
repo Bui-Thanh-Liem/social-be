@@ -39,3 +39,5 @@ export const envs = {
 
   MAX_REPORT_THRESHOLD: process.env.MAX_REPORT_THRESHOLD || ''
 }
+
+console.log('envs::', envs)

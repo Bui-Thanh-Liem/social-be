@@ -156,6 +156,7 @@ class DatabaseConfig {
       CommunityCollection.createIndex({ membershipType: 1 })
       CommunityCollection.createIndex({ name: 1 }, { unique: true })
       CommunityCollection.createIndex({ slug: 1 }, { unique: true })
+      CommunityCollection.createIndex({ category: 1 })
       CommunityCollection.createIndex({ bio: 'text' }, { default_language: 'none' })
       // CommunityCollection.createIndex({ category: 'text' }, { default_language: 'none' })
     }
