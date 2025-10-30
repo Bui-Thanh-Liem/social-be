@@ -104,7 +104,7 @@ app.get('/health', (req, res) => {
 })
 
 // API routes
-app.use('/', rootRoute)
+app.use('/api', rootRoute)
 
 // 404 handler
 app.use((req, res, next) => {

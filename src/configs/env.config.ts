@@ -14,9 +14,9 @@ export const envs = {
   REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
 
   SERVER_PORT: Number(process.env.SERVER_PORT) || 9000,
-  SERVER_HOST: process.env.SERVER_HOST || 'localhost',
+  SERVER_HOST: process.env.SERVER_HOST || '0.0.0.0',
 
-  CLIENT_DOMAIN: process.env.CLIENT_DOMAIN || 'http://localhost:3000',
+  CLIENT_DOMAIN: process.env.CLIENT_DOMAIN || 'http://localhost',
   SERVER_DOMAIN: process.env.SERVER_DOMAIN || 'http://localhost:9000',
 
   PASSWORD_SALT: process.env.PASSWORD_SALT || '',

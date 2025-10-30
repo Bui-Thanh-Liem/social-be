@@ -45,4 +45,10 @@ rootRoute.post('/faker', async (req: Request, res: Response, next: NextFunction)
   })
 })
 
+rootRoute.get('/health', async (req: Request, res: Response, next: NextFunction) => {
+  res.status(200).json({
+    message: 'OK'
+  })
+})
+
 export default rootRoute

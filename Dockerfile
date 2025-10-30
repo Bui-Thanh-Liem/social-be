@@ -9,7 +9,6 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install ALL dependencies (cần devDependencies để build)
-RUN npm install -g concurrently
 RUN npm install
 
 # Copy source code
@@ -67,7 +66,7 @@ ENV NODE_ENV=production \
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" || exit 1
+  CMD node -e "require('http').get('http://localhost:9000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" || exit 1
 
 # Use dumb-init
 ENTRYPOINT ["dumb-init", "--"]
