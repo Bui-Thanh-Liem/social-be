@@ -4,6 +4,7 @@ import { EInvitationStatus } from '~/shared/enums/status.enum'
 import { EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
 import {
   ICommunity,
+  ICommunityActivity,
   ICommunityInvitation,
   ICommunityMember,
   ICommunityMentor,
@@ -108,11 +109,28 @@ export class CommunityInvitationSchema extends BaseSchema implements ICommunityI
   }
 }
 
+// Những lời mời từ mentor
+export class CommunityActivitySchema extends BaseSchema implements ICommunityActivity {
+  actor_id: ObjectId
+  community_id: ObjectId
+  action: string
+  target_id?: ObjectId | undefined
+
+  constructor(activity: Partial<ICommunityActivity>) {
+    super()
+    this.actor_id = activity.actor_id || new ObjectId()
+    this.community_id = activity.community_id || new ObjectId()
+    this.action = activity.action || ''
+    if (activity.target_id) this.target_id = activity.target_id
+  }
+}
+
 export let CommunityCollection: Collection<CommunitySchema>
 export let CommunityMentorCollection: Collection<CommunityMentorSchema>
 export let CommunityMemberCollection: Collection<CommunityMemberSchema>
 export let CommunityPinCollection: Collection<CommunityPinSchema>
 export let CommunityInvitationCollection: Collection<CommunityInvitationSchema>
+export let CommunityActivityCollection: Collection<CommunityActivitySchema>
 
 export function initCommunityCollection(db: Db) {
   CommunityCollection = db.collection<CommunitySchema>('community')
@@ -132,4 +150,8 @@ export function initCommunityPinCollection(db: Db) {
 
 export function initCommunityInvitationCollection(db: Db) {
   CommunityInvitationCollection = db.collection<CommunityInvitationSchema>('community-invitation')
+}
+
+export function initCommunityActivityCollection(db: Db) {
+  CommunityActivityCollection = db.collection<CommunityActivitySchema>('community-activities')
 }

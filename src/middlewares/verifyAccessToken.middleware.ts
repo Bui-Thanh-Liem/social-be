@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { envs } from '~/configs/env.config'
+import UsersService from '~/services/Users.service'
 import { UnauthorizedError } from '~/shared/classes/error.class'
 import { verifyToken } from '~/utils/jwt.util'
 
@@ -13,6 +14,17 @@ export async function verifyAccessToken(req: Request, res: Response, next: NextF
     }
     const decoded = await verifyToken({ token: access_token, privateKey: envs.JWT_SECRET_ACCESS })
     req.decoded_authorization = decoded
+
+    //
+    if (decoded.user_id) {
+      const user = await UsersService.getUserActive(decoded.user_id)
+
+      if (!user) {
+        throw new UnauthorizedError('Người dùng không tồn tại.')
+      }
+      req.user = user
+    }
+
     next()
   } catch (error) {
     next(new UnauthorizedError(error as string))

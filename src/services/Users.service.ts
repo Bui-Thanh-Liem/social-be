@@ -471,6 +471,7 @@ class UsersService {
     const keyCache = `${CONSTANT_USER.user_active_key_cache}-${user_id}`
     let userActive = await cacheServiceInstance.getCache<IUser>(keyCache)
     if (!userActive) {
+      console.log('❌ lấy người dùng hiện tại trong database 🤦‍♂️')
       userActive = await UserCollection.findOne(
         { _id: new ObjectId(user_id) },
         { projection: { email_verify_token: 0, forgot_password_token: 0, password: 0 } }

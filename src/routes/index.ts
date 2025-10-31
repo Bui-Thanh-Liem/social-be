@@ -34,9 +34,6 @@ rootRoute.use('/trending', trendingRoute)
 rootRoute.use('/messages', messagesRoute)
 rootRoute.use('/conversations', conversationsRoute)
 rootRoute.use('/communities', communitiesRoute)
-rootRoute.get('/videos-streaming/:filename', StreamVideoController.streamVideo)
-rootRoute.get('/videos-hls/:foldername/master.m3u8', StreamVideoController.streamMaster)
-rootRoute.get('/videos-hls/:foldername/:v/:segment', StreamVideoController.streamSegment)
 
 rootRoute.post('/faker', async (req: Request, res: Response, next: NextFunction) => {
   await startFaker()

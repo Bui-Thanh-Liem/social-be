@@ -274,10 +274,6 @@ class AuthService {
     )
   }
 
-  async getMe(user_id: string) {
-    return await UsersService.getUserActive(user_id)
-  }
-
   async refreshToken({ user_id, token, exp }: { user_id: string; token: string; exp?: number }) {
     const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
       payload: { user_id },

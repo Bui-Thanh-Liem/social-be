@@ -29,14 +29,16 @@ class CommunityController {
   async join(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const { community_id } = req.params as JoinLeaveCommunityDto
-    const result = await CommunityService.join({ user_id, community_id })
+    const { user } = req
+    const result = await CommunityService.join({ user_id, community_id, user })
     res.json(new CreatedResponse('Tham gia cộng đồng thành công.', result))
   }
 
   async leave(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const { community_id } = req.params as JoinLeaveCommunityDto
-    const result = await CommunityService.leave({ user_id, community_id })
+    const { user } = req
+    const result = await CommunityService.leave({ user_id, community_id, user })
     res.json(new CreatedResponse('Rời cộng đồng thành công.', result))
   }
 
@@ -122,7 +124,8 @@ class CommunityController {
   //
   async inviteMembers(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await CommunityService.inviteMembers({ user_id, payload: req.body })
+    const { user } = req
+    const result = await CommunityService.inviteMembers({ user_id, payload: req.body, user: user! })
     res.json(new OkResponse(`Mời thành viên vào cộng đồng thành công.`, result))
   }
 

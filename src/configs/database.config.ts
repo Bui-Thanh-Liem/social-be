@@ -2,11 +2,13 @@ import { Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { initBookmarkCollection } from '~/models/schemas/Bookmark.schema'
 import {
+  CommunityActivityCollection,
   CommunityCollection,
   CommunityInvitationCollection,
   CommunityMemberCollection,
   CommunityMentorCollection,
   CommunityPinCollection,
+  initCommunityActivityCollection,
   initCommunityCollection,
   initCommunityInvitationCollection,
   initCommunityMemberCollection,
@@ -78,6 +80,7 @@ class DatabaseConfig {
     initCommunityMemberCollection(this.db)
     initCommunityPinCollection(this.db)
     initCommunityInvitationCollection(this.db)
+    initCommunityActivityCollection(this.db)
   }
 
   async initialIndex() {
@@ -105,6 +108,7 @@ class DatabaseConfig {
       'community_id_1',
       'community_id_1_user_id_1'
     ])
+    const indexCommunityActivity = await CommunityActivityCollection.indexExists(['community_id_1'])
 
     // User
     if (!indexUser) {
@@ -188,6 +192,11 @@ class DatabaseConfig {
       CommunityInvitationCollection.createIndex({ community_id: 1 })
       CommunityInvitationCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
       CommunityInvitationCollection.createIndex({ community_id: 1, user_id: 1 }, { unique: true })
+    }
+
+    // CommunityActivity
+    if (!indexCommunityActivity) {
+      CommunityActivityCollection.createIndex({ community_id: 1 })
     }
   }
 

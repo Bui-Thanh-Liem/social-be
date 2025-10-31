@@ -18,6 +18,7 @@ import { logger } from './utils/logger.util'
 
 //
 import './tasks/cleanup.task'
+import StreamVideoController from './controllers/StreamVideo.controller'
 
 const app = express()
 
@@ -102,6 +103,10 @@ app.get('/health', (req, res) => {
     uptime: process.uptime()
   })
 })
+
+app.get('/videos-streaming/:filename', StreamVideoController.streamVideo)
+app.get('/videos-hls/:foldername/master.m3u8', StreamVideoController.streamMaster)
+app.get('/videos-hls/:foldername/:v/:segment', StreamVideoController.streamSegment)
 
 // API routes
 app.use('/api', rootRoute)

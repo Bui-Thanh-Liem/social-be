@@ -52,9 +52,7 @@ class AuthController {
   }
 
   async getMe(req: Request, res: Response, next: NextFunction) {
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await AuthServices.getMe(user_id)
-    res.json(new OkResponse('Lấy thông tin của chính mình thành công', result))
+    res.json(new OkResponse('Lấy thông tin của chính mình thành công', req.user))
   }
 
   async updateMe(req: Request, res: Response, next: NextFunction) {

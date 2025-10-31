@@ -99,6 +99,13 @@ export type PinCommunityDto = z.infer<typeof PinCommunityDtoSchema>
 export type GetMultiInvitationsDto = z.infer<typeof GetMultiInvitationsDtoSchema>
 export type UpdateDto = z.infer<typeof UpdateDtoSchema>
 export type deleteInvitationDto = z.infer<typeof deleteInvitationDtoSchema>
+
+//
+export type CreateCommunityActivityDto = {
+  action: string
+  actor_id: string
+  community_id: string
+}
 export type CreateCommunityInvitationDto = {
   user_id: string
   community: ICommunity

@@ -1,6 +1,8 @@
 import { ObjectId } from 'mongodb'
 import database from '~/configs/database.config'
 import {
+  CommunityActivityCollection,
+  CommunityActivitySchema,
   CommunityCollection,
   CommunityMemberCollection,
   CommunityMentorCollection,
@@ -8,12 +10,18 @@ import {
   CommunitySchema
 } from '~/models/schemas/Community.schema'
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '~/shared/classes/error.class'
-import { CreateCommunityDto, InvitationMembersDto, UpdateDto } from '~/shared/dtos/req/community.dto'
+import {
+  CreateCommunityActivityDto,
+  CreateCommunityDto,
+  InvitationMembersDto,
+  UpdateDto
+} from '~/shared/dtos/req/community.dto'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
 import { EMembershipType, ENotificationType } from '~/shared/enums/type.enum'
 import { ICommonPayload } from '~/shared/interfaces/common/community.interface'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
+import { ICommunity, ICommunityActivity } from '~/shared/interfaces/schemas/community.interface'
+import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 import { logger } from '~/utils/logger.util'
@@ -89,7 +97,7 @@ class CommunityService {
     return !!updated.modifiedCount
   }
 
-  async inviteMembers({ user_id, payload }: { user_id: string; payload: InvitationMembersDto }) {
+  async inviteMembers({ user_id, payload, user }: { user_id: string; payload: InvitationMembersDto; user: IUser }) {
     const { community, isAdmin, isMentor } = await this.validateCommunityAndMembership({
       user_id,
       community_id: payload.community_id
@@ -101,6 +109,14 @@ class CommunityService {
       }
     }
 
+    //
+    await this.createActivity({
+      actor_id: user_id,
+      action: `${user.name} vừa mời thành viên vào cộng đồng.`,
+      community_id: payload.community_id
+    })
+
+    //
     return await CommunityInvitationService.createInQueue({
       user_id,
       community,
@@ -108,7 +124,7 @@ class CommunityService {
     })
   }
 
-  async join({ user_id, community_id }: ICommonPayload) {
+  async join({ user_id, community_id, user }: ICommonPayload) {
     const { community, isJoined } = await this.validateCommunityAndMembership({ user_id, community_id })
 
     if (isJoined) {
@@ -130,10 +146,17 @@ class CommunityService {
       await CommunityInvitationService.updateStatus(invitation._id, EInvitationStatus.Accepted)
     }
 
+    //
+    await this.createActivity({
+      actor_id: user_id,
+      action: `${user?.name} vừa tham gia cộng đồng.`,
+      community_id: community_id
+    })
+
     return await CommunityMemberService.create({ user_id, community_id })
   }
 
-  async leave({ user_id, community_id }: ICommonPayload) {
+  async leave({ user_id, community_id, user }: ICommonPayload) {
     const { isJoined, community } = await this.validateCommunityAndMembership({ user_id, community_id })
 
     if (!isJoined) {
@@ -144,6 +167,13 @@ class CommunityService {
     if (community.admin.toString() === user_id) {
       throw new BadRequestError('Admin không thể rời khỏi cộng đồng của mình.')
     }
+
+    //
+    await this.createActivity({
+      actor_id: user_id,
+      action: `${user?.name} đã rời cộng đồng.`,
+      community_id: community_id
+    })
 
     return await Promise.all([
       CommunityMemberService.delete({ user_id, community_id }),
@@ -538,53 +568,28 @@ class CommunityService {
   }): Promise<ResMultiType<ICommunity>> {
     const { skip, limit, sort, q, qe } = getPaginationAndSafeQuery<ICommunity>(query)
 
+    const matchStage: Record<string, any> = {}
+
+    if (q) {
+      matchStage.$or = [{ name: { $regex: q, $options: 'i' } }, { $text: { $search: q } }]
+    }
+
+    if (qe) {
+      matchStage.category = { $regex: qe, $options: 'i' }
+    }
+
+    console.log('skip:::', skip)
+    console.log('limit:::', limit)
+    console.log('sort:::', sort)
+    console.log('q:::', q)
+    console.log('qe:::', qe)
+
     //
     const communities = await CommunityCollection.aggregate<CommunitySchema>([
-      {
-        $match: {
-          ...(q
-            ? [
-                {
-                  $or: [{ name: { $regex: q, $options: 'i' } }, { $text: { $search: q } }]
-                }
-              ]
-            : []),
-          ...(qe
-            ? [
-                {
-                  $or: [
-                    { visibilityType: { $regex: qe, $options: 'i' } },
-                    { membershipType: { $regex: qe, $options: 'i' } }
-                  ]
-                }
-              ]
-            : [])
-        }
-      },
-      {
-        $sort: sort
-      },
-      {
-        $skip: skip
-      },
-      {
-        $limit: limit
-      },
-      {
-        $lookup: {
-          from: 'community-pin',
-          localField: '_id',
-          foreignField: 'community_id',
-          as: 'pin',
-          pipeline: [
-            {
-              $project: {
-                user_id: 1
-              }
-            }
-          ]
-        }
-      },
+      { $match: matchStage },
+      { $sort: sort },
+      { $skip: skip },
+      { $limit: limit },
       {
         $unwind: {
           path: '$admin',
@@ -592,36 +597,15 @@ class CommunityService {
         }
       },
       {
-        $addFields: {
-          pinned: {
-            $in: [new ObjectId(user_id), '$pin.user_id']
-          }
-        }
-      },
-      {
         $project: {
-          bio: 0,
-          category: 0,
-          pin: 0
+          pin: 0,
+          bio: 0
         }
       }
     ]).toArray()
 
     //
-    const total = await CommunityCollection.countDocuments({
-      $or: [
-        {
-          admin: {
-            $in: [new ObjectId(user_id)]
-          }
-        }
-      ],
-      ...(q
-        ? {
-            $or: [{ name: { $regex: q, $options: 'i' } }, { $text: { $search: q } }]
-          }
-        : {})
-    })
+    const total = await CommunityCollection.countDocuments(matchStage)
 
     return {
       total,
@@ -1025,6 +1009,45 @@ class CommunityService {
     })
 
     return { community, isJoined, isAdmin, isMentor, isMember }
+  }
+
+  // ------------------------ ACTIVITY ------------------------------
+  async getMultiActivity({
+    community_id,
+    queries
+  }: {
+    community_id: string
+    queries: IQuery<ICommunityActivity>
+  }): Promise<ResMultiType<ICommunityActivity>> {
+    const { skip, limit } = getPaginationAndSafeQuery<ICommunityActivity>(queries)
+    const communityObjId = new ObjectId(community_id)
+
+    //
+    const activities = await CommunityActivityCollection.find(
+      { community_id: communityObjId },
+      { skip, limit }
+    ).toArray()
+
+    //
+    const total = await CommunityActivityCollection.countDocuments({ community_id: communityObjId })
+
+    //
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: activities
+    }
+  }
+
+  private async createActivity(payload: CreateCommunityActivityDto): Promise<boolean> {
+    const res = await CommunityActivityCollection.insertOne(
+      new CommunityActivitySchema({
+        action: payload.action,
+        actor_id: new ObjectId(payload.action),
+        community_id: new ObjectId(payload.community_id)
+      })
+    )
+    return !!res.insertedId
   }
 }
 
