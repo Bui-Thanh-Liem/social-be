@@ -72,6 +72,19 @@ class TweetsController {
     res.status(200).json(new OkResponse('Get profile tweet success', result))
   }
 
+  async getCommunityTweets(req: Request, res: Response) {
+    const user = req?.decoded_authorization as IJwtPayload
+    const queries = req.query as IQuery<ITweet>
+
+    const result = await TweetsService.getCommunityTweets({
+      query: queries,
+      user_active_id: user.user_id,
+      isHighlight: queries?.ishl === '1',
+      community_id: queries?.community_id as string
+    })
+    res.status(200).json(new OkResponse('Get community tweet success', result))
+  }
+
   async getTweetLiked(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
 

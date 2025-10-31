@@ -12,6 +12,7 @@ export interface IQuery<T> {
 
   // Profile
   user_id?: string
+  community_id?: string
   ishl?: '1' | '0'
   ids?: string[]
 }

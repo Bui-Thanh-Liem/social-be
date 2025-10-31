@@ -7,6 +7,7 @@ import {
   deleteInvitationDto,
   DemoteMentorDto,
   GetMMByIdDto,
+  GetMultiActivityDto,
   GetMultiInvitationsDto,
   GetOneBySlugDto,
   JoinLeaveCommunityDto,
@@ -78,6 +79,12 @@ class CommunityController {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await CommunityService.getMultiOwner({ user_id, query: req.query })
     res.json(new OkResponse(`Lấy nhiều cộng đồng của bạn thành công.`, result))
+  }
+
+  async getMultiActivity(req: Request, res: Response, next: NextFunction) {
+    const { community_id } = req.params as GetMultiActivityDto
+    const result = await CommunityService.getMultiActivity({ community_id, queries: req.query })
+    res.json(new OkResponse(`Lấy nhiều hoạt đông của cộng đồng thành công.`, result))
   }
 
   async getMultiJoined(req: Request, res: Response, next: NextFunction) {

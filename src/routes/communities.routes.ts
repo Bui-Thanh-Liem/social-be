@@ -11,6 +11,7 @@ import {
   deleteInvitationDtoSchema,
   DemoteMentorDtoSchema,
   GetMMByIdDtoSchema,
+  GetMultiActivityDtoSchema,
   GetMultiInvitationsDtoSchema,
   GetOneBySlugDtoSchema,
   InvitationMembersDtoSchema,
@@ -131,6 +132,15 @@ communitiesRoute.get(
   requestParamsValidate(GetMultiInvitationsDtoSchema),
   requestQueryValidate(QueryDtoSchema),
   wrapAsyncHandler(CommunityController.getMultiInvitations)
+)
+
+// Lấy những lời mời đã mời
+communitiesRoute.get(
+  '/activity/:community_id',
+  verifyAccessToken,
+  requestQueryValidate(QueryDtoSchema),
+  requestParamsValidate(GetMultiActivityDtoSchema),
+  wrapAsyncHandler(CommunityController.getMultiActivity)
 )
 
 // Xoá lời mời (ở cộng đồng "Chỉ được mời" sẽ không vào được)

@@ -110,6 +110,10 @@ class CommunityService {
     }
 
     //
+    console.log('user_id::', user_id)
+    console.log('community_id::', payload.community_id)
+
+    //
     await this.createActivity({
       actor_id: user_id,
       action: `${user.name} vừa mời thành viên vào cộng đồng.`,
@@ -1043,7 +1047,7 @@ class CommunityService {
     const res = await CommunityActivityCollection.insertOne(
       new CommunityActivitySchema({
         action: payload.action,
-        actor_id: new ObjectId(payload.action),
+        actor_id: new ObjectId(payload.actor_id),
         community_id: new ObjectId(payload.community_id)
       })
     )

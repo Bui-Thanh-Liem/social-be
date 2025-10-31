@@ -53,6 +53,14 @@ tweetsRoute.get(
 )
 
 tweetsRoute.get(
+  '/community',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(TweetsController.getCommunityTweets)
+)
+
+tweetsRoute.get(
   '/profile/:tweet_type',
   verifyAccessToken,
   verifyUserEmail,

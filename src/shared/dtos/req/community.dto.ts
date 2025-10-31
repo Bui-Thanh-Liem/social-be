@@ -66,6 +66,7 @@ export const PromoteMentorDtoSchema = z.object({
 export const DemoteMentorDtoSchema = PromoteMentorDtoSchema
 
 export const GetMultiInvitationsDtoSchema = GetMMByIdDtoSchema
+export const GetMultiActivityDtoSchema = GetMMByIdDtoSchema
 export const deleteInvitationDtoSchema = z.object({
   invitation_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'ObjectId không hợp lệ'
@@ -95,6 +96,7 @@ export type PromoteMentorDto = z.infer<typeof PromoteMentorDtoSchema>
 export type DemoteMentorDto = z.infer<typeof DemoteMentorDtoSchema>
 export type GetOneBySlugDto = z.infer<typeof GetOneBySlugDtoSchema>
 export type GetMMByIdDto = z.infer<typeof GetMMByIdDtoSchema>
+export type GetMultiActivityDto = z.infer<typeof GetMMByIdDtoSchema>
 export type PinCommunityDto = z.infer<typeof PinCommunityDtoSchema>
 export type GetMultiInvitationsDto = z.infer<typeof GetMultiInvitationsDtoSchema>
 export type UpdateDto = z.infer<typeof UpdateDtoSchema>

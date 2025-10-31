@@ -34,6 +34,13 @@ export const QueryDtoSchema = z.object({
       message: 'ObjectId không hợp lệ'
     })
     .optional(),
+  community_id: z
+    .string()
+    .trim()
+    .regex(CONSTANT_REGEX.ID_MONGO, {
+      message: 'ObjectId không hợp lệ'
+    })
+    .optional(),
   ishl: z.enum(['0', '1']).default('0'),
   sd: z
     .string()
