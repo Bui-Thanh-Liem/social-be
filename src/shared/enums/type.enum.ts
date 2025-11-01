@@ -23,6 +23,11 @@ export enum EFeedType {
   Following = 'following' // Chỉ người mình follow
 }
 
+export enum EFeedTypeItem {
+  Tweet = 'tweet',
+  Community = 'Community'
+}
+
 export enum EConversationType {
   Private,
   Group

@@ -15,8 +15,8 @@ export interface ICommunity extends IBase {
   verify: boolean
 
   //
-  visibilityType: EVisibilityType // tất cả mọi người đề thấy nhưng không thể tương tác
-  membershipType: EMembershipType // chỉ members thấy
+  visibilityType: EVisibilityType // hiển thị nội dung cho người xem là thành viên hay mọi người
+  membershipType: EMembershipType // Nhóm chỉ được mời mới được tham gia hay là mở để mọi người có thể tham gia
   showLogForMember: boolean
   showLogForMentor: boolean
   showInviteListForMember: boolean

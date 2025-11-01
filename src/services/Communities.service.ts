@@ -582,12 +582,6 @@ class CommunityService {
       matchStage.category = { $regex: qe, $options: 'i' }
     }
 
-    console.log('skip:::', skip)
-    console.log('limit:::', limit)
-    console.log('sort:::', sort)
-    console.log('q:::', q)
-    console.log('qe:::', qe)
-
     //
     const communities = await CommunityCollection.aggregate<CommunitySchema>([
       { $match: matchStage },
