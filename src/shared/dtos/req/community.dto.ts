@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
 import { EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
-import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
+import { IActionActivity, ICommunity } from '~/shared/interfaces/schemas/community.interface'
 
 export const CreateCommunityDtoSchema = z.object({
   name: z.string().trim().max(32),
@@ -104,7 +104,7 @@ export type deleteInvitationDto = z.infer<typeof deleteInvitationDtoSchema>
 
 //
 export type CreateCommunityActivityDto = {
-  action: string
+  action: IActionActivity
   actor_id: string
   community_id: string
 }

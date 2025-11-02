@@ -49,3 +49,9 @@ export enum EVisibilityType {
   Public = 'Công cộng',
   Private = 'Riêng tư'
 }
+
+export enum EActivityType {
+  Join,
+  Leave,
+  Invite
+}

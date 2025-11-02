@@ -85,6 +85,18 @@ class TweetsController {
     res.status(200).json(new OkResponse('Get community tweet success', result))
   }
 
+  async getTweetsPendingByCommunityId(req: Request, res: Response) {
+    const user = req?.decoded_authorization as IJwtPayload
+    const queries = req.query as IQuery<ITweet>
+
+    const result = await TweetsService.getTweetsPendingByCommunityId({
+      query: queries,
+      user_active_id: user.user_id,
+      community_id: queries?.community_id as string
+    })
+    res.status(200).json(new OkResponse('Lấy tất vả bài viết chưa duyệt thành công.', result))
+  }
+
   async getTweetLiked(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
 

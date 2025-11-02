@@ -6,10 +6,11 @@ import { CommunityCollection, CommunitySchema } from '~/models/schemas/Community
 import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
-import { NotFoundError } from '~/shared/classes/error.class'
+import { BadRequestError, NotFoundError } from '~/shared/classes/error.class'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
+import { ETweetStatus } from '~/shared/enums/status.enum'
 import {
   EFeedType,
   EFeedTypeItem,
@@ -26,6 +27,7 @@ import { chunkArray } from '~/utils/chunkArray'
 import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
 import { deleteImage } from '~/utils/upload.util'
 import BookmarksService from './Bookmarks.service'
+import CommunityService from './Communities.service'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
 import LikesService from './Likes.service'
@@ -1331,6 +1333,7 @@ class TweetsService {
     //
     const matchCondition = {
       community_id: new ObjectId(community_id),
+      status: ETweetStatus.Ready,
       $or: [
         { audience: ETweetAudience.Everyone },
         ...(following_user_ids.length
@@ -1631,6 +1634,84 @@ class TweetsService {
       total_page: Math.ceil(total / limit),
       items: tweets
     }
+  }
+
+  // Lấy tất cả bài viết chưa duyệt trong cộng đồng
+  async getTweetsPendingByCommunityId({
+    query,
+    community_id,
+    user_active_id
+  }: {
+    community_id: string
+    query: IQuery<ITweet>
+    user_active_id: string
+  }): Promise<ResMultiType<ITweet>> {
+    const { isAdmin, isMentor } = await CommunityService.validateCommunityAndMembership({
+      community_id,
+      user_id: user_active_id
+    })
+
+    //
+    if (!isAdmin && !isMentor) {
+      throw new BadRequestError('Chỉ chủ sở hữu và điều hành viên mới có quyền xem.')
+    }
+
+    //
+    const { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
+
+    const matchCondition = {
+      community_id: new ObjectId(community_id),
+      status: ETweetStatus.Pending
+    }
+
+    const tweets = await TweetCollection.aggregate<TweetSchema>([
+      {
+        $match: matchCondition
+      },
+      {
+        $sort: sort
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user_id',
+          pipeline: [
+            {
+              $project: {
+                bio: 1,
+                name: 1,
+                email: 1,
+                username: 1,
+                avatar: 1,
+                verify: 1,
+                cover_photo: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: {
+          path: '$user_id',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: { user_id: 1, content: 1, media: 1 }
+      }
+    ]).toArray()
+
+    const total = await TweetCollection.countDocuments(matchCondition)
+
+    return { items: tweets, total, total_page: Math.ceil(total / limit) }
   }
 
   async getTweetLiked({

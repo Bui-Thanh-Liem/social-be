@@ -10,6 +10,12 @@ export enum EVideoStatus {
   Success
 }
 
+export enum ETweetStatus {
+  Pending,
+  Reject,
+  Ready
+}
+
 export enum EInvitationStatus {
   Pending,
   Accepted

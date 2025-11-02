@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
-import type { EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
+import type { EActivityType, EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
 import { type IBase } from './base.interface'
 import { IUser } from './user.interface'
 
@@ -51,9 +51,14 @@ export interface ICommunityInvitation extends IBase {
   status: EInvitationStatus
 }
 
+export interface IActionActivity {
+  message: string
+  key: EActivityType
+}
+
 export interface ICommunityActivity extends IBase {
   actor_id: ObjectId // người thực hiện hành động
   community_id: ObjectId // cộng đồng bị tác động
-  action: string // ví dụ: "join", "leave", "post_created", ...
+  action: IActionActivity // ví dụ: "join", "leave", "post_created", ...
   target_id?: ObjectId // nếu có đối tượng cụ thể (bài viết, bình luận, v.v.)
 }

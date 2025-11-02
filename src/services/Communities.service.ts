@@ -17,7 +17,7 @@ import {
   UpdateDto
 } from '~/shared/dtos/req/community.dto'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
-import { EMembershipType, ENotificationType } from '~/shared/enums/type.enum'
+import { EActivityType, EMembershipType, ENotificationType } from '~/shared/enums/type.enum'
 import { ICommonPayload } from '~/shared/interfaces/common/community.interface'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity, ICommunityActivity } from '~/shared/interfaces/schemas/community.interface'
@@ -116,7 +116,7 @@ class CommunityService {
     //
     await this.createActivity({
       actor_id: user_id,
-      action: `${user.name} vừa mời thành viên vào cộng đồng.`,
+      action: { message: `${user.name} vừa mời thành viên vào cộng đồng.`, key: EActivityType.Invite },
       community_id: payload.community_id
     })
 
@@ -153,7 +153,7 @@ class CommunityService {
     //
     await this.createActivity({
       actor_id: user_id,
-      action: `${user?.name} vừa tham gia cộng đồng.`,
+      action: { message: `${user?.name} vừa tham gia cộng đồng.`, key: EActivityType.Join },
       community_id: community_id
     })
 
@@ -175,7 +175,7 @@ class CommunityService {
     //
     await this.createActivity({
       actor_id: user_id,
-      action: `${user?.name} đã rời cộng đồng.`,
+      action: { message: `${user?.name} đã rời cộng đồng.`, key: EActivityType.Leave },
       community_id: community_id
     })
 

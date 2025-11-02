@@ -52,6 +52,16 @@ tweetsRoute.get(
   wrapAsyncHandler(TweetsController.getNewFeeds)
 )
 
+// Lấy bài viết đang chờ duyệt trong cộng đồng
+tweetsRoute.get(
+  '/community/pending',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestQueryValidate(QueryDtoSchema),
+  wrapAsyncHandler(TweetsController.getTweetsPendingByCommunityId)
+)
+
+// Lấy bài viết trong cộng đồng (feeds)
 tweetsRoute.get(
   '/community',
   verifyAccessToken,

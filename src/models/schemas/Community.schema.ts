@@ -1,8 +1,9 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { CONSTANT_INVITE_EXPIRES } from '~/shared/constants'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
-import { EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
+import { EActivityType, EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
 import {
+  IActionActivity,
   ICommunity,
   ICommunityActivity,
   ICommunityInvitation,
@@ -111,16 +112,16 @@ export class CommunityInvitationSchema extends BaseSchema implements ICommunityI
 
 // Những lời mời từ mentor
 export class CommunityActivitySchema extends BaseSchema implements ICommunityActivity {
+  action: IActionActivity
   actor_id: ObjectId
   community_id: ObjectId
-  action: string
   target_id?: ObjectId | undefined
 
   constructor(activity: Partial<ICommunityActivity>) {
     super()
     this.actor_id = activity.actor_id || new ObjectId()
     this.community_id = activity.community_id || new ObjectId()
-    this.action = activity.action || ''
+    this.action = activity.action || { message: '', key: EActivityType.Invite }
     if (activity.target_id) this.target_id = activity.target_id
   }
 }

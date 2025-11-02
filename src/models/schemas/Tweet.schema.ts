@@ -4,6 +4,7 @@ import { ETweetType } from '~/shared/enums/type.enum'
 import { IMedia } from '~/shared/interfaces/common/media.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { BaseSchema } from './Base.schema'
+import { ETweetStatus } from '~/shared/enums/status.enum'
 
 export class TweetSchema extends BaseSchema implements ITweet {
   user_id: ObjectId
@@ -17,6 +18,7 @@ export class TweetSchema extends BaseSchema implements ITweet {
   guest_view: number
   user_view: number
   community_id: ObjectId | null
+  status: ETweetStatus
 
   constructor(tweet: Partial<ITweet>) {
     super()
@@ -31,6 +33,7 @@ export class TweetSchema extends BaseSchema implements ITweet {
     this.guest_view = tweet.guest_view || 0
     this.user_view = tweet.user_view || 0
     this.community_id = tweet.community_id || null
+    this.status = tweet.status || ETweetStatus.Pending
   }
 }
 
