@@ -168,6 +168,7 @@ class TweetsService {
     // Dynamic match condition based on feed type
     const matchCondition = {
       _id: new ObjectId(tweet_id),
+      status: ETweetStatus.Ready,
       $or: [
         { audience: ETweetAudience.Everyone },
         {
