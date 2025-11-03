@@ -16,7 +16,7 @@ import {
   InvitationMembersDto,
   UpdateDto
 } from '~/shared/dtos/req/community.dto'
-import { EInvitationStatus } from '~/shared/enums/status.enum'
+import { EInvitationStatus, ETweetStatus } from '~/shared/enums/status.enum'
 import { EActivityType, EMembershipType, ENotificationType } from '~/shared/enums/type.enum'
 import { ICommonPayload } from '~/shared/interfaces/common/community.interface'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
@@ -30,6 +30,7 @@ import CommunityInvitationService from './Community-invitation.service'
 import CommunityMemberService from './Community-member.service'
 import CommunityMentorService from './Community-mentor.service'
 import NotificationService from './Notification.service'
+import TweetsService from './Tweets.service'
 
 interface IPromoteDemote {
   actor_id: string
@@ -981,8 +982,8 @@ class CommunityService {
 
     //
     return {
-      isMentor: !!existing[1],
       isMember: !!existing[0],
+      isMentor: !!existing[1],
       isAdmin: communityAdmin === user_id,
       isJoined: existing.filter(Boolean).length > 0 || communityAdmin === user_id
     }
@@ -991,10 +992,13 @@ class CommunityService {
   async validateCommunityAndMembership({ user_id, community_id }: ICommonPayload) {
     const communityObjId = new ObjectId(community_id)
 
-    const community = await CommunityCollection.findOne(
-      { _id: communityObjId },
-      { projection: { admin: 1, name: 1, membershipType: 1, inviteExpireDays: 1 } }
-    )
+    const [community, mentorIds] = await Promise.all([
+      CommunityCollection.findOne(
+        { _id: communityObjId },
+        { projection: { admin: 1, name: 1, membershipType: 1, inviteExpireDays: 1 } }
+      ),
+      CommunityMentorCollection.distinct('user_id', { community_id: communityObjId })
+    ])
 
     if (!community) {
       throw new NotFoundError('Không tìm thấy hoặc cộng đồng bạn muốn tham gia đã giải tán.')
@@ -1006,7 +1010,48 @@ class CommunityService {
       communityAdmin: community.admin.toString()
     })
 
-    return { community, isJoined, isAdmin, isMentor, isMember }
+    return { community, mentorIds, isJoined, isAdmin, isMentor, isMember }
+  }
+
+  async changeStatusTweet({
+    status,
+    tweet_id,
+    user_active,
+    community_id
+  }: {
+    tweet_id: string
+    user_active: IUser
+    community_id: string
+    status: ETweetStatus
+  }) {
+    const user_active_id = user_active._id!.toString()
+
+    const { isAdmin, isMentor, community } = await this.validateCommunityAndMembership({
+      community_id,
+      user_id: user_active_id
+    })
+
+    //
+    if (!isAdmin && !isMentor) {
+      throw new BadRequestError('Chỉ chủ sở hữu và điều hành viên mới có quyền xem.')
+    }
+
+    const res = await TweetsService.changeStatusTweet({ tweet_id, status })
+    if (res) {
+      let mess = `${user_active.name} đã duyệt bài viết của bạn đăng trong cộng đồng ${community.name}`
+      if (status === ETweetStatus.Reject) {
+        mess = `${user_active.name} đã từ chối bài viết của bạn đăng trong cộng đồng ${community.name}`
+      }
+
+      //
+      await NotificationService.createInQueue({
+        content: mess,
+        sender: user_active_id,
+        refId: res._id?.toString(),
+        receiver: res.user_id.toString(),
+        type: ENotificationType.Community
+      })
+    }
   }
 
   // ------------------------ ACTIVITY ------------------------------

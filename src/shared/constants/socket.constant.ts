@@ -23,6 +23,11 @@ export const CONSTANT_EVENT_NAMES = {
   JOIN_COMMENT: 'comment:join',
   LEAVE_COMMENT: 'comment:leave',
 
+  // COMMUNITY
+  JOIN_COMMUNITY: 'community:join',
+  LEAVE_COMMUNITY: 'community:leave',
+  COUNT_TWEET_APPROVE: 'community:count:tweet-approve',
+
   //
   ERROR: 'error'
 } as const

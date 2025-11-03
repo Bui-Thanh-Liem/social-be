@@ -7,6 +7,7 @@ import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middlew
 import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
 import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
 import {
+  ChangeStatusTweetInCommunityDtoSchema,
   CreateCommunityDtoSchema,
   deleteInvitationDtoSchema,
   DemoteMentorDtoSchema,
@@ -25,7 +26,7 @@ import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
 
 const communitiesRoute = Router()
 
-// Tạo cộng  đồng mới
+// Tạo cộng đồng mới
 communitiesRoute.post(
   '/',
   verifyAccessToken,
@@ -95,6 +96,15 @@ communitiesRoute.post(
   verifyUserEmail,
   requestBodyValidate(DemoteMentorDtoSchema),
   wrapAsyncHandler(CommunityController.demoteMentor)
+)
+
+//
+communitiesRoute.post(
+  '/change-status',
+  verifyAccessToken,
+  verifyUserEmail,
+  requestBodyValidate(ChangeStatusTweetInCommunityDtoSchema),
+  wrapAsyncHandler(CommunityController.changeStatusTweet)
 )
 
 //

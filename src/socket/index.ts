@@ -1,9 +1,10 @@
 import { Server, Socket } from 'socket.io'
+import { commentHandler } from './handlers/comment.handler'
+import { communityHandler } from './handlers/community.handler'
 import { connectionHandler } from './handlers/connection.handler'
 import { conversationHandler } from './handlers/conversation.handler'
 import { messageHandler } from './handlers/message.handler'
 import { authMiddleware } from './middlewares/auth.socket'
-import { commentHandler } from './handlers/comment.handler'
 
 let _io: Server
 let _socket: Socket
@@ -25,6 +26,7 @@ export function initializeSocket(io: Server) {
     await conversationHandler(io, socket)
     await messageHandler(io, socket)
     await commentHandler(io, socket)
+    await communityHandler(io, socket)
   })
 }
 

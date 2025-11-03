@@ -3,6 +3,7 @@ import CommunityService from '~/services/Communities.service'
 import CommunityInvitationService from '~/services/Community-invitation.service'
 import { CreatedResponse, OkResponse } from '~/shared/classes/response.class'
 import {
+  ChangeStatusTweetInCommunityDto,
   CreateCommunityDto,
   deleteInvitationDto,
   DemoteMentorDto,
@@ -97,6 +98,12 @@ class CommunityController {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await CommunityService.getMultiExplore({ user_id, query: req.query })
     res.json(new OkResponse(`Lấy nhiều cộng đồng thành công.`, result))
+  }
+
+  async changeStatusTweet(req: Request, res: Response, next: NextFunction) {
+    const { tweet_id, community_id, status } = req.body as ChangeStatusTweetInCommunityDto
+    const result = await CommunityService.changeStatusTweet({ user_active: req.user!, community_id, tweet_id, status })
+    res.json(new OkResponse(`Thay đổi trạng thái bài viết thành công.`, result))
   }
 
   async getOneBareInfoBySlug(req: Request, res: Response, next: NextFunction) {
