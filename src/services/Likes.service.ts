@@ -41,7 +41,7 @@ class LikesService {
         type: ENotificationType.Mention_like,
         sender: user_id,
         receiver: tw!.user_id.toString(),
-        refId: tw?._id.toString()
+        ref_id: tw?._id.toString()
       })
     }
 

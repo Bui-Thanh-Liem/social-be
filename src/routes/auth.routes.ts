@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import AuthController from '~/controllers/Auth.controller'
 import { loginRateLimit } from '~/middlewares/ratelimit.middleware'
-import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middleware'
-import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
-import { verifyRefreshToken } from '~/middlewares/verifyRefreshToken.middleware'
-import { verifyTokenForgotPassword } from '~/middlewares/verifyTokenForgotPassword.middleware'
+import { requestBodyValidate } from '~/middlewares/request-body-validate.middleware'
+import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
+import { verifyRefreshToken } from '~/middlewares/verify-refresh-token.middleware'
+import { verifyTokenForgotPassword } from '~/middlewares/verify-token-forgot-password.middleware'
 import {
   ForgotPasswordDtoSchema,
   LoginUserDtoSchema,
@@ -12,7 +12,7 @@ import {
   ResetPasswordDtoSchema,
   UpdateMeDtoSchema
 } from '~/shared/dtos/req/auth.dto'
-import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
+import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
 
 const authRoute = Router()
 

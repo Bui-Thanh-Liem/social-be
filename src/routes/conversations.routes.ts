@@ -1,18 +1,18 @@
 import { Router } from 'express'
 import ConversationsController from '~/controllers/Conversations.controller'
-import { checkExistParticipants } from '~/middlewares/checkExistParticipants.middleware'
-import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middleware'
-import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middleware'
-import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
-import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
-import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
+import { checkExistParticipants } from '~/middlewares/check-exist-participants.middleware'
+import { requestBodyValidate } from '~/middlewares/request-body-validate.middleware'
+import { requestParamsValidate } from '~/middlewares/request-params-validate.middleware'
+import { requestQueryValidate } from '~/middlewares/request-query-validate.middleware'
+import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
+import { verifyUserEmail } from '~/middlewares/verify-user-email.middleware'
 import {
   ConversationIdDtoSchema,
   CreateConversationDtoSchema,
   ParticipantsDtoSchema
 } from '~/shared/dtos/req/conversation.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
-import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
+import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
 
 const conversationsRoute = Router()
 

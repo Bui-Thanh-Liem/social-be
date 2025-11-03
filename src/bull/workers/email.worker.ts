@@ -4,22 +4,21 @@ import mailServiceInstance from '~/helpers/mail.helper'
 import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants'
 import { logger } from '~/utils/logger.util'
 
-
 // Worker xử lý gửi email xác thực
 // Worker xử lý gửi email quên mật khẩu
 export const emailWorker = new Worker(
   CONSTANT_QUEUE.MAIL,
   async (job) => {
-    const { toEmail, name, url } = job.data
+    const { to_email, name, url } = job.data
     switch (job.name) {
       case CONSTANT_JOB.VERIFY_MAIL:
-        await mailServiceInstance.sendVerifyEmail({ toEmail, name, url })
-        logger.info(`✅ Sent verify email to ${toEmail}`)
+        await mailServiceInstance.sendVerifyEmail({ to_email, name, url })
+        logger.info(`✅ Sent verify email to ${to_email}`)
         break
 
       case CONSTANT_JOB.FORGOT_PASSWORD:
-        await mailServiceInstance.sendForgotPasswordEmail({ toEmail, name, url })
-        logger.info('Sent forgot password email to', toEmail)
+        await mailServiceInstance.sendForgotPasswordEmail({ to_email, name, url })
+        logger.info('Sent forgot password email to', to_email)
         break
     }
   },

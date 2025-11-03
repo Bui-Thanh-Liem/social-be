@@ -9,11 +9,11 @@ import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { INotification } from '~/shared/interfaces/schemas/notification.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import NotificationGateway from '~/socket/gateways/Notification.gateway'
-import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 
 class NotificationService {
   async create(payload: CreateNotiDto) {
-    const { content, type, sender: senderId, receiver: receiverId, refId } = payload
+    const { content, type, sender: senderId, receiver: receiverId, ref_id } = payload
 
     //
     const result = await NotificationCollection.insertOne(
@@ -22,7 +22,7 @@ class NotificationService {
         type,
         sender: new ObjectId(senderId),
         receiver: new ObjectId(receiverId),
-        refId: refId ? new ObjectId(refId) : undefined
+        ref_id: ref_id ? new ObjectId(ref_id) : undefined
       })
     )
 
@@ -53,9 +53,9 @@ class NotificationService {
       pipeline.push({
         $lookup: {
           from: 'tweets',
-          localField: 'refId',
+          localField: 'ref_id',
           foreignField: '_id',
-          as: 'tweetRef',
+          as: 'tweet_ref',
           pipeline: [{ $project: { type: 1, parent_id: 1 } }]
         }
       })
@@ -65,9 +65,9 @@ class NotificationService {
       pipeline.push({
         $lookup: {
           from: 'users',
-          localField: 'refId',
+          localField: 'ref_id',
           foreignField: '_id',
-          as: 'userRef',
+          as: 'user_ref',
           pipeline: [{ $project: { username: 1 } }]
         }
       })
@@ -77,9 +77,9 @@ class NotificationService {
       pipeline.push({
         $lookup: {
           from: 'community',
-          localField: 'refId',
+          localField: 'ref_id',
           foreignField: '_id',
-          as: 'communityRef',
+          as: 'community_ref',
           pipeline: [{ $project: { slug: 1 } }]
         }
       })
@@ -88,9 +88,9 @@ class NotificationService {
     pipeline.push(
       { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$receiver', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$tweetRef', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$userRef', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$communityRef', preserveNullAndEmptyArrays: true } }
+      { $unwind: { path: '$tweet_ref', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$user_ref', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$community_ref', preserveNullAndEmptyArrays: true } }
     )
 
     const newNoti = await NotificationCollection.aggregate<NotificationSchema>(pipeline).next()
@@ -149,9 +149,9 @@ class NotificationService {
       pipeline.push({
         $lookup: {
           from: 'tweets',
-          localField: 'refId',
+          localField: 'ref_id',
           foreignField: '_id',
-          as: 'tweetRef',
+          as: 'tweet_ref',
           pipeline: [{ $project: { type: 1, parent_id: 1 } }]
         }
       })
@@ -161,9 +161,9 @@ class NotificationService {
       pipeline.push({
         $lookup: {
           from: 'users',
-          localField: 'refId',
+          localField: 'ref_id',
           foreignField: '_id',
-          as: 'userRef',
+          as: 'user_ref',
           pipeline: [{ $project: { username: 1 } }]
         }
       })
@@ -173,9 +173,9 @@ class NotificationService {
       pipeline.push({
         $lookup: {
           from: 'community',
-          localField: 'refId',
+          localField: 'ref_id',
           foreignField: '_id',
-          as: 'communityRef',
+          as: 'community_ref',
           pipeline: [{ $project: { slug: 1 } }]
         }
       })
@@ -184,9 +184,9 @@ class NotificationService {
     pipeline.push(
       { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$receiver', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$tweetRef', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$userRef', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$communityRef', preserveNullAndEmptyArrays: true } }
+      { $unwind: { path: '$tweet_ref', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$user_ref', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$community_ref', preserveNullAndEmptyArrays: true } }
     )
 
     const notis = await NotificationCollection.aggregate<NotificationSchema>(pipeline).toArray()

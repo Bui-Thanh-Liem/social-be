@@ -53,7 +53,7 @@ CREATE TABLE `NOTIFICATION` (
 	`sender` TINYINT,
 	`receiver` TINYINT,
 	`isRead` BOOLEAN,
-	`refId` TINYINT COMMENT 'Là ObjectId của những đối tượng của thông báo',
+	`ref_id` TINYINT COMMENT 'Là ObjectId của những đối tượng của thông báo',
 	PRIMARY KEY(`_id`)
 );
 
@@ -103,8 +103,8 @@ CREATE TABLE `TWEET` (
 	`shares_count` INTEGER,
 	`retweets_count` INTEGER,
 	`quotes_count` INTEGER,
-	`isLike` BOOLEAN,
-	`isBookmark` BOOLEAN,
+	`is_like` BOOLEAN,
+	`is_bookmark` BOOLEAN,
 	`retweet` TINYINT COMMENT 'ObjectId của reTweet',
 	`quote` TINYINT COMMENT 'ObjectId của quoteTweet',
 	`total_views` INTEGER,

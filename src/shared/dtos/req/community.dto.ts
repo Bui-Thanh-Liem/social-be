@@ -9,8 +9,8 @@ export const CreateCommunityDtoSchema = z.object({
   cover: z.string().trim().max(200).optional(),
   bio: z.string().trim().max(200).optional(),
   category: z.string().trim().max(16),
-  visibilityType: z.nativeEnum(EVisibilityType),
-  membershipType: z.nativeEnum(EMembershipType),
+  visibility_type: z.nativeEnum(EVisibilityType),
+  membership_type: z.nativeEnum(EMembershipType),
   member_ids: z
     .array(
       z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
@@ -81,13 +81,13 @@ export const UpdateDtoSchema = z.object({
   community_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'ObjectId không hợp lệ'
   }),
-  showLogForMember: z.boolean().optional(),
-  showLogForMentor: z.boolean().optional(),
-  showInviteListForMember: z.boolean().optional(),
-  showInviteListForMentor: z.boolean().optional(),
-  inviteExpireDays: z.number().optional(),
-  membershipType: z.nativeEnum(EMembershipType).optional(),
-  visibilityType: z.nativeEnum(EVisibilityType).optional()
+  show_log_for_member: z.boolean().optional(),
+  show_log_for_mentor: z.boolean().optional(),
+  show_invite_list_for_member: z.boolean().optional(),
+  show_invite_list_for_mentor: z.boolean().optional(),
+  invite_expire_days: z.number().optional(),
+  membership_type: z.nativeEnum(EMembershipType).optional(),
+  visibility_type: z.nativeEnum(EVisibilityType).optional()
 })
 
 export const ChangeStatusTweetInCommunityDtoSchema = z.object({

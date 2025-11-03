@@ -1,11 +1,11 @@
 import { Router } from 'express'
 import FollowsController from '~/controllers/Follows.controller'
-import { checkUserParams } from '~/middlewares/checkUserParams.middleware'
-import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middleware'
-import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
-import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
+import { checkUserParams } from '~/middlewares/check-user-params.middleware'
+import { requestParamsValidate } from '~/middlewares/request-params-validate.middleware'
+import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
+import { verifyUserEmail } from '~/middlewares/verify-user-email.middleware'
 import { UserIdDtoSchema } from '~/shared/dtos/req/user.dto'
-import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
+import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
 
 const followsRoute = Router()
 

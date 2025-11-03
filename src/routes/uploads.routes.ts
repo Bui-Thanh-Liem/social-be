@@ -1,9 +1,9 @@
 import { Router } from 'express'
 import UploadsControllers from '~/controllers/Uploads.controller'
-import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middleware'
-import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
+import { requestBodyValidate } from '~/middlewares/request-body-validate.middleware'
+import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
 import { remoteImagesDtoSchema } from '~/shared/dtos/req/upload.dto'
-import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
+import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
 
 const uploadsRoute = Router()
 

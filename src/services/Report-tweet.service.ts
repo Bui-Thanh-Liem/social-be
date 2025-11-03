@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { envs } from '~/configs/env.config'
-import { ReportTweetCollection } from '~/models/schemas/ReportTweet.schema'
+import { ReportTweetCollection } from '~/models/schemas/Report-tweet.schema'
 import { TweetCollection } from '~/models/schemas/Tweet.schema'
 import { BadRequestError } from '~/shared/classes/error.class'
 import { ENotificationType } from '~/shared/enums/type.enum'
@@ -55,7 +55,7 @@ class ReportTweetService {
         type: ENotificationType.Other,
         sender: tweet.user_id.toString(),
         receiver: tweet.user_id.toString(),
-        refId: tweet._id.toString()
+        ref_id: tweet._id.toString()
       })
     }
 

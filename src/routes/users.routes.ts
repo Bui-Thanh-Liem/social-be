@@ -1,14 +1,14 @@
 import { Router } from 'express'
 import UsersControllers from '~/controllers/Users.controller'
-import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middleware'
-import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middleware'
-import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
-import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
-import { verifyTokenVerifyEmail } from '~/middlewares/verifyTokenVerifyEmail.middleware'
-import { verifyUserActiveForChangePassword } from '~/middlewares/verifyUserActiveForChangePassword.middleware'
+import { requestBodyValidate } from '~/middlewares/request-body-validate.middleware'
+import { requestParamsValidate } from '~/middlewares/request-params-validate.middleware'
+import { requestQueryValidate } from '~/middlewares/request-query-validate.middleware'
+import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
+import { verifyTokenVerifyEmail } from '~/middlewares/verify-token-verify-email.middleware'
+import { verifyUserActiveForChangePassword } from '~/middlewares/verify-user-active-for-change-password.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { ChangePasswordDtoSchema, UserIdDtoSchema, VerifyEmailDtoSchema } from '~/shared/dtos/req/user.dto'
-import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
+import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
 
 const usersRoute = Router()
 

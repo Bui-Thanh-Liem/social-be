@@ -10,7 +10,7 @@ import { ITrending } from '~/shared/interfaces/schemas/trending.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
-import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { slug } from '~/utils/slug.util'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
@@ -727,10 +727,10 @@ class TrendingService {
         $addFields: {
           // bookmarks_count: { $size: '$bookmarks' },
           likes_count: { $size: '$likes' },
-          isLike: {
+          is_like: {
             $in: [new ObjectId(user_active_id), '$likes.user_id']
           },
-          isBookmark: {
+          is_bookmark: {
             $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
           },
           // lấy id retweet của user (1 cái đầu tiên hoặc null)

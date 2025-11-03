@@ -25,8 +25,8 @@ import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import CommentGateway from '~/socket/gateways/Comment.gateway'
 import CommunityGateway from '~/socket/gateways/Community.gateway'
-import { chunkArray } from '~/utils/chunkArray'
-import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import { chunkArray } from '~/utils/chunk-array'
+import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { deleteImage } from '~/utils/upload.util'
 import BookmarksService from './Bookmarks.service'
 import CommunityService from './Communities.service'
@@ -71,8 +71,8 @@ class TweetsService {
     if (community_id) {
       const {
         mentorIds,
-        isAdmin,
-        isMentor,
+        is_admin,
+        is_mentor,
         community: c
       } = await CommunityService.validateCommunityAndMembership({
         user_id: user_id,
@@ -80,7 +80,7 @@ class TweetsService {
       })
 
       community = c
-      if (isAdmin || isMentor) {
+      if (is_admin || is_mentor) {
         status = ETweetStatus.Ready
       } else {
         operatorIds = [...mentorIds, c.admin]
@@ -115,7 +115,7 @@ class TweetsService {
           type: ENotificationType.Mention_like,
           sender: user_id,
           receiver: mentions[i],
-          refId: newTweet.insertedId.toString()
+          ref_id: newTweet.insertedId.toString()
         })
       }
     }
@@ -130,7 +130,7 @@ class TweetsService {
         type: ENotificationType.Mention_like,
         sender: user_id,
         receiver: tw!.user_id.toString(),
-        refId: tw?._id.toString()
+        ref_id: tw?._id.toString()
       })
 
       //
@@ -148,7 +148,7 @@ class TweetsService {
           type: ENotificationType.Community,
           sender: user_id,
           receiver: operatorIds[i].toString(),
-          refId: community_id
+          ref_id: community_id
         })
       }
       await CommunityGateway.sendCountTweetApprove(community_id)
@@ -286,10 +286,10 @@ class TweetsService {
         $addFields: {
           // bookmarks_count: { $size: '$bookmarks' },
           likes_count: { $size: '$likes' },
-          isLike: {
+          is_like: {
             $in: [new ObjectId(user_active_id), '$likes.user_id']
           },
-          isBookmark: {
+          is_bookmark: {
             $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
           },
           // lấy id retweet của user (1 cái đầu tiên hoặc null)
@@ -470,10 +470,10 @@ class TweetsService {
         $addFields: {
           bookmark_count: { $size: '$bookmarks' },
           likes_count: { $size: '$likes' },
-          isLike: {
+          is_like: {
             $in: [new ObjectId(user_id), '$likes.user_id']
           },
-          isBookmark: {
+          is_bookmark: {
             $in: [new ObjectId(user_id), '$bookmarks.user_id']
           },
           // lấy id retweet của user (1 cái đầu tiên hoặc null)
@@ -820,10 +820,10 @@ class TweetsService {
           $addFields: {
             // bookmarks_count: { $size: '$bookmarks' },
             likes_count: { $size: '$likes' },
-            isLike: {
+            is_like: {
               $in: [new ObjectId(user_active_id), '$likes.user_id']
             },
-            isBookmark: {
+            is_bookmark: {
               $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
             },
             // lấy id retweet của user (1 cái đầu tiên hoặc null)
@@ -904,7 +904,7 @@ class TweetsService {
       ]).toArray(),
       feed_type !== EFeedType.Following &&
         CommunityCollection.aggregate<CommunitySchema>([
-          { $match: { membershipType: EMembershipType.Open } },
+          { $match: { membership_type: EMembershipType.Open } },
           { $sort: sort },
           { $skip: skipCom },
           { $limit: 2 },
@@ -1264,10 +1264,10 @@ class TweetsService {
       {
         $addFields: {
           likes_count: { $size: '$likes' },
-          isLike: {
+          is_like: {
             $in: [new ObjectId(user_active_id), '$likes.user_id']
           },
-          isBookmark: {
+          is_bookmark: {
             $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
           },
           // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
@@ -1539,10 +1539,10 @@ class TweetsService {
         $addFields: {
           // bookmarks_count: { $size: '$bookmarks' },
           likes_count: { $size: '$likes' },
-          isLike: {
+          is_like: {
             $in: [new ObjectId(user_active_id), '$likes.user_id']
           },
-          isBookmark: {
+          is_bookmark: {
             $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
           },
           // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
@@ -1801,10 +1801,10 @@ class TweetsService {
       {
         $addFields: {
           likes_count: { $size: '$likes' },
-          isLike: {
+          is_like: {
             $in: [new ObjectId(user_active_id), '$likes.user_id']
           },
-          isBookmark: {
+          is_bookmark: {
             $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
           },
           // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
@@ -2237,10 +2237,10 @@ class TweetsService {
       {
         $addFields: {
           likes_count: { $size: '$likes' },
-          isLike: {
+          is_like: {
             $in: [new ObjectId(user_active_id), '$likes.user_id']
           },
-          isBookmark: {
+          is_bookmark: {
             $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
           },
           // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
@@ -2362,13 +2362,13 @@ class TweetsService {
     query: IQuery<ITweet>
     user_active_id: string
   }): Promise<ResMultiType<ITweet>> {
-    const { isAdmin, isMentor } = await CommunityService.validateCommunityAndMembership({
+    const { is_admin, is_mentor } = await CommunityService.validateCommunityAndMembership({
       community_id,
       user_id: user_active_id
     })
 
     //
-    if (!isAdmin && !isMentor) {
+    if (!is_admin && !is_mentor) {
       throw new BadRequestError('Chỉ chủ sở hữu và điều hành viên mới có quyền xem.')
     }
 

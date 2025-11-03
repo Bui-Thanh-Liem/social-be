@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import ReportTweetService from '~/services/ReportTweet.service'
+import ReportTweetService from '~/services/Report-tweet.service'
 import { CreatedResponse } from '~/shared/classes/response.class'
 import { ParamIdTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'

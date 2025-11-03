@@ -11,8 +11,8 @@ import { IConversation } from '~/shared/interfaces/schemas/conversation.interfac
 import { ResMultiType } from '~/shared/types/response.type'
 import { getSocket } from '~/socket'
 import ConversationGateway from '~/socket/gateways/Conversation.gateway'
-import { createKeyAllConversationIds } from '~/utils/createKeyCache.util'
-import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import { createKeyAllConversationIds } from '~/utils/create-key-cache.util'
+import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import MessagesService from './Messages.service'
 import NotificationService from './Notification.service'
 
@@ -824,7 +824,7 @@ class ConversationsService {
         }
 
         // Nếu participants bằng deletedFor => xoá luôn conversation + messages
-        if (updated.deletedFor?.length === updated.participants?.length) {
+        if (updated.deleted_for?.length === updated.participants?.length) {
           await MessagesService.deleteConversationMessages(conv_id)
           await ConversationCollection.deleteOne({ _id: new ObjectId(conv_id) })
         }

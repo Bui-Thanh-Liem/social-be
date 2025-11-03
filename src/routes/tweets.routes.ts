@@ -1,14 +1,14 @@
 import { Router } from 'express'
 import TweetsController from '~/controllers/Tweets.controller'
-import { checkAudience } from '~/middlewares/checkAudience.middleware'
-import { checkTweetByIdParams } from '~/middlewares/checkTweetParams.middleware'
-import { checkTweetParamsId } from '~/middlewares/checkTweetParamsId.middleware'
-import { optionLogin } from '~/middlewares/optionLogin.middleware'
-import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middleware'
-import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middleware'
-import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
-import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
-import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
+import { checkAudience } from '~/middlewares/check-audience.middleware'
+import { checkTweetByIdParams } from '~/middlewares/check-tweet-params.middleware'
+import { checkTweetParamsId } from '~/middlewares/check-tweet-params-id.middleware'
+import { optionLogin } from '~/middlewares/option-login.middleware'
+import { requestBodyValidate } from '~/middlewares/request-body-validate.middleware'
+import { requestParamsValidate } from '~/middlewares/request-params-validate.middleware'
+import { requestQueryValidate } from '~/middlewares/request-query-validate.middleware'
+import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
+import { verifyUserEmail } from '~/middlewares/verify-user-email.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import {
   CreateTweetDtoSchema,
@@ -18,7 +18,7 @@ import {
   getTweetChildrenDtoSchemaParams,
   paramIdTweetDtoSchema
 } from '~/shared/dtos/req/tweet.dto'
-import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
+import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
 
 const tweetsRoute = Router()
 

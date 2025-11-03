@@ -46,10 +46,10 @@ class MailService {
    * @param userName tên người nhận
    * @param verifyCode mã xác minh
    */
-  async sendVerifyEmail({ toEmail, name, url }: ISendVerifyEmail) {
+  async sendVerifyEmail({ to_email, name, url }: ISendVerifyEmail) {
     const mailOptions = {
       from: this.from,
-      to: toEmail,
+      to: to_email,
       subject: 'Verify your email',
       template: 'verifyEmail',
       context: {
@@ -60,7 +60,7 @@ class MailService {
 
     //
     try {
-      logger.info('✅ Đang gửi email xác minh:', toEmail)
+      logger.info('✅ Đang gửi email xác minh:', to_email)
       const info = await this.transporter.sendMail(mailOptions)
       logger.info('✅ Đã gửi email xác minh:', info.response)
     } catch (error) {
@@ -75,10 +75,10 @@ class MailService {
    * @param userName tên người nhận
    * @param verifyCode mã xác minh
    */
-  async sendForgotPasswordEmail({ toEmail, name, url }: ISendVerifyEmail) {
+  async sendForgotPasswordEmail({ to_email, name, url }: ISendVerifyEmail) {
     const _mailOptions = {
       from: this.from,
-      to: toEmail,
+      to: to_email,
       subject: 'forgot password',
       template: 'forgotPassword',
       context: {
@@ -89,7 +89,7 @@ class MailService {
 
     //
     try {
-      logger.info('✅ Đang gửi email để đặt lại mật khẩu:', toEmail)
+      logger.info('✅ Đang gửi email để đặt lại mật khẩu:', to_email)
       const info = await this.transporter.sendMail(_mailOptions)
       logger.info('✅ Đã gửi email để đặt lại mật khẩu:', info.response)
     } catch (error) {

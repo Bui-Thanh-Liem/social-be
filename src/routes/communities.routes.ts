@@ -1,11 +1,11 @@
 import { Router } from 'express'
 import CommunityController from '~/controllers/Community.controller'
-import { checkExistMembers } from '~/middlewares/checkExistMembers.middleware'
-import { requestBodyValidate } from '~/middlewares/requestBodyValidate.middleware'
-import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middleware'
-import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
-import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
-import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
+import { checkExistMembers } from '~/middlewares/check-exist-members.middleware'
+import { requestBodyValidate } from '~/middlewares/request-body-validate.middleware'
+import { requestParamsValidate } from '~/middlewares/request-params-validate.middleware'
+import { requestQueryValidate } from '~/middlewares/request-query-validate.middleware'
+import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
+import { verifyUserEmail } from '~/middlewares/verify-user-email.middleware'
 import {
   ChangeStatusTweetInCommunityDtoSchema,
   CreateCommunityDtoSchema,
@@ -22,7 +22,7 @@ import {
   UpdateDtoSchema
 } from '~/shared/dtos/req/community.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
-import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
+import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
 
 const communitiesRoute = Router()
 

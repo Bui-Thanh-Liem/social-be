@@ -4,7 +4,7 @@ import { BadRequestError } from '~/shared/classes/error.class'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IHashtag } from '~/shared/interfaces/schemas/hashtag.interface'
 import { ResMultiType } from '~/shared/types/response.type'
-import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { slug } from '~/utils/slug.util'
 
 class HashtagsService {

@@ -1,11 +1,11 @@
 import { Router } from 'express'
 import NotificationsController from '~/controllers/Notifications.controller'
-import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middleware'
-import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
-import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
+import { requestParamsValidate } from '~/middlewares/request-params-validate.middleware'
+import { requestQueryValidate } from '~/middlewares/request-query-validate.middleware'
+import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
 import { ParamIdNotiDtoSchema, GetMultiByTypeNotiDtoSchema } from '~/shared/dtos/req/notification.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
-import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
+import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
 
 const notificationRoute = Router()
 

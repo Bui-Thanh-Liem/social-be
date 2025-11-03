@@ -11,9 +11,9 @@ export interface INotification extends IBase {
   sender: IUser | ObjectId
   receiver: IUser | ObjectId
   isRead: boolean
-  refId: ObjectId | undefined
+  ref_id: ObjectId | undefined
 
-  tweetRef?: ITweet
-  userRef?: IUser
-  communityRef?: ICommunity
+  tweet_ref?: ITweet
+  user_ref?: IUser
+  community_ref?: ICommunity
 }

@@ -15,19 +15,19 @@ export interface ICommunity extends IBase {
   verify: boolean
 
   //
-  visibilityType: EVisibilityType // hiển thị nội dung cho người xem là thành viên hay mọi người
-  membershipType: EMembershipType // Nhóm chỉ được mời mới được tham gia hay là mở để mọi người có thể tham gia
-  showLogForMember: boolean
-  showLogForMentor: boolean
-  showInviteListForMember: boolean
-  showInviteListForMentor: boolean
-  inviteExpireDays: number // Lời mời có hiệu lực trong
+  visibility_type: EVisibilityType // hiển thị nội dung cho người xem là thành viên hay mọi người
+  membership_type: EMembershipType // Nhóm chỉ được mời mới được tham gia hay là mở để mọi người có thể tham gia
+  show_log_for_member: boolean
+  show_log_for_mentor: boolean
+  show_invite_list_for_member: boolean
+  show_invite_list_for_mentor: boolean
+  invite_expire_days: number // Lời mời có hiệu lực trong
 
   pinned?: boolean
-  isJoined?: boolean
-  isAdmin?: boolean
-  isMember?: boolean
-  isMentor?: boolean
+  is_joined?: boolean
+  is_admin?: boolean
+  is_member?: boolean
+  is_mentor?: boolean
   member_count?: number
 
   members?: IUser[]

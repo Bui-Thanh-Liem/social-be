@@ -1,5 +1,5 @@
 import cron from 'node-cron'
-import ReportTweetService from '~/services/ReportTweet.service'
+import ReportTweetService from '~/services/Report-tweet.service'
 
 /**
  * 🧹 JOB 1 — Mỗi ngày: kiểm tra xem report có tweet nào cần được xóa không

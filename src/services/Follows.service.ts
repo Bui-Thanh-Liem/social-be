@@ -35,7 +35,7 @@ class FollowsService {
         type: ENotificationType.Follow,
         sender: user_id,
         receiver: followed_user_id,
-        refId: user_id
+        ref_id: user_id
       })
 
       return { status: 'Follow', _id: inserted.insertedId.toString() }

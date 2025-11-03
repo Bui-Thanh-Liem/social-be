@@ -21,8 +21,8 @@ import { HashtagCollection, initHashtagCollection } from '~/models/schemas/Hasht
 import { initLikeCollection } from '~/models/schemas/Like.schema'
 import { initMessageCollection, MessageCollection } from '~/models/schemas/Message.schema'
 import { initNotificationCollection } from '~/models/schemas/Notification.schema'
-import { initRefreshTokenCollection, RefreshTokenCollection } from '~/models/schemas/RefreshToken.schema'
-import { initReportTweetCollection, ReportTweetCollection } from '~/models/schemas/ReportTweet.schema'
+import { initRefreshTokenCollection, RefreshTokenCollection } from '~/models/schemas/Refresh-token.schema'
+import { initReportTweetCollection, ReportTweetCollection } from '~/models/schemas/Report-tweet.schema'
 import { initTrendingCollection, TrendingCollection } from '~/models/schemas/Trending.schema'
 import { initTweetCollection, TweetCollection } from '~/models/schemas/Tweet.schema'
 import { initUserCollection, UserCollection } from '~/models/schemas/User.schema'
@@ -156,8 +156,8 @@ class DatabaseConfig {
 
     // Community
     if (!indexCommunity) {
-      CommunityCollection.createIndex({ visibilityType: 1 })
-      CommunityCollection.createIndex({ membershipType: 1 })
+      CommunityCollection.createIndex({ visibility_type: 1 })
+      CommunityCollection.createIndex({ membership_type: 1 })
       CommunityCollection.createIndex({ name: 1 }, { unique: true })
       CommunityCollection.createIndex({ slug: 1 }, { unique: true })
       CommunityCollection.createIndex({ category: 1 })

@@ -11,7 +11,7 @@ export const CreateNotiDtoSchema = z.object({
   receiver: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'ObjectId không hợp lệ'
   }),
-  refId: z
+  ref_id: z
     .string()
     .trim()
     .regex(CONSTANT_REGEX.ID_MONGO, {

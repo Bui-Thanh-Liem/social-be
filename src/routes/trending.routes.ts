@@ -1,12 +1,12 @@
 import { Router } from 'express'
 import TrendingController from '~/controllers/Trending.controller'
-import { requestParamsValidate } from '~/middlewares/requestParamsValidate.middleware'
-import { requestQueryValidate } from '~/middlewares/requestQueryValidate.middleware'
-import { verifyAccessToken } from '~/middlewares/verifyAccessToken.middleware'
-import { verifyUserEmail } from '~/middlewares/verifyUserEmail.middleware'
+import { requestParamsValidate } from '~/middlewares/request-params-validate.middleware'
+import { requestQueryValidate } from '~/middlewares/request-query-validate.middleware'
+import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
+import { verifyUserEmail } from '~/middlewares/verify-user-email.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { ParamIdTrendingDtoSchema } from '~/shared/dtos/req/trending.dto'
-import { wrapAsyncHandler } from '~/utils/wrapAsyncHandler.util'
+import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
 
 const trendingRoute = Router()
 

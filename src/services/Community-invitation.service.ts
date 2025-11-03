@@ -9,7 +9,7 @@ import { ENotificationType } from '~/shared/enums/type.enum'
 import { ICommonPayload } from '~/shared/interfaces/common/community.interface'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
-import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import CommunitiesService from './Communities.service'
 import NotificationService from './Notification.service'
 import { inviteQueue } from '~/bull/queues'
@@ -46,7 +46,7 @@ class CommunityInvitationService {
             inviter: userObjId,
             user_id: targetUserId,
             community_id: new ObjectId(community._id),
-            exp: new Date(Date.now() + community.inviteExpireDays * 24 * 60 * 60 * 1000)
+            exp: new Date(Date.now() + community.invite_expire_days * 24 * 60 * 60 * 1000)
           })
 
           await Promise.all([
@@ -56,7 +56,7 @@ class CommunityInvitationService {
               type: ENotificationType.Community,
               sender: user_id,
               receiver: id,
-              refId: community._id?.toString()
+              ref_id: community._id?.toString()
             })
           ])
         })
@@ -158,16 +158,16 @@ class CommunityInvitationService {
   }
 
   async delete({ user_id, payload }: { user_id: string; payload: deleteInvitationDto }) {
-    const { isAdmin, isJoined, isMentor } = await CommunitiesService.validateCommunityAndMembership({
+    const { is_admin, is_joined, is_mentor } = await CommunitiesService.validateCommunityAndMembership({
       user_id,
       community_id: payload.community_id
     })
 
-    if (!isJoined) {
+    if (!is_joined) {
       throw new ForbiddenError('Bạn chưa tham gia vào cộng đồng.')
     }
 
-    if (!isAdmin && !isMentor) {
+    if (!is_admin && !is_mentor) {
       throw new ForbiddenError('Chủ sở hữu và điều hành viên mới có thể xoá lời mời (cho dù đó là lời mời của bạn).')
     }
 

@@ -7,7 +7,7 @@ import { BaseSchema } from './Base.schema'
 export class NotificationSchema extends BaseSchema implements INotification {
   content: string
   type: ENotificationType
-  refId: ObjectId | undefined
+  ref_id: ObjectId | undefined
   sender: ObjectId | IUser
   receiver: ObjectId | IUser
   isRead: boolean
@@ -16,7 +16,7 @@ export class NotificationSchema extends BaseSchema implements INotification {
     super()
     this.isRead = false
     this.content = noti.content || ''
-    this.refId = noti.refId || new ObjectId()
+    this.ref_id = noti.ref_id || new ObjectId()
     this.sender = noti.sender || new ObjectId()
     this.receiver = noti.receiver || new ObjectId()
     this.type = noti.type || ENotificationType.Other

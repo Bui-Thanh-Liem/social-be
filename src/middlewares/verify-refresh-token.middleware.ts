@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { envs } from '~/configs/env.config'
-import { RefreshTokenCollection } from '~/models/schemas/RefreshToken.schema'
+import { RefreshTokenCollection } from '~/models/schemas/Refresh-token.schema'
 import { UnauthorizedError } from '~/shared/classes/error.class'
 import { verifyToken } from '~/utils/jwt.util'
 

@@ -8,7 +8,7 @@ export interface IConversation extends IBase {
   type: EConversationType
   mentors: ObjectId[]
   participants: ObjectId[]
-  deletedFor: ObjectId[]
+  deleted_for: ObjectId[]
   pinned: IPinned[]
 
   //

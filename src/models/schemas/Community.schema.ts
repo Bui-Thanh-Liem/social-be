@@ -26,13 +26,13 @@ export class CommunitySchema extends BaseSchema implements ICommunity {
   verify: boolean
 
   //
-  visibilityType: EVisibilityType
-  membershipType: EMembershipType
-  showLogForMember: boolean
-  showLogForMentor: boolean
-  showInviteListForMember: boolean
-  showInviteListForMentor: boolean
-  inviteExpireDays: number
+  visibility_type: EVisibilityType
+  membership_type: EMembershipType
+  show_log_for_member: boolean
+  show_log_for_mentor: boolean
+  show_invite_list_for_member: boolean
+  show_invite_list_for_mentor: boolean
+  invite_expire_days: number
 
   constructor(community: Partial<ICommunity>) {
     super()
@@ -46,13 +46,13 @@ export class CommunitySchema extends BaseSchema implements ICommunity {
     this.verify = community.verify || false
 
     //
-    this.visibilityType = community.visibilityType || EVisibilityType.Public
-    this.membershipType = community.membershipType || EMembershipType.Open
-    this.showLogForMember = community.showLogForMember || false
-    this.showLogForMentor = community.showLogForMentor || false
-    this.showInviteListForMember = community.showInviteListForMember || false
-    this.showInviteListForMentor = community.showInviteListForMentor || false
-    this.inviteExpireDays = community.inviteExpireDays || CONSTANT_INVITE_EXPIRES
+    this.visibility_type = community.visibility_type || EVisibilityType.Public
+    this.membership_type = community.membership_type || EMembershipType.Open
+    this.show_log_for_member = community.show_log_for_member || false
+    this.show_log_for_mentor = community.show_log_for_mentor || false
+    this.show_invite_list_for_member = community.show_invite_list_for_member || false
+    this.show_invite_list_for_mentor = community.show_invite_list_for_mentor || false
+    this.invite_expire_days = community.invite_expire_days || CONSTANT_INVITE_EXPIRES
   }
 }
 

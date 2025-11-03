@@ -23,7 +23,7 @@ import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity, ICommunityActivity } from '~/shared/interfaces/schemas/community.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
-import { getPaginationAndSafeQuery } from '~/utils/getPaginationAndSafeQuery.util'
+import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { logger } from '~/utils/logger.util'
 import { slug } from '~/utils/slug.util'
 import CommunityInvitationService from './Community-invitation.service'
@@ -56,7 +56,7 @@ class CommunityService {
 
     const community = await CommunityCollection.findOne(
       { _id: inserted.insertedId },
-      { projection: { admin: 1, name: 1, membershipType: 1 } }
+      { projection: { admin: 1, name: 1, membership_type: 1 } }
     )
 
     try {
@@ -75,9 +75,9 @@ class CommunityService {
 
   async update({ user_id, payload }: { payload: UpdateDto; user_id: string }) {
     const { community_id } = payload
-    const { isAdmin } = await this.validateCommunityAndMembership({ community_id, user_id })
+    const { is_admin } = await this.validateCommunityAndMembership({ community_id, user_id })
 
-    if (!isAdmin) {
+    if (!is_admin) {
       throw new ForbiddenError('Chỉ chủ sở hữu mới có thể thay đổi cài đặt.')
     }
 
@@ -99,13 +99,13 @@ class CommunityService {
   }
 
   async inviteMembers({ user_id, payload, user }: { user_id: string; payload: InvitationMembersDto; user: IUser }) {
-    const { community, isAdmin, isMentor } = await this.validateCommunityAndMembership({
+    const { community, is_admin, is_mentor } = await this.validateCommunityAndMembership({
       user_id,
       community_id: payload.community_id
     })
 
-    if (community?.membershipType === EMembershipType.Invite_only) {
-      if (!isAdmin && !isMentor) {
+    if (community?.membership_type === EMembershipType.Invite_only) {
+      if (!is_admin && !is_mentor) {
         throw new BadRequestError('Bạn không có quyền mời thành viên vào cộng đồng.')
       }
     }
@@ -130,14 +130,14 @@ class CommunityService {
   }
 
   async join({ user_id, community_id, user }: ICommonPayload) {
-    const { community, isJoined } = await this.validateCommunityAndMembership({ user_id, community_id })
+    const { community, is_joined } = await this.validateCommunityAndMembership({ user_id, community_id })
 
-    if (isJoined) {
+    if (is_joined) {
       throw new BadRequestError('Bạn đã là thành viên của cộng đồng này.')
     }
 
     // Nếu cộng đồng chỉ cho phép mời
-    if (community.membershipType === EMembershipType.Invite_only) {
+    if (community.membership_type === EMembershipType.Invite_only) {
       const invitation = await CommunityInvitationService.getOneByUserIdAndCommunityId({ user_id, community_id })
 
       if (!invitation) {
@@ -162,9 +162,9 @@ class CommunityService {
   }
 
   async leave({ user_id, community_id, user }: ICommonPayload) {
-    const { isJoined, community } = await this.validateCommunityAndMembership({ user_id, community_id })
+    const { is_joined, community } = await this.validateCommunityAndMembership({ user_id, community_id })
 
-    if (!isJoined) {
+    if (!is_joined) {
       throw new BadRequestError('Bạn không phải là thành viên của cộng đồng này.')
     }
 
@@ -194,21 +194,21 @@ class CommunityService {
       this.validateCommunityAndMembership({ user_id: target_id, community_id })
     ])
 
-    if (!actor.isAdmin) {
+    if (!actor.is_admin) {
       throw new ForbiddenError('Chỉ chủ sở hữu mới có thể cho thành viên lên điều hành viên.')
     }
 
-    if (!target.isJoined) {
+    if (!target.is_joined) {
       throw new NotFoundError('Người dùng không tồn tại trong cộng đồng này.')
     }
 
     //
-    if (target.isMentor) {
+    if (target.is_mentor) {
       throw new ConflictError('Người dùng này đã là điều hành viên.')
     }
 
     //
-    if (!target.isMember) {
+    if (!target.is_member) {
       throw new BadRequestError('Người dùng này không phải là thành viên trong cộng đồng.')
     }
 
@@ -246,7 +246,7 @@ class CommunityService {
       type: ENotificationType.Community,
       sender: actor_id,
       receiver: target_id,
-      refId: actor.community._id?.toString()
+      ref_id: actor.community._id?.toString()
     }).catch((err) => {
       // Log nhưng không throw
       logger.warn('Failed to send promotion notification', {
@@ -266,16 +266,16 @@ class CommunityService {
       this.validateCommunityAndMembership({ user_id: target_id, community_id })
     ])
 
-    if (!actor.isAdmin) {
+    if (!actor.is_admin) {
       throw new ForbiddenError('Chỉ chủ sở hữu mới có thể cho điều hành viên xuống thành viên bình thường.')
     }
 
-    if (!target.isJoined) {
+    if (!target.is_joined) {
       throw new NotFoundError('Người dùng không tồn tại trong cộng đồng này.')
     }
 
     //
-    if (target.isMember) {
+    if (target.is_member) {
       throw new ConflictError('Người dùng này đang là thành viên bình thường.')
     }
 
@@ -312,7 +312,7 @@ class CommunityService {
       type: ENotificationType.Community,
       sender: actor_id,
       receiver: target_id,
-      refId: actor.community._id?.toString()
+      ref_id: actor.community._id?.toString()
     }).catch((err) => {
       // Log nhưng không throw
       logger.warn('Failed to send demote notification', {
@@ -373,8 +373,8 @@ class CommunityService {
               ? [
                   {
                     $or: [
-                      { visibilityType: { $regex: qe, $options: 'i' } },
-                      { membershipType: { $regex: qe, $options: 'i' } }
+                      { visibility_type: { $regex: qe, $options: 'i' } },
+                      { membership_type: { $regex: qe, $options: 'i' } }
                     ]
                   }
                 ]
@@ -486,8 +486,8 @@ class CommunityService {
               ? [
                   {
                     $or: [
-                      { visibilityType: { $regex: qe, $options: 'i' } },
-                      { membershipType: { $regex: qe, $options: 'i' } }
+                      { visibility_type: { $regex: qe, $options: 'i' } },
+                      { membership_type: { $regex: qe, $options: 'i' } }
                     ]
                   }
                 ]
@@ -679,7 +679,7 @@ class CommunityService {
               $group: {
                 _id: null,
                 count: { $sum: 1 },
-                isMember: {
+                is_member: {
                   $max: { $eq: ['$user_id', '$$currentUserId'] }
                 }
               }
@@ -702,7 +702,7 @@ class CommunityService {
               $group: {
                 _id: null,
                 count: { $sum: 1 },
-                isMentor: {
+                is_mentor: {
                   $max: { $eq: ['$user_id', '$$currentUserId'] }
                 }
               }
@@ -718,13 +718,13 @@ class CommunityService {
           'admin.isFollow': { $gt: [{ $size: '$userFollowCheck' }, 0] },
 
           // ✅ Extract individual flags
-          isMember: {
-            $ifNull: [{ $arrayElemAt: ['$membersInfo.isMember', 0] }, false]
+          is_member: {
+            $ifNull: [{ $arrayElemAt: ['$membersInfo.is_member', 0] }, false]
           },
-          isMentor: {
-            $ifNull: [{ $arrayElemAt: ['$mentorsInfo.isMentor', 0] }, false]
+          is_mentor: {
+            $ifNull: [{ $arrayElemAt: ['$mentorsInfo.is_mentor', 0] }, false]
           },
-          isAdmin: {
+          is_admin: {
             $eq: ['$admin._id', new ObjectId(user_id)]
           },
 
@@ -737,12 +737,12 @@ class CommunityService {
             ]
           },
 
-          // isJoined = isAdmin OR isMember OR isMentor
-          isJoined: {
+          // is_joined = is_admin OR is_member OR is_mentor
+          is_joined: {
             $or: [
               { $eq: ['$admin._id', new ObjectId(user_id)] },
-              { $ifNull: [{ $arrayElemAt: ['$membersInfo.isMember', 0] }, false] },
-              { $ifNull: [{ $arrayElemAt: ['$mentorsInfo.isMentor', 0] }, false] }
+              { $ifNull: [{ $arrayElemAt: ['$membersInfo.is_member', 0] }, false] },
+              { $ifNull: [{ $arrayElemAt: ['$mentorsInfo.is_mentor', 0] }, false] }
             ]
           }
         }
@@ -967,7 +967,7 @@ class CommunityService {
     user_id: string
     community_id: string
     communityAdmin: string
-  }): Promise<{ isJoined: boolean; isAdmin: boolean; isMentor: boolean; isMember: boolean }> {
+  }): Promise<{ is_joined: boolean; is_admin: boolean; is_mentor: boolean; is_member: boolean }> {
     //
     const existing = await Promise.all([
       CommunityMemberCollection.findOne({
@@ -982,10 +982,10 @@ class CommunityService {
 
     //
     return {
-      isMember: !!existing[0],
-      isMentor: !!existing[1],
-      isAdmin: communityAdmin === user_id,
-      isJoined: existing.filter(Boolean).length > 0 || communityAdmin === user_id
+      is_member: !!existing[0],
+      is_mentor: !!existing[1],
+      is_admin: communityAdmin === user_id,
+      is_joined: existing.filter(Boolean).length > 0 || communityAdmin === user_id
     }
   }
 
@@ -995,7 +995,7 @@ class CommunityService {
     const [community, mentorIds] = await Promise.all([
       CommunityCollection.findOne(
         { _id: communityObjId },
-        { projection: { admin: 1, name: 1, membershipType: 1, inviteExpireDays: 1 } }
+        { projection: { admin: 1, name: 1, membership_type: 1, invite_expire_days: 1 } }
       ),
       CommunityMentorCollection.distinct('user_id', { community_id: communityObjId })
     ])
@@ -1004,13 +1004,13 @@ class CommunityService {
       throw new NotFoundError('Không tìm thấy hoặc cộng đồng bạn muốn tham gia đã giải tán.')
     }
 
-    const { isJoined, isAdmin, isMentor, isMember } = await this.checkJoined({
+    const { is_joined, is_admin, is_mentor, is_member } = await this.checkJoined({
       user_id,
       community_id,
       communityAdmin: community.admin.toString()
     })
 
-    return { community, mentorIds, isJoined, isAdmin, isMentor, isMember }
+    return { community, mentorIds, is_joined, is_admin, is_mentor, is_member }
   }
 
   async changeStatusTweet({
@@ -1026,13 +1026,13 @@ class CommunityService {
   }) {
     const user_active_id = user_active._id!.toString()
 
-    const { isAdmin, isMentor, community } = await this.validateCommunityAndMembership({
+    const { is_admin, is_mentor, community } = await this.validateCommunityAndMembership({
       community_id,
       user_id: user_active_id
     })
 
     //
-    if (!isAdmin && !isMentor) {
+    if (!is_admin && !is_mentor) {
       throw new BadRequestError('Chỉ chủ sở hữu và điều hành viên mới có quyền xem.')
     }
 
@@ -1047,7 +1047,7 @@ class CommunityService {
       await NotificationService.createInQueue({
         content: mess,
         sender: user_active_id,
-        refId: res._id?.toString(),
+        ref_id: res._id?.toString(),
         receiver: res.user_id.toString(),
         type: ENotificationType.Community
       })
