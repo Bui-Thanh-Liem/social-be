@@ -5,12 +5,12 @@ import { ResToggleBookmark } from '~/shared/dtos/res/bookmark.dto'
 
 class BookmarksService {
   async toggleBookmark(user_id: string, payload: ParamIdTweetDto): Promise<ResToggleBookmark> {
-    const userObjectId = new ObjectId(user_id)
-    const tweetObjectId = new ObjectId(payload.tweet_id)
+    const user_object_id = new ObjectId(user_id)
+    const tweet_object_id = new ObjectId(payload.tweet_id)
 
     const dataHandle = {
-      user_id: userObjectId,
-      tweet_id: tweetObjectId
+      user_id: user_object_id,
+      tweet_id: tweet_object_id
     }
 
     const deleted = await BookmarkCollection.findOneAndDelete(dataHandle)

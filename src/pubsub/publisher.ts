@@ -7,6 +7,6 @@ export async function publishCompression(video_id: string) {
 }
 
 export const PUBLISH_NOTIFICATION = 'publish-notification'
-export async function publishNotification(payload: { receiverId: string; newNoti: INotification }) {
+export async function publishNotification(payload: { receiver_id: string; new_noti: INotification }) {
   await pubSubServiceInstance.publish(PUBLISH_NOTIFICATION, payload)
 }

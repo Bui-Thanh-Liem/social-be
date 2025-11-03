@@ -329,18 +329,18 @@ class CommunityService {
   }
 
   async getAllBare(user_id: string) {
-    const userObjId = new ObjectId(user_id)
+    const user_obj_id = new ObjectId(user_id)
 
     // Lấy danh sách community_id mà user là mentor/member
     const [mentor, member] = await Promise.all([
-      CommunityMentorCollection.find({ user_id: userObjId }, { projection: { community_id: 1 } }).toArray(),
-      CommunityMemberCollection.find({ user_id: userObjId }, { projection: { community_id: 1 } }).toArray()
+      CommunityMentorCollection.find({ user_id: user_obj_id }, { projection: { community_id: 1 } }).toArray(),
+      CommunityMemberCollection.find({ user_id: user_obj_id }, { projection: { community_id: 1 } }).toArray()
     ])
 
     const joinedObjIds = [...mentor, ...member].map((x) => x.community_id)
 
     // Tạo query động
-    const query: any = { $or: [{ admin: userObjId }] }
+    const query: any = { $or: [{ admin: user_obj_id }] }
     if (joinedObjIds.length > 0) query.$or.push({ _id: { $in: joinedObjIds } })
 
     // Trả về danh sách cộng đồng (chỉ cần name)
@@ -573,19 +573,19 @@ class CommunityService {
   }): Promise<ResMultiType<ICommunity>> {
     const { skip, limit, sort, q, qe } = getPaginationAndSafeQuery<ICommunity>(query)
 
-    const matchStage: Record<string, any> = {}
+    const match_stage: Record<string, any> = {}
 
     if (q) {
-      matchStage.$or = [{ name: { $regex: q, $options: 'i' } }, { $text: { $search: q } }]
+      match_stage.$or = [{ name: { $regex: q, $options: 'i' } }, { $text: { $search: q } }]
     }
 
     if (qe) {
-      matchStage.category = { $regex: qe, $options: 'i' }
+      match_stage.category = { $regex: qe, $options: 'i' }
     }
 
     //
     const communities = await CommunityCollection.aggregate<CommunitySchema>([
-      { $match: matchStage },
+      { $match: match_stage },
       { $sort: sort },
       { $skip: skip },
       { $limit: limit },
@@ -604,7 +604,7 @@ class CommunityService {
     ]).toArray()
 
     //
-    const total = await CommunityCollection.countDocuments(matchStage)
+    const total = await CommunityCollection.countDocuments(match_stage)
 
     return {
       total,
@@ -652,12 +652,15 @@ class CommunityService {
       {
         $lookup: {
           from: 'followers',
-          let: { targetUserId: '$admin._id' },
+          let: { target_user_id: '$admin._id' },
           pipeline: [
             {
               $match: {
                 $expr: {
-                  $and: [{ $eq: ['$followed_user_id', '$$targetUserId'] }, { $eq: ['$user_id', new ObjectId(user_id)] }]
+                  $and: [
+                    { $eq: ['$followed_user_id', '$$target_user_id'] },
+                    { $eq: ['$user_id', new ObjectId(user_id)] }
+                  ]
                 }
               }
             }
@@ -774,12 +777,12 @@ class CommunityService {
     user_id: string
     queries: IQuery<ICommunity>
   }): Promise<ICommunity> {
-    const userObjId = new ObjectId(user_id)
-    const communityObjId = new ObjectId(community_id)
+    const user_obj_id = new ObjectId(user_id)
+    const community_obj_id = new ObjectId(community_id)
     const { skip, limit, q } = getPaginationAndSafeQuery<ICommunity>(queries)
 
     const community = await CommunityCollection.aggregate<CommunitySchema>([
-      { $match: { _id: communityObjId } },
+      { $match: { _id: community_obj_id } },
 
       // mentors list
       {
@@ -799,12 +802,15 @@ class CommunityService {
                   {
                     $lookup: {
                       from: 'followers',
-                      let: { targetUserId: '$_id' },
+                      let: { target_user_id: '$_id' },
                       pipeline: [
                         {
                           $match: {
                             $expr: {
-                              $and: [{ $eq: ['$followed_user_id', '$$targetUserId'] }, { $eq: ['$user_id', userObjId] }]
+                              $and: [
+                                { $eq: ['$followed_user_id', '$$target_user_id'] },
+                                { $eq: ['$user_id', user_obj_id] }
+                              ]
                             }
                           }
                         }
@@ -878,12 +884,12 @@ class CommunityService {
             {
               $lookup: {
                 from: 'followers',
-                let: { targetUserId: '$userInfo._id' },
+                let: { target_user_id: '$userInfo._id' },
                 pipeline: [
                   {
                     $match: {
                       $expr: {
-                        $and: [{ $eq: ['$followed_user_id', '$$targetUserId'] }, { $eq: ['$user_id', userObjId] }]
+                        $and: [{ $eq: ['$followed_user_id', '$$target_user_id'] }, { $eq: ['$user_id', user_obj_id] }]
                       }
                     }
                   }
@@ -930,12 +936,12 @@ class CommunityService {
   }
 
   async togglePin({ user_id, community_id }: ICommonPayload) {
-    const userObjectId = new ObjectId(user_id)
-    const communityObjectId = new ObjectId(community_id)
+    const user_object_id = new ObjectId(user_id)
+    const community_object_id = new ObjectId(community_id)
 
     const dataHandle = {
-      user_id: userObjectId,
-      community_id: communityObjectId
+      user_id: user_object_id,
+      community_id: community_object_id
     }
 
     // Check and delete if like exists
@@ -990,14 +996,14 @@ class CommunityService {
   }
 
   async validateCommunityAndMembership({ user_id, community_id }: ICommonPayload) {
-    const communityObjId = new ObjectId(community_id)
+    const community_obj_id = new ObjectId(community_id)
 
     const [community, mentorIds] = await Promise.all([
       CommunityCollection.findOne(
-        { _id: communityObjId },
+        { _id: community_obj_id },
         { projection: { admin: 1, name: 1, membership_type: 1, invite_expire_days: 1 } }
       ),
-      CommunityMentorCollection.distinct('user_id', { community_id: communityObjId })
+      CommunityMentorCollection.distinct('user_id', { community_id: community_obj_id })
     ])
 
     if (!community) {
@@ -1063,16 +1069,16 @@ class CommunityService {
     queries: IQuery<ICommunityActivity>
   }): Promise<ResMultiType<ICommunityActivity>> {
     const { skip, limit } = getPaginationAndSafeQuery<ICommunityActivity>(queries)
-    const communityObjId = new ObjectId(community_id)
+    const community_obj_id = new ObjectId(community_id)
 
     //
     const activities = await CommunityActivityCollection.find(
-      { community_id: communityObjId },
+      { community_id: community_obj_id },
       { skip, limit }
     ).toArray()
 
     //
-    const total = await CommunityActivityCollection.countDocuments({ community_id: communityObjId })
+    const total = await CommunityActivityCollection.countDocuments({ community_id: community_obj_id })
 
     //
     return {

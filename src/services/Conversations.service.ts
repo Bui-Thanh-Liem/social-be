@@ -19,7 +19,7 @@ import NotificationService from './Notification.service'
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {
     const socket = getSocket()
-    let _newConversation: InsertOneResult<ConversationSchema> | null = null
+    let _new_conversation: InsertOneResult<ConversationSchema> | null = null
     const userObjectId = new ObjectId(user_id)
 
     // PRIVATE
@@ -51,14 +51,14 @@ class ConversationsService {
     }
 
     // GROUP
-    const participantObjectIds = payload.participants.map((userId) => new ObjectId(userId))
-    _newConversation = await ConversationCollection.insertOne(
+    const participant_object_ids = payload.participants.map((userId) => new ObjectId(userId))
+    _new_conversation = await ConversationCollection.insertOne(
       new ConversationSchema({
         type: payload.type,
         name: payload.name,
         avatar: payload?.avatar,
         mentors: [userObjectId],
-        participants: [userObjectId, ...participantObjectIds]
+        participants: [userObjectId, ...participant_object_ids]
       })
     )
 
@@ -67,7 +67,7 @@ class ConversationsService {
       [user_id, ...payload.participants].map(async (id) => {
         const cacheKey = createKeyAllConversationIds(id)
 
-        const conversation = await this.getOneById(_newConversation?.insertedId.toString() || '', user_id)
+        const conversation = await this.getOneById(_new_conversation?.insertedId.toString() || '', user_id)
 
         ConversationGateway.sendNewConversation(conversation, id)
 
@@ -502,7 +502,7 @@ class ConversationsService {
 
     // 2. Build conversation cho từng viewer và emit
     for (const viewerId of participants) {
-      const fullForViewer = await ConversationCollection.aggregate<ConversationSchema>([
+      const full_for_viewer = await ConversationCollection.aggregate<ConversationSchema>([
         { $match: { _id: updated._id } },
         {
           $lookup: {
@@ -585,14 +585,14 @@ class ConversationsService {
         }
       ]).next()
 
-      if (fullForViewer) {
-        ConversationGateway.changeConversation(fullForViewer, viewerId.toString())
+      if (full_for_viewer) {
+        ConversationGateway.changeConversation(full_for_viewer, viewerId.toString())
       }
     }
 
     // 3. Return conversation đúng định dạng cho sender (người gọi API)
     // => chính là conversationForViewer ứng với sender_id
-    const conversationForSender = await ConversationCollection.aggregate<ConversationSchema>([
+    const conversation_for_sender = await ConversationCollection.aggregate<ConversationSchema>([
       { $match: { _id: updated._id } },
       {
         $lookup: {
@@ -675,7 +675,7 @@ class ConversationsService {
       }
     ]).next()
 
-    return conversationForSender
+    return conversation_for_sender
   }
 
   async read({ user_id, conv_id }: { conv_id: string; user_id: string }) {
@@ -843,22 +843,21 @@ class ConversationsService {
     const conv = await ConversationCollection.findOne({ _id: new ObjectId(conv_id) })
     if (!conv) throw new Error('Không tìm thấy cuộc trò chuyện')
 
-    const userObjectId = new ObjectId(user_id)
+    const user_object_id = new ObjectId(user_id)
+    const already_pinned = conv.pinned?.some((p) => p.user_id.equals(user_object_id))
 
-    const alreadyPinned = conv.pinned?.some((p) => p.user_id.equals(userObjectId))
-
-    if (alreadyPinned) {
+    if (already_pinned) {
       // unpin
       await ConversationCollection.updateOne(
         { _id: new ObjectId(conv_id) },
-        { $pull: { pinned: { user_id: userObjectId } } }
+        { $pull: { pinned: { user_id: user_object_id } } }
       )
       return 'Gỡ ghim'
     } else {
       // pin
       await ConversationCollection.updateOne(
         { _id: new ObjectId(conv_id) },
-        { $push: { pinned: { user_id: userObjectId, at: new Date() } } }
+        { $push: { pinned: { user_id: user_object_id, at: new Date() } } }
       )
       return 'Ghim'
     }
@@ -884,8 +883,8 @@ class ConversationsService {
     }
 
     //
-    const currentCount = conv.participants.length
-    const newCount = currentCount + participants.length
+    const current_count = conv.participants.length
+    const newCount = current_count + participants.length
 
     if (newCount > 50) {
       throw new BadRequestError('Số lượng thành viên không được vượt quá 50 người.')
@@ -918,22 +917,22 @@ class ConversationsService {
     const conv = await ConversationCollection.findOne({ _id: new ObjectId(conv_id) })
     if (!conv) throw new NotFoundError('Không tìm thấy cuộc trò chuyện')
 
-    const userObjectId = new ObjectId(user_id)
-    const participantObjectId = new ObjectId(participant)
+    const user_object_id = new ObjectId(user_id)
+    const participant_object_id = new ObjectId(participant)
 
     // Kiểm tra user gọi có trong nhóm
-    const exists = conv.participants.some((p) => p.equals(userObjectId))
+    const exists = conv.participants.some((p) => p.equals(user_object_id))
     if (!exists) throw new BadRequestError('Bạn không phải là thành viên của cuộc trò chuyện này.')
 
     // Nếu user xoá người khác → cần là mentor
-    const existMentorCaller = conv.mentors?.some((p) => p.equals(userObjectId)) ?? false
+    const exist_mentor_caller = conv.mentors?.some((p) => p.equals(user_object_id)) ?? false
 
     if (user_id !== participant) {
       mess = 'Xoá thành viên khỏi'
 
-      const existMentorTarget = conv.mentors?.some((p) => p.equals(participantObjectId)) ?? false
+      const existMentorTarget = conv.mentors?.some((p) => p.equals(participant_object_id)) ?? false
 
-      if (!existMentorCaller) {
+      if (!exist_mentor_caller) {
         throw new BadRequestError('Bạn không phải là trưởng nhóm của cuộc trò chuyện này.')
       }
 
@@ -942,7 +941,7 @@ class ConversationsService {
       }
     } else {
       // Tự rời nhóm
-      if (existMentorCaller && conv.mentors.length === 1) {
+      if (exist_mentor_caller && conv.mentors.length === 1) {
         throw new BadRequestError('Hãy cho một thành viên lên nhóm trưởng trước khi bạn rời cuộc trò chuyện.')
       }
     }
@@ -952,8 +951,8 @@ class ConversationsService {
       { _id: conv._id },
       {
         $pull: {
-          participants: participantObjectId,
-          mentors: participantObjectId
+          participants: participant_object_id,
+          mentors: participant_object_id
         }
       },
       { returnDocument: 'after', projection: { participants: 1 } }
@@ -987,26 +986,26 @@ class ConversationsService {
     const conv = await ConversationCollection.findOne({ _id: new ObjectId(conv_id) })
     if (!conv) throw new NotFoundError('Không tìm thấy cuộc trò chuyện')
 
-    const userObjectId = new ObjectId(user_id)
-    const participantObjectId = new ObjectId(participant)
+    const user_object_id = new ObjectId(user_id)
+    const participant_object_id = new ObjectId(participant)
 
     // Kiểm tra user có trong nhóm
-    const exists = conv.participants.some((p) => p.equals(userObjectId))
+    const exists = conv.participants.some((p) => p.equals(user_object_id))
     if (!exists) throw new BadRequestError('Bạn không phải là thành viên của cuộc trò chuyện này.')
 
     // Không tự promote bản thân
     if (user_id === participant) throw new BadRequestError('Bạn không thể tự cho bạn là nhóm trưởng.')
 
     // Kiểm tra quyền người gọi
-    const isMentorCaller = conv.mentors?.some((p) => p.equals(userObjectId)) ?? false
+    const isMentorCaller = conv.mentors?.some((p) => p.equals(user_object_id)) ?? false
     if (!isMentorCaller) throw new BadRequestError('Bạn không phải là trưởng nhóm của cuộc trò chuyện này.')
 
     // Kiểm tra người được promote có phải mentor chưa
-    const alreadyMentor = conv.mentors?.some((p) => p.equals(participantObjectId)) ?? false
+    const alreadyMentor = conv.mentors?.some((p) => p.equals(participant_object_id)) ?? false
     if (alreadyMentor) throw new BadRequestError('Người này đã là trưởng nhóm rồi.')
 
     // Cập nhật
-    await ConversationCollection.updateOne({ _id: conv._id }, { $addToSet: { mentors: participantObjectId } })
+    await ConversationCollection.updateOne({ _id: conv._id }, { $addToSet: { mentors: participant_object_id } })
 
     // Gửi thông báo
     await NotificationService.createInQueue({

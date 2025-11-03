@@ -18,10 +18,10 @@ const limit = pLimit(10)
 
 class CommunityInvitationService {
   async create({ user_id, community, member_ids }: CreateCommunityInvitationDto) {
-    const userObjId = new ObjectId(user_id)
+    const user_obj_id = new ObjectId(user_id)
 
     //
-    const sender = await UserCollection.findOne({ _id: userObjId }, { projection: { name: 1 } })
+    const sender = await UserCollection.findOne({ _id: user_obj_id }, { projection: { name: 1 } })
 
     if (!sender) {
       throw new NotFoundError()
@@ -30,11 +30,11 @@ class CommunityInvitationService {
     const created = await Promise.all(
       member_ids.map((id) =>
         limit(async () => {
-          const targetUserId = new ObjectId(id)
+          const target_user_id = new ObjectId(id)
 
           // ✅ Kiểm tra nếu đã có lời mời trước đó
           const alreadyInvited = await CommunityInvitationCollection.findOne({
-            user_id: targetUserId,
+            user_id: target_user_id,
             community_id: community._id,
             status: EInvitationStatus.Pending // chỉ bỏ qua nếu đang chờ
           })
@@ -43,8 +43,8 @@ class CommunityInvitationService {
 
           // ✅ Tạo lời mời mới
           const invitation = new CommunityInvitationSchema({
-            inviter: userObjId,
-            user_id: targetUserId,
+            inviter: user_obj_id,
+            user_id: target_user_id,
             community_id: new ObjectId(community._id),
             exp: new Date(Date.now() + community.invite_expire_days * 24 * 60 * 60 * 1000)
           })

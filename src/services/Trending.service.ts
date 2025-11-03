@@ -112,7 +112,7 @@ class TrendingService {
     ]).toArray()
 
     //
-    const totalAgg = await TrendingCollection.aggregate([
+    const total_agg = await TrendingCollection.aggregate([
       {
         $lookup: {
           from: 'hashtags',
@@ -127,7 +127,7 @@ class TrendingService {
       { $count: 'total' }
     ]).toArray()
 
-    const total = totalAgg[0]?.total || 0
+    const total = total_agg[0]?.total || 0
 
     return { total, total_page: Math.ceil(total / limit), items: trending }
   }
@@ -144,14 +144,14 @@ class TrendingService {
     user_id: string
   }): Promise<IResTodayNewsOrOutstanding[]> {
     // Today range
-    const startDay = new Date()
-    startDay.setHours(0, 0, 0, 0)
-    const endDay = new Date()
-    endDay.setHours(23, 59, 59, 999)
+    const start_day = new Date()
+    start_day.setHours(0, 0, 0, 0)
+    const end_day = new Date()
+    end_day.setHours(23, 59, 59, 999)
 
     // Trending data
     const trending = await this.getTrending({
-      query: { ...query, sd: startDay, ed: endDay }
+      query: { ...query, sd: start_day, ed: end_day }
     })
 
     //
@@ -249,7 +249,7 @@ class TrendingService {
           {
             $match: {
               $text: { $search: searchString },
-              created_at: { $gte: startDay, $lte: endDay },
+              created_at: { $gte: start_day, $lte: end_day },
               audience: ETweetAudience.Everyone
             }
           },
@@ -273,7 +273,7 @@ class TrendingService {
           {
             $match: {
               hashtags: { $in: trending_hashtags },
-              created_at: { $gte: startDay, $lte: endDay },
+              created_at: { $gte: start_day, $lte: end_day },
               audience: ETweetAudience.Everyone
             }
           },
@@ -300,16 +300,16 @@ class TrendingService {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    const endDay = new Date(today)
-    endDay.setMilliseconds(-1) // 23:59:59.999 hôm qua
+    const end_day = new Date(today)
+    end_day.setMilliseconds(-1) // 23:59:59.999 hôm qua
 
-    const startDay = new Date(today)
-    startDay.setDate(today.getDate() - 7) // cách đây 7 ngày
-    startDay.setHours(0, 0, 0, 0)
+    const start_day = new Date(today)
+    start_day.setDate(today.getDate() - 7) // cách đây 7 ngày
+    start_day.setHours(0, 0, 0, 0)
 
     // Trending data
     const trending = await this.getTrending({
-      query: { ...query, sd: startDay, ed: endDay }
+      query: { ...query, sd: start_day, ed: end_day }
     })
 
     //
@@ -329,7 +329,7 @@ class TrendingService {
     )
 
     // Build search string (OR mode)
-    const searchString = trending_topics.join(' ')
+    const search_string = trending_topics.join(' ')
 
     // Base pipeline for $lookup, $addFields, $sort, $project
     const basePipeline = [
@@ -402,12 +402,12 @@ class TrendingService {
     ]
 
     // Query 1: Text search (if searchString exists)
-    const textSearchTweets = searchString
+    const textSearchTweets = search_string
       ? await TweetCollection.aggregate<ITweet>([
           {
             $match: {
-              $text: { $search: searchString },
-              created_at: { $gte: startDay, $lte: endDay },
+              $text: { $search: search_string },
+              created_at: { $gte: start_day, $lte: end_day },
               audience: ETweetAudience.Everyone
             }
           },
@@ -431,7 +431,7 @@ class TrendingService {
           {
             $match: {
               hashtags: { $in: trending_hashtags },
-              created_at: { $gte: startDay, $lte: endDay },
+              created_at: { $gte: start_day, $lte: end_day },
               audience: ETweetAudience.Everyone
             }
           },
@@ -456,23 +456,23 @@ class TrendingService {
       const t_hashtag = t?.hashtag
 
       //
-      const relatedTweets = tweets.filter(
+      const related_tweets = tweets.filter(
         (tw) =>
           (t_key && tw.content.toLocaleLowerCase().includes(t_key.toLocaleLowerCase())) ||
           (t_hashtag && tw.hashtags.some((h) => h.equals?.(t_hashtag)))
       )
 
-      if (!relatedTweets.length) return []
+      if (!related_tweets.length) return []
 
-      const relatedTweet = relatedTweets.length
-      const highlightTweet = [...relatedTweets]
+      const relatedTweet = related_tweets.length
+      const highlight_tweet = [...related_tweets]
         .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
         .slice(0, relatedTweet > 4 ? 3 : 2)
 
       //
       const highlight = Array.from(
         new Map(
-          highlightTweet.map((tw) => [
+          highlight_tweet.map((tw) => [
             (tw.user_id as any)._id?.toString(),
             {
               content: tw.content,
@@ -491,11 +491,11 @@ class TrendingService {
       return {
         trending: t,
         category: category,
-        media: highlightTweet[0].media,
+        media: highlight_tweet[0].media,
         posts: relatedTweet,
-        id: highlightTweet[0]._id as any,
-        time: highlightTweet[0].created_at,
-        relevantIds: relatedTweets.map((tw) => tw._id),
+        id: highlight_tweet[0]._id as any,
+        time: highlight_tweet[0].created_at,
+        relevant_ids: related_tweets.map((tw) => tw._id),
         highlight: highlight
       } as IResTodayNewsOrOutstanding
     })
@@ -526,9 +526,9 @@ class TrendingService {
     const { ids } = query
     const { sort } = getPaginationAndSafeQuery<ITweet>(query)
 
-    let safeIds = typeof ids === 'object' ? [...ids] : []
+    let safe_ids = typeof ids === 'object' ? [...ids] : []
     if (typeof ids === 'string') {
-      safeIds = [...(ids as any).split(',')]
+      safe_ids = [...(ids as any).split(',')]
     }
 
     //
@@ -536,7 +536,7 @@ class TrendingService {
     followed_user_ids.push(user_active_id)
 
     // condition
-    const matchCondition = {
+    const match_condition = {
       $or: [
         {
           audience: ETweetAudience.Everyone
@@ -563,10 +563,10 @@ class TrendingService {
     //
     const tweets = await TweetCollection.aggregate<TweetSchema>([
       {
-        $match: matchCondition
+        $match: match_condition
       },
       {
-        $match: { type: { $ne: ETweetType.Comment }, _id: { $in: safeIds.map((id) => new ObjectId(id)) } }
+        $match: { type: { $ne: ETweetType.Comment }, _id: { $in: safe_ids.map((id) => new ObjectId(id)) } }
       },
       {
         $sort: sort
@@ -575,7 +575,7 @@ class TrendingService {
         $skip: 0
       },
       {
-        $limit: safeIds.length
+        $limit: safe_ids.length
       },
       {
         $lookup: {
@@ -625,13 +625,13 @@ class TrendingService {
       {
         $lookup: {
           from: 'followers',
-          let: { targetUserId: '$user_id._id' },
+          let: { target_user_id: '$user_id._id' },
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ['$followed_user_id', '$$targetUserId'] },
+                    { $eq: ['$followed_user_id', '$$target_user_id'] },
                     { $eq: ['$user_id', new ObjectId(user_active_id)] }
                   ]
                 }

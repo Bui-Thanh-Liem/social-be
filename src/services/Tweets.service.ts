@@ -65,7 +65,8 @@ class TweetsService {
     }
 
     // Kiểm tra nếu đăng trong cộng đồng
-    let status = ETweetStatus.Pending
+    // Ready giai đoạn 2 làm bảng điều khiển, sẽ duyệt
+    let status = ETweetStatus.Ready
     let operatorIds = [] as ObjectId[]
     let community: null | ICommunity = null
     if (community_id) {
@@ -83,6 +84,7 @@ class TweetsService {
       if (is_admin || is_mentor) {
         status = ETweetStatus.Ready
       } else {
+        status = ETweetStatus.Pending
         operatorIds = [...mentorIds, c.admin]
         message = 'Đăng bài thành công, chờ điều hành viên phê duyệt.'
       }
@@ -166,7 +168,7 @@ class TweetsService {
     followed_user_ids.push(user_active_id)
 
     // Dynamic match condition based on feed type
-    const matchCondition = {
+    const match_condition = {
       _id: new ObjectId(tweet_id),
       status: ETweetStatus.Ready,
       $or: [
@@ -184,7 +186,7 @@ class TweetsService {
 
     const result = await TweetCollection.aggregate<TweetSchema>([
       {
-        $match: matchCondition
+        $match: match_condition
       },
       {
         $lookup: {
@@ -623,24 +625,24 @@ class TweetsService {
     followed_user_ids.push(user_active_id)
 
     // Dynamic match condition based on feed type
-    let matchCondition: any
+    let match_condition: any
 
     switch (feed_type) {
       case EFeedType.Following:
         // Chỉ tweets following
-        matchCondition = {
+        match_condition = {
           user_id: { $in: followed_user_ids.map((id) => new ObjectId(id)) }
         }
         break
       case EFeedType.Everyone:
         // Chỉ tweets công khai từ tất cả mọi người
-        matchCondition = {
+        match_condition = {
           audience: ETweetAudience.Everyone
         }
         break
 
       default:
-        matchCondition = {
+        match_condition = {
           $or: [
             {
               audience: ETweetAudience.Everyone
@@ -671,7 +673,7 @@ class TweetsService {
         {
           $match: {
             community_id: { $eq: null },
-            ...matchCondition
+            ...match_condition
           }
         },
         {
@@ -718,13 +720,13 @@ class TweetsService {
         {
           $lookup: {
             from: 'followers',
-            let: { targetUserId: '$user_id._id' },
+            let: { target_user_id: '$user_id._id' },
             pipeline: [
               {
                 $match: {
                   $expr: {
                     $and: [
-                      { $eq: ['$followed_user_id', '$$targetUserId'] },
+                      { $eq: ['$followed_user_id', '$$target_user_id'] },
                       { $eq: ['$user_id', new ObjectId(user_active_id)] }
                     ]
                   }
@@ -928,7 +930,7 @@ class TweetsService {
     const date = new Date()
 
     const [total] = await Promise.all([
-      TweetCollection.countDocuments(matchCondition),
+      TweetCollection.countDocuments(match_condition),
       TweetCollection.updateMany(
         {
           _id: {
@@ -1034,26 +1036,26 @@ class TweetsService {
     const followed_user_ids = await FollowsService.getUserFollowers(user_id)
 
     // ép về string để so sánh cho chắc
-    const isFollowing = followed_user_ids.some((f: ObjectId | string) => f.toString() === user_active_id.toString())
+    const is_following = followed_user_ids.some((f: ObjectId | string) => f.toString() === user_active_id.toString())
 
     //
-    const matchCondition: any = {
+    const match_condition: any = {
       user_id: new ObjectId(user_id),
       type: tweet_type
     }
 
     // Nếu người xem profile là chính chủ
     if (user_active_id === user_id) {
-      matchCondition.audience = { $in: [ETweetAudience.Everyone, ETweetAudience.Followers] }
+      match_condition.audience = { $in: [ETweetAudience.Everyone, ETweetAudience.Followers] }
     } else {
       // Nếu người khác xem profile
-      matchCondition.$or = [
+      match_condition.$or = [
         { audience: ETweetAudience.Everyone },
-        ...(isFollowing ? [{ audience: ETweetAudience.Followers }] : [])
+        ...(is_following ? [{ audience: ETweetAudience.Followers }] : [])
       ]
 
       // Nếu là người khác xem profile của mình thì không cho thấy
-      matchCondition.community_id = { $eq: null }
+      match_condition.community_id = { $eq: null }
     }
 
     //
@@ -1066,7 +1068,7 @@ class TweetsService {
     // Pipeline tổng hợp
     const tweets = await TweetCollection.aggregate<TweetSchema>([
       {
-        $match: matchCondition
+        $match: match_condition
       },
 
       // tính total_views nếu cần (ok để trước sort)
@@ -1163,13 +1165,13 @@ class TweetsService {
       {
         $lookup: {
           from: 'followers',
-          let: { targetUserId: '$user_id._id' },
+          let: { target_user_id: '$user_id._id' },
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ['$followed_user_id', '$$targetUserId'] },
+                    { $eq: ['$followed_user_id', '$$target_user_id'] },
                     { $eq: ['$user_id', new ObjectId(user_active_id)] }
                   ]
                 }
@@ -1343,7 +1345,7 @@ class TweetsService {
     const date = new Date()
 
     const [total] = await Promise.all([
-      TweetCollection.countDocuments(matchCondition),
+      TweetCollection.countDocuments(match_condition),
       TweetCollection.updateMany(
         {
           _id: { $in: ids }
@@ -1388,19 +1390,19 @@ class TweetsService {
     })
 
     // Điều kiện lọc tweet
-    const matchCondition: any = {
+    const match_condition: any = {
       _id: { $in: likedTweetIds } // Chỉ lấy tweet đã like
     }
 
     //
     if (q) {
-      matchCondition.$text = { $search: q }
+      match_condition.$text = { $search: q }
     }
 
     // Pipeline tổng hợp
     const tweets = await TweetCollection.aggregate<TweetSchema>([
       {
-        $match: matchCondition
+        $match: match_condition
       },
       {
         $sort: sort
@@ -1442,13 +1444,13 @@ class TweetsService {
       {
         $lookup: {
           from: 'followers',
-          let: { targetUserId: '$user_id._id' },
+          let: { target_user_id: '$user_id._id' },
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ['$followed_user_id', '$$targetUserId'] },
+                    { $eq: ['$followed_user_id', '$$target_user_id'] },
                     { $eq: ['$user_id', new ObjectId(user_active_id)] }
                   ]
                 }
@@ -1607,7 +1609,7 @@ class TweetsService {
     const date = new Date()
 
     const [total] = await Promise.all([
-      TweetCollection.countDocuments(matchCondition),
+      TweetCollection.countDocuments(match_condition),
       ids.length > 0
         ? TweetCollection.updateMany(
             {
@@ -1649,24 +1651,24 @@ class TweetsService {
     const { skip, limit, sort, q } = getPaginationAndSafeQuery<TweetSchema>(query)
 
     // Lấy danh sách tweet_id mà user_id đã bookmark
-    const bookmarkedTweetIds = await BookmarkCollection.distinct('tweet_id', {
+    const bookmarked_tweet_ids = await BookmarkCollection.distinct('tweet_id', {
       user_id: new ObjectId(user_active_id)
     })
 
     // Điều kiện lọc tweet
-    const matchCondition: any = {
-      _id: { $in: bookmarkedTweetIds } // Chỉ lấy tweet đã bookmarks
+    const match_condition: any = {
+      _id: { $in: bookmarked_tweet_ids } // Chỉ lấy tweet đã bookmarks
     }
 
     //
     if (q) {
-      matchCondition.$text = { $search: q }
+      match_condition.$text = { $search: q }
     }
 
     // Pipeline tổng hợp
     const tweets = await TweetCollection.aggregate<TweetSchema>([
       {
-        $match: matchCondition
+        $match: match_condition
       },
       {
         $sort: sort
@@ -1708,13 +1710,13 @@ class TweetsService {
       {
         $lookup: {
           from: 'followers',
-          let: { targetUserId: '$user_id._id' },
+          let: { target_user_id: '$user_id._id' },
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ['$followed_user_id', '$$targetUserId'] },
+                    { $eq: ['$followed_user_id', '$$target_user_id'] },
                     { $eq: ['$user_id', new ObjectId(user_active_id)] }
                   ]
                 }
@@ -1869,7 +1871,7 @@ class TweetsService {
     const date = new Date()
 
     const [total] = await Promise.all([
-      TweetCollection.countDocuments(matchCondition),
+      TweetCollection.countDocuments(match_condition),
       ids.length > 0
         ? TweetCollection.updateMany(
             {
@@ -1957,18 +1959,18 @@ class TweetsService {
     await LikesService.deleteByTweetId(parent_id)
 
     //
-    const childrenIds = await TweetCollection.find(
+    const children_ids = await TweetCollection.find(
       { parent_id: new ObjectId(parent_id), type: ETweetType.Comment },
       { projection: { _id: 1 } }
     ).toArray()
 
     // tránh đẹ quy vô tận
-    if (!childrenIds.length) {
+    if (!children_ids.length) {
       console.log('Không có comment cần xóa')
       return
     }
 
-    const ids = childrenIds.map((tw) => tw._id.toString())
+    const ids = children_ids.map((tw) => tw._id.toString())
 
     // Chia nhỏ để tránh nghẽn — ví dụ mỗi chunk 100 tweet
     const chunks = chunkArray(ids, 100)
@@ -2040,7 +2042,7 @@ class TweetsService {
     const following_user_ids = await FollowsService.getUserFollowing(user_active_id)
 
     //
-    const matchCondition = {
+    const match_condition = {
       community_id: new ObjectId(community_id),
       status: ETweetStatus.Ready,
       $or: [
@@ -2061,7 +2063,7 @@ class TweetsService {
     // Pipeline tổng hợp
     const tweets = await TweetCollection.aggregate<TweetSchema>([
       {
-        $match: matchCondition
+        $match: match_condition
       },
 
       // tính total_views nếu cần (ok để trước sort)
@@ -2136,13 +2138,13 @@ class TweetsService {
       {
         $lookup: {
           from: 'followers',
-          let: { targetUserId: '$user_id._id' },
+          let: { target_user_id: '$user_id._id' },
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ['$followed_user_id', '$$targetUserId'] },
+                    { $eq: ['$followed_user_id', '$$target_user_id'] },
                     { $eq: ['$user_id', new ObjectId(user_active_id)] }
                   ]
                 }
@@ -2316,7 +2318,7 @@ class TweetsService {
     const date = new Date()
 
     const [total] = await Promise.all([
-      TweetCollection.countDocuments(matchCondition),
+      TweetCollection.countDocuments(match_condition),
       TweetCollection.updateMany(
         {
           _id: { $in: ids }
@@ -2375,14 +2377,14 @@ class TweetsService {
     //
     const { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
 
-    const matchCondition = {
+    const match_condition = {
       community_id: new ObjectId(community_id),
       status: ETweetStatus.Pending
     }
 
     const tweets = await TweetCollection.aggregate<TweetSchema>([
       {
-        $match: matchCondition
+        $match: match_condition
       },
       {
         $sort: sort
@@ -2425,7 +2427,7 @@ class TweetsService {
       }
     ]).toArray()
 
-    const total = await TweetCollection.countDocuments(matchCondition)
+    const total = await TweetCollection.countDocuments(match_condition)
 
     return { items: tweets, total, total_page: Math.ceil(total / limit) }
   }

@@ -94,7 +94,7 @@ class SearchService {
     followed_user_ids.push(user_id)
 
     //
-    const hasQ = { query: {}, projection: {}, sort: {}, score: {} }
+    const has_q = { query: {}, projection: {}, sort: {}, score: {} }
     const hasF = { query: {} }
     const hasPf = {
       query: {}
@@ -105,19 +105,19 @@ class SearchService {
 
     //
     if (q) {
-      hasQ.query = {
+      has_q.query = {
         $text: { $search: q }
       }
-      hasQ.projection = {
+      has_q.projection = {
         score: { $meta: 'textScore' }
       }
-      hasQ.sort = {
+      has_q.sort = {
         score: { $meta: 'textScore' },
         created_at: -1
       }
-      hasQ.score = { score: { $meta: 'textScore' } }
+      has_q.score = { score: { $meta: 'textScore' } }
     } else {
-      hasQ.sort = sort
+      has_q.sort = sort
     }
 
     //
@@ -223,7 +223,7 @@ class SearchService {
       {
         $match: {
           community_id: { $eq: null },
-          ...hasQ.query,
+          ...has_q.query,
           ...hasF.query,
           ...hasPf.query
         }
@@ -262,12 +262,15 @@ class SearchService {
       {
         $lookup: {
           from: 'followers',
-          let: { targetUserId: '$user_id._id' },
+          let: { target_user_id: '$user_id._id' },
           pipeline: [
             {
               $match: {
                 $expr: {
-                  $and: [{ $eq: ['$followed_user_id', '$$targetUserId'] }, { $eq: ['$user_id', new ObjectId(user_id)] }]
+                  $and: [
+                    { $eq: ['$followed_user_id', '$$target_user_id'] },
+                    { $eq: ['$user_id', new ObjectId(user_id)] }
+                  ]
                 }
               }
             }
@@ -451,7 +454,7 @@ class SearchService {
     //
     const [total] = await Promise.all([
       TweetCollection.countDocuments({
-        ...hasQ.query,
+        ...has_q.query,
         ...hasF.query,
         ...hasPf.query
       }),

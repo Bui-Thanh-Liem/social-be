@@ -7,16 +7,16 @@ import { ENotificationType } from '~/shared/enums/type.enum'
 
 class FollowsService {
   async toggleFollow(user_id: string, followed_user_id: string): Promise<ResToggleFollow> {
-    const userIdObjectId = new ObjectId(user_id)
-    const followedUserIdObjectId = new ObjectId(followed_user_id)
+    const user_object_id = new ObjectId(user_id)
+    const followed_user_object_id = new ObjectId(followed_user_id)
 
-    const dataHandle = {
-      user_id: userIdObjectId,
-      followed_user_id: followedUserIdObjectId
+    const data_handle = {
+      user_id: user_object_id,
+      followed_user_id: followed_user_object_id
     }
 
     //
-    const deleted = await FollowerCollection.findOneAndDelete(dataHandle)
+    const deleted = await FollowerCollection.findOneAndDelete(data_handle)
 
     //
     if (deleted?._id) {
@@ -24,8 +24,8 @@ class FollowsService {
     } else {
       //
       const inserted = await FollowerCollection.insertOne({
-        user_id: userIdObjectId,
-        followed_user_id: followedUserIdObjectId
+        user_id: user_object_id,
+        followed_user_id: followed_user_object_id
       })
 
       // Gửi thông báo
@@ -44,7 +44,7 @@ class FollowsService {
 
   // Lấy user mình đang follow
   async getUserFollowing(user_id: string) {
-    const resultFollowing = await FollowerCollection.find(
+    const result_following = await FollowerCollection.find(
       {
         user_id: new ObjectId(user_id)
       },
@@ -57,14 +57,14 @@ class FollowsService {
     ).toArray()
 
     //
-    const followed_user_ids = resultFollowing.map((x) => x.followed_user_id) as unknown as string[]
+    const followed_user_ids = result_following.map((x) => x.followed_user_id) as unknown as string[]
     followed_user_ids.push(user_id)
     return followed_user_ids
   }
 
   // Lấy user đang follow mình
   async getUserFollowers(user_id: string) {
-    const resultFollower = await FollowerCollection.find(
+    const result_follower = await FollowerCollection.find(
       {
         followed_user_id: new ObjectId(user_id)
       },
@@ -77,7 +77,7 @@ class FollowsService {
     ).toArray()
 
     //
-    const followers_user_ids = resultFollower.map((x) => x.user_id) as unknown as string[]
+    const followers_user_ids = result_follower.map((x) => x.user_id) as unknown as string[]
     return followers_user_ids
   }
 }

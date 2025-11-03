@@ -112,11 +112,11 @@ class MessagesService {
   }
 
   async cleanupOldMessages() {
-    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+    const three_days_ago = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
     const limit = pLimit(10) // chỉ cho phép 10 task xóa chạy song song
 
     const conversations = await MessageCollection.aggregate([
-      { $match: { created_at: { $lt: threeDaysAgo } } },
+      { $match: { created_at: { $lt: three_days_ago } } },
       { $group: { _id: '$conversation_id' } }
     ]).toArray()
 
@@ -134,7 +134,7 @@ class MessagesService {
       // Lấy danh sách message sẽ bị xóa
       const oldMessages = await MessageCollection.find({
         conversation_id: convId,
-        created_at: { $lt: threeDaysAgo },
+        created_at: { $lt: three_days_ago },
         _id: { $nin: keepIds }
       }).toArray()
 
@@ -165,7 +165,7 @@ class MessagesService {
       // Xóa message trong DB
       await MessageCollection.deleteMany({
         conversation_id: convId,
-        created_at: { $lt: threeDaysAgo },
+        created_at: { $lt: three_days_ago },
         _id: { $nin: keepIds }
       })
     }

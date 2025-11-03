@@ -2,19 +2,19 @@ import { ObjectId } from 'mongodb'
 import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection } from '~/models/schemas/Tweet.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
+import { ParamIdTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ResToggleLike } from '~/shared/dtos/res/like.dto'
 import { ENotificationType } from '~/shared/enums/type.enum'
 import NotificationService from './Notification.service'
-import { ParamIdTweetDto } from '~/shared/dtos/req/tweet.dto'
 
 class LikesService {
   async toggleLike(user_id: string, payload: ParamIdTweetDto): Promise<ResToggleLike> {
-    const userObjectId = new ObjectId(user_id)
-    const tweetObjectId = new ObjectId(payload.tweet_id)
+    const user_Obj_id = new ObjectId(user_id)
+    const tweet_obj_id = new ObjectId(payload.tweet_id)
 
     const dataHandle = {
-      user_id: userObjectId,
-      tweet_id: tweetObjectId
+      user_id: user_Obj_id,
+      tweet_id: tweet_obj_id
     }
 
     // Check and delete if like exists
@@ -46,7 +46,7 @@ class LikesService {
     }
 
     // Calculate likes_count
-    const likesCount = await LikeCollection.countDocuments({ tweet_id: tweetObjectId })
+    const likesCount = await LikeCollection.countDocuments({ tweet_id: tweet_obj_id })
 
     return { status, _id: id, likes_count: likesCount }
   }

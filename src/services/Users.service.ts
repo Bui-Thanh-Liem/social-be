@@ -84,8 +84,8 @@ class UsersService {
   }
 
   async getOneByUsername(username: string, user_id_active: string) {
-    const keyCache = `${CONSTANT_USER.user_active_key_cache}-${username}`
-    let user = await cacheServiceInstance.getCache<IUser>(keyCache)
+    const key_cache = `${CONSTANT_USER.user_active_key_cache}-${username}`
+    let user = await cacheServiceInstance.getCache<IUser>(key_cache)
     if (!user) {
       user = await UserCollection.aggregate<IUser>([
         {
@@ -171,12 +171,12 @@ class UsersService {
     const { skip, limit, sort, q } = getPaginationAndSafeQuery<IUser>(query)
 
     //
-    const hasQ = {
+    const has_q = {
       query: {}
     }
 
     if (q) {
-      hasQ.query = { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] }
+      has_q.query = { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] }
     }
 
     //
@@ -185,7 +185,7 @@ class UsersService {
       {
         $match: {
           _id: { $in: followed_user_ids },
-          ...hasQ.query
+          ...has_q.query
         }
       },
       {
@@ -254,13 +254,13 @@ class UsersService {
     const { skip, limit, sort, q } = getPaginationAndSafeQuery<IUser>(query)
 
     //
-    const hasQ = {
+    const has_q = {
       query: {}
     }
 
     //
     if (q) {
-      hasQ.query = { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] }
+      has_q.query = { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] }
     }
 
     //
@@ -269,7 +269,7 @@ class UsersService {
       {
         $match: {
           _id: { $in: following_user_ids },
-          ...hasQ.query
+          ...has_q.query
         }
       },
       {

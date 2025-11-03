@@ -13,7 +13,7 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 
 class NotificationService {
   async create(payload: CreateNotiDto) {
-    const { content, type, sender: senderId, receiver: receiverId, ref_id } = payload
+    const { content, type, sender: senderId, receiver: receiver_id, ref_id } = payload
 
     //
     const result = await NotificationCollection.insertOne(
@@ -21,7 +21,7 @@ class NotificationService {
         content,
         type,
         sender: new ObjectId(senderId),
-        receiver: new ObjectId(receiverId),
+        receiver: new ObjectId(receiver_id),
         ref_id: ref_id ? new ObjectId(ref_id) : undefined
       })
     )
@@ -93,11 +93,11 @@ class NotificationService {
       { $unwind: { path: '$community_ref', preserveNullAndEmptyArrays: true } }
     )
 
-    const newNoti = await NotificationCollection.aggregate<NotificationSchema>(pipeline).next()
+    const new_noti = await NotificationCollection.aggregate<NotificationSchema>(pipeline).next()
 
     //
-    if (receiverId && newNoti) {
-      await publishNotification({ newNoti, receiverId })
+    if (receiver_id && new_noti) {
+      await publishNotification({ new_noti, receiver_id })
     }
 
     return true

@@ -28,8 +28,8 @@ import UsersService from './Users.service'
 class AuthService {
   async register(payload: RegisterUserDto) {
     //
-    const existEmail = await this.findOneByEmail(payload.email)
-    if (existEmail) {
+    const exist_email = await this.findOneByEmail(payload.email)
+    if (exist_email) {
       throw new ConflictError('Email đã tồn tại')
     }
 
@@ -37,7 +37,7 @@ class AuthService {
     await this.checkExistByName(payload?.name)
 
     //
-    const passwordHashed = hashPassword(payload.password)
+    const password_hashed = hashPassword(payload.password)
 
     //
     const email_verify_token = await signToken({
@@ -47,13 +47,13 @@ class AuthService {
     })
 
     //
-    const snakeCaseName = `@${_.snakeCase(payload.name)}`.slice(0, 20)
+    const snake_case_name = `@${_.snakeCase(payload.name)}`.slice(0, 20)
     const result = await UserCollection.insertOne(
       new UserSchema({
         ...payload,
         email_verify_token,
-        username: snakeCaseName,
-        password: passwordHashed,
+        username: snake_case_name,
+        password: password_hashed,
         day_of_birth: new Date(payload.day_of_birth)
       })
     )
@@ -108,8 +108,8 @@ class AuthService {
     }
 
     //
-    const verifyPass = verifyPassword(payload.password, exist.password)
-    if (!verifyPass) {
+    const verify_pass = verifyPassword(payload.password, exist.password)
+    if (!verify_pass) {
       throw new UnauthorizedError('Email hoặc mật khẩu không đúng.')
     }
 
@@ -131,15 +131,15 @@ class AuthService {
 
   async googleLogin(code: string) {
     const { id_token, access_token } = await this.getOauthGoogleToken(code)
-    const userInfo = await this.getOauthGoogleInfoUser(access_token, id_token)
+    const user_info = await this.getOauthGoogleInfoUser(access_token, id_token)
 
     //
-    if (!userInfo.verified_email) {
+    if (!user_info.verified_email) {
       throw new BadRequestError('Email của bạn chưa được xác minh.')
     }
 
     //
-    const exist = await this.findOneByEmail(userInfo?.email)
+    const exist = await this.findOneByEmail(user_info?.email)
 
     // Nếu đã đăng nhập rồi thì tạo token gửi về client
     if (exist) {
@@ -162,12 +162,12 @@ class AuthService {
     //
     const newPass = generatePassword()
     const register = await this.register({
-      email: userInfo.email,
-      name: userInfo.name,
+      email: user_info.email,
+      name: user_info.name,
       day_of_birth: new Date(),
       confirm_password: newPass,
       password: newPass,
-      avatar: userInfo.picture
+      avatar: user_info.picture
     })
 
     return {
@@ -209,8 +209,8 @@ class AuthService {
   }
 
   async logout({ refresh_token, user_id }: { refresh_token: string; user_id: string }) {
-    const keyCache = `${CONSTANT_USER.user_active_key_cache}-${user_id}`
-    await cacheServiceInstance.del(keyCache)
+    const key_cache = `${CONSTANT_USER.user_active_key_cache}-${user_id}`
+    await cacheServiceInstance.del(key_cache)
     return await RefreshTokenCollection.deleteOne({ token: refresh_token })
   }
 
@@ -255,7 +255,7 @@ class AuthService {
 
   async resetPassword(objectId: ObjectId, payload: ResetPasswordDto) {
     //
-    const passwordHashed = hashPassword(payload.password)
+    const password_hashed = hashPassword(payload.password)
 
     await UsersService.resetUserActive(objectId.toString())
 
@@ -264,7 +264,7 @@ class AuthService {
       { _: objectId },
       {
         $set: {
-          password: passwordHashed,
+          password: password_hashed,
           forgot_password_token: ''
         },
         $currentDate: {
@@ -310,8 +310,8 @@ class AuthService {
   }
 
   private async checkExistByName(name: string) {
-    const isExist = (await UserCollection.countDocuments({ name })) > 0
-    if (isExist) {
+    const is_exist = (await UserCollection.countDocuments({ name })) > 0
+    if (is_exist) {
       throw new ConflictError('Tên người dùng đã tồn tại.')
     }
   }

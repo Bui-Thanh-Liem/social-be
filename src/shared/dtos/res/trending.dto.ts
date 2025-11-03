@@ -11,7 +11,7 @@ export interface IResTodayNewsOrOutstanding {
   category: string
   posts: number // Số lượng bài đã đăng với keyword/hashtag nổi bật hôm nay
   trending: ITrending
-  relevantIds: ObjectId[]
+  relevant_ids: ObjectId[]
 
   highlight: (Pick<ITweet, '_id' | 'content' | 'created_at'> &
     Pick<IUser, 'avatar' | 'name' | 'username' | 'verify' | 'isFollow'>)[]
