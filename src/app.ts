@@ -19,6 +19,7 @@ import { logger } from './utils/logger.util'
 //
 import './tasks/cleanup.task'
 import StreamVideoController from './controllers/StreamVideo.controller'
+import path from 'path'
 
 const app = express()
 
@@ -73,6 +74,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' })) // application/x-
 
 // Static files
 app.use(
+  '/uploads',
   express.static(UPLOAD_VIDEO_FOLDER_PATH, {
     setHeaders: (res, path) => {
       // Thêm CORS headers cho static files
@@ -83,6 +85,7 @@ app.use(
 )
 
 app.use(
+  '/uploads',
   express.static(UPLOAD_IMAGE_FOLDER_PATH, {
     setHeaders: (res, path) => {
       // Thêm CORS headers cho static files

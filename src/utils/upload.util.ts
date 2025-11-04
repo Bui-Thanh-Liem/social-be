@@ -95,7 +95,7 @@ export function uploadImages(req: Request): Promise<string[]> {
       ;(async () => {
         try {
           const compressedFiles = await Promise.all(imageUploaded.map((img) => compressionFile(img)))
-          const imgMap = compressedFiles.map((img) => `${envs.SERVER_DOMAIN}/${img}`)
+          const imgMap = compressedFiles.map((img) => `${envs.SERVER_DOMAIN}/uploads/${img}`)
           res(imgMap)
         } catch (error) {
           rej(error)
