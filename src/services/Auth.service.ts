@@ -24,6 +24,7 @@ import { generatePassword, hashPassword, verifyPassword } from '~/utils/crypto.u
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import NotificationService from './Notification.service'
 import UsersService from './Users.service'
+import { ISendVerifyEmail } from '~/shared/interfaces/common/mail.interface'
 
 class AuthService {
   async register(payload: RegisterUserDto) {
@@ -73,10 +74,10 @@ class AuthService {
     await emailQueue.add(
       CONSTANT_JOB.VERIFY_MAIL,
       {
-        toEmail: payload.email,
+        to_email: payload.email,
         name: payload.name,
         url: `${envs.CLIENT_DOMAIN}/verify?token=${email_verify_token}`
-      },
+      } as ISendVerifyEmail,
       { delay: 5000 }
     )
 
@@ -243,7 +244,7 @@ class AuthService {
 
     //
     await emailQueue.add(CONSTANT_JOB.FORGOT_PASSWORD, {
-      toEmail: user?.email,
+      to_email: user?.email,
       name: user?.name,
       url: `${envs.CLIENT_DOMAIN}#reset-password?token=${forgot_password_token}`
     })

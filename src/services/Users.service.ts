@@ -75,7 +75,7 @@ class UsersService {
     //
     logger.info('resendVerifyEmail - user:::', user)
     await emailQueue.add(CONSTANT_JOB.VERIFY_MAIL, {
-      toEmail: user?.email,
+      to_email: user?.email,
       name: user?.name,
       url: `${envs.CLIENT_DOMAIN}/verify?token=${email_verify_token}`
     })

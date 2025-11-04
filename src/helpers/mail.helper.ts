@@ -26,15 +26,18 @@ class MailService {
   async setupHandlebars() {
     const { default: hbs } = await import('nodemailer-express-handlebars')
 
+    // __dirname sẽ tự động đúng cả dev và prod
+    const templatesPath = path.join(__dirname, '../templates')
+
     this.transporter.use(
       'compile',
       hbs({
         viewEngine: {
           extname: '.handlebars',
-          partialsDir: path.resolve('./src/templates'),
+          partialsDir: templatesPath,
           defaultLayout: false
         },
-        viewPath: path.resolve('./src/templates'),
+        viewPath: templatesPath,
         extName: '.handlebars'
       })
     )
@@ -42,8 +45,8 @@ class MailService {
 
   /**
    * Gửi email xác minh tài khoản
-   * @param toEmail địa chỉ email người nhận
-   * @param userName tên người nhận
+   * @param to_email địa chỉ email người nhận
+   * @param name tên người nhận
    * @param verifyCode mã xác minh
    */
   async sendVerifyEmail({ to_email, name, url }: ISendVerifyEmail) {
@@ -71,7 +74,7 @@ class MailService {
 
   /**
    * Gửi email xác minh tài khoản
-   * @param toEmail địa chỉ email người nhận
+   * @param to_email địa chỉ email người nhận
    * @param userName tên người nhận
    * @param verifyCode mã xác minh
    */

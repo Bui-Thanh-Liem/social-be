@@ -1,4 +1,5 @@
 import { createClient, RedisClientType } from 'redis'
+import { redisConnection } from '~/configs/redis.config'
 import { logger } from '~/utils/logger.util'
 
 class PubSubService {
@@ -7,7 +8,7 @@ class PubSubService {
   private isConnected = false
 
   constructor() {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
+    const redisUrl = `redis://${redisConnection.host}:${redisConnection.port}`
 
     this.publisher = createClient({
       url: redisUrl,
