@@ -3,12 +3,15 @@
 # ============================================
 FROM node:20-alpine AS builder
 
+# Install FFmpeg để build/testing nếu cần
+RUN apk add --no-cache ffmpeg
+
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install ALL dependencies (cần devDependencies để build)
+# Install ALL dependencies (bao gồm devDependencies)
 RUN npm install
 
 # Copy source code
@@ -36,8 +39,8 @@ RUN npm install --only=production && \
 # ============================================
 FROM node:20-alpine
 
-# Install dumb-init
-RUN apk add --no-cache dumb-init
+# Install dumb-init + FFmpeg (production cần FFmpeg để worker chạy)
+RUN apk add --no-cache dumb-init ffmpeg
 
 # Tạo non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -65,8 +68,8 @@ ENV NODE_ENV=production \
     PORT=9000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localh   ost:9000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" || exit 1
+HEALTHCHECK --interval=60s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:9000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" || exit 1
 
 # Use dumb-init
 ENTRYPOINT ["dumb-init", "--"]

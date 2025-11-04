@@ -17,9 +17,8 @@ import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/con
 import { logger } from './utils/logger.util'
 
 //
-import './tasks/cleanup.task'
 import StreamVideoController from './controllers/StreamVideo.controller'
-import path from 'path'
+import './tasks/cleanup.task'
 
 const app = express()
 

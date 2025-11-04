@@ -134,23 +134,23 @@ export let CommunityInvitationCollection: Collection<CommunityInvitationSchema>
 export let CommunityActivityCollection: Collection<CommunityActivitySchema>
 
 export function initCommunityCollection(db: Db) {
-  CommunityCollection = db.collection<CommunitySchema>('community')
+  CommunityCollection = db.collection<CommunitySchema>('communities')
 }
 
 export function initCommunityMentorCollection(db: Db) {
-  CommunityMentorCollection = db.collection<CommunityMentorSchema>('community-mentor')
+  CommunityMentorCollection = db.collection<CommunityMentorSchema>('community-mentors')
 }
 
 export function initCommunityMemberCollection(db: Db) {
-  CommunityMemberCollection = db.collection<CommunityMemberSchema>('community-member')
+  CommunityMemberCollection = db.collection<CommunityMemberSchema>('community-members')
 }
 
 export function initCommunityPinCollection(db: Db) {
-  CommunityPinCollection = db.collection<CommunityPinSchema>('community-pin')
+  CommunityPinCollection = db.collection<CommunityPinSchema>('community-pins')
 }
 
 export function initCommunityInvitationCollection(db: Db) {
-  CommunityInvitationCollection = db.collection<CommunityInvitationSchema>('community-invitation')
+  CommunityInvitationCollection = db.collection<CommunityInvitationSchema>('community-invitations')
 }
 
 export function initCommunityActivityCollection(db: Db) {

@@ -20,5 +20,5 @@ export class RefreshTokenSchema extends BaseSchema implements IRefresh {
 export let RefreshTokenCollection: Collection<RefreshTokenSchema>
 
 export function initRefreshTokenCollection(db: Db) {
-  RefreshTokenCollection = db.collection<RefreshTokenSchema>('refresh_tokens')
+  RefreshTokenCollection = db.collection<RefreshTokenSchema>('refresh-tokens')
 }
