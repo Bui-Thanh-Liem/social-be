@@ -29,24 +29,26 @@ import { initUserCollection, UserCollection } from '~/models/schemas/User.schema
 import { initVideoCollection } from '~/models/schemas/Video.schema'
 import { logger } from '~/utils/logger.util'
 
+const uri =
+  envs.NODE_ENV === 'production'
+    ? `mongodb://${envs.DB_USERNAME}:${envs.DB_PASSWORD}@localhost:27017/${envs.DB_NAME}?authSource=${envs.DB_NAME}`
+    : `mongodb+srv://${envs.DB_USERNAME}:${envs.DB_PASSWORD}@cluster0-liemdev.dfynfof.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0-LiemDev`
+
 class DatabaseConfig {
   private client: MongoClient
   private db: Db
 
   constructor() {
-    this.client = new MongoClient(
-      `mongodb+srv://${envs.DB_USERNAME}:${envs.DB_PASSWORD}@cluster0-liemdev.dfynfof.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0-LiemDev`,
-      {
-        serverApi: {
-          version: ServerApiVersion.v1,
-          strict: false,
-          deprecationErrors: true
-        },
-        // Cấu hình connection pool
-        minPoolSize: 5, // tối thiểu 5 kết nối trong pool
-        maxPoolSize: 20 // tối đa 20 kết nối
-      }
-    )
+    this.client = new MongoClient(uri, {
+      serverApi: {
+        version: ServerApiVersion.v1,
+        strict: false,
+        deprecationErrors: true
+      },
+      // Cấu hình connection pool
+      minPoolSize: 5, // tối thiểu 5 kết nối trong pool
+      maxPoolSize: 20 // tối đa 20 kết nối
+    })
     this.db = this.client.db(envs.DB_NAME)
   }
 
