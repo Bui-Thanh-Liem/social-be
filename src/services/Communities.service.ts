@@ -244,7 +244,7 @@ class CommunityService {
 
     //
     try {
-      notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+      await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
         content: `Bạn đã trở thành điều hành viên của cộng đồng ${actor.community.name}.`,
         type: ENotificationType.Community,
         sender: actor_id,
@@ -312,7 +312,7 @@ class CommunityService {
 
     //
     try {
-      notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+      await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
         content: `Bạn không còn là điều hành viên của cộng đồng ${actor.community.name}.`,
         type: ENotificationType.Community,
         sender: actor_id,
@@ -1056,7 +1056,7 @@ class CommunityService {
       }
 
       //
-      notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+      await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
         content: mess,
         sender: user_active_id,
         ref_id: res._id?.toString(),

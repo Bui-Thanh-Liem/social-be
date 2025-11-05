@@ -1,11 +1,10 @@
 import { ObjectId } from 'mongodb'
+import { notificationQueue } from '~/bull/queues'
 import { FollowerCollection } from '~/models/schemas/Follower.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
-import { ResToggleFollow } from '~/shared/dtos/res/follow.dto'
-import NotificationService from './Notification.service'
-import { ENotificationType } from '~/shared/enums/type.enum'
-import { notificationQueue } from '~/bull/queues'
 import { CONSTANT_JOB } from '~/shared/constants'
+import { ResToggleFollow } from '~/shared/dtos/res/follow.dto'
+import { ENotificationType } from '~/shared/enums/type.enum'
 
 class FollowsService {
   async toggleFollow(user_id: string, followed_user_id: string): Promise<ResToggleFollow> {
@@ -32,7 +31,7 @@ class FollowsService {
 
       // Gửi thông báo
       const sender = await UserCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { name: 1 } })
-      notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+      await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
         content: `${sender?.name} đang theo dõi bạn.`,
         type: ENotificationType.Follow,
         sender: user_id,

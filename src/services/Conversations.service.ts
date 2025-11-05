@@ -972,7 +972,7 @@ class ConversationsService {
 
     // Gửi thông báo chỉ khi bị xoá
     if (user_id !== participant) {
-      notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+      await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
         content: `Bạn đã bị xoá khỏi nhóm ${conv?.name || 'cuộc trò chuyện'}.`,
         type: ENotificationType.Other,
         sender: user_id,
@@ -1009,7 +1009,7 @@ class ConversationsService {
     await ConversationCollection.updateOne({ _id: conv._id }, { $addToSet: { mentors: participant_object_id } })
 
     // Gửi thông báo
-    notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+    await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
       content: `Bạn đã trở thành nhóm trưởng của cuộc trò chuyện ${conv?.name || ''}.`,
       type: ENotificationType.Other,
       sender: user_id,

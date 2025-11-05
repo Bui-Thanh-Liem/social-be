@@ -80,9 +80,8 @@ class AuthService {
       { delay: 5000 }
     )
 
-    //
-
-    notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+    // Gửi thông báo
+    await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
       content: 'Kiểm tra mail để xác thực tài khoản của bạn.',
       receiver: result.insertedId.toString(),
       sender: result.insertedId.toString(),

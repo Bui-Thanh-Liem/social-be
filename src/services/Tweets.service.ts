@@ -112,15 +112,24 @@ class TweetsService {
 
     // Gửi thông báo cho ai mà người comment/tweet nhắc đến
     if (mentions?.length) {
-      for (let i = 0; i < mentions.length; i++) {
-        notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
-          content: `${sender?.name} đã nhắc đến bạn trong một ${type === ETweetType.Comment ? 'bình luận' : 'bài viết'}.`,
+      const jobs = mentions.map((receiverId) => ({
+        name: CONSTANT_JOB.SEND_NOTI,
+        data: {
+          content: `${sender?.name} đã nhắc đến bạn trong một ${
+            type === ETweetType.Comment ? 'bình luận' : 'bài viết'
+          }.`,
           type: ENotificationType.Mention_like,
           sender: user_id,
-          receiver: mentions[i],
+          receiver: receiverId,
           ref_id: newTweet.insertedId.toString()
-        })
-      }
+        },
+        opts: {
+          removeOnComplete: true,
+          attempts: 3 // retry nếu queue bị lỗi
+        }
+      }))
+
+      await notificationQueue.addBulk(jobs)
     }
 
     // Gửi thông báo cho chủ bài viết là có người bình luận
@@ -128,7 +137,7 @@ class TweetsService {
     // Emit comment mới về bài viết parent
     if (type === ETweetType.Comment && parent_id) {
       const tw = await TweetCollection.findOne({ _id: new ObjectId(parent_id) }, { projection: { user_id: 1 } })
-      notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+      await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
         content: `${sender?.name} đã bình luận bài viết của bạn.`,
         type: ENotificationType.Mention_like,
         sender: user_id,
@@ -145,15 +154,19 @@ class TweetsService {
 
     // Gửi thông báo cho điều hành viên của cộng đồng
     if (community_id && community && operatorIds.length > 0) {
-      for (let i = 0; i < operatorIds.length; i++) {
-        notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+      const jobs = operatorIds.map((id) => ({
+        name: CONSTANT_JOB.SEND_NOTI,
+        data: {
           content: `${sender?.name} đã đăng bài viết mới trong cộng đồng ${community.name}, đang chờ duyệt bài.`,
           type: ENotificationType.Community,
           sender: user_id,
-          receiver: operatorIds[i].toString(),
+          receiver: id.toString(),
           ref_id: community_id
-        })
-      }
+        }
+      }))
+
+      await notificationQueue.addBulk(jobs)
+
       await CommunityGateway.sendCountTweetApprove(community_id)
     }
 

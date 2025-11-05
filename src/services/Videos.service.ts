@@ -37,7 +37,7 @@ class VideosService {
     )
 
     //
-    notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+    await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
       type: ENotificationType.Other,
       content: 'Video của bạn đã sẵn sàng.',
       receiver: updated?.user_id.toString() || '',

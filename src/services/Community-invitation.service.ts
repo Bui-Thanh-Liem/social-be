@@ -49,7 +49,7 @@ class CommunityInvitationService {
           })
 
           //
-          notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+          await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
             content: `${sender.name} đã mời bạn vào cộng đồng ${community.name}.`,
             type: ENotificationType.Community,
             sender: user_id,
