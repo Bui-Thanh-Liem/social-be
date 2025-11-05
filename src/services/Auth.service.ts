@@ -311,7 +311,10 @@ class AuthService {
   }
 
   private async checkExistByName(name: string) {
-    const is_exist = (await UserCollection.countDocuments({ name })) > 0
+    const snake_case_name = `@${_.snakeCase(name)}`.slice(0, 20)
+    console.log('snake_case_name::', snake_case_name)
+
+    const is_exist = (await UserCollection.countDocuments({ $or: [{ name }, { username: snake_case_name }] })) > 0
     if (is_exist) {
       throw new ConflictError('Tên người dùng đã tồn tại.')
     }
