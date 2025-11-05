@@ -94,6 +94,8 @@ class NotificationService {
     const new_noti = await NotificationCollection.aggregate<NotificationSchema>(pipeline).next()
 
     //
+    console.log('publishNotification:::', new_noti)
+
     if (receiver_id && new_noti) {
       await publishNotification({ new_noti, receiver_id })
     }

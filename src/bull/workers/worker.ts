@@ -1,5 +1,4 @@
 import database from '~/configs/database.config'
-import { envs } from '~/configs/env.config'
 import { logger } from '~/utils/logger.util'
 import { inviteQueue } from '../queues'
 import { cleanupWorker, compressionWorker, emailWorker, notificationWorker } from './index'
@@ -24,12 +23,6 @@ async function bootstrapWorker() {
     logger.info(`  - InviteQueue Worker: ${inviteQueue.name}`)
     logger.info(`  - Compression Worker: ${compressionWorker.name}`)
     logger.info(`  - Notification Worker: ${notificationWorker.name}`)
-
-    console.log('=== ENVIRONMENT CHECK ===')
-    console.log('REDIS_HOST:', envs.REDIS_HOST)
-    console.log('REDIS_PORT:', envs.REDIS_PORT)
-    console.log('NODE_ENV:', envs.NODE_ENV)
-    console.log('========================')
 
     // 5. Health check (optional)
     setInterval(async () => {
