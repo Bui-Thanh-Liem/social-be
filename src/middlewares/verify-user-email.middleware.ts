@@ -8,7 +8,7 @@ export async function verifyUserEmail(req: Request, res: Response, next: NextFun
     const { user } = req
 
     if (user?.verify === EUserVerifyStatus.Unverified) {
-      throw new UnauthorizedError('Tài khoản của bạn chưa được xác minh.')
+      throw new UnauthorizedError('Tài khoản của bạn chưa được xác minh, xác minh ở trang cá nhân của bạn.')
     }
 
     next()

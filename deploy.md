@@ -4,11 +4,11 @@ Trên máy local hoặc CI/CD:
 
 cd frontend
 npm install
-npm run build   # sinh ra /dist hoặc /build
+npm run build # sinh ra /dist hoặc /build
 
 # 1.2 Copy lên VPS
 
-Giả sử Nginx VPS phục vụ FE ở /var/www/html/app1:
+Giả sử Nginx VPS phục vụ FE ở /var/www/html/social:
 
 scp -r dist/ liemdev@42.112.147.46:/var/www/html/social
 
