@@ -393,7 +393,7 @@ class CommunityService {
       },
       {
         $lookup: {
-          from: 'community-pin',
+          from: 'community-pins',
           localField: '_id',
           foreignField: 'community_id',
           as: 'pin',
@@ -506,7 +506,7 @@ class CommunityService {
       },
       {
         $lookup: {
-          from: 'community-pin',
+          from: 'community-pins',
           localField: '_id',
           foreignField: 'community_id',
           as: 'pin',
@@ -672,7 +672,7 @@ class CommunityService {
       // lookup members count + check if current user is member
       {
         $lookup: {
-          from: 'community-member',
+          from: 'community-members',
           let: { communityId: '$_id', currentUserId: new ObjectId(user_id) },
           pipeline: [
             {
@@ -695,7 +695,7 @@ class CommunityService {
       // lookup mentors count + check if current user is mentor
       {
         $lookup: {
-          from: 'community-mentor',
+          from: 'community-mentors',
           let: { communityId: '$_id', currentUserId: new ObjectId(user_id) },
           pipeline: [
             {
@@ -787,7 +787,7 @@ class CommunityService {
       // mentors list
       {
         $lookup: {
-          from: 'community-mentor',
+          from: 'community-mentors',
           localField: '_id',
           foreignField: 'community_id',
           as: 'mentors',
@@ -846,7 +846,7 @@ class CommunityService {
       // members list - search trước khi lookup user details
       {
         $lookup: {
-          from: 'community-member',
+          from: 'community-members',
           let: { communityId: '$_id' },
           pipeline: [
             {

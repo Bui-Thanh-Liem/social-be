@@ -172,7 +172,7 @@ class NotificationService {
     if (type === ENotificationType.Community) {
       pipeline.push({
         $lookup: {
-          from: 'community',
+          from: 'communities',
           localField: 'ref_id',
           foreignField: '_id',
           as: 'community_ref',
