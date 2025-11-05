@@ -1,9 +1,10 @@
 import { ObjectId } from 'mongodb'
+import { notificationQueue } from '~/bull/queues'
 import { VideoCollection, VideoSchema } from '~/models/schemas/Video.schema'
+import { CONSTANT_JOB } from '~/shared/constants'
 import { EVideoStatus } from '~/shared/enums/status.enum'
-import { IPayloadCreateVideo } from '~/shared/interfaces/common/payload-service.interface'
-import NotificationService from './Notification.service'
 import { ENotificationType } from '~/shared/enums/type.enum'
+import { IPayloadCreateVideo } from '~/shared/interfaces/common/payload-service.interface'
 import { deleteVideo } from '~/utils/upload.util'
 
 class VideosService {
@@ -36,7 +37,7 @@ class VideosService {
     )
 
     //
-    await NotificationService.createInQueue({
+    notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
       type: ENotificationType.Other,
       content: 'Video của bạn đã sẵn sàng.',
       receiver: updated?.user_id.toString() || '',

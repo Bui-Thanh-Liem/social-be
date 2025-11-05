@@ -1,8 +1,10 @@
 import { ObjectId } from 'mongodb'
 import pLimit from 'p-limit'
+import { inviteQueue, notificationQueue } from '~/bull/queues'
 import { CommunityInvitationCollection, CommunityInvitationSchema } from '~/models/schemas/Community.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
 import { ForbiddenError, NotFoundError } from '~/shared/classes/error.class'
+import { CONSTANT_JOB } from '~/shared/constants'
 import { CreateCommunityInvitationDto, deleteInvitationDto } from '~/shared/dtos/req/community.dto'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
 import { ENotificationType } from '~/shared/enums/type.enum'
@@ -11,9 +13,6 @@ import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import CommunitiesService from './Communities.service'
-import NotificationService from './Notification.service'
-import { inviteQueue } from '~/bull/queues'
-import { CONSTANT_JOB } from '~/shared/constants'
 const limit = pLimit(10)
 
 class CommunityInvitationService {
@@ -49,16 +48,16 @@ class CommunityInvitationService {
             exp: new Date(Date.now() + community.invite_expire_days * 24 * 60 * 60 * 1000)
           })
 
-          await Promise.all([
-            CommunityInvitationCollection.insertOne(invitation),
-            NotificationService.createInQueue({
-              content: `${sender.name} đã mời bạn vào cộng đồng ${community.name}.`,
-              type: ENotificationType.Community,
-              sender: user_id,
-              receiver: id,
-              ref_id: community._id?.toString()
-            })
-          ])
+          //
+          notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+            content: `${sender.name} đã mời bạn vào cộng đồng ${community.name}.`,
+            type: ENotificationType.Community,
+            sender: user_id,
+            receiver: id,
+            ref_id: community._id?.toString()
+          })
+
+          await CommunityInvitationCollection.insertOne(invitation)
         })
       )
     )

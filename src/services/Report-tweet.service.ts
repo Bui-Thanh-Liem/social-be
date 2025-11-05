@@ -1,10 +1,11 @@
 import { ObjectId } from 'mongodb'
+import { notificationQueue } from '~/bull/queues'
 import { envs } from '~/configs/env.config'
 import { ReportTweetCollection } from '~/models/schemas/Report-tweet.schema'
 import { TweetCollection } from '~/models/schemas/Tweet.schema'
 import { BadRequestError } from '~/shared/classes/error.class'
+import { CONSTANT_JOB } from '~/shared/constants'
 import { ENotificationType } from '~/shared/enums/type.enum'
-import NotificationService from './Notification.service'
 import TweetsService from './Tweets.service'
 
 class ReportTweetService {
@@ -50,7 +51,7 @@ class ReportTweetService {
     }
 
     if (result.report_count >= Number(envs.MAX_REPORT_THRESHOLD)) {
-      await NotificationService.createInQueue({
+      notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
         content: `Bài viết của bạn đã vi phạm một số quy tắc cộng đồng, sẽ bị gỡ bỏ trong 12 giờ tới.`,
         type: ENotificationType.Other,
         sender: tweet.user_id.toString(),

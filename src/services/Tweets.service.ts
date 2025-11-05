@@ -1,4 +1,5 @@
 import { Filter, ObjectId } from 'mongodb'
+import { notificationQueue } from '~/bull/queues'
 import { cleanupQueue } from '~/bull/queues/cleanup.queue'
 import database from '~/configs/database.config'
 import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
@@ -112,7 +113,7 @@ class TweetsService {
     // Gửi thông báo cho ai mà người comment/tweet nhắc đến
     if (mentions?.length) {
       for (let i = 0; i < mentions.length; i++) {
-        await NotificationService.createInQueue({
+        notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
           content: `${sender?.name} đã nhắc đến bạn trong một ${type === ETweetType.Comment ? 'bình luận' : 'bài viết'}.`,
           type: ENotificationType.Mention_like,
           sender: user_id,
@@ -127,7 +128,7 @@ class TweetsService {
     // Emit comment mới về bài viết parent
     if (type === ETweetType.Comment && parent_id) {
       const tw = await TweetCollection.findOne({ _id: new ObjectId(parent_id) }, { projection: { user_id: 1 } })
-      await NotificationService.createInQueue({
+      notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
         content: `${sender?.name} đã bình luận bài viết của bạn.`,
         type: ENotificationType.Mention_like,
         sender: user_id,
@@ -145,7 +146,7 @@ class TweetsService {
     // Gửi thông báo cho điều hành viên của cộng đồng
     if (community_id && community && operatorIds.length > 0) {
       for (let i = 0; i < operatorIds.length; i++) {
-        await NotificationService.createInQueue({
+        notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
           content: `${sender?.name} đã đăng bài viết mới trong cộng đồng ${community.name}, đang chờ duyệt bài.`,
           type: ENotificationType.Community,
           sender: user_id,

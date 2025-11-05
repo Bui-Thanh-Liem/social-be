@@ -1,8 +1,6 @@
 import { ObjectId } from 'mongodb'
-import { notificationQueue } from '~/bull/queues'
 import { NotificationCollection, NotificationSchema } from '~/models/schemas/Notification.schema'
 import { publishNotification } from '~/pubsub/publisher'
-import { CONSTANT_JOB } from '~/shared/constants'
 import { CreateNotiDto } from '~/shared/dtos/req/notification.dto'
 import { ENotificationType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
@@ -101,10 +99,6 @@ class NotificationService {
     }
 
     return true
-  }
-
-  async createInQueue(payload: CreateNotiDto) {
-    notificationQueue.add(CONSTANT_JOB.SEND_NOTI, payload)
   }
 
   async getMultiByType({

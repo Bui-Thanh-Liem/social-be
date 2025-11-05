@@ -13,7 +13,7 @@ export const notificationWorker = new Worker(
       case CONSTANT_JOB.SEND_NOTI: {
         const payload = job.data as CreateNotiDto
         await NotificationService.create(payload)
-        logger.info('Sent noti ::::', payload)
+        logger.info('✅ Sent noti ::::', payload)
         break
       }
     }

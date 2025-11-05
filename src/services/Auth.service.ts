@@ -2,7 +2,7 @@ import axios from 'axios'
 import _ from 'lodash'
 import { ObjectId } from 'mongodb'
 import { StringValue } from 'ms'
-import { emailQueue } from '~/bull/queues'
+import { emailQueue, notificationQueue } from '~/bull/queues'
 import { envs } from '~/configs/env.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { RefreshTokenCollection, RefreshTokenSchema } from '~/models/schemas/Refresh-token.schema'
@@ -18,13 +18,12 @@ import {
 } from '~/shared/dtos/req/auth.dto'
 import { ENotificationType, ETokenType } from '~/shared/enums/type.enum'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { ISendVerifyEmail } from '~/shared/interfaces/common/mail.interface'
 import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oauth-google.interface'
 import ConversationGateway from '~/socket/gateways/Conversation.gateway'
 import { generatePassword, hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
-import NotificationService from './Notification.service'
 import UsersService from './Users.service'
-import { ISendVerifyEmail } from '~/shared/interfaces/common/mail.interface'
 
 class AuthService {
   async register(payload: RegisterUserDto) {
@@ -82,7 +81,8 @@ class AuthService {
     )
 
     //
-    await NotificationService.createInQueue({
+
+    notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
       content: 'Kiểm tra mail để xác thực tài khoản của bạn.',
       receiver: result.insertedId.toString(),
       sender: result.insertedId.toString(),

@@ -1,9 +1,11 @@
 import { InsertOneResult, ObjectId } from 'mongodb'
+import { notificationQueue } from '~/bull/queues'
 import database from '~/configs/database.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { ConversationCollection, ConversationSchema } from '~/models/schemas/Conversation.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
 import { BadRequestError, NotFoundError } from '~/shared/classes/error.class'
+import { CONSTANT_JOB } from '~/shared/constants'
 import { CreateConversationDto } from '~/shared/dtos/req/conversation.dto'
 import { EConversationType, ENotificationType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
@@ -14,7 +16,6 @@ import ConversationGateway from '~/socket/gateways/Conversation.gateway'
 import { createKeyAllConversationIds } from '~/utils/create-key-cache.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import MessagesService from './Messages.service'
-import NotificationService from './Notification.service'
 
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {
@@ -971,7 +972,7 @@ class ConversationsService {
 
     // Gửi thông báo chỉ khi bị xoá
     if (user_id !== participant) {
-      await NotificationService.createInQueue({
+      notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
         content: `Bạn đã bị xoá khỏi nhóm ${conv?.name || 'cuộc trò chuyện'}.`,
         type: ENotificationType.Other,
         sender: user_id,
@@ -1008,7 +1009,7 @@ class ConversationsService {
     await ConversationCollection.updateOne({ _id: conv._id }, { $addToSet: { mentors: participant_object_id } })
 
     // Gửi thông báo
-    await NotificationService.createInQueue({
+    notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
       content: `Bạn đã trở thành nhóm trưởng của cuộc trò chuyện ${conv?.name || ''}.`,
       type: ENotificationType.Other,
       sender: user_id,

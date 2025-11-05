@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongodb'
+import { notificationQueue } from '~/bull/queues'
 import database from '~/configs/database.config'
 import {
   CommunityActivityCollection,
@@ -10,6 +11,7 @@ import {
   CommunitySchema
 } from '~/models/schemas/Community.schema'
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '~/shared/classes/error.class'
+import { CONSTANT_JOB } from '~/shared/constants'
 import {
   CreateCommunityActivityDto,
   CreateCommunityDto,
@@ -241,13 +243,15 @@ class CommunityService {
     }
 
     //
-    NotificationService.createInQueue({
-      content: `Bạn đã trở thành điều hành viên của cộng đồng ${actor.community.name}.`,
-      type: ENotificationType.Community,
-      sender: actor_id,
-      receiver: target_id,
-      ref_id: actor.community._id?.toString()
-    }).catch((err) => {
+    try {
+      notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+        content: `Bạn đã trở thành điều hành viên của cộng đồng ${actor.community.name}.`,
+        type: ENotificationType.Community,
+        sender: actor_id,
+        receiver: target_id,
+        ref_id: actor.community._id?.toString()
+      })
+    } catch (err) {
       // Log nhưng không throw
       logger.warn('Failed to send promotion notification', {
         actor_id,
@@ -255,7 +259,7 @@ class CommunityService {
         community_id,
         error: err instanceof Error ? err.message : 'Unknown error'
       })
-    })
+    }
   }
 
   async demoteMentor({ target_id, actor_id, community_id }: IPromoteDemote) {
@@ -307,13 +311,15 @@ class CommunityService {
     }
 
     //
-    NotificationService.createInQueue({
-      content: `Bạn không còn là điều hành viên của cộng đồng ${actor.community.name}.`,
-      type: ENotificationType.Community,
-      sender: actor_id,
-      receiver: target_id,
-      ref_id: actor.community._id?.toString()
-    }).catch((err) => {
+    try {
+      notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+        content: `Bạn không còn là điều hành viên của cộng đồng ${actor.community.name}.`,
+        type: ENotificationType.Community,
+        sender: actor_id,
+        receiver: target_id,
+        ref_id: actor.community._id?.toString()
+      })
+    } catch (err) {
       // Log nhưng không throw
       logger.warn('Failed to send demote notification', {
         actor_id,
@@ -321,7 +327,7 @@ class CommunityService {
         community_id,
         error: err instanceof Error ? err.message : 'Unknown error'
       })
-    })
+    }
   }
 
   async getAllCategories() {
@@ -1050,7 +1056,7 @@ class CommunityService {
       }
 
       //
-      await NotificationService.createInQueue({
+      notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
         content: mess,
         sender: user_active_id,
         ref_id: res._id?.toString(),
