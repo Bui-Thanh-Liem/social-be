@@ -1,13 +1,12 @@
 import { ObjectId } from 'mongodb'
+import { notificationQueue } from '~/bull/queues'
 import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection } from '~/models/schemas/Tweet.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
+import { CONSTANT_JOB } from '~/shared/constants'
 import { ParamIdTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ResToggleLike } from '~/shared/dtos/res/like.dto'
 import { ENotificationType } from '~/shared/enums/type.enum'
-import NotificationService from './Notification.service'
-import { notificationQueue } from '~/bull/queues'
-import { CONSTANT_JOB } from '~/shared/constants'
 
 class LikesService {
   async toggleLike(user_id: string, payload: ParamIdTweetDto): Promise<ResToggleLike> {

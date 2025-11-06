@@ -14,7 +14,6 @@ import { ResMultiType } from '~/shared/types/response.type'
 import { hashPassword } from '~/utils/crypto.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { signToken } from '~/utils/jwt.util'
-import { logger } from '~/utils/logger.util'
 import FollowsService from './Follows.service'
 
 class UsersService {
@@ -73,7 +72,6 @@ class UsersService {
     )
 
     //
-    logger.info('resendVerifyEmail - user:::', user)
     await emailQueue.add(CONSTANT_JOB.VERIFY_MAIL, {
       to_email: user?.email,
       name: user?.name,

@@ -34,7 +34,6 @@ import CommunityService from './Communities.service'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
 import LikesService from './Likes.service'
-import NotificationService from './Notification.service'
 import TrendingService from './Trending.service'
 import VideosService from './Videos.service'
 

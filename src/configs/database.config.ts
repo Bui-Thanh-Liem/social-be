@@ -23,6 +23,7 @@ import { initMessageCollection, MessageCollection } from '~/models/schemas/Messa
 import { initNotificationCollection } from '~/models/schemas/Notification.schema'
 import { initRefreshTokenCollection, RefreshTokenCollection } from '~/models/schemas/Refresh-token.schema'
 import { initReportTweetCollection, ReportTweetCollection } from '~/models/schemas/Report-tweet.schema'
+import { initSearchHistoryCollection, SearchHistoryCollection } from '~/models/schemas/SearchHistory.schema'
 import { initTrendingCollection, TrendingCollection } from '~/models/schemas/Trending.schema'
 import { initTweetCollection, TweetCollection } from '~/models/schemas/Tweet.schema'
 import { initUserCollection, UserCollection } from '~/models/schemas/User.schema'
@@ -83,6 +84,7 @@ class DatabaseConfig {
     initCommunityPinCollection(this.db)
     initCommunityInvitationCollection(this.db)
     initCommunityActivityCollection(this.db)
+    initSearchHistoryCollection(this.db)
   }
 
   async initialIndex() {
@@ -111,6 +113,7 @@ class DatabaseConfig {
       'community_id_1_user_id_1'
     ])
     const indexCommunityActivity = await CommunityActivityCollection.indexExists(['community_id_1'])
+    const indexSearchHistory = await CommunityActivityCollection.indexExists(['owner_1'])
 
     // User
     if (!indexUser) {
@@ -199,6 +202,11 @@ class DatabaseConfig {
     // CommunityActivity
     if (!indexCommunityActivity) {
       CommunityActivityCollection.createIndex({ community_id: 1 })
+    }
+
+    // SearchHistory
+    if (!indexSearchHistory) {
+      SearchHistoryCollection.createIndex({ owner: 1 })
     }
   }
 

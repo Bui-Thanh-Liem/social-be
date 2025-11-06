@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response, Router } from 'express'
-import StreamVideoController from '~/controllers/StreamVideo.controller'
 import { startFaker } from '~/utils/faker.util'
 import authRoute from './auth.routes'
 import bookmarksRoute from './bookmarks.routes'
@@ -11,6 +10,7 @@ import likesRoute from './likes.routes'
 import messagesRoute from './messages.routes'
 import notificationRoute from './notification.route'
 import reportTweetRoute from './report-tweet.routes'
+import searchHistoryRoute from './search-history.routes'
 import searchRoute from './search.route'
 import trendingRoute from './trending.routes'
 import tweetsRoute from './tweets.routes'
@@ -34,6 +34,7 @@ rootRoute.use('/trending', trendingRoute)
 rootRoute.use('/messages', messagesRoute)
 rootRoute.use('/conversations', conversationsRoute)
 rootRoute.use('/communities', communitiesRoute)
+rootRoute.use('/search-history', searchHistoryRoute)
 
 rootRoute.post('/faker', async (req: Request, res: Response, next: NextFunction) => {
   await startFaker()
