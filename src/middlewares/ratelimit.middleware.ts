@@ -43,6 +43,25 @@ export const loginRateLimit = rateLimit({
   }
 })
 
+// Rate limit nghiêm ngặt cho resend email: 5 req/5p/IP (chống spam mail)
+export const resendRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 5,
+  // message: {
+  //   status: 429,
+  //   error: 'Có quá nhiều yêu cầu từ thiết bị này, vui lòng thử lại sau 5 phút nữa.'
+  // },
+  standardHeaders: true,
+
+  // Dùng handler để ném error vào error middleware
+  handler: () => {
+    const error: any = new Error('Có quá nhiều yêu cầu từ thiết bị này, vui lòng thử lại sau 5 phút nữa.')
+    error.statusCode = 429
+    error.type = 'RATE_LIMIT_EXCEEDED'
+    throw error
+  }
+})
+
 // Brute force => thử sai mật khẩu nhiều lần
 // block mền -> 15/5req, nhập req thứ 6 ở phút thứ 10 thì đợi thêm 5p nữa (sliding window)
 // block cứng kể từ khi vi phạm mới bắt đầu tính 15p                      (fixed block time)

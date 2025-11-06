@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import UsersControllers from '~/controllers/Users.controller'
+import { resendRateLimit } from '~/middlewares/ratelimit.middleware'
 import { requestBodyValidate } from '~/middlewares/request-body-validate.middleware'
 import { requestParamsValidate } from '~/middlewares/request-params-validate.middleware'
 import { requestQueryValidate } from '~/middlewares/request-query-validate.middleware'
@@ -20,7 +21,12 @@ usersRoute.post(
   wrapAsyncHandler(UsersControllers.verifyEmail)
 )
 
-usersRoute.post('/resend-verify-email', verifyAccessToken, wrapAsyncHandler(UsersControllers.resendVerifyEmail))
+usersRoute.post(
+  '/resend-verify-email',
+  wrapAsyncHandler(resendRateLimit),
+  verifyAccessToken,
+  wrapAsyncHandler(UsersControllers.resendVerifyEmail)
+)
 
 usersRoute.get('/username/:username', verifyAccessToken, wrapAsyncHandler(UsersControllers.getOneByUsername))
 usersRoute.get('/mentions/:username', verifyAccessToken, wrapAsyncHandler(UsersControllers.getMultiForMentions))
