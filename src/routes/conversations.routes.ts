@@ -58,6 +58,7 @@ conversationsRoute.post(
 conversationsRoute.get(
   '/',
   verifyAccessToken,
+  verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
   wrapAsyncHandler(ConversationsController.getMulti)
 )

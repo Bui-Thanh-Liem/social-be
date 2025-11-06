@@ -11,6 +11,8 @@ export async function verifyUserEmail(req: Request, res: Response, next: NextFun
       throw new UnauthorizedError('Tài khoản của bạn chưa được xác minh, xác minh ở trang cá nhân của bạn.')
     }
 
+    console.log('user::', user)
+
     next()
   } catch (error) {
     next(error)
