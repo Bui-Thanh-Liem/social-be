@@ -32,7 +32,7 @@ export const errorHandler: ErrorRequestHandler = (err: any, req: Request, res: R
   }
 
   // Log đầy đủ để dev dễ debug
-  logger.error('🛑 Error caught by middleware:', { message })
+  logger.error(`🛑 Error caught (${req.ip}) by middleware:::`, { message })
   console.log({
     message: message,
     statusCode: statusCode,

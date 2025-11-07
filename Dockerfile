@@ -48,6 +48,9 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
+# 👉 Tạo thư mục logs và cấp quyền cho user nodejs
+RUN mkdir -p /app/logs && chown -R nodejs:nodejs /app
+
 # Copy production node_modules từ stage 2
 COPY --from=prod-dependencies --chown=nodejs:nodejs /app/node_modules ./node_modules
 
