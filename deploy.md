@@ -10,7 +10,7 @@ npm run build # sinh ra /dist hoặc /build
 
 Giả sử Nginx VPS phục vụ FE ở /var/www/html/social:
 
-scp -r dist/ liemdev@42.112.147.46:/var/www/html/social
+scp -r dist/ liemdev@42.113.31.90:/var/www/html/social
 
 # 1.3 Cấu hình nginx proxy
 

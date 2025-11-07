@@ -30,10 +30,14 @@ import { initUserCollection, UserCollection } from '~/models/schemas/User.schema
 import { initVideoCollection } from '~/models/schemas/Video.schema'
 import { logger } from '~/utils/logger.util'
 
+//
 const uri =
   envs.NODE_ENV === 'production'
-    ? `mongodb://${envs.DB_USERNAME}:${envs.DB_PASSWORD}@${envs.VPS_IP}:27017/${envs.DB_NAME}?authSource=${envs.DB_NAME}&replicaSet=rs0`
+    ? `mongodb://${envs.DB_USERNAME}:${envs.DB_PASSWORD}@localhost:27017/${envs.DB_NAME}?authSource=${envs.DB_NAME}&replicaSet=rs0`
     : `mongodb+srv://${envs.DB_USERNAME}:${envs.DB_PASSWORD}@cluster0-liemdev.dfynfof.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0-LiemDev`
+
+//
+console.log('mongodb - uri:::', uri)
 
 class DatabaseConfig {
   private client: MongoClient
