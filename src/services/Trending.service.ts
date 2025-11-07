@@ -450,26 +450,35 @@ class TrendingService {
   private grouped(trending: ITrending[], tweets: ITweet[], category: string): IResTodayNewsOrOutstanding[] {
     if (!trending?.length || !tweets?.length) return []
 
+    // Dùng Set để tránh trùng tweet giữa các trending
+    const usedTweetIds = new Set<string>()
+
     const grouped = trending.flatMap((t) => {
-      //
       const t_key = t.topic || ''
       const t_hashtag = t?.hashtag
 
-      //
-      const related_tweets = tweets.filter(
-        (tw) =>
+      // Lọc tweet có liên quan và chưa dùng
+      const related_tweets = tweets.filter((tw) => {
+        const matched =
           (t_key && tw.content.toLocaleLowerCase().includes(t_key.toLocaleLowerCase())) ||
           (t_hashtag && tw.hashtags.some((h) => h.equals?.(t_hashtag)))
-      )
+
+        return matched && !usedTweetIds.has(tw._id!.toString())
+      })
+
+      // Đánh dấu tweet đã dùng
+      related_tweets.forEach((tw) => usedTweetIds.add(tw._id!.toString()))
 
       if (!related_tweets.length) return []
 
       const relatedTweet = related_tweets.length
+
+      // Lấy tweet nổi bật nhất (mới nhất)
       const highlight_tweet = [...related_tweets]
         .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
         .slice(0, relatedTweet > 4 ? 3 : 2)
 
-      //
+      // Danh sách người dùng highlight (unique theo user_id)
       const highlight = Array.from(
         new Map(
           highlight_tweet.map((tw) => [
