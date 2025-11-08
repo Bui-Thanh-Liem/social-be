@@ -17,9 +17,9 @@ import { signToken } from '~/utils/jwt.util'
 import FollowsService from './Follows.service'
 
 class UsersService {
-  async verifyEmail(user_id: string): Promise<EUserVerifyStatus> {
+  async verifyEmail(user_id: string): Promise<Pick<IUser, 'email' | 'verify'>> {
     //
-    const user = await UserCollection.findOne({ _id: new ObjectId(user_id) })
+    const user = await UserCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { email: 1 } })
     if (!user) {
       throw new NotFoundError('User not exist')
     }
@@ -40,7 +40,7 @@ class UsersService {
       }
     )
 
-    return EUserVerifyStatus.Verified
+    return { email: user.email, verify: EUserVerifyStatus.Verified }
   }
 
   async resendVerifyEmail(id: string) {

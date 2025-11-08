@@ -11,7 +11,7 @@ class UsersController {
   async verifyEmail(req: Request, res: Response, next: NextFunction) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await UsersServices.verifyEmail(user_id)
-    res.json(new OkResponse('Verify email Success', result))
+    res.json(new OkResponse(`Xác thực email ${result.email} thành công.`, result))
   }
 
   async resendVerifyEmail(req: Request, res: Response, next: NextFunction) {
@@ -19,7 +19,7 @@ class UsersController {
 
     const user = await UserCollection.findOne({ _id: new ObjectId(user_id) })
     if (user?.verify === EUserVerifyStatus.Verified) {
-      res.json(new OkResponse('Your email verified', true))
+      res.json(new OkResponse('Email của bạn đã xác được xác thực.', true))
       return
     }
 
@@ -62,7 +62,7 @@ class UsersController {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const { new_password } = req.body as ChangePasswordDto
     const result = await UsersServices.changePassword(user_id, new_password)
-    res.json(new OkResponse(`Change password Success`, result))
+    res.json(new OkResponse(`Thay đổi mật khẩu thành công.`, result))
   }
 }
 
