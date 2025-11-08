@@ -9,7 +9,7 @@ export async function verifyRefreshToken(req: Request, res: Response, next: Next
     const refresh_token = req.body?.refresh_token || undefined
 
     if (!refresh_token) {
-      throw new UnauthorizedError('Refresh token is required')
+      throw new UnauthorizedError('Trình duyệt không gửi refresh token lên server.')
     }
 
     //
@@ -23,7 +23,7 @@ export async function verifyRefreshToken(req: Request, res: Response, next: Next
 
     //
     if (!tokenInDatabase) {
-      throw new UnauthorizedError('Refresh token not exist')
+      throw new UnauthorizedError('Server tìm trong database không có refresh token.')
     }
 
     next()

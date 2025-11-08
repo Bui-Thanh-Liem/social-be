@@ -250,7 +250,8 @@ class TrendingService {
             $match: {
               $text: { $search: searchString },
               created_at: { $gte: start_day, $lte: end_day },
-              audience: ETweetAudience.Everyone
+              audience: ETweetAudience.Everyone,
+              community_id: { $eq: null }
             }
           },
           {
@@ -274,7 +275,8 @@ class TrendingService {
             $match: {
               hashtags: { $in: trending_hashtags },
               created_at: { $gte: start_day, $lte: end_day },
-              audience: ETweetAudience.Everyone
+              audience: ETweetAudience.Everyone,
+              community_id: { $eq: null }
             }
           },
           ...basePipeline
@@ -408,7 +410,8 @@ class TrendingService {
             $match: {
               $text: { $search: search_string },
               created_at: { $gte: start_day, $lte: end_day },
-              audience: ETweetAudience.Everyone
+              audience: ETweetAudience.Everyone,
+              community_id: { $eq: null }
             }
           },
           {
@@ -432,7 +435,8 @@ class TrendingService {
             $match: {
               hashtags: { $in: trending_hashtags },
               created_at: { $gte: start_day, $lte: end_day },
-              audience: ETweetAudience.Everyone
+              audience: ETweetAudience.Everyone,
+              community_id: { $eq: null }
             }
           },
           ...basePipeline

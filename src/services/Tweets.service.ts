@@ -1148,7 +1148,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'community',
+          from: 'communities',
           localField: 'community_id',
           foreignField: '_id',
           as: 'community_id',
