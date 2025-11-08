@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongodb'
+import { CommunityCollection, CommunitySchema } from '~/models/schemas/Community.schema'
 import { TrendingCollection, TrendingSchema } from '~/models/schemas/Trending.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
@@ -20,12 +21,6 @@ class SearchService {
   //
   async searchPending({ query }: { query: IQuery<ITrending> }): Promise<ResSearchPending> {
     const { skip, limit, sort, q } = getPaginationAndSafeQuery<ITrending>(query)
-
-    // let _hashtag = undefined
-    // if (q.includes('#')) {
-    //   const [_id] = await HashtagsService.checkHashtags([q])
-    //   _hashtag = _id
-    // }
 
     const trending = await TrendingCollection.aggregate<TrendingSchema>([
       {
@@ -80,7 +75,26 @@ class SearchService {
       }
     ]).toArray()
 
-    return { trending, users }
+    const communities = await CommunityCollection.aggregate<CommunitySchema>([
+      {
+        $match: {
+          $or: [{ name: { $regex: q, $options: 'i' } }, { $text: { $search: q } }]
+        }
+      },
+      { $sort: sort },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          name: 1,
+          slug: 1,
+          cover: 1,
+          category: 1
+        }
+      }
+    ]).toArray()
+
+    return { trending, users, communities }
   }
 
   // Sử dụng cho thanh tìm kiếm search

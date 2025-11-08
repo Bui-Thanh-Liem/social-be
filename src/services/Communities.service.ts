@@ -31,7 +31,6 @@ import { slug } from '~/utils/slug.util'
 import CommunityInvitationService from './Community-invitation.service'
 import CommunityMemberService from './Community-member.service'
 import CommunityMentorService from './Community-mentor.service'
-import NotificationService from './Notification.service'
 import TweetsService from './Tweets.service'
 
 interface IPromoteDemote {
