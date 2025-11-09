@@ -23,7 +23,6 @@ export async function verifyRefreshToken(req: Request, res: Response, next: Next
 
     //
     if (!tokenInDatabase) {
-      console.log('tokenInDatabase:::', tokenInDatabase)
       throw new UnauthorizedError('Server tìm trong database không có refresh token.')
     }
 

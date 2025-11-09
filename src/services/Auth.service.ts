@@ -282,7 +282,7 @@ class AuthService {
 
     const decoded = await this.verifyToken(refresh_token, envs.JWT_SECRET_REFRESH)
     await Promise.all([
-      RefreshTokenCollection.deleteOne({ token }),
+      // RefreshTokenCollection.deleteOne({ token }),
       RefreshTokenCollection.insertOne(
         new RefreshTokenSchema({
           token: refresh_token,
