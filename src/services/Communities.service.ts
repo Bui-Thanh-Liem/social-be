@@ -594,16 +594,125 @@ class CommunityService {
       { $sort: sort },
       { $skip: skip },
       { $limit: limit },
+
+      // 1️⃣ Lấy thông tin admin
       {
-        $unwind: {
-          path: '$admin',
-          preserveNullAndEmptyArrays: true
+        $lookup: {
+          from: 'users',
+          localField: 'admin',
+          foreignField: '_id',
+          as: 'admin',
+          pipeline: [{ $project: { _id: 1, name: 1, avatar: 1, username: 1 } }]
+        }
+      },
+      { $unwind: { path: '$admin', preserveNullAndEmptyArrays: true } },
+
+      // 2️⃣ Lấy info member count + is_member
+      {
+        $lookup: {
+          from: 'community-members',
+          let: { communityId: '$_id', currentUserId: new ObjectId(user_id) },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$community_id', '$$communityId'] } } },
+            {
+              $group: {
+                _id: null,
+                count: { $sum: 1 },
+                is_member: { $max: { $eq: ['$user_id', '$$currentUserId'] } }
+              }
+            }
+          ],
+          as: 'membersInfo'
+        }
+      },
+
+      // 3️⃣ Lấy info mentors count + is_mentor
+      {
+        $lookup: {
+          from: 'community-mentors',
+          let: { communityId: '$_id', currentUserId: new ObjectId(user_id) },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$community_id', '$$communityId'] } } },
+            {
+              $group: {
+                _id: null,
+                count: { $sum: 1 },
+                is_mentor: { $max: { $eq: ['$user_id', '$$currentUserId'] } }
+              }
+            }
+          ],
+          as: 'mentorsInfo'
+        }
+      },
+
+      // 4️⃣ Lấy danh sách 5 members đầu tiên
+      {
+        $lookup: {
+          from: 'community-members',
+          localField: '_id',
+          foreignField: 'community_id',
+          as: 'memberRefs'
         }
       },
       {
+        $lookup: {
+          from: 'users',
+          localField: 'memberRefs.user_id',
+          foreignField: '_id',
+          as: 'members',
+          pipeline: [
+            { $project: { _id: 1, name: 1, avatar: 1, username: 1 } },
+            { $limit: 5 } // 🔥 chỉ lấy 5 member
+          ]
+        }
+      },
+
+      // 5️⃣ Lấy danh sách 5 mentors đầu tiên
+      {
+        $lookup: {
+          from: 'community-mentors',
+          localField: '_id',
+          foreignField: 'community_id',
+          as: 'mentorRefs'
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'mentorRefs.user_id',
+          foreignField: '_id',
+          as: 'mentors',
+          pipeline: [
+            { $project: { _id: 1, name: 1, avatar: 1, username: 1 } },
+            { $limit: 5 } // 🔥 chỉ lấy 5 mentor
+          ]
+        }
+      },
+
+      // 6️⃣ Add các flag logic
+      {
+        $addFields: {
+          is_admin: { $eq: ['$admin._id', new ObjectId(user_id)] },
+          is_joined: {
+            $or: [
+              { $eq: ['$admin._id', new ObjectId(user_id)] },
+              { $ifNull: [{ $arrayElemAt: ['$membersInfo.is_member', 0] }, false] },
+              { $ifNull: [{ $arrayElemAt: ['$mentorsInfo.is_mentor', 0] }, false] }
+            ]
+          },
+          members_count: { $ifNull: [{ $arrayElemAt: ['$membersInfo.count', 0] }, 0] },
+          mentors_count: { $ifNull: [{ $arrayElemAt: ['$mentorsInfo.count', 0] }, 0] }
+        }
+      },
+
+      // 7️⃣ Loại bỏ field phụ
+      {
         $project: {
           pin: 0,
-          bio: 0
+          memberRefs: 0,
+          mentorRefs: 0,
+          membersInfo: 0,
+          mentorsInfo: 0
         }
       }
     ]).toArray()

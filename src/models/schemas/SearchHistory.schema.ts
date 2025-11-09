@@ -6,18 +6,20 @@ export class SearchHistorySchema extends BaseSchema implements ISearchHistory {
   user: ObjectId | undefined
 
   //
+  owner: ObjectId
   text: string | undefined
   trending: ObjectId | undefined
-  owner: ObjectId
+  community: ObjectId | undefined
 
   constructor(sh: Partial<ISearchHistory>) {
     super()
     this.owner = sh.owner || new ObjectId()
 
     //
+    this.user = sh.user || undefined
     this.text = sh.text || undefined
     this.trending = sh.trending || undefined
-    this.user = sh.user || undefined
+    this.community = sh.community || undefined
   }
 }
 

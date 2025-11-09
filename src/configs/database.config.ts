@@ -94,7 +94,7 @@ class DatabaseConfig {
   async initialIndex() {
     const indexUser = await UserCollection.indexExists(['email_1', 'username_1', 'bio_text'])
     const indexReportTweet = await ReportTweetCollection.indexExists(['tweet_id_1'])
-    const indexRefresh = await RefreshTokenCollection.indexExists(['token_1', 'exp_1'])
+    const indexRefresh = await RefreshTokenCollection.indexExists(['exp_1'])
     const indexTweet = await TweetCollection.indexExists(['content_text'])
     const indexTrending = await TweetCollection.indexExists(['slug_1', 'created_at_-1'])
     const indexHashtag = await HashtagCollection.indexExists(['slug_1'])
@@ -133,7 +133,6 @@ class DatabaseConfig {
 
     // Refresh
     if (!indexRefresh) {
-      RefreshTokenCollection.createIndex({ token: 1 }, { unique: true })
       RefreshTokenCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
     }
 

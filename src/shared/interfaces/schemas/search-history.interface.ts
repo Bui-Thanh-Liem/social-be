@@ -8,4 +8,5 @@ export interface ISearchHistory extends IBase {
   text?: string
   trending?: ObjectId
   user?: ObjectId
+  community?: ObjectId
 }

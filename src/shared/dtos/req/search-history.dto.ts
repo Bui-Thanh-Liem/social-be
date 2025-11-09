@@ -16,6 +16,13 @@ export const CreateSearchHistoryDtoSchema = z.object({
     .regex(CONSTANT_REGEX.ID_MONGO, {
       message: 'ObjectId không hợp lệ'
     })
+    .optional(),
+  community: z
+    .string()
+    .trim()
+    .regex(CONSTANT_REGEX.ID_MONGO, {
+      message: 'ObjectId không hợp lệ'
+    })
     .optional()
 })
 

@@ -8,7 +8,9 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 
 class SearchHistoryService {
   async create({ payload, user_active }: { payload: CreateSearchHistoryDto; user_active: IUser }) {
-    const { user, trending, text } = payload
+    console.log('SearchHistoryService - create :::', payload)
+
+    const { user, trending, community, text } = payload
 
     const query: any = {
       owner: user_active._id
@@ -17,6 +19,7 @@ class SearchHistoryService {
     if (text) query.text = text
     if (user) query.user = new ObjectId(user)
     if (trending) query.trending = new ObjectId(trending)
+    if (community) query.community = new ObjectId(community)
 
     // Nếu không có field nào ngoài owner thì không cho tạo
     if (Object.keys(query).length === 1) return false
@@ -30,7 +33,8 @@ class SearchHistoryService {
         owner: user_active._id,
         text: text || undefined,
         user: user ? new ObjectId(user) : undefined,
-        trending: trending ? new ObjectId(trending) : undefined
+        trending: trending ? new ObjectId(trending) : undefined,
+        community: community ? new ObjectId(community) : undefined
       })
     )
 
@@ -63,14 +67,25 @@ class SearchHistoryService {
           pipeline: [{ $project: { topic: 1, hashtag: 1 } }]
         }
       },
+      {
+        $lookup: {
+          from: 'communities',
+          localField: 'community',
+          foreignField: '_id',
+          as: 'community',
+          pipeline: [{ $project: { name: 1, slug: 1, cover: 1, category: 1 } }]
+        }
+      },
       { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$trending', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$community', preserveNullAndEmptyArrays: true } },
       {
         $project: {
           _id: 1,
           text: 1,
           user: 1,
-          trending: 1
+          trending: 1,
+          community: 1
         }
       }
     ]
