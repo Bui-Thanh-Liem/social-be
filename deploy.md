@@ -54,5 +54,5 @@ print(`Đã xóa xong: ${collName}`);
 
 print("Đã xóa toàn bộ dữ liệu trong tất cả collection!");
 
-git tag v3
+git tag v3  #
 git push origin v3 => handle on server
