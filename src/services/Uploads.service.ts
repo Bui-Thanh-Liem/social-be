@@ -45,7 +45,7 @@ class UploadsService {
             logger.info(`Deleted image: ${filePath}`)
           } else {
             console.warn(`Image not found: ${filePath}`)
-            throw new NotFoundError('Không tìm thấy ảnh trước cũ ?')
+            // throw new NotFoundError('Không tìm thấy ảnh trước cũ ?')
           }
         })
 
