@@ -34,7 +34,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.NAME_IMAGE }}:${{ github.ref_name || github.run_number }}
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.NAME_IMAGE }}:${{ github.ref_name }}
 
       # 5. Deploy to server via SSH
       - name: Deploy to server
@@ -45,13 +45,22 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd /home/liemdev/social
-            # Lấy tag image: Git tag nếu có, nếu không dùng run_number
-            if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-              export IMAGE_TAG=${GITHUB_REF#refs/tags/}
-            else
-              export IMAGE_TAG=${GITHUB_RUN_NUMBER}
-            fi
-            echo "Deploying image tag: $IMAGE_TAG"
-            docker compose pull
+      
+            # Set các biến môi trường cần thiết
+            export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
+            export NAME_IMAGE="${{ secrets.NAME_IMAGE }}"
+            export IMAGE_TAG="${{ github.ref_name }}"
+            
+            echo "Deploying image: $DOCKER_USERNAME/$NAME_IMAGE:$IMAGE_TAG"
+            
+            # Pull image mới với tag cụ thể
+            docker pull $DOCKER_USERNAME/$NAME_IMAGE:$IMAGE_TAG
+            
+            # Stop và xóa containers cũ
             docker compose down
+            
+            # Start containers với image mới
             docker compose up -d --remove-orphans
+            
+            # Dọn dẹp images cũ (optional)
+            docker image prune -f
