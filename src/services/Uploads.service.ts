@@ -2,7 +2,7 @@ import { Request } from 'express'
 import fs from 'fs'
 import path from 'path'
 import { envs } from '~/configs/env.config'
-import { BadRequestError } from '~/shared/classes/error.class'
+import { BadRequestError, NotFoundError } from '~/shared/classes/error.class'
 import { UPLOAD_IMAGE_FOLDER_PATH } from '~/shared/constants'
 import { ResUpload } from '~/shared/dtos/res/upload.dto'
 import { EMediaType } from '~/shared/enums/type.enum'
@@ -31,7 +31,7 @@ class UploadsService {
         // Process each image URL
         urls.forEach((url) => {
           // Extract the relative path from the URL (remove the server domain)
-          const relativePath = url.replace(`${envs.SERVER_DOMAIN}/`, '')
+          const relativePath = url.replace(`${envs.SERVER_DOMAIN}/uploads/`, '')
           const filePath = path.join(UPLOAD_IMAGE_FOLDER_PATH, relativePath)
 
           // Security check: Ensure the file path is within the upload directory
@@ -45,6 +45,7 @@ class UploadsService {
             logger.info(`Deleted image: ${filePath}`)
           } else {
             console.warn(`Image not found: ${filePath}`)
+            throw new NotFoundError('Không tìm thấy ảnh trước cũ ?')
           }
         })
 

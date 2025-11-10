@@ -16,6 +16,8 @@ class UploadsController {
 
   async removeImages(req: Request, res: Response, next: NextFunction) {
     const { urls } = req.body as RemoteImagesDto
+    console.log('removeImages:::', urls)
+
     const result = await UploadsService.removeImages(urls)
     res.status(200).json(new OkResponse('Thành công', result))
   }
