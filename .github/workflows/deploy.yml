@@ -44,23 +44,23 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd /home/liemdev/social
-      
+            cd ~/social
+
             # Set các biến môi trường cần thiết
             export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
             export NAME_IMAGE="${{ secrets.NAME_IMAGE }}"
             export IMAGE_TAG="${{ github.ref_name }}"
-            
+
             echo "Deploying image: $DOCKER_USERNAME/$NAME_IMAGE:$IMAGE_TAG"
-            
+
             # Pull image mới với tag cụ thể
             docker pull $DOCKER_USERNAME/$NAME_IMAGE:$IMAGE_TAG
-            
+
             # Stop và xóa containers cũ
             docker compose down
-            
+
             # Start containers với image mới
             docker compose up -d --remove-orphans
-            
+
             # Dọn dẹp images cũ (optional)
-            docker image prune -f
+            docker image prune -af --filter "until=24h"
