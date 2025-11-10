@@ -2,8 +2,8 @@ name: CI/CD Docker - Docker Hub + Compose
 
 on:
   push:
-    branches:
-      - main # chạy khi push commit main
+    # branches:
+    #   - main # chạy khi push commit main
     tags:
       - 'v*' # chạy khi push Git tag versioned
   workflow_dispatch: # trigger thủ công
