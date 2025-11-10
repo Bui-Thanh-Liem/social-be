@@ -13,12 +13,12 @@ export const emailWorker = new Worker(
     switch (job.name) {
       case CONSTANT_JOB.VERIFY_MAIL:
         await mailServiceInstance.sendVerifyEmail({ to_email, name, url })
-        logger.info(`✅ Sent verify email to ${to_email}`)
+        console.log(`✅ Sent verify email to ${to_email}`)
         break
 
       case CONSTANT_JOB.FORGOT_PASSWORD:
         await mailServiceInstance.sendForgotPasswordEmail({ to_email, name, url })
-        logger.info('Sent forgot password email to', to_email)
+        console.log('Sent forgot password email to', to_email)
         break
     }
   },

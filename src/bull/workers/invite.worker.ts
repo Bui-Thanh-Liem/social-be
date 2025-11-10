@@ -13,7 +13,7 @@ export const inviteWorker = new Worker(
       case CONSTANT_JOB.INVITE: {
         const payload = job.data as CreateCommunityInvitationDto
         await CommunityInvitationService.create(payload)
-        logger.info('Invited ::::', payload)
+        console.log('Invited ::::', payload)
         break
       }
     }

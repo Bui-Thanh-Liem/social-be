@@ -4,7 +4,6 @@ import TweetsService from '~/services/Tweets.service'
 import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants'
 import { logger } from '~/utils/logger.util'
 
-
 export const cleanupWorker = new Worker(
   CONSTANT_QUEUE.CLEANUP,
   async (job) => {
@@ -13,7 +12,7 @@ export const cleanupWorker = new Worker(
       case CONSTANT_JOB.DELETE_CHILDREN_TWEET: {
         const { parent_id } = job.data
         await TweetsService.deleteChildrenTweet(parent_id)
-        logger.info('Deleted children tweet of ', parent_id)
+        console.log('Deleted children tweet of ', parent_id)
         break
       }
     }
