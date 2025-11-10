@@ -15,4 +15,4 @@ export const cleanupQueue = new Queue(CONSTANT_QUEUE.CLEANUP, {
 })
 
 // 🔹 Dev / staging / app nhỏ → Multi-worker single process
-// 🔹 Production / hệ thống lớn → Dedicated worker process (1 queue = 1 process)
+// 🔹 Production / hệ thống lớn → Dedicated worker process (1 queue = 1 process).
