@@ -421,7 +421,11 @@ async function createRandomTweets(user_ids: ObjectId[]) {
           content: generateRandomTweet(ht1),
           hashtags: ht1,
           mentions: getRandomMentions(user_ids),
-          media: { url: faker.image.avatar(), type: EMediaType.Image }
+          media: [
+            { url: faker.image.avatar(), type: EMediaType.Image },
+            { url: faker.image.avatar(), type: EMediaType.Image },
+            { url: faker.image.avatar(), type: EMediaType.Image }
+          ]
         }),
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
@@ -429,7 +433,11 @@ async function createRandomTweets(user_ids: ObjectId[]) {
           content: generateRandomTweet(ht2),
           hashtags: ht2,
           mentions: getRandomMentions(user_ids),
-          media: { url: faker.image.avatar(), type: EMediaType.Image }
+          media: [
+            { url: faker.image.avatar(), type: EMediaType.Image },
+            { url: faker.image.avatar(), type: EMediaType.Image },
+            { url: faker.image.avatar(), type: EMediaType.Image }
+          ]
         }),
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
@@ -437,7 +445,11 @@ async function createRandomTweets(user_ids: ObjectId[]) {
           content: generateRandomTweet(ht3),
           hashtags: ht3,
           mentions: getRandomMentions(user_ids),
-          media: { url: faker.image.avatar(), type: EMediaType.Image }
+          media: [
+            { url: faker.image.avatar(), type: EMediaType.Image },
+            { url: faker.image.avatar(), type: EMediaType.Image },
+            { url: faker.image.avatar(), type: EMediaType.Image }
+          ]
         }),
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
@@ -445,7 +457,11 @@ async function createRandomTweets(user_ids: ObjectId[]) {
           content: generateRandomTweet(ht4),
           hashtags: ht4,
           mentions: getRandomMentions(user_ids),
-          media: { url: faker.image.avatar(), type: EMediaType.Image }
+          media: [
+            { url: faker.image.avatar(), type: EMediaType.Image },
+            { url: faker.image.avatar(), type: EMediaType.Image },
+            { url: faker.image.avatar(), type: EMediaType.Image }
+          ]
         }),
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
@@ -453,7 +469,11 @@ async function createRandomTweets(user_ids: ObjectId[]) {
           content: generateRandomTweet(ht5),
           hashtags: ht5,
           mentions: getRandomMentions(user_ids),
-          media: { url: faker.image.avatar(), type: EMediaType.Image }
+          media: [
+            { url: faker.image.avatar(), type: EMediaType.Image },
+            { url: faker.image.avatar(), type: EMediaType.Image },
+            { url: faker.image.avatar(), type: EMediaType.Image }
+          ]
         })
       ])
     })

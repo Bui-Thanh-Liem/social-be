@@ -504,9 +504,9 @@ class TrendingService {
       return {
         trending: t,
         category: category,
-        media: highlight_tweet[0].media,
+        media: highlight_tweet[0].media?.[0],
         posts: relatedTweet,
-        id: highlight_tweet[0]._id as any,
+        id: highlight_tweet[0]._id as unknown,
         time: highlight_tweet[0].created_at,
         relevant_ids: related_tweets.map((tw) => tw._id),
         highlight: highlight

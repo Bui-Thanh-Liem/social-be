@@ -34,7 +34,7 @@ export const CreateTweetDtoSchema = z.object({
       })
     )
     .optional(),
-  media: MediaSchema.optional()
+  media: z.array(MediaSchema).optional().nullable()
 })
 
 export const GetOneTweetByIdDtoSchema = z.object({

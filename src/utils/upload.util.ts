@@ -5,8 +5,8 @@ import fs from 'fs'
 import { ObjectId } from 'mongodb'
 import { nanoid } from 'nanoid'
 import path from 'path'
-import { envs } from '~/configs/env.config'
 import { compressionQueue } from '~/bull/queues'
+import { envs } from '~/configs/env.config'
 import VideosService from '~/services/Videos.service'
 import { BadRequestError } from '~/shared/classes/error.class'
 import {
@@ -163,8 +163,6 @@ export function uploadVideos(req: Request): Promise<string[]> {
               const name = video.newFilename.split('/')[0]
 
               //
-              console.log('taojk vidfeo ::', user_id)
-              console.log('req.decoded_authorization ::', req.decoded_authorization)
               const newVideo = await VideosService.create({
                 name,
                 user_id,

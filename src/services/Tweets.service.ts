@@ -1932,24 +1932,32 @@ class TweetsService {
           throw new NotFoundError('Không tìm thấy bài viết để xóa')
         }
 
-        // Xóa ảnh
-        if (tweet?.media && tweet?.media?.type === EMediaType.Image) {
-          // Lấy filename từ url: http://domain/images/abc.png => abc.png
-          const filename = tweet.media?.url.split('/').pop()
-          if (filename) {
-            await deleteImage(filename).catch((err) => {
-              console.log('Tweet - delete - media - img:::', err)
-            })
-          }
-        }
+        if (tweet.media) {
+          for (let i = 0; i < tweet?.media?.length; i++) {
+            const media = tweet.media[i]
 
-        // Xóa video
-        if (tweet?.media && tweet?.media?.type === EMediaType.Video) {
-          // Lấy folderName: http://localhost:9000/videos-hls/RXhw4s21AEzt_-VpjWIin/master.m3u8
-          const parts = tweet.media?.url.split('/')
-          const folderName = parts[parts.length - 2] // "RXhw4s21AEzt_-VpjWIin"
-          if (folderName) {
-            await VideosService.delete(folderName)
+            // Xóa ảnh
+            if (media?.type === EMediaType.Image) {
+              // Lấy filename từ url: http://domain/images/abc.png => abc.png
+              const filename = media?.url.split('/').pop()
+              if (filename) {
+                await deleteImage(filename).catch((err) => {
+                  console.log('Tweet - delete - media - img:::', err)
+                })
+              }
+            }
+
+            // Xóa video
+            if (media?.type === EMediaType.Video) {
+              // Lấy folderName: http://localhost:9000/videos-hls/RXhw4s21AEzt_-VpjWIin/master.m3u8
+              const parts = media?.url.split('/')
+              const folderName = parts[parts.length - 2] // "RXhw4s21AEzt_-VpjWIin"
+              if (folderName) {
+                await VideosService.delete(folderName).catch((err) => {
+                  console.log('Tweet - delete - media - img:::', err)
+                })
+              }
+            }
           }
         }
 
