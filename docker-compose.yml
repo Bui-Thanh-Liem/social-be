@@ -1,0 +1,121 @@
+# version: "3.8"
+
+services:
+  # =====================================================
+  # 1. BACKEND
+  # =====================================================
+  twitter-be:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: always
+    command: npm run start:server:prod
+    env_file:
+      - .env
+    ports:
+      - '9000:9000'
+    depends_on:
+      - twitter-redis
+      - twitter-elasticsearch
+    volumes:
+      - ./uploads:/app/uploads:rw
+      - ./logs:/app/logs:rw
+    networks:
+      - twitter-network
+
+  twitter-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: always
+    command: npm run start:worker:prod
+    env_file:
+      - .env
+    depends_on:
+      - twitter-redis
+      - twitter-elasticsearch
+    volumes:
+      - ./uploads:/app/uploads:rw
+      - ./app.log:/app/app.log
+    networks:
+      - twitter-network
+
+  # =====================================================
+  # 2. REDIS
+  # =====================================================
+  twitter-redis:
+    image: redis:7-alpine
+    container_name: twitter-redis
+    restart: always
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis-data:/data
+    networks:
+      - twitter-network
+
+  # =====================================================
+  # 3. ELASTICSEARCH
+  # =====================================================
+  twitter-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: twitter-elasticsearch
+    restart: always
+    environment:
+      - node.name=twitter_es
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
+    deploy:
+      resources:
+        limits: # Giới hạn TỐI ĐA
+          memory: 2g
+          cpus: '2.0'
+        reservations: # Đảm bảo TỐI THIỂU
+          memory: 1g
+          cpus: '1.0'
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    volumes:
+      - ./elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - twitter-network
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:9200/_cluster/health || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # =====================================================
+  # 4. KIBANA (UI for Elasticsearch)
+  # =====================================================
+  twitter-kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: twitter-kibana
+    restart: always
+    environment:
+      - ELASTICSEARCH_HOSTS=http://twitter-elasticsearch:9200
+      - xpack.security.enabled=false
+    ports:
+      - '5601:5601'
+    depends_on:
+      - twitter-elasticsearch
+    networks:
+      - twitter-network
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:5601/api/status || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+# =====================================================
+# VOLUMES & NETWORKS
+# =====================================================
+volumes:
+  mongo-data:
+  redis-data:
+  elasticsearch-data:
+
+networks:
+  twitter-network:
+    driver: bridge
