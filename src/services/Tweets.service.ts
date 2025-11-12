@@ -631,6 +631,7 @@ class TweetsService {
     feed_type: EFeedType
   }): Promise<ResMultiType<ITweet>> {
     //
+    const activeObjectId = new ObjectId(user_active_id)
     const { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
 
     //
@@ -919,7 +920,37 @@ class TweetsService {
       ]).toArray(),
       feed_type !== EFeedType.Following &&
         CommunityCollection.aggregate<CommunitySchema>([
-          { $match: { membership_type: EMembershipType.Open } },
+          // 1️⃣ Chỉ lấy community mở
+          { $match: { membership_type: EMembershipType.Open, admin: { $ne: activeObjectId } } },
+
+          // 2️⃣ Join sang bảng mentor
+          {
+            $lookup: {
+              from: 'community-mentors',
+              localField: '_id',
+              foreignField: 'community_id',
+              as: 'mentors'
+            }
+          },
+
+          // 3️⃣ Join sang bảng member
+          {
+            $lookup: {
+              from: 'community-members',
+              localField: '_id',
+              foreignField: 'community_id',
+              as: 'members'
+            }
+          },
+
+          // 4️⃣ Lọc bỏ community mà user đã là mentor hoặc member
+          {
+            $match: {
+              'mentors.user_id': { $ne: activeObjectId },
+              'members.user_id': { $ne: activeObjectId }
+            }
+          },
+
           { $sort: sort },
           { $skip: skipCom },
           { $limit: 2 },
@@ -931,6 +962,8 @@ class TweetsService {
           },
           {
             $project: {
+              mentors: 0,
+              members: 0,
               pin: 0,
               bio: 0
             }
