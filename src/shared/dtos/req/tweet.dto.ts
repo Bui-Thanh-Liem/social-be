@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CONSTANT_REGEX } from '~/shared/constants'
+import { CONSTANT_MAX_LENGTH_CONTENT, CONSTANT_REGEX } from '~/shared/constants'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EFeedType, EMediaType, ETweetType } from '~/shared/enums/type.enum'
 
@@ -25,7 +25,7 @@ export const CreateTweetDtoSchema = z.object({
       message: 'ObjectId không hợp lệ (community_id)'
     })
     .optional(),
-  content: z.string().max(280, 'Nội dung tối đa 280 kí tự').trim(),
+  content: z.string().max(CONSTANT_MAX_LENGTH_CONTENT, `Nội dung tối đa ${CONSTANT_MAX_LENGTH_CONTENT} kí tự`).trim(),
   hashtags: z.array(z.string().trim()).optional(), // client gửi lên name
   mentions: z
     .array(
