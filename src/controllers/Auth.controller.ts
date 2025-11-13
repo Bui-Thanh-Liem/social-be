@@ -27,6 +27,13 @@ class AuthController {
     res.redirect(url)
   }
 
+  async facebookLogin(req: Request, res: Response, next: NextFunction) {
+    const { code } = req.query
+    const { access_token, refresh_token, status } = await AuthServices.facebookLogin(code as string)
+    const url = `${envs.CLIENT_DOMAIN}/?access_token=${access_token}&refresh_token=${refresh_token}&s=${status}`
+    res.redirect(url)
+  }
+
   async logout(req: Request, res: Response, next: NextFunction) {
     const { refresh_token } = req.body
     const { user_id } = req.decoded_refresh_token as IJwtPayload

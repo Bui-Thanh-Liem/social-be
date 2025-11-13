@@ -27,6 +27,8 @@ authRoute.post(
 
 authRoute.get('/google-login', AuthController.googleLogin)
 
+authRoute.get('/facebook-login', AuthController.facebookLogin)
+
 authRoute.post('/logout', verifyAccessToken, verifyRefreshToken, wrapAsyncHandler(AuthController.logout))
 
 authRoute.post('/refresh-token', verifyRefreshToken, wrapAsyncHandler(AuthController.refreshToken))

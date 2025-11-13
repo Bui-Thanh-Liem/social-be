@@ -135,7 +135,7 @@ class AuthService {
 
     //
     if (!user_info.verified_email) {
-      throw new BadRequestError('Email của bạn chưa được xác minh.')
+      throw new BadRequestError('Email của bạn chưa được xác minh từ google.')
     }
 
     //
@@ -176,6 +176,54 @@ class AuthService {
     }
   }
 
+  async facebookLogin(code: string) {
+    const { access_token } = await this.getOauthFacebookToken(code)
+    const user_info = await this.getOauthFacebookInfoUser(access_token)
+
+    //
+    if (!user_info.verified_email) {
+      throw new BadRequestError('Email của bạn chưa được xác minh từ facebook.')
+    }
+
+    //
+    const exist = await this.findOneByEmail(user_info?.email)
+
+    // Nếu đã đăng nhập rồi thì tạo token gửi về client
+    if (exist) {
+      const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
+        payload: { user_id: exist._id.toString() }
+      })
+      // await RefreshTokenCollection.deleteOne({ user_id: exist._id }) // => Đăng nhập 1 thiết bị
+      const { iat, exp } = await this.verifyToken(refresh_token, envs.JWT_SECRET_REFRESH)
+      await RefreshTokenCollection.insertOne(
+        new RefreshTokenSchema({ token: refresh_token, user_id: exist._id, exp, iat })
+      )
+
+      return {
+        access_token,
+        refresh_token,
+        status: 'Login'
+      }
+    }
+
+    //
+    const newPass = generatePassword()
+    const register = await this.register({
+      email: user_info.email,
+      name: user_info.name,
+      day_of_birth: new Date(),
+      confirm_password: newPass,
+      password: newPass,
+      avatar: user_info.picture
+    })
+
+    return {
+      ...register,
+      status: 'Register'
+    }
+  }
+
+  // Đổi code lấy access_token từ google
   private async getOauthGoogleToken(code: string): Promise<IGoogleToken> {
     const body = {
       code,
@@ -194,6 +242,7 @@ class AuthService {
     return data
   }
 
+  // Từ access_token lấy thông tin user google
   private async getOauthGoogleInfoUser(access_token: string, id_token: string): Promise<IGoogleUserProfile> {
     const { data } = await axios.get('https://www.googleapis.com/oauth2/v1/userinfo', {
       params: {
@@ -206,6 +255,59 @@ class AuthService {
     })
 
     return data
+  }
+
+  // Đổi code lấy access_token từ facebook
+  private async getOauthFacebookToken(code: string): Promise<{ access_token: string }> {
+    const fb_client_id = envs.FACEBOOK_CLIENT_ID
+    const fb_redirect_uri = envs.FACEBOOK_REDIRECT_URIS
+    const fe_client_secret = envs.FACEBOOK_CLIENT_SECRET
+
+    // Kiểm tra các giá trị bắt buộc
+    if (!fb_client_id || !fb_redirect_uri || !fe_client_secret || !code) {
+      throw new NotFoundError('Thiếu các tham số bắt buộc để trao đổi mã thông báo Facebook.')
+    }
+
+    try {
+      const response = await axios({
+        method: 'post',
+        url: 'https://graph.facebook.com/v21.0/oauth/access_token',
+        data: {
+          // Sử dụng data cho POST
+          client_id: fb_client_id,
+          redirect_uri: fb_redirect_uri,
+          client_secret: fe_client_secret,
+          code
+        },
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const { access_token, expires_in } = response.data
+      if (!access_token) {
+        throw new NotFoundError('Không tìm thấy mã thông báo truy cập trong phản hồi.')
+      }
+
+      console.log(`Access token retrieved, expires in ${expires_in} seconds`)
+      return { access_token }
+    } catch (error) {
+      throw new BadRequestError(
+        `Không thể đổi mã để lấy mã thông báo truy cập: ${(error as { message: string })?.message}`
+      )
+    }
+  }
+
+  // Từ access_token lấy thông tin user facebook
+  private async getOauthFacebookInfoUser(token: string) {
+    const res = await axios.get('https://graph.facebook.com/me', {
+      params: {
+        access_token: token,
+        fields: 'id,name,email'
+      }
+    })
+
+    return res.data
   }
 
   async logout({ refresh_token, user_id }: { refresh_token: string; user_id: string }) {
