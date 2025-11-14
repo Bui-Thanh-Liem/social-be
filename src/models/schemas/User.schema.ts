@@ -3,6 +3,7 @@ import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { BaseSchema } from './Base.schema'
 
+const _COLLECTION_NAME = 'users'
 export class UserSchema extends BaseSchema implements IUser {
   name: string
   email: string
@@ -39,5 +40,5 @@ export class UserSchema extends BaseSchema implements IUser {
 export let UserCollection: Collection<UserSchema>
 
 export function initUserCollection(db: Db) {
-  UserCollection = db.collection<UserSchema>('users')
+  UserCollection = db.collection<UserSchema>(_COLLECTION_NAME)
 }

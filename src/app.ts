@@ -8,6 +8,7 @@ import swaggerUi from 'swagger-ui-express'
 import morgan from 'morgan'
 import { envs } from './configs/env.config'
 import { swaggerSpec } from './configs/swagger'
+import StreamVideoController from './controllers/StreamVideo.controller'
 import { corsMiddleware } from './middlewares/cors.middleware'
 import { errorHandler } from './middlewares/errorhandler.middleware'
 import { loggerMiddleware } from './middlewares/logger.middleware'
@@ -17,8 +18,9 @@ import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/con
 import { logger } from './utils/logger.util'
 
 //
-import StreamVideoController from './controllers/StreamVideo.controller'
 import './tasks/cleanup.task'
+
+const isDev = process.env.NODE_ENV === 'development'
 
 const app = express()
 
@@ -55,7 +57,7 @@ app.use(compression())
 app.use(hpp()) // page=1&page=4 => thì lấy page=4
 
 //
-app.use(morgan('dev'))
+app.use(morgan(isDev ? 'dev' : 'combined'))
 app.use(loggerMiddleware)
 
 // Rate limiting
@@ -97,15 +99,7 @@ app.use(
 // API documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
-// Health check
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  })
-})
-
+// Streaming
 app.get('/videos-streaming/:filename', StreamVideoController.streamVideo)
 app.get('/videos-hls/:foldername/master.m3u8', StreamVideoController.streamMaster)
 app.get('/videos-hls/:foldername/:v/:segment', StreamVideoController.streamSegment)

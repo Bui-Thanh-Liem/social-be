@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { notificationQueue } from '~/bull/queues'
-import database from '~/configs/database.config'
+import { clientMongodb } from '~/dbs/init.mongodb'
 import {
   CommunityActivityCollection,
   CommunityActivitySchema,
@@ -216,7 +216,7 @@ class CommunityService {
     //
     await CommunityMentorService.checkLength({ user_id: actor_id, community_id })
 
-    const session = database.getClient().startSession()
+    const session = clientMongodb.startSession()
 
     try {
       await session.withTransaction(async () => {
@@ -282,7 +282,7 @@ class CommunityService {
       throw new ConflictError('Người dùng này đang là thành viên bình thường.')
     }
 
-    const session = database.getClient().startSession()
+    const session = clientMongodb.startSession()
 
     try {
       await session.withTransaction(async () => {

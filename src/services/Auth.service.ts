@@ -17,27 +17,31 @@ import {
   UpdateMeDto
 } from '~/shared/dtos/req/auth.dto'
 import { ENotificationType, ETokenType } from '~/shared/enums/type.enum'
-import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { ISendVerifyEmail } from '~/shared/interfaces/common/mail.interface'
 import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oauth-google.interface'
-import ConversationGateway from '~/socket/gateways/Conversation.gateway'
+import { createTokenPair } from '~/utils/auth.util'
 import { generatePassword, hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
+import RefreshTokenService from './Refresh-token.service'
 import UsersService from './Users.service'
 
 class AuthService {
-  async register(payload: RegisterUserDto) {
+  async signup(payload: RegisterUserDto) {
     //
-    const exist_email = await this.findOneByEmail(payload.email)
-    if (exist_email) {
-      throw new ConflictError('Email đã tồn tại')
+    const [holder_email_user, holder_name_user] = await Promise.all([
+      this.findOneByEmail(payload.email),
+      this.checkExistByName(payload?.name)
+    ])
+
+    //
+    if (holder_email_user) {
+      throw new ConflictError('Email đã tồn tại.')
     }
 
     //
-    await this.checkExistByName(payload?.name)
-
-    //
-    const password_hashed = hashPassword(payload.password)
+    if (holder_name_user) {
+      throw new ConflictError('Tên người dùng đã tồn tại.')
+    }
 
     //
     const email_verify_token = await signToken({
@@ -46,8 +50,11 @@ class AuthService {
       options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
     })
 
-    //
+    // mã hoá mật khẩu và chuyển đổi định dạng username
+    const password_hashed = hashPassword(payload.password)
     const snake_case_name = `@${_.snakeCase(payload.name)}`.slice(0, 20)
+
+    //
     const result = await UserCollection.insertOne(
       new UserSchema({
         ...payload,
@@ -58,40 +65,35 @@ class AuthService {
       })
     )
 
-    const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
+    const [access_token, refresh_token] = await createTokenPair({
       payload: {
         user_id: result.insertedId.toString()
       }
     })
-    // Khi đăng kí thành công thì cho người dùng đăng nhập luôn
-    const { iat, exp } = await this.verifyToken(refresh_token, envs.JWT_SECRET_REFRESH)
-    await RefreshTokenCollection.insertOne(
-      new RefreshTokenSchema({ token: refresh_token, user_id: result.insertedId, iat, exp })
-    )
 
     //
-    await emailQueue.add(
-      CONSTANT_JOB.VERIFY_MAIL,
-      {
-        to_email: payload.email,
-        name: payload.name,
-        url: `${envs.CLIENT_DOMAIN}/verify?token=${email_verify_token}`
-      } as ISendVerifyEmail,
-      { delay: 5000 }
-    )
+    if (!access_token || !refresh_token) {
+      throw new BadRequestError('Có lỗi trong quá trình đăng ký vui lòng thử lại.')
+    }
 
-    // Gửi thông báo
+    // Khi đăng kí thành công thì cho người dùng đăng nhập vào ứng dụng ngay.
+    const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
+    await RefreshTokenService.create({ refresh_token, user_id: result.insertedId.toString(), iat, exp })
+
+    // Đưa qua worker gửi mail
+    await emailQueue.add(CONSTANT_JOB.VERIFY_MAIL, {
+      to_email: payload.email,
+      name: payload.name,
+      url: `${envs.CLIENT_DOMAIN}/verify?token=${email_verify_token}`
+    } as ISendVerifyEmail)
+
+    // Gửi thông báo xác thực email
     await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
-      content: 'Kiểm tra mail để xác thực tài khoản của bạn.',
+      content: 'Kiểm tra mail để xác thực tài khoản, nếu bạn đã xác thực vui lòng bỏ qua thông báo này.',
       receiver: result.insertedId.toString(),
       sender: result.insertedId.toString(),
       type: ENotificationType.Other
     })
-
-    // Sau 5s chờ người ổn định socket rồi mới gửi số lượng thông báo chưa đọc
-    setTimeout(async () => {
-      await ConversationGateway.sendCountUnreadConv(result.insertedId.toString())
-    }, 5000)
 
     //
     return {
@@ -114,14 +116,13 @@ class AuthService {
     }
 
     //
-    const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
+    const [access_token, refresh_token] = await createTokenPair({
       payload: { user_id: exist._id.toString() }
     })
+
     // await RefreshTokenCollection.deleteOne({ user_id: exist._id }) // => Đăng nhập 1 thiết bị
-    const { iat, exp } = await this.verifyToken(refresh_token, envs.JWT_SECRET_REFRESH)
-    await RefreshTokenCollection.insertOne(
-      new RefreshTokenSchema({ token: refresh_token, user_id: exist._id, iat, exp })
-    )
+    const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
+    await RefreshTokenService.create({ refresh_token, user_id: exist._id.toString(), iat, exp })
 
     return {
       access_token,
@@ -143,11 +144,11 @@ class AuthService {
 
     // Nếu đã đăng nhập rồi thì tạo token gửi về client
     if (exist) {
-      const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
+      const [access_token, refresh_token] = await createTokenPair({
         payload: { user_id: exist._id.toString() }
       })
       // await RefreshTokenCollection.deleteOne({ user_id: exist._id }) // => Đăng nhập 1 thiết bị
-      const { iat, exp } = await this.verifyToken(refresh_token, envs.JWT_SECRET_REFRESH)
+      const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
       await RefreshTokenCollection.insertOne(
         new RefreshTokenSchema({ token: refresh_token, user_id: exist._id, exp, iat })
       )
@@ -161,7 +162,7 @@ class AuthService {
 
     //
     const newPass = generatePassword()
-    const register = await this.register({
+    const register = await this.signup({
       email: user_info.email,
       name: user_info.name,
       day_of_birth: new Date(),
@@ -190,11 +191,11 @@ class AuthService {
 
     // Nếu đã đăng nhập rồi thì tạo token gửi về client
     if (exist) {
-      const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
+      const [access_token, refresh_token] = await createTokenPair({
         payload: { user_id: exist._id.toString() }
       })
       // await RefreshTokenCollection.deleteOne({ user_id: exist._id }) // => Đăng nhập 1 thiết bị
-      const { iat, exp } = await this.verifyToken(refresh_token, envs.JWT_SECRET_REFRESH)
+      const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
       await RefreshTokenCollection.insertOne(
         new RefreshTokenSchema({ token: refresh_token, user_id: exist._id, exp, iat })
       )
@@ -208,7 +209,7 @@ class AuthService {
 
     //
     const newPass = generatePassword()
-    const register = await this.register({
+    const register = await this.signup({
       email: user_info.email,
       name: user_info.name,
       day_of_birth: new Date(),
@@ -376,24 +377,14 @@ class AuthService {
     )
   }
 
-  async refreshToken({ user_id, token, exp }: { user_id: string; token: string; exp?: number }) {
-    const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
+  async refreshToken({ user_id, exp }: { user_id: string; exp?: number }) {
+    const [access_token, refresh_token] = await createTokenPair({
       payload: { user_id },
       exp_refresh: exp
     })
 
-    const decoded = await this.verifyToken(refresh_token, envs.JWT_SECRET_REFRESH)
-    await Promise.all([
-      // RefreshTokenCollection.deleteOne({ token }),
-      RefreshTokenCollection.insertOne(
-        new RefreshTokenSchema({
-          token: refresh_token,
-          user_id: new ObjectId(user_id),
-          iat: decoded.iat,
-          exp: decoded.exp
-        })
-      )
-    ])
+    const decoded = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
+    await Promise.all([RefreshTokenService.create({ refresh_token, user_id, iat: decoded.iat, exp: decoded.exp })])
 
     return { access_token, refresh_token }
   }
@@ -415,36 +406,7 @@ class AuthService {
     const snake_case_name = `@${_.snakeCase(name)}`.slice(0, 20)
     console.log('snake_case_name::', snake_case_name)
 
-    const is_exist = (await UserCollection.countDocuments({ $or: [{ name }, { username: snake_case_name }] })) > 0
-    if (is_exist) {
-      throw new ConflictError('Tên người dùng đã tồn tại.')
-    }
-  }
-
-  //
-  private async signAccessAndRefreshToken({
-    payload,
-    exp_refresh
-  }: {
-    payload: Pick<IJwtPayload, 'user_id'>
-    exp_refresh?: number
-  }): Promise<[string, string]> {
-    return (await Promise.all([
-      signToken({
-        payload: { ...payload, type: ETokenType.AccessToken },
-        privateKey: envs.JWT_SECRET_ACCESS,
-        options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
-      }),
-      signToken({
-        payload: { ...payload, type: ETokenType.RefreshToken, exp: exp_refresh },
-        privateKey: envs.JWT_SECRET_REFRESH,
-        options: { expiresIn: envs.REFRESH_TOKEN_EXPIRES_IN as StringValue }
-      })
-    ])) as [string, string]
-  }
-
-  async verifyToken(token: string, privateKey: string) {
-    return verifyToken({ token, privateKey })
+    return (await UserCollection.countDocuments({ $or: [{ name }, { username: snake_case_name }] })) > 0
   }
 
   async updateMe(user_id: string, payload: UpdateMeDto) {

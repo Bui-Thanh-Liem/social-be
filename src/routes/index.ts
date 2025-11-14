@@ -43,9 +43,12 @@ rootRoute.post('/faker', async (req: Request, res: Response, next: NextFunction)
   })
 })
 
-rootRoute.get('/health', async (req: Request, res: Response, next: NextFunction) => {
+// Health check
+rootRoute.get('/health', (req, res) => {
   res.status(200).json({
-    message: 'OK'
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
   })
 })
 

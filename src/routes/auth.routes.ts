@@ -16,7 +16,7 @@ import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
 
 const authRoute = Router()
 
-authRoute.post('/register', requestBodyValidate(RegisterUserDtoSchema), wrapAsyncHandler(AuthController.register))
+authRoute.post('/signup', requestBodyValidate(RegisterUserDtoSchema), wrapAsyncHandler(AuthController.signup))
 
 authRoute.post(
   '/login',

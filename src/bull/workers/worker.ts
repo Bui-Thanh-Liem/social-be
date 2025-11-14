@@ -1,4 +1,4 @@
-import database from '~/configs/database.config'
+import { instanceMongodb } from '~/dbs/init.mongodb'
 import { logger } from '~/utils/logger.util'
 import { inviteQueue } from '../queues'
 import { cleanupWorker, compressionWorker, emailWorker, notificationWorker } from './index'
@@ -6,12 +6,8 @@ import { cleanupWorker, compressionWorker, emailWorker, notificationWorker } fro
 async function bootstrapWorker() {
   try {
     // 1. Kết nối database
-    await database.connect()
+    await instanceMongodb.connect()
     logger.info('✅ Worker: Database connected!')
-
-    // 2. Khởi tạo collections (nếu cần)
-    database.initialCollections()
-    logger.info('✅ Worker: Collections initialized!')
 
     // 3. Khởi tạo indexes (optional - có thể bỏ qua vì API server đã tạo rồi)
     // await database.initialIndex()
@@ -23,15 +19,9 @@ async function bootstrapWorker() {
     logger.info(`  - InviteQueue Worker: ${inviteQueue.name}`)
     logger.info(`  - Compression Worker: ${compressionWorker.name}`)
     logger.info(`  - Notification Worker: ${notificationWorker.name}`)
-
-    // 5. Health check (optional)
-    setInterval(async () => {
-      const db = database.getDb()
-      await db.admin().ping()
-    }, 30000) // Ping mỗi 30s
   } catch (err) {
     logger.error('❌ Worker: Failed to start:', err)
-    await database.disconnect()
+    await instanceMongodb.disconnect()
     process.exit(1)
   }
 }
@@ -51,9 +41,8 @@ async function shutdown() {
     logger.info('✅ All workers closed')
 
     // 2. Đóng database connection
-    await database.disconnect()
+    await instanceMongodb.disconnect()
     logger.info('✅ Database disconnected')
-
     process.exit(0)
   } catch (err) {
     logger.error('❌ Error during shutdown:', err)

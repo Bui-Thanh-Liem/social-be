@@ -3,6 +3,10 @@ import { StringValue } from 'ms'
 import { envs } from '~/configs/env.config'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
+// Tạo token đơn giản
+// muốn bảo mật hơn:
+// privateKey → dùng để sign (tạo JWT)
+// publicKey → dùng để verify (xác thực JWT)
 export async function signToken({
   payload,
   privateKey = envs.JWT_SECRET_ACCESS,

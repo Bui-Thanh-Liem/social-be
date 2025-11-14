@@ -1,6 +1,6 @@
 import { InsertOneResult, ObjectId } from 'mongodb'
 import { notificationQueue } from '~/bull/queues'
-import database from '~/configs/database.config'
+import { clientMongodb } from '~/dbs/init.mongodb'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { ConversationCollection, ConversationSchema } from '~/models/schemas/Conversation.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
@@ -805,7 +805,7 @@ class ConversationsService {
   }
 
   async delete({ user_id, conv_id }: { conv_id: string; user_id: string }) {
-    const session = database.getClient().startSession()
+    const session = clientMongodb.startSession()
     try {
       await session.withTransaction(async () => {
         // Pull user ra khỏi participants

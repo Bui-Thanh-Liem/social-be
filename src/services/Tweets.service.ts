@@ -1,7 +1,7 @@
 import { Filter, ObjectId } from 'mongodb'
 import { notificationQueue } from '~/bull/queues'
 import { cleanupQueue } from '~/bull/queues/cleanup.queue'
-import database from '~/configs/database.config'
+import { clientMongodb } from '~/dbs/init.mongodb'
 import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
 import { CommunityCollection, CommunitySchema } from '~/models/schemas/Community.schema'
 import { LikeCollection } from '~/models/schemas/Like.schema'
@@ -1949,7 +1949,7 @@ class TweetsService {
   }
 
   async delete(tweet_id: string) {
-    const session = database.getClient().startSession()
+    const session = clientMongodb.startSession()
     try {
       await session.withTransaction(async () => {
         // Lấy tweet trước

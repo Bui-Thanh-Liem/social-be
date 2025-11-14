@@ -1,12 +1,13 @@
 import { createServer } from 'http'
 import { Server } from 'socket.io'
-import database from '~/configs/database.config'
 import app from './app'
 import { envs } from './configs/env.config'
+import { instanceMongodb } from './dbs/init.mongodb'
 import { allowedOrigins } from './middlewares/cors.middleware'
 import { initSubscriber } from './pubsub/subscriber'
 import { initializeSocket } from './socket'
 import { logger } from './utils/logger.util'
+import { checkOverload } from './helpers/check.connect'
 
 //
 const port = envs.SERVER_PORT
@@ -28,14 +29,17 @@ const io = new Server(httpServer, {
 //
 async function bootstrap() {
   try {
-    await database.connect()
+    await instanceMongodb.connect() // chỉ có một kết nối tại đây
     logger.info('Database connected!')
 
-    database.initialCollections()
+    instanceMongodb.initialCollections()
     logger.info('Cerated collections!')
 
-    database.initialIndex()
+    instanceMongodb.initialIndex()
     logger.info('Cerated index!')
+
+    // Kiểm tra kết nối database
+    checkOverload()
 
     initializeSocket(io)
     logger.info('Socket.IO initialized!')
@@ -48,7 +52,7 @@ async function bootstrap() {
       logger.info(`App listening on ${host}:${port}`)
     })
   } catch (err) {
-    await database.disconnect()
+    await instanceMongodb.disconnect()
     logger.error('Failed to connect database:', err)
     process.exit(1) // dừng app nếu không connect được
   }

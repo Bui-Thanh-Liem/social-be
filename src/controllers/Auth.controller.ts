@@ -6,8 +6,8 @@ import { CreatedResponse, OkResponse } from '~/shared/classes/response.class'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class AuthController {
-  async register(req: Request, res: Response) {
-    const result = await AuthServices.register(req.body)
+  async signup(req: Request, res: Response) {
+    const result = await AuthServices.signup(req.body)
     res.status(201).json(new CreatedResponse('Kiểm tra mail để xác minh tài khoản.', result))
   }
 
@@ -44,7 +44,7 @@ class AuthController {
   async refreshToken(req: Request, res: Response, next: NextFunction) {
     const { refresh_token } = req.body
     const { user_id, exp } = req.decoded_refresh_token as IJwtPayload
-    const result = await AuthServices.refreshToken({ user_id, token: refresh_token, exp })
+    const result = await AuthServices.refreshToken({ user_id, exp })
     res.json(new OkResponse('Làm mới token thành công', result))
   }
 
