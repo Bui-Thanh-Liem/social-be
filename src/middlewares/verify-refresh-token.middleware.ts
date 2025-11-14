@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { envs } from '~/configs/env.config'
-import { RefreshTokenCollection } from '~/models/schemas/Refresh-token.schema'
-import { UnauthorizedError } from '~/shared/classes/error.class'
+import { UnauthorizedError } from '~/core/error.reponse'
+import RefreshTokenService from '~/services/Refresh-token.service'
 import { verifyToken } from '~/utils/jwt.util'
 
 export async function verifyRefreshToken(req: Request, res: Response, next: NextFunction) {
@@ -15,7 +15,7 @@ export async function verifyRefreshToken(req: Request, res: Response, next: Next
     //
     const [decoded, tokenInDatabase] = await Promise.all([
       verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH }),
-      RefreshTokenCollection.findOne({ token: refresh_token })
+      RefreshTokenService.findOneByToken({ token: refresh_token })
     ])
 
     //

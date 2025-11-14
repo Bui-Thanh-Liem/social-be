@@ -12,43 +12,43 @@ import {
   ResetPasswordDtoSchema,
   UpdateMeDtoSchema
 } from '~/shared/dtos/req/auth.dto'
-import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
+import { asyncHandler } from '~/utils/async-handler.util'
 
 const authRoute = Router()
 
-authRoute.post('/signup', requestBodyValidate(RegisterUserDtoSchema), wrapAsyncHandler(AuthController.signup))
+authRoute.post('/signup', requestBodyValidate(RegisterUserDtoSchema), asyncHandler(AuthController.signup))
 
 authRoute.post(
   '/login',
-  wrapAsyncHandler(loginRateLimit),
+  asyncHandler(loginRateLimit),
   requestBodyValidate(LoginUserDtoSchema),
-  wrapAsyncHandler(AuthController.login)
+  asyncHandler(AuthController.login)
 )
 
-authRoute.get('/google-login', AuthController.googleLogin)
+authRoute.get('/google-login', asyncHandler(AuthController.googleLogin))
 
-authRoute.get('/facebook-login', AuthController.facebookLogin)
+authRoute.get('/facebook-login', asyncHandler(AuthController.facebookLogin))
 
-authRoute.post('/logout', verifyAccessToken, verifyRefreshToken, wrapAsyncHandler(AuthController.logout))
+authRoute.post('/logout', verifyAccessToken, verifyRefreshToken, asyncHandler(AuthController.logout))
 
-authRoute.post('/refresh-token', verifyRefreshToken, wrapAsyncHandler(AuthController.refreshToken))
+authRoute.post('/refresh-token', verifyRefreshToken, asyncHandler(AuthController.refreshToken))
 
 authRoute.post(
   '/forgot-password',
   requestBodyValidate(ForgotPasswordDtoSchema),
-  wrapAsyncHandler(AuthController.forgotPassword)
+  asyncHandler(AuthController.forgotPassword)
 )
 
 authRoute.post(
   '/reset-password',
   requestBodyValidate(ResetPasswordDtoSchema),
   verifyTokenForgotPassword,
-  wrapAsyncHandler(AuthController.resetPassword)
+  asyncHandler(AuthController.resetPassword)
 )
 
 authRoute
   .route('/me')
-  .get(verifyAccessToken, wrapAsyncHandler(AuthController.getMe))
-  .patch(verifyAccessToken, requestBodyValidate(UpdateMeDtoSchema), wrapAsyncHandler(AuthController.updateMe))
+  .get(verifyAccessToken, asyncHandler(AuthController.getMe))
+  .patch(verifyAccessToken, requestBodyValidate(UpdateMeDtoSchema), asyncHandler(AuthController.updateMe))
 
 export default authRoute

@@ -6,7 +6,7 @@ import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
 import { verifyUserEmail } from '~/middlewares/verify-user-email.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { ParamIdTrendingDtoSchema } from '~/shared/dtos/req/trending.dto'
-import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
+import { asyncHandler } from '~/utils/async-handler.util'
 
 const trendingRoute = Router()
 
@@ -15,7 +15,7 @@ trendingRoute.get(
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(TrendingController.getTrending)
+  asyncHandler(TrendingController.getTrending)
 )
 
 /**
@@ -28,7 +28,7 @@ trendingRoute.get(
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(TrendingController.getTodayNews)
+  asyncHandler(TrendingController.getTodayNews)
 )
 
 /**
@@ -41,7 +41,7 @@ trendingRoute.get(
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(TrendingController.getOutStandingThisWeekNews)
+  asyncHandler(TrendingController.getOutStandingThisWeekNews)
 )
 
 // Nếu mở rộng thì chuyển sang POST (không theo chuẩn RESTFul api)
@@ -50,7 +50,7 @@ trendingRoute.get(
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(TrendingController.getTweetsByIds)
+  asyncHandler(TrendingController.getTweetsByIds)
 )
 
 trendingRoute.patch(
@@ -58,7 +58,7 @@ trendingRoute.patch(
   verifyAccessToken,
   verifyUserEmail,
   requestParamsValidate(ParamIdTrendingDtoSchema),
-  wrapAsyncHandler(TrendingController.report)
+  asyncHandler(TrendingController.report)
 )
 
 export default trendingRoute

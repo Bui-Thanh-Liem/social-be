@@ -1,11 +1,11 @@
-import { NextFunction, Request, Response } from 'express'
+import { Request, Response } from 'express'
 import FollowsService from '~/services/Follows.service'
-import { OkResponse } from '~/shared/classes/response.class'
+import { OkResponse } from '~/core/success.reponse'
 import { ToggleFollowDto } from '~/shared/dtos/req/user.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class FollowsController {
-  async toggleFollow(req: Request, res: Response, next: NextFunction) {
+  async toggleFollow(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const { user_id: followed_user_id } = req.params as ToggleFollowDto
     const result = await FollowsService.toggleFollow(user_id, followed_user_id)

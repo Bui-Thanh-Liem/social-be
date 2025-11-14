@@ -13,9 +13,24 @@ export class RefreshTokenService {
     iat?: number
     exp?: number
   }) {
-    await RefreshTokenCollection.insertOne(
-      new RefreshTokenSchema({ token: refresh_token, user_id: new ObjectId(user_id), iat, exp })
+    const filter = { token: refresh_token, user_id: new ObjectId(user_id) }
+    await RefreshTokenCollection.findOneAndUpdate(
+      filter,
+      { $setOnInsert: new RefreshTokenSchema({ token: refresh_token, user_id: new ObjectId(user_id), iat, exp }) },
+      { upsert: true, returnDocument: 'after' }
     )
+  }
+
+  async findOneByToken({ token }: { token: string }) {
+    return await RefreshTokenCollection.findOne({ token })
+  }
+
+  async findOneByUserId({ user_id }: { user_id: string }) {
+    return await RefreshTokenCollection.findOne({ user_id: new ObjectId(user_id) })
+  }
+
+  async deleteByToken({ token }: { token: string }) {
+    return await RefreshTokenCollection.deleteOne({ token })
   }
 }
 

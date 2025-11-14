@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { UserCollection } from '~/models/schemas/User.schema'
-import { BadRequestError, UnauthorizedError } from '~/shared/classes/error.class'
+import { BadRequestError, UnauthorizedError } from '~/core/error.reponse'
 import { ETokenType } from '~/shared/enums/type.enum'
 import { verifyToken } from '~/utils/jwt.util'
 

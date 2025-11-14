@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import TweetsService from '~/services/Tweets.service'
-import { CreatedResponse, OkResponse } from '~/shared/classes/response.class'
+import { CreatedResponse, OkResponse } from '~/core/success.reponse'
 import {
   getNewFeedTypeDto,
   getProfileTweetDto,

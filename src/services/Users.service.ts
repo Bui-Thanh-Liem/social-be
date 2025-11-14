@@ -4,7 +4,7 @@ import { emailQueue } from '~/bull/queues'
 import { envs } from '~/configs/env.config'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
-import { NotFoundError } from '~/shared/classes/error.class'
+import { NotFoundError } from '~/core/error.reponse'
 import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { ETokenType } from '~/shared/enums/type.enum'
@@ -496,6 +496,19 @@ class UsersService {
       throw new NotFoundError('Người dùng không tồn tại')
     }
     return isExist
+  }
+
+  //
+  async findOneByEmail(email: string) {
+    return await UserCollection.findOne(
+      { email },
+      {
+        projection: {
+          email: 1,
+          password: 1
+        }
+      }
+    )
   }
 }
 

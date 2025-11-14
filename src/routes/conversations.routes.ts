@@ -12,7 +12,7 @@ import {
   ParticipantsDtoSchema
 } from '~/shared/dtos/req/conversation.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
-import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
+import { asyncHandler } from '~/utils/async-handler.util'
 
 const conversationsRoute = Router()
 
@@ -22,7 +22,7 @@ conversationsRoute.post(
   verifyUserEmail,
   requestBodyValidate(CreateConversationDtoSchema),
   checkExistParticipants,
-  wrapAsyncHandler(ConversationsController.create)
+  asyncHandler(ConversationsController.create)
 )
 
 conversationsRoute.post(
@@ -32,7 +32,7 @@ conversationsRoute.post(
   requestParamsValidate(ConversationIdDtoSchema),
   requestBodyValidate(ParticipantsDtoSchema),
   checkExistParticipants,
-  wrapAsyncHandler(ConversationsController.addParticipants)
+  asyncHandler(ConversationsController.addParticipants)
 )
 
 conversationsRoute.post(
@@ -42,7 +42,7 @@ conversationsRoute.post(
   requestParamsValidate(ConversationIdDtoSchema),
   requestBodyValidate(ParticipantsDtoSchema),
   checkExistParticipants,
-  wrapAsyncHandler(ConversationsController.removeParticipants)
+  asyncHandler(ConversationsController.removeParticipants)
 )
 
 conversationsRoute.post(
@@ -52,7 +52,7 @@ conversationsRoute.post(
   requestParamsValidate(ConversationIdDtoSchema),
   requestBodyValidate(ParticipantsDtoSchema),
   checkExistParticipants,
-  wrapAsyncHandler(ConversationsController.promoteMentor)
+  asyncHandler(ConversationsController.promoteMentor)
 )
 
 conversationsRoute.get(
@@ -60,28 +60,28 @@ conversationsRoute.get(
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(ConversationsController.getMulti)
+  asyncHandler(ConversationsController.getMulti)
 )
 
 conversationsRoute.patch(
   '/read/:conv_id',
   verifyAccessToken,
   requestParamsValidate(ConversationIdDtoSchema),
-  wrapAsyncHandler(ConversationsController.read)
+  asyncHandler(ConversationsController.read)
 )
 
 conversationsRoute.patch(
   '/toggle-pin/:conv_id',
   verifyAccessToken,
   requestParamsValidate(ConversationIdDtoSchema),
-  wrapAsyncHandler(ConversationsController.togglePinConv)
+  asyncHandler(ConversationsController.togglePinConv)
 )
 
 conversationsRoute.delete(
   '/:conv_id',
   verifyAccessToken,
   requestParamsValidate(ConversationIdDtoSchema),
-  wrapAsyncHandler(ConversationsController.delete)
+  asyncHandler(ConversationsController.delete)
 )
 
 export default conversationsRoute

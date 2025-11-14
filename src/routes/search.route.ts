@@ -4,7 +4,7 @@ import { requestQueryValidate } from '~/middlewares/request-query-validate.middl
 import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
 import { verifyUserEmail } from '~/middlewares/verify-user-email.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
-import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
+import { asyncHandler } from '~/utils/async-handler.util'
 
 const searchRoute = Router()
 
@@ -13,7 +13,7 @@ searchRoute.get(
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(SearchController.searchPending)
+  asyncHandler(SearchController.searchPending)
 )
 
 searchRoute.get(
@@ -21,7 +21,7 @@ searchRoute.get(
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(SearchController.searchTweet)
+  asyncHandler(SearchController.searchTweet)
 )
 
 searchRoute.get(
@@ -29,7 +29,7 @@ searchRoute.get(
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(SearchController.searchUser)
+  asyncHandler(SearchController.searchUser)
 )
 
 export default searchRoute

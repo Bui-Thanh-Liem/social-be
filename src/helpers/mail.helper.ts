@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 import path from 'path'
 import { envs } from '~/configs/env.config'
-import { BadRequestError } from '~/shared/classes/error.class'
+import { BadRequestError } from '~/core/error.reponse'
 import { ISendVerifyEmail } from '~/shared/interfaces/common/mail.interface'
 import { logger } from '~/utils/logger.util'
 

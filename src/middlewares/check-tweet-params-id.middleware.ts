@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import TweetsService from '~/services/Tweets.service'
-import { NotFoundError } from '~/shared/classes/error.class'
+import { NotFoundError } from '~/core/error.reponse'
 
 // Y rang checkTweetParams nhưng sẽ query kiểm tra tồn tại và lấy audience thôi
 export async function checkTweetParamsId(req: Request, res: Response, next: NextFunction) {

@@ -9,7 +9,7 @@ import { verifyTokenVerifyEmail } from '~/middlewares/verify-token-verify-email.
 import { verifyUserActiveForChangePassword } from '~/middlewares/verify-user-active-for-change-password.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { ChangePasswordDtoSchema, UserIdDtoSchema, VerifyEmailDtoSchema } from '~/shared/dtos/req/user.dto'
-import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
+import { asyncHandler } from '~/utils/async-handler.util'
 
 const usersRoute = Router()
 
@@ -18,25 +18,25 @@ usersRoute.post(
   verifyAccessToken,
   requestBodyValidate(VerifyEmailDtoSchema),
   verifyTokenVerifyEmail,
-  wrapAsyncHandler(UsersControllers.verifyEmail)
+  asyncHandler(UsersControllers.verifyEmail)
 )
 
 usersRoute.post(
   '/resend-verify-email',
-  wrapAsyncHandler(resendRateLimit),
+  asyncHandler(resendRateLimit),
   verifyAccessToken,
-  wrapAsyncHandler(UsersControllers.resendVerifyEmail)
+  asyncHandler(UsersControllers.resendVerifyEmail)
 )
 
-usersRoute.get('/username/:username', verifyAccessToken, wrapAsyncHandler(UsersControllers.getOneByUsername))
-usersRoute.get('/mentions/:username', verifyAccessToken, wrapAsyncHandler(UsersControllers.getMultiForMentions))
+usersRoute.get('/username/:username', verifyAccessToken, asyncHandler(UsersControllers.getOneByUsername))
+usersRoute.get('/mentions/:username', verifyAccessToken, asyncHandler(UsersControllers.getMultiForMentions))
 
 usersRoute.get(
   '/followed/:user_id',
   verifyAccessToken,
   requestParamsValidate(UserIdDtoSchema),
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(UsersControllers.getFollowedUsersBasic)
+  asyncHandler(UsersControllers.getFollowedUsersBasic)
 )
 
 usersRoute.get(
@@ -44,14 +44,14 @@ usersRoute.get(
   verifyAccessToken,
   requestParamsValidate(UserIdDtoSchema),
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(UsersControllers.getFollowingUsersBasic)
+  asyncHandler(UsersControllers.getFollowingUsersBasic)
 )
 
 usersRoute.get(
   '/top-followed',
   verifyAccessToken,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(UsersControllers.getTopFollowedUsers)
+  asyncHandler(UsersControllers.getTopFollowedUsers)
 )
 
 usersRoute.post(
@@ -59,7 +59,7 @@ usersRoute.post(
   verifyAccessToken,
   requestBodyValidate(ChangePasswordDtoSchema),
   verifyUserActiveForChangePassword,
-  wrapAsyncHandler(UsersControllers.changePassword)
+  asyncHandler(UsersControllers.changePassword)
 )
 
 export default usersRoute

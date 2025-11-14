@@ -7,7 +7,7 @@ import { CommunityCollection, CommunitySchema } from '~/models/schemas/Community
 import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
-import { BadRequestError, NotFoundError } from '~/shared/classes/error.class'
+import { BadRequestError, NotFoundError } from '~/core/error.reponse'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'

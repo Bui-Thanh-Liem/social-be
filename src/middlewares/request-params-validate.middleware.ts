@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { z } from 'zod'
-import { BadRequestError } from '~/shared/classes/error.class'
+import { BadRequestError } from '~/core/error.reponse'
 
 export function requestParamsValidate(schema: z.ZodSchema<any>) {
   return (req: Request, res: Response, next: NextFunction) => {

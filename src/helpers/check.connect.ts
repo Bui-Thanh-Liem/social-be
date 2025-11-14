@@ -1,6 +1,5 @@
 import * as os from 'os'
-import { Database } from '~/dbs/init.mongodb'
-import { BadRequestError } from '~/shared/classes/error.class'
+import { clientMongodb, Database } from '~/dbs/init.mongodb'
 
 const _SECONDS = 15000
 export function checkOverload() {
@@ -16,7 +15,7 @@ export function checkOverload() {
     // Cho một core tối đa 3 connect
     const maxConnections = numCores * 3
     if (numConnections > maxConnections - 3) {
-      throw new BadRequestError('Quá tải kết nối')
+      console.error('Quá tải kết nối tới database.')
     }
   }, _SECONDS)
 }

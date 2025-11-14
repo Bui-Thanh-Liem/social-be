@@ -18,7 +18,7 @@ import {
   getTweetChildrenDtoSchemaParams,
   paramIdTweetDtoSchema
 } from '~/shared/dtos/req/tweet.dto'
-import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
+import { asyncHandler } from '~/utils/async-handler.util'
 
 const tweetsRoute = Router()
 
@@ -27,7 +27,7 @@ tweetsRoute.post(
   verifyAccessToken,
   verifyUserEmail,
   requestBodyValidate(CreateTweetDtoSchema),
-  wrapAsyncHandler(TweetsController.create)
+  asyncHandler(TweetsController.create)
 )
 
 tweetsRoute.delete(
@@ -35,7 +35,7 @@ tweetsRoute.delete(
   verifyAccessToken,
   verifyUserEmail,
   requestParamsValidate(paramIdTweetDtoSchema),
-  wrapAsyncHandler(TweetsController.delete)
+  asyncHandler(TweetsController.delete)
 )
 
 /*
@@ -49,7 +49,7 @@ tweetsRoute.get(
   verifyUserEmail,
   requestParamsValidate(getNewFeedTypeDtoSchema),
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(TweetsController.getNewFeeds)
+  asyncHandler(TweetsController.getNewFeeds)
 )
 
 // Lấy bài viết đang chờ duyệt trong cộng đồng
@@ -58,7 +58,7 @@ tweetsRoute.get(
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(TweetsController.getTweetsPendingByCommunityId)
+  asyncHandler(TweetsController.getTweetsPendingByCommunityId)
 )
 
 // Lấy bài viết trong cộng đồng (feeds)
@@ -67,7 +67,7 @@ tweetsRoute.get(
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(TweetsController.getCommunityTweets)
+  asyncHandler(TweetsController.getCommunityTweets)
 )
 
 tweetsRoute.get(
@@ -76,7 +76,7 @@ tweetsRoute.get(
   verifyUserEmail,
   requestParamsValidate(getProfileTweetDtoSchema),
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(TweetsController.getProfileTweets)
+  asyncHandler(TweetsController.getProfileTweets)
 )
 
 tweetsRoute.get(
@@ -84,7 +84,7 @@ tweetsRoute.get(
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(TweetsController.getTweetLiked)
+  asyncHandler(TweetsController.getTweetLiked)
 )
 
 tweetsRoute.get(
@@ -92,7 +92,7 @@ tweetsRoute.get(
   verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(TweetsController.getTweetBookmarked)
+  asyncHandler(TweetsController.getTweetBookmarked)
 )
 
 tweetsRoute.get(
@@ -103,7 +103,7 @@ tweetsRoute.get(
   requestQueryValidate(QueryDtoSchema),
   checkTweetParamsId, // chỉ  kiểm tra tồn tại và lấy audience cho checkAudience
   checkAudience,
-  wrapAsyncHandler(TweetsController.getTweetChildren)
+  asyncHandler(TweetsController.getTweetChildren)
 )
 
 tweetsRoute.get(
@@ -113,7 +113,7 @@ tweetsRoute.get(
   requestParamsValidate(GetOneTweetByIdDtoSchema),
   checkTweetByIdParams,
   checkAudience,
-  wrapAsyncHandler(TweetsController.getOneById)
+  asyncHandler(TweetsController.getOneById)
 )
 
 export default tweetsRoute

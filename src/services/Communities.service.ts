@@ -10,7 +10,7 @@ import {
   CommunityPinCollection,
   CommunitySchema
 } from '~/models/schemas/Community.schema'
-import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '~/shared/classes/error.class'
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '~/core/error.reponse'
 import { CONSTANT_JOB } from '~/shared/constants'
 import {
   CreateCommunityActivityDto,

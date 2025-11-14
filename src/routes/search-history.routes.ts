@@ -7,7 +7,7 @@ import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
 import { ParamIdDtoSchema } from '~/shared/dtos/req/common/param-id.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { CreateSearchHistoryDtoSchema } from '~/shared/dtos/req/search-history.dto'
-import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
+import { asyncHandler } from '~/utils/async-handler.util'
 
 const searchHistoryRoute = Router()
 
@@ -15,21 +15,21 @@ searchHistoryRoute.post(
   '/',
   verifyAccessToken,
   requestBodyValidate(CreateSearchHistoryDtoSchema),
-  wrapAsyncHandler(SearchHistoryController.create)
+  asyncHandler(SearchHistoryController.create)
 )
 
 searchHistoryRoute.get(
   '/',
   verifyAccessToken,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(SearchHistoryController.getMulti)
+  asyncHandler(SearchHistoryController.getMulti)
 )
 
 searchHistoryRoute.delete(
   '/:id',
   verifyAccessToken,
   requestParamsValidate(ParamIdDtoSchema),
-  wrapAsyncHandler(SearchHistoryController.delete)
+  asyncHandler(SearchHistoryController.delete)
 )
 
 export default searchHistoryRoute

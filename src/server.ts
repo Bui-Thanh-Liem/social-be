@@ -3,11 +3,11 @@ import { Server } from 'socket.io'
 import app from './app'
 import { envs } from './configs/env.config'
 import { instanceMongodb } from './dbs/init.mongodb'
+import { checkOverload } from './helpers/check.connect'
 import { allowedOrigins } from './middlewares/cors.middleware'
 import { initSubscriber } from './pubsub/subscriber'
 import { initializeSocket } from './socket'
 import { logger } from './utils/logger.util'
-import { checkOverload } from './helpers/check.connect'
 
 //
 const port = envs.SERVER_PORT

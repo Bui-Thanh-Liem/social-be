@@ -5,9 +5,18 @@ POST {{url}}/auth/signup
 Content-Type: application/json
 
 {
-  "name": "Liemdev",
-  "email": "buithanhliem5073@gmail.com",
+  "name": "Liemdev2",
+  "email": "buithanhliem5072@gmail.com",
   "password": "Liemdev@123",
   "confirm_password": "Liemdev@123",
   "day_of_birth": "2025-06-14T01:58:53.050Z"
+}
+
+### signin
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "buithanhliem5072@gmail.com",
+  "password": "Liemdev@123"
 }

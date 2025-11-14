@@ -1,7 +1,7 @@
-import { NextFunction, Request, Response } from 'express'
+import { Request, Response } from 'express'
 import CommunityService from '~/services/Communities.service'
 import CommunityInvitationService from '~/services/Community-invitation.service'
-import { CreatedResponse, OkResponse } from '~/shared/classes/response.class'
+import { CreatedResponse, OkResponse } from '~/core/success.reponse'
 import {
   ChangeStatusTweetInCommunityDto,
   CreateCommunityDto,
@@ -65,55 +65,55 @@ class CommunityController {
     res.json(new CreatedResponse('Thay đổi cài đặt tham gia thành công.', result))
   }
 
-  async getAllCategories(req: Request, res: Response, next: NextFunction) {
+  async getAllCategories(req: Request, res: Response) {
     const result = await CommunityService.getAllCategories()
     res.json(new OkResponse(`Lấy nhiều danh mục cộng đồng thành công.`, result))
   }
 
-  async getAllBare(req: Request, res: Response, next: NextFunction) {
+  async getAllBare(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await CommunityService.getAllBare(user_id)
     res.json(new OkResponse(`Lấy danh sách id và tên cộng đồng thành công.`, result))
   }
 
-  async getMultiOwner(req: Request, res: Response, next: NextFunction) {
+  async getMultiOwner(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await CommunityService.getMultiOwner({ user_id, query: req.query })
     res.json(new OkResponse(`Lấy nhiều cộng đồng của bạn thành công.`, result))
   }
 
-  async getMultiActivity(req: Request, res: Response, next: NextFunction) {
+  async getMultiActivity(req: Request, res: Response) {
     const { community_id } = req.params as GetMultiActivityDto
     const result = await CommunityService.getMultiActivity({ community_id, queries: req.query })
     res.json(new OkResponse(`Lấy nhiều hoạt đông của cộng đồng thành công.`, result))
   }
 
-  async getMultiJoined(req: Request, res: Response, next: NextFunction) {
+  async getMultiJoined(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await CommunityService.getMultiJoined({ user_id, query: req.query })
     res.json(new OkResponse(`Lấy nhiều cộng đồng bạn đã tham gia thành công.`, result))
   }
 
-  async getMultiExplore(req: Request, res: Response, next: NextFunction) {
+  async getMultiExplore(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await CommunityService.getMultiExplore({ user_id, query: req.query })
     res.json(new OkResponse(`Lấy nhiều cộng đồng thành công.`, result))
   }
 
-  async changeStatusTweet(req: Request, res: Response, next: NextFunction) {
+  async changeStatusTweet(req: Request, res: Response) {
     const { tweet_id, community_id, status } = req.body as ChangeStatusTweetInCommunityDto
     const result = await CommunityService.changeStatusTweet({ user_active: req.user!, community_id, tweet_id, status })
     res.json(new OkResponse(`Thay đổi trạng thái bài viết thành công.`, result))
   }
 
-  async getOneBareInfoBySlug(req: Request, res: Response, next: NextFunction) {
+  async getOneBareInfoBySlug(req: Request, res: Response) {
     const { slug } = req.params as GetOneBySlugDto
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await CommunityService.getOneBareInfoBySlug({ slug, user_id })
     res.json(new OkResponse(`Lấy cộng đồng bằng slug thành công.`, result))
   }
 
-  async getMultiMMById(req: Request, res: Response, next: NextFunction) {
+  async getMultiMMById(req: Request, res: Response) {
     const { community_id } = req.params as GetMMByIdDto
     const queries = req.query as IQuery<ICommunity>
     const { user_id } = req.decoded_authorization as IJwtPayload
@@ -121,14 +121,14 @@ class CommunityController {
     res.json(new OkResponse(`Lấy thành viên và điều hành viên cộng đồng bằng id thành công.`, result))
   }
 
-  async deleteInvitation(req: Request, res: Response, next: NextFunction) {
+  async deleteInvitation(req: Request, res: Response) {
     const payload = req.params as deleteInvitationDto
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await CommunityInvitationService.delete({ user_id, payload })
     res.json(new OkResponse(`Xoá lời mời thành công.`, result))
   }
 
-  async getMultiInvitations(req: Request, res: Response, next: NextFunction) {
+  async getMultiInvitations(req: Request, res: Response) {
     const { community_id } = req.params as GetMultiInvitationsDto
     const queries = req.query as IQuery<ICommunity>
     const result = await CommunityInvitationService.getMultiByCommunityId({ community_id, queries })
@@ -136,7 +136,7 @@ class CommunityController {
   }
 
   //
-  async inviteMembers(req: Request, res: Response, next: NextFunction) {
+  async inviteMembers(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const { user } = req
     const result = await CommunityService.inviteMembers({ user_id, payload: req.body, user: user! })
@@ -144,7 +144,7 @@ class CommunityController {
   }
 
   //
-  async togglePin(req: Request, res: Response, next: NextFunction) {
+  async togglePin(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const params = req.params as PinCommunityDto
     const result = await CommunityService.togglePin({ user_id, community_id: params.community_id })

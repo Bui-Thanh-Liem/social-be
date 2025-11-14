@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import LikesService from '~/services/Likes.service'
-import { CreatedResponse } from '~/shared/classes/response.class'
+import { CreatedResponse } from '~/core/success.reponse'
 import { ParamIdTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 

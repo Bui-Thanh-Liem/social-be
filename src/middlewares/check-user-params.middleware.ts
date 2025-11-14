@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
 import { UserCollection } from '~/models/schemas/User.schema'
-import { NotFoundError } from '~/shared/classes/error.class'
+import { NotFoundError } from '~/core/error.reponse'
 
 export async function checkUserParams(req: Request, res: Response, next: NextFunction) {
   try {

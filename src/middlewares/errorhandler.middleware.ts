@@ -1,13 +1,13 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from 'express'
 import { ZodError } from 'zod'
-import { ErrorResponse } from '~/shared/classes/response.class'
+import { ErrorResponse } from '~/core/error.reponse'
 import { logger } from '~/utils/logger.util'
 
 export const errorHandler: ErrorRequestHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   const isDev = process.env.NODE_ENV === 'development'
 
   // Thông tin cơ bản
-  let statusCode: number = err.statusCode
+  let statusCode: number = err.statusCode || 500
   let message: string = err.message
   const stack = err.stack
 

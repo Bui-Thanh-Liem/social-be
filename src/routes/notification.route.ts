@@ -5,7 +5,7 @@ import { requestQueryValidate } from '~/middlewares/request-query-validate.middl
 import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
 import { ParamIdNotiDtoSchema, GetMultiByTypeNotiDtoSchema } from '~/shared/dtos/req/notification.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
-import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
+import { asyncHandler } from '~/utils/async-handler.util'
 
 const notificationRoute = Router()
 
@@ -14,21 +14,21 @@ notificationRoute.get(
   verifyAccessToken,
   requestQueryValidate(QueryDtoSchema),
   requestParamsValidate(GetMultiByTypeNotiDtoSchema),
-  wrapAsyncHandler(NotificationsController.getMultiByType)
+  asyncHandler(NotificationsController.getMultiByType)
 )
 
 notificationRoute.patch(
   '/read/:noti_id',
   verifyAccessToken,
   requestParamsValidate(ParamIdNotiDtoSchema),
-  wrapAsyncHandler(NotificationsController.read)
+  asyncHandler(NotificationsController.read)
 )
 
 notificationRoute.delete(
   '/:noti_id',
   verifyAccessToken,
   requestParamsValidate(ParamIdNotiDtoSchema),
-  wrapAsyncHandler(NotificationsController.delete)
+  asyncHandler(NotificationsController.delete)
 )
 
 export default notificationRoute

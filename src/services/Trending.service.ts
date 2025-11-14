@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
 import { TrendingCollection, TrendingSchema } from '~/models/schemas/Trending.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
-import { BadRequestError } from '~/shared/classes/error.class'
+import { BadRequestError } from '~/core/error.reponse'
 import { IResTodayNewsOrOutstanding } from '~/shared/dtos/res/trending.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { ETweetType } from '~/shared/enums/type.enum'

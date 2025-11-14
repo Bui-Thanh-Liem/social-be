@@ -1,13 +1,13 @@
-import { NextFunction, Request, Response } from 'express'
+import { Request, Response } from 'express'
 import fs from 'fs'
 import mime from 'mime'
 import path from 'path'
-import { BadRequestError } from '~/shared/classes/error.class'
+import { BadRequestError } from '~/core/error.reponse'
 import { UPLOAD_VIDEO_FOLDER_PATH } from '~/shared/constants/path-static.constant'
 import { logger } from '~/utils/logger.util'
 
 class StreamVideoController {
-  async streamVideo(req: Request, res: Response, next: NextFunction) {
+  async streamVideo(req: Request, res: Response) {
     const range = req.headers.range
     const { filename } = req.params
 
@@ -44,13 +44,13 @@ class StreamVideoController {
     videoStreams.pipe(res)
   }
 
-  async streamMaster(req: Request, res: Response, next: NextFunction) {
+  async streamMaster(req: Request, res: Response) {
     const { foldername } = req.params
     const masterFile = path.resolve(UPLOAD_VIDEO_FOLDER_PATH, foldername, 'master.m3u8')
     res.sendFile(masterFile)
   }
 
-  async streamSegment(req: Request, res: Response, next: NextFunction) {
+  async streamSegment(req: Request, res: Response) {
     const { foldername, v, segment } = req.params
     const segmentFile = path.resolve(UPLOAD_VIDEO_FOLDER_PATH, foldername, v, segment)
     res.sendFile(segmentFile)

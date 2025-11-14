@@ -4,10 +4,9 @@ import { ObjectId } from 'mongodb'
 import { StringValue } from 'ms'
 import { emailQueue, notificationQueue } from '~/bull/queues'
 import { envs } from '~/configs/env.config'
+import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '~/core/error.reponse'
 import cacheServiceInstance from '~/helpers/cache.helper'
-import { RefreshTokenCollection, RefreshTokenSchema } from '~/models/schemas/Refresh-token.schema'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
-import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '~/shared/classes/error.class'
 import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
 import {
   ForgotPasswordDto,
@@ -29,32 +28,32 @@ class AuthService {
   async signup(payload: RegisterUserDto) {
     //
     const [holder_email_user, holder_name_user] = await Promise.all([
-      this.findOneByEmail(payload.email),
+      UsersService.findOneByEmail(payload.email),
       this.checkExistByName(payload?.name)
     ])
 
-    //
+    // Kiểm tra email tồn tại hay chưa
     if (holder_email_user) {
       throw new ConflictError('Email đã tồn tại.')
     }
 
-    //
+    // // Kiểm tra name tồn tại hay chưa
     if (holder_name_user) {
       throw new ConflictError('Tên người dùng đã tồn tại.')
     }
 
-    //
+    // Tạo token để verify email
     const email_verify_token = await signToken({
       payload: { user_id: '', type: ETokenType.VerifyToken },
       privateKey: envs.JWT_SECRET_TEMP,
       options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
     })
 
-    // mã hoá mật khẩu và chuyển đổi định dạng username
+    // Mã hoá mật khẩu và chuyển đổi định dạng username user_name
     const password_hashed = hashPassword(payload.password)
     const snake_case_name = `@${_.snakeCase(payload.name)}`.slice(0, 20)
 
-    //
+    // Lưu user vào database
     const result = await UserCollection.insertOne(
       new UserSchema({
         ...payload,
@@ -65,6 +64,7 @@ class AuthService {
       })
     )
 
+    // Tạo token/refresh
     const [access_token, refresh_token] = await createTokenPair({
       payload: {
         user_id: result.insertedId.toString()
@@ -103,26 +103,26 @@ class AuthService {
   }
 
   async login(payload: LoginUserDto) {
-    //
-    const exist = await this.findOneByEmail(payload?.email)
-    if (!exist) {
+    // Kiểm tra tồn tại email
+    const foundUser = await UsersService.findOneByEmail(payload?.email)
+    if (!foundUser) {
       throw new UnauthorizedError('Email hoặc mật khẩu không đúng.')
     }
 
-    //
-    const verify_pass = verifyPassword(payload.password, exist.password)
+    // Kiểm tra mật khẩu đúng hay không
+    const verify_pass = verifyPassword(payload.password, foundUser.password)
     if (!verify_pass) {
       throw new UnauthorizedError('Email hoặc mật khẩu không đúng.')
     }
 
-    //
+    // Tạo access/refresh token
     const [access_token, refresh_token] = await createTokenPair({
-      payload: { user_id: exist._id.toString() }
+      payload: { user_id: foundUser._id.toString() }
     })
 
-    // await RefreshTokenCollection.deleteOne({ user_id: exist._id }) // => Đăng nhập 1 thiết bị
+    // Lưu refresh token vào database
     const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-    await RefreshTokenService.create({ refresh_token, user_id: exist._id.toString(), iat, exp })
+    await RefreshTokenService.create({ refresh_token, user_id: foundUser._id.toString(), iat, exp })
 
     return {
       access_token,
@@ -140,18 +140,16 @@ class AuthService {
     }
 
     //
-    const exist = await this.findOneByEmail(user_info?.email)
+    const exist = await UsersService.findOneByEmail(user_info?.email)
 
     // Nếu đã đăng nhập rồi thì tạo token gửi về client
     if (exist) {
       const [access_token, refresh_token] = await createTokenPair({
         payload: { user_id: exist._id.toString() }
       })
-      // await RefreshTokenCollection.deleteOne({ user_id: exist._id }) // => Đăng nhập 1 thiết bị
+
       const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-      await RefreshTokenCollection.insertOne(
-        new RefreshTokenSchema({ token: refresh_token, user_id: exist._id, exp, iat })
-      )
+      await RefreshTokenService.create({ refresh_token, user_id: exist._id.toString(), exp, iat })
 
       return {
         access_token,
@@ -187,18 +185,16 @@ class AuthService {
     }
 
     //
-    const exist = await this.findOneByEmail(user_info?.email)
+    const exist = await UsersService.findOneByEmail(user_info?.email)
 
     // Nếu đã đăng nhập rồi thì tạo token gửi về client
     if (exist) {
       const [access_token, refresh_token] = await createTokenPair({
         payload: { user_id: exist._id.toString() }
       })
-      // await RefreshTokenCollection.deleteOne({ user_id: exist._id }) // => Đăng nhập 1 thiết bị
+
       const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-      await RefreshTokenCollection.insertOne(
-        new RefreshTokenSchema({ token: refresh_token, user_id: exist._id, exp, iat })
-      )
+      await RefreshTokenService.create({ refresh_token, user_id: exist._id.toString(), exp, iat })
 
       return {
         access_token,
@@ -314,7 +310,7 @@ class AuthService {
   async logout({ refresh_token, user_id }: { refresh_token: string; user_id: string }) {
     const key_cache = `${CONSTANT_USER.user_active_key_cache}-${user_id}`
     await cacheServiceInstance.del(key_cache)
-    return await RefreshTokenCollection.deleteOne({ token: refresh_token })
+    return await RefreshTokenService.deleteByToken({ token: refresh_token })
   }
 
   async forgotPassword({ email }: ForgotPasswordDto) {
@@ -387,19 +383,6 @@ class AuthService {
     await Promise.all([RefreshTokenService.create({ refresh_token, user_id, iat: decoded.iat, exp: decoded.exp })])
 
     return { access_token, refresh_token }
-  }
-
-  //
-  private async findOneByEmail(email: string) {
-    return await UserCollection.findOne(
-      { email },
-      {
-        projection: {
-          email: 1,
-          password: 1
-        }
-      }
-    )
   }
 
   private async checkExistByName(name: string) {

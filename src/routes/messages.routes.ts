@@ -5,7 +5,7 @@ import { requestQueryValidate } from '~/middlewares/request-query-validate.middl
 import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
 import { GetMultiMessageByConversationDtoSchema } from '~/shared/dtos/req/message.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
-import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
+import { asyncHandler } from '~/utils/async-handler.util'
 
 const messagesRoute = Router()
 
@@ -14,7 +14,7 @@ messagesRoute.get(
   verifyAccessToken,
   requestParamsValidate(GetMultiMessageByConversationDtoSchema),
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(MessagesController.getMultiByConversation)
+  asyncHandler(MessagesController.getMultiByConversation)
 )
 
 export default messagesRoute

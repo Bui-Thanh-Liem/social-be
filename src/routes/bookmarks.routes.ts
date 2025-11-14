@@ -5,7 +5,7 @@ import { requestParamsValidate } from '~/middlewares/request-params-validate.mid
 import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
 import { verifyUserEmail } from '~/middlewares/verify-user-email.middleware'
 import { paramIdTweetDtoSchema } from '~/shared/dtos/req/tweet.dto'
-import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
+import { asyncHandler } from '~/utils/async-handler.util'
 
 const bookmarksRoute = Router()
 
@@ -15,7 +15,7 @@ bookmarksRoute.post(
   verifyUserEmail,
   requestParamsValidate(paramIdTweetDtoSchema),
   checkTweetByIdParams,
-  wrapAsyncHandler(BookmarksController.toggleBookmark)
+  asyncHandler(BookmarksController.toggleBookmark)
 )
 
 export default bookmarksRoute

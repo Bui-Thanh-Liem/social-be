@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import TrendingService from '~/services/Trending.service'
-import { OkResponse } from '~/shared/classes/response.class'
+import { OkResponse } from '~/core/success.reponse'
 import { ReportTrendingDto } from '~/shared/dtos/req/trending.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 

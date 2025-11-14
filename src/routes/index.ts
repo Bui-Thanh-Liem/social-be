@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response, Router } from 'express'
+import { Request, Response, Router } from 'express'
 import { startFaker } from '~/utils/faker.util'
 import authRoute from './auth.routes'
 import bookmarksRoute from './bookmarks.routes'
@@ -36,7 +36,7 @@ rootRoute.use('/conversations', conversationsRoute)
 rootRoute.use('/communities', communitiesRoute)
 rootRoute.use('/search-history', searchHistoryRoute)
 
-rootRoute.post('/faker', async (req: Request, res: Response, next: NextFunction) => {
+rootRoute.post('/faker', async (req: Request, res: Response) => {
   await startFaker()
   res.status(200).json({
     message: 'Faker data success'
@@ -44,7 +44,8 @@ rootRoute.post('/faker', async (req: Request, res: Response, next: NextFunction)
 })
 
 // Health check
-rootRoute.get('/health', (req, res) => {
+rootRoute.get('/health', (req: Request, res: Response) => {
+  console.log('client - ip:::', req.ip)
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),

@@ -5,7 +5,7 @@ import { requestParamsValidate } from '~/middlewares/request-params-validate.mid
 import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
 import { verifyUserEmail } from '~/middlewares/verify-user-email.middleware'
 import { UserIdDtoSchema } from '~/shared/dtos/req/user.dto'
-import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
+import { asyncHandler } from '~/utils/async-handler.util'
 
 const followsRoute = Router()
 
@@ -15,7 +15,7 @@ followsRoute.post(
   verifyUserEmail,
   requestParamsValidate(UserIdDtoSchema),
   checkUserParams,
-  wrapAsyncHandler(FollowsController.toggleFollow)
+  asyncHandler(FollowsController.toggleFollow)
 )
 
 export default followsRoute

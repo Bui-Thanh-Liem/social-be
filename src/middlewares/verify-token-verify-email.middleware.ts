@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { envs } from '~/configs/env.config'
 import { UserCollection } from '~/models/schemas/User.schema'
-import { UnauthorizedError } from '~/shared/classes/error.class'
+import { UnauthorizedError } from '~/core/error.reponse'
 import { verifyToken } from '~/utils/jwt.util'
 
 export async function verifyTokenVerifyEmail(req: Request, res: Response, next: NextFunction) {

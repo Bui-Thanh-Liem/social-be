@@ -22,7 +22,7 @@ import {
   UpdateDtoSchema
 } from '~/shared/dtos/req/community.dto'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
-import { wrapAsyncHandler } from '~/utils/wrap-async-handler.util'
+import { asyncHandler } from '~/utils/async-handler.util'
 
 const communitiesRoute = Router()
 
@@ -33,14 +33,14 @@ communitiesRoute.post(
   verifyUserEmail,
   requestBodyValidate(CreateCommunityDtoSchema),
   checkExistMembers,
-  wrapAsyncHandler(CommunityController.create)
+  asyncHandler(CommunityController.create)
 )
 
 // Lấy categories của từng community (trả về danh sách)
-communitiesRoute.get('/categories', verifyAccessToken, wrapAsyncHandler(CommunityController.getAllCategories))
+communitiesRoute.get('/categories', verifyAccessToken, asyncHandler(CommunityController.getAllCategories))
 
 // Lấy danh sách name, id của cộng đồng
-communitiesRoute.get('/bare', verifyAccessToken, verifyUserEmail, wrapAsyncHandler(CommunityController.getAllBare))
+communitiesRoute.get('/bare', verifyAccessToken, verifyUserEmail, asyncHandler(CommunityController.getAllBare))
 
 // Ghim cộng đồng lên đầu trang
 communitiesRoute.patch(
@@ -48,7 +48,7 @@ communitiesRoute.patch(
   verifyAccessToken,
   verifyUserEmail,
   requestParamsValidate(PinCommunityDtoSchema),
-  wrapAsyncHandler(CommunityController.togglePin)
+  asyncHandler(CommunityController.togglePin)
 )
 
 // Mời ai đó vào cộng đồng (chỉ là thông báo)
@@ -59,7 +59,7 @@ communitiesRoute.post(
   verifyUserEmail,
   requestBodyValidate(InvitationMembersDtoSchema),
   checkExistMembers,
-  wrapAsyncHandler(CommunityController.inviteMembers)
+  asyncHandler(CommunityController.inviteMembers)
 )
 
 //
@@ -68,7 +68,7 @@ communitiesRoute.post(
   verifyAccessToken,
   verifyUserEmail,
   requestParamsValidate(JoinLeaveCommunityDtoSchema),
-  wrapAsyncHandler(CommunityController.join)
+  asyncHandler(CommunityController.join)
 )
 
 //
@@ -77,7 +77,7 @@ communitiesRoute.post(
   verifyAccessToken,
   verifyUserEmail,
   requestParamsValidate(JoinLeaveCommunityDtoSchema),
-  wrapAsyncHandler(CommunityController.leave)
+  asyncHandler(CommunityController.leave)
 )
 
 //
@@ -86,7 +86,7 @@ communitiesRoute.post(
   verifyAccessToken,
   verifyUserEmail,
   requestBodyValidate(PromoteMentorDtoSchema),
-  wrapAsyncHandler(CommunityController.promoteMentor)
+  asyncHandler(CommunityController.promoteMentor)
 )
 
 //
@@ -95,7 +95,7 @@ communitiesRoute.post(
   verifyAccessToken,
   verifyUserEmail,
   requestBodyValidate(DemoteMentorDtoSchema),
-  wrapAsyncHandler(CommunityController.demoteMentor)
+  asyncHandler(CommunityController.demoteMentor)
 )
 
 //
@@ -104,7 +104,7 @@ communitiesRoute.post(
   verifyAccessToken,
   verifyUserEmail,
   requestBodyValidate(ChangeStatusTweetInCommunityDtoSchema),
-  wrapAsyncHandler(CommunityController.changeStatusTweet)
+  asyncHandler(CommunityController.changeStatusTweet)
 )
 
 //
@@ -113,7 +113,7 @@ communitiesRoute.patch(
   verifyAccessToken,
   verifyUserEmail,
   requestBodyValidate(UpdateDtoSchema),
-  wrapAsyncHandler(CommunityController.update)
+  asyncHandler(CommunityController.update)
 )
 
 // Lấy thông tin tổng quát một community theo slug
@@ -122,7 +122,7 @@ communitiesRoute.get(
   verifyAccessToken,
   verifyUserEmail,
   requestParamsValidate(GetOneBySlugDtoSchema),
-  wrapAsyncHandler(CommunityController.getOneBareInfoBySlug)
+  asyncHandler(CommunityController.getOneBareInfoBySlug)
 )
 
 // Lấy thông tin chi tiết members mentors một community theo id
@@ -132,7 +132,7 @@ communitiesRoute.get(
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
   requestParamsValidate(GetMMByIdDtoSchema),
-  wrapAsyncHandler(CommunityController.getMultiMMById)
+  asyncHandler(CommunityController.getMultiMMById)
 )
 
 // Lấy những lời mời đã mời
@@ -141,7 +141,7 @@ communitiesRoute.get(
   verifyAccessToken,
   requestParamsValidate(GetMultiInvitationsDtoSchema),
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(CommunityController.getMultiInvitations)
+  asyncHandler(CommunityController.getMultiInvitations)
 )
 
 // Lấy những lời mời đã mời
@@ -150,7 +150,7 @@ communitiesRoute.get(
   verifyAccessToken,
   requestQueryValidate(QueryDtoSchema),
   requestParamsValidate(GetMultiActivityDtoSchema),
-  wrapAsyncHandler(CommunityController.getMultiActivity)
+  asyncHandler(CommunityController.getMultiActivity)
 )
 
 // Xoá lời mời (ở cộng đồng "Chỉ được mời" sẽ không vào được)
@@ -159,7 +159,7 @@ communitiesRoute.delete(
   verifyAccessToken,
   verifyUserEmail,
   requestParamsValidate(deleteInvitationDtoSchema),
-  wrapAsyncHandler(CommunityController.deleteInvitation)
+  asyncHandler(CommunityController.deleteInvitation)
 )
 
 // Lấy những cộng đồng đã tạo
@@ -167,7 +167,7 @@ communitiesRoute.get(
   '/owner',
   verifyAccessToken,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(CommunityController.getMultiOwner)
+  asyncHandler(CommunityController.getMultiOwner)
 )
 
 // Lấy những cộng đồng đã tham gia
@@ -175,7 +175,7 @@ communitiesRoute.get(
   '/joined',
   verifyAccessToken,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(CommunityController.getMultiJoined)
+  asyncHandler(CommunityController.getMultiJoined)
 )
 
 // Lấy những cộng đồng
@@ -183,7 +183,7 @@ communitiesRoute.get(
   '/explore',
   verifyAccessToken,
   requestQueryValidate(QueryDtoSchema),
-  wrapAsyncHandler(CommunityController.getMultiExplore)
+  asyncHandler(CommunityController.getMultiExplore)
 )
 
 export default communitiesRoute
