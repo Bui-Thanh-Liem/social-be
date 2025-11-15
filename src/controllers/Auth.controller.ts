@@ -31,17 +31,16 @@ class AuthController {
   }
 
   async logout(req: Request, res: Response) {
-    const { refresh_token } = req.body
-    const { user_id } = req.decoded_refresh_token as IJwtPayload
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const { refresh_token } = req.body // Sẽ để ở cookie sau
     const result = await AuthServices.logout({ refresh_token, user_id })
     res.json(new OkResponse('Đăng xuất thành công', !!result.deletedCount))
   }
 
   async refreshToken(req: Request, res: Response) {
-    const { refresh_token } = req.body
-    const { user_id, exp } = req.decoded_refresh_token as IJwtPayload
-    const result = await AuthServices.refreshToken({ user_id, exp })
-    res.json(new OkResponse('Làm mới token thành công', result))
+    const { refresh_token } = req.body // Sẽ để ở cookie sau
+    const tokens = await AuthServices.refreshToken({ refresh_token })
+    res.json(new OkResponse('Làm mới token thành công.', tokens))
   }
 
   async forgotPassword(req: Request, res: Response) {

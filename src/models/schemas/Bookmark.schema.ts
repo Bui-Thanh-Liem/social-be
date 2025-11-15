@@ -6,7 +6,7 @@ export class BookmarkSchema extends BaseSchema implements IBookmark {
   user_id: ObjectId
   tweet_id: ObjectId
 
-  constructor(bookmark: Partial<IBookmark>) {
+  constructor(bookmark: Pick<IBookmark, 'user_id' | 'tweet_id'>) {
     super()
     this.user_id = bookmark.user_id || new ObjectId()
     this.tweet_id = bookmark.tweet_id || new ObjectId()

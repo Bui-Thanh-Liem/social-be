@@ -2,9 +2,9 @@ import { ObjectId } from 'mongodb'
 import { StringValue } from 'ms'
 import { emailQueue } from '~/bull/queues'
 import { envs } from '~/configs/env.config'
+import { NotFoundError, UnauthorizedError } from '~/core/error.reponse'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
-import { NotFoundError } from '~/core/error.reponse'
 import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { ETokenType } from '~/shared/enums/type.enum'
@@ -13,15 +13,38 @@ import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { hashPassword } from '~/utils/crypto.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
-import { signToken } from '~/utils/jwt.util'
+import { signToken, verifyToken } from '~/utils/jwt.util'
+import { logger } from '~/utils/logger.util'
 import FollowsService from './Follows.service'
 
 class UsersService {
-  async verifyEmail(user_id: string): Promise<Pick<IUser, 'email' | 'verify'>> {
+  async verifyEmail({
+    user_id,
+    email_verify_token
+  }: {
+    user_id: string
+    email_verify_token: string
+  }): Promise<Pick<IUser, 'email' | 'verify'>> {
     //
-    const user = await UserCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { email: 1 } })
+    if (!email_verify_token) {
+      throw new NotFoundError('Token thì bắt buộc.')
+    }
+
+    //
+    await verifyToken({ token: email_verify_token, privateKey: envs.JWT_SECRET_TEMP })
+
+    //
+    const user = await UserCollection.findOne({ email_verify_token })
+
+    //
     if (!user) {
-      throw new NotFoundError('User not exist')
+      throw new NotFoundError('Người dùng không tồn tại.')
+    }
+
+    const user_id_from_token = user._id.toString()
+    if (user_id_from_token !== user_id) {
+      logger.error(`Người dùng ${user_id} đã sử dụng email_verify_token của ${user_id_from_token}`)
+      throw new UnauthorizedError('Có lỗi xảy ra trong quá trình xử lý, vui lòng thử lại.')
     }
 
     await this.resetUserActive(user_id)
@@ -469,7 +492,7 @@ class UsersService {
     const keyCache = `${CONSTANT_USER.user_active_key_cache}-${user_id}`
     let userActive = await cacheServiceInstance.getCache<IUser>(keyCache)
     if (!userActive) {
-      console.log('❌ lấy người dùng hiện tại trong database 🤦‍♂️')
+      console.log('❌ cache hết hạn lấy người dùng hiện tại trong database 🤦‍♂️')
       userActive = await UserCollection.findOne(
         { _id: new ObjectId(user_id) },
         { projection: { email_verify_token: 0, forgot_password_token: 0, password: 0 } }
@@ -478,7 +501,7 @@ class UsersService {
     }
 
     if (!userActive) {
-      throw new NotFoundError('User not found')
+      throw new NotFoundError('Người dùng không tồn tại.')
     }
 
     return userActive
@@ -489,11 +512,11 @@ class UsersService {
     await cacheServiceInstance.del(keyCache)
   }
 
-  async checkExist(_ids: string[]) {
+  async checkUsersExist(_ids: string[]) {
     const objectIds = _ids.map((_id) => new ObjectId(_id))
     const isExist = await UserCollection.countDocuments({ _id: { $in: objectIds } })
     if (!isExist) {
-      throw new NotFoundError('Người dùng không tồn tại')
+      throw new NotFoundError('Người dùng không tồn tại.')
     }
     return isExist
   }
@@ -506,6 +529,18 @@ class UsersService {
         projection: {
           email: 1,
           password: 1
+        }
+      }
+    )
+  }
+
+  //
+  async findOneById(id: string) {
+    return await UserCollection.findOne(
+      { _id: new ObjectId(id) },
+      {
+        projection: {
+          email: 1
         }
       }
     )

@@ -2,7 +2,7 @@ import { Request } from 'express'
 import fs from 'fs'
 import path from 'path'
 import { envs } from '~/configs/env.config'
-import { BadRequestError, NotFoundError } from '~/core/error.reponse'
+import { BadRequestError } from '~/core/error.reponse'
 import { UPLOAD_IMAGE_FOLDER_PATH } from '~/shared/constants'
 import { ResUpload } from '~/shared/dtos/res/upload.dto'
 import { EMediaType } from '~/shared/enums/type.enum'
@@ -45,7 +45,7 @@ class UploadsService {
             logger.info(`Deleted image: ${filePath}`)
           } else {
             console.error(`Image not found: ${filePath}`)
-            throw new NotFoundError('Không tìm thấy ảnh trước cũ ?')
+            console.error('Không tìm thấy ảnh trước cũ ?')
           }
         })
 

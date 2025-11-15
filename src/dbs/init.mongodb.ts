@@ -22,7 +22,7 @@ import { HashtagCollection, initHashtagCollection } from '~/models/schemas/Hasht
 import { initLikeCollection } from '~/models/schemas/Like.schema'
 import { initMessageCollection, MessageCollection } from '~/models/schemas/Message.schema'
 import { initNotificationCollection } from '~/models/schemas/Notification.schema'
-import { initRefreshTokenCollection, RefreshTokenCollection } from '~/models/schemas/Refresh-token.schema'
+import { initTokenCollection, TokenCollection } from '~/models/schemas/Token.schema'
 import { initReportTweetCollection, ReportTweetCollection } from '~/models/schemas/Report-tweet.schema'
 import { initSearchHistoryCollection, SearchHistoryCollection } from '~/models/schemas/SearchHistory.schema'
 import { initTrendingCollection, TrendingCollection } from '~/models/schemas/Trending.schema'
@@ -136,7 +136,7 @@ class Database {
     try {
       this.checkConnection()
       initUserCollection(this.db)
-      initRefreshTokenCollection(this.db)
+      initTokenCollection(this.db)
       initFollowerCollection(this.db)
       initVideoCollection(this.db)
       initTweetCollection(this.db)
@@ -166,7 +166,7 @@ class Database {
       this.checkConnection()
       const indexUser = await UserCollection.indexExists(['email_1', 'username_1', 'bio_text'])
       const indexReportTweet = await ReportTweetCollection.indexExists(['tweet_id_1'])
-      const indexRefresh = await RefreshTokenCollection.indexExists(['exp_1'])
+      const indexToken = await TokenCollection.indexExists(['exp_1'])
       const indexTweet = await TweetCollection.indexExists(['content_text'])
       const indexTrending = await TrendingCollection.indexExists(['slug_1', 'created_at_-1'])
       const indexHashtag = await HashtagCollection.indexExists(['slug_1'])
@@ -204,8 +204,8 @@ class Database {
       }
 
       // Refresh
-      if (!indexRefresh) {
-        RefreshTokenCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
+      if (!indexToken) {
+        TokenCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
       }
 
       // Tweet - default_language: 'none' -> cho phép sử dụng stop words

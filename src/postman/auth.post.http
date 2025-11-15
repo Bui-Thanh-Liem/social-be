@@ -5,18 +5,35 @@ POST {{url}}/auth/signup
 Content-Type: application/json
 
 {
-  "name": "Liemdev2",
-  "email": "buithanhliem5072@gmail.com",
+  "name": "Liemdev",
+  "email": "buithanhliem5073@gmail.com",
   "password": "Liemdev@123",
   "confirm_password": "Liemdev@123",
   "day_of_birth": "2025-06-14T01:58:53.050Z"
 }
 
-### signin
+### login
 POST {{url}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "buithanhliem5072@gmail.com",
+  "email": "buithanhliem5073@gmail.com",
   "password": "Liemdev@123"
+}
+
+### refresh-token
+POST {{url}}/auth/refresh-token
+Content-Type: application/json
+
+{
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjkxN2Y1ZmU3ZmJhMWE3MGFmMjMwNjA0IiwidHlwZSI6MSwiaWF0IjoxNzYzMTc5NTQ5LCJleHAiOjE3NjU3NzE1NDl9.-Zncf7eqkFv3UvrsTFcGot3iXrqqeT7F_u5U_r4-HS0"
+}
+
+### logout
+POST {{url}}/auth/logout
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjkxN2Y1ZmU3ZmJhMWE3MGFmMjMwNjA0IiwidHlwZSI6MCwiaWF0IjoxNzYzMTc5NTg3LCJleHAiOjE3NjMxODA0ODd9.znM5opw751P5S0f18DRDD9KQIUIHDi2_e-kXued6J7Q
+
+{
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjkxN2Y1ZmU3ZmJhMWE3MGFmMjMwNjA0IiwidHlwZSI6MSwiZXhwIjoxNzY1NzcxNTQ5LCJpYXQiOjE3NjMxNzk1ODd9.rRhmXH_NPqxOoJV3RG214uVo48hergMFusrFpDbG5EQ"
 }

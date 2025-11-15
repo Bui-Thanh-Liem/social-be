@@ -13,7 +13,6 @@ export async function verifyAccessToken(req: Request, res: Response, next: NextF
       throw new UnauthorizedError('Access token is required')
     }
     const decoded = await verifyToken({ token: access_token, privateKey: envs.JWT_SECRET_ACCESS })
-    req.decoded_authorization = decoded
 
     //
     if (decoded.user_id) {
@@ -22,9 +21,11 @@ export async function verifyAccessToken(req: Request, res: Response, next: NextF
       if (!user) {
         throw new UnauthorizedError('Người dùng không tồn tại.')
       }
+
       req.user = user
     }
 
+    req.decoded_authorization = decoded
     next()
   } catch (error) {
     next(new UnauthorizedError(error as string))

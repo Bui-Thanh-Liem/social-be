@@ -22,7 +22,16 @@ export const corsMiddleware = cors({
   },
   credentials: true, // Cho phép cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'Cache-Control', 'Pragma'],
+  allowedHeaders: [
+    'Origin',
+    'Accept',
+    'Pragma',
+    'x-client-id', // kiểm tra sau
+    'Content-Type',
+    'Authorization',
+    'Cache-Control',
+    'X-Requested-With'
+  ],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   maxAge: 86400, // 24 hours
   preflightContinue: false,

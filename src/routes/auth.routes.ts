@@ -29,9 +29,7 @@ authRoute.get('/google-login', asyncHandler(AuthController.googleLogin))
 
 authRoute.get('/facebook-login', asyncHandler(AuthController.facebookLogin))
 
-authRoute.post('/logout', verifyAccessToken, verifyRefreshToken, asyncHandler(AuthController.logout))
-
-authRoute.post('/refresh-token', verifyRefreshToken, asyncHandler(AuthController.refreshToken))
+authRoute.post('/refresh-token', asyncHandler(AuthController.refreshToken))
 
 authRoute.post(
   '/forgot-password',
@@ -45,6 +43,8 @@ authRoute.post(
   verifyTokenForgotPassword,
   asyncHandler(AuthController.resetPassword)
 )
+
+authRoute.post('/logout', verifyAccessToken, verifyRefreshToken, asyncHandler(AuthController.logout))
 
 authRoute
   .route('/me')

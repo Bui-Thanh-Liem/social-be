@@ -5,8 +5,8 @@ import { requestBodyValidate } from '~/middlewares/request-body-validate.middlew
 import { requestParamsValidate } from '~/middlewares/request-params-validate.middleware'
 import { requestQueryValidate } from '~/middlewares/request-query-validate.middleware'
 import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
-import { verifyTokenVerifyEmail } from '~/middlewares/verify-token-verify-email.middleware'
 import { verifyUserActiveForChangePassword } from '~/middlewares/verify-user-active-for-change-password.middleware'
+import { verifyUserEmail } from '~/middlewares/verify-user-email.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import { ChangePasswordDtoSchema, UserIdDtoSchema, VerifyEmailDtoSchema } from '~/shared/dtos/req/user.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
@@ -17,7 +17,6 @@ usersRoute.post(
   '/verify-email',
   verifyAccessToken,
   requestBodyValidate(VerifyEmailDtoSchema),
-  verifyTokenVerifyEmail,
   asyncHandler(UsersControllers.verifyEmail)
 )
 
@@ -50,6 +49,7 @@ usersRoute.get(
 usersRoute.get(
   '/top-followed',
   verifyAccessToken,
+  verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
   asyncHandler(UsersControllers.getTopFollowedUsers)
 )

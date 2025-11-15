@@ -1,16 +1,17 @@
 import { Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
+import { OkResponse } from '~/core/success.reponse'
 import { UserCollection } from '~/models/schemas/User.schema'
 import UsersServices from '~/services/Users.service'
-import { OkResponse } from '~/core/success.reponse'
-import { ChangePasswordDto, UserIdDto } from '~/shared/dtos/req/user.dto'
+import { ChangePasswordDto, UserIdDto, verifyEmailDto } from '~/shared/dtos/req/user.dto'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class UsersController {
   async verifyEmail(req: Request, res: Response) {
+    const { email_verify_token } = req.body as verifyEmailDto
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await UsersServices.verifyEmail(user_id)
+    const result = await UsersServices.verifyEmail({ user_id, email_verify_token })
     res.json(new OkResponse(`Xác thực email ${result.email} thành công.`, result))
   }
 

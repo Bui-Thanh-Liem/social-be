@@ -4,7 +4,7 @@ import { ObjectId } from 'mongodb'
 import { StringValue } from 'ms'
 import { emailQueue, notificationQueue } from '~/bull/queues'
 import { envs } from '~/configs/env.config'
-import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '~/core/error.reponse'
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from '~/core/error.reponse'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
@@ -21,7 +21,8 @@ import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oau
 import { createTokenPair } from '~/utils/auth.util'
 import { generatePassword, hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
-import RefreshTokenService from './Refresh-token.service'
+import { logger } from '~/utils/logger.util'
+import TokensService from './Tokens.service'
 import UsersService from './Users.service'
 
 class AuthService {
@@ -78,7 +79,7 @@ class AuthService {
 
     // Khi đăng kí thành công thì cho người dùng đăng nhập vào ứng dụng ngay.
     const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-    await RefreshTokenService.create({ refresh_token, user_id: result.insertedId.toString(), iat, exp })
+    await TokensService.create({ refresh_token, user_id: result.insertedId.toString(), iat, exp })
 
     // Đưa qua worker gửi mail
     await emailQueue.add(CONSTANT_JOB.VERIFY_MAIL, {
@@ -122,7 +123,7 @@ class AuthService {
 
     // Lưu refresh token vào database
     const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-    await RefreshTokenService.create({ refresh_token, user_id: foundUser._id.toString(), iat, exp })
+    await TokensService.create({ refresh_token, user_id: foundUser._id.toString(), iat, exp })
 
     return {
       access_token,
@@ -149,12 +150,12 @@ class AuthService {
       })
 
       const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-      await RefreshTokenService.create({ refresh_token, user_id: exist._id.toString(), exp, iat })
+      await TokensService.create({ refresh_token, user_id: exist._id.toString(), exp, iat })
 
       return {
         access_token,
         refresh_token,
-        status: 'Login'
+        status: 'login'
       }
     }
 
@@ -171,7 +172,7 @@ class AuthService {
 
     return {
       ...register,
-      status: 'Register'
+      status: 'signup'
     }
   }
 
@@ -194,12 +195,12 @@ class AuthService {
       })
 
       const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-      await RefreshTokenService.create({ refresh_token, user_id: exist._id.toString(), exp, iat })
+      await TokensService.create({ refresh_token, user_id: exist._id.toString(), exp, iat })
 
       return {
         access_token,
         refresh_token,
-        status: 'Login'
+        status: 'login'
       }
     }
 
@@ -216,7 +217,7 @@ class AuthService {
 
     return {
       ...register,
-      status: 'Register'
+      status: 'signup'
     }
   }
 
@@ -307,10 +308,13 @@ class AuthService {
     return res.data
   }
 
-  async logout({ refresh_token, user_id }: { refresh_token: string; user_id: string }) {
+  async logout({ user_id, refresh_token }: { user_id: string; refresh_token: string }) {
+    // Xoá Người dùng đang active trong cache
     const key_cache = `${CONSTANT_USER.user_active_key_cache}-${user_id}`
     await cacheServiceInstance.del(key_cache)
-    return await RefreshTokenService.deleteByToken({ token: refresh_token })
+
+    //
+    return await TokensService.deleteByToken({ refresh_token }) // Chỉ đăng xuất trên phiên hiện tại
   }
 
   async forgotPassword({ email }: ForgotPasswordDto) {
@@ -373,16 +377,45 @@ class AuthService {
     )
   }
 
-  async refreshToken({ user_id, exp }: { user_id: string; exp?: number }) {
-    const [access_token, refresh_token] = await createTokenPair({
-      payload: { user_id },
-      exp_refresh: exp
+  // Đã kiểm tra refresh_token hợp lệ ở route (nếu không hợp lệ thì không cho vào controller)
+  async refreshToken({ refresh_token }: { refresh_token: string }) {
+    // Kiểm tra xem refresh_token này đã sử dụng chưa
+    const foundToken = await TokensService.findByRefreshTokenUsed({ refresh_token })
+
+    // Nếu có (hacker sử dụng rồi hoặc là chính chủ sử dụng rồi giờ hacker sử dụng lại)
+    if (foundToken) {
+      const decoded = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
+      logger.error('Người dùng này đang sử dụng refresh_token đã được sử dụng rồi:::', decoded.user_id)
+
+      // Xoá mọi phiên đang đăng nhập của người dùng này (an toàn nhất)
+      await TokensService.deleteByUserId({ user_id: decoded.user_id })
+      throw new ForbiddenError('Có lỗi trong quá trình xử lý, vui lòng đăng nhập lại')
+    }
+
+    // Kiểm tra refresh_token có trong trạng thái sử dụng hay không
+    const holderToken = await TokensService.findByRefreshToken({ refresh_token })
+    if (!holderToken) {
+      throw new UnauthorizedError()
+    }
+
+    // Verify
+    const decoded = await verifyToken({ token: holderToken.refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
+
+    // Kiểm tra tồn tại người dùng
+    const foundUser = await UsersService.findOneById(decoded.user_id)
+    if (!foundUser) throw new NotFoundError('Người dùng không tồn tại.')
+
+    // Tạo access/refresh token mới
+    const [access_token, new_refresh_token] = await createTokenPair({
+      payload: { user_id: decoded.user_id },
+      exp_refresh: decoded.exp
     })
 
-    const decoded = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-    await Promise.all([RefreshTokenService.create({ refresh_token, user_id, iat: decoded.iat, exp: decoded.exp })])
+    // Cập nhật lại token đang sử dụng và token đã được sử dụng.
+    await TokensService.updateTokenUsed({ new_token: new_refresh_token, token_used: refresh_token })
 
-    return { access_token, refresh_token }
+    //
+    return { access_token, refresh_token: new_refresh_token }
   }
 
   private async checkExistByName(name: string) {
@@ -390,7 +423,7 @@ class AuthService {
     console.log('snake_case_name::', snake_case_name)
 
     return (await UserCollection.countDocuments({ $or: [{ name }, { username: snake_case_name }] })) > 0
-  };
+  }
 
   async updateMe(user_id: string, payload: UpdateMeDto) {
     const user = await UserCollection.findOne({ username: payload.username, _id: { $ne: new ObjectId(user_id) } })

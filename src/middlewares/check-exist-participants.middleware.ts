@@ -5,7 +5,7 @@ export async function checkExistParticipants(req: Request, res: Response, next: 
   try {
     const { participants } = req.body as { participants: string[] }
 
-    await UsersService.checkExist(participants)
+    await UsersService.checkUsersExist(participants)
 
     next()
   } catch (error) {
