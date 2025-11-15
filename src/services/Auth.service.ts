@@ -390,7 +390,7 @@ class AuthService {
     console.log('snake_case_name::', snake_case_name)
 
     return (await UserCollection.countDocuments({ $or: [{ name }, { username: snake_case_name }] })) > 0
-  }
+  };
 
   async updateMe(user_id: string, payload: UpdateMeDto) {
     const user = await UserCollection.findOne({ username: payload.username, _id: { $ne: new ObjectId(user_id) } })
