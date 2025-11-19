@@ -9,10 +9,10 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const reportTweetRoute = Router()
 
+reportTweetRoute.use(verifyAccessToken, verifyUserEmail)
+
 reportTweetRoute.post(
   '/:tweet_id',
-  verifyAccessToken,
-  verifyUserEmail,
   requestParamsValidate(paramIdTweetDtoSchema),
   checkTweetByIdParams,
   asyncHandler(ReportTweetController.report)

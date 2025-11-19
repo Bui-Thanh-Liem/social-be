@@ -13,26 +13,17 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const usersRoute = Router()
 
-usersRoute.post(
-  '/verify-email',
-  verifyAccessToken,
-  requestBodyValidate(VerifyEmailDtoSchema),
-  asyncHandler(UsersControllers.verifyEmail)
-)
+usersRoute.use(verifyAccessToken)
 
-usersRoute.post(
-  '/resend-verify-email',
-  asyncHandler(resendRateLimit),
-  verifyAccessToken,
-  asyncHandler(UsersControllers.resendVerifyEmail)
-)
+usersRoute.post('/verify-email', requestBodyValidate(VerifyEmailDtoSchema), asyncHandler(UsersControllers.verifyEmail))
 
-usersRoute.get('/username/:username', verifyAccessToken, asyncHandler(UsersControllers.getOneByUsername))
-usersRoute.get('/mentions/:username', verifyAccessToken, asyncHandler(UsersControllers.getMultiForMentions))
+usersRoute.post('/resend-verify-email', asyncHandler(resendRateLimit), asyncHandler(UsersControllers.resendVerifyEmail))
+
+usersRoute.get('/username/:username', asyncHandler(UsersControllers.getOneByUsername))
+usersRoute.get('/mentions/:username', asyncHandler(UsersControllers.getMultiForMentions))
 
 usersRoute.get(
   '/followed/:user_id',
-  verifyAccessToken,
   requestParamsValidate(UserIdDtoSchema),
   requestQueryValidate(QueryDtoSchema),
   asyncHandler(UsersControllers.getFollowedUsersBasic)
@@ -40,7 +31,6 @@ usersRoute.get(
 
 usersRoute.get(
   '/following/:user_id',
-  verifyAccessToken,
   requestParamsValidate(UserIdDtoSchema),
   requestQueryValidate(QueryDtoSchema),
   asyncHandler(UsersControllers.getFollowingUsersBasic)
@@ -48,7 +38,6 @@ usersRoute.get(
 
 usersRoute.get(
   '/top-followed',
-  verifyAccessToken,
   verifyUserEmail,
   requestQueryValidate(QueryDtoSchema),
   asyncHandler(UsersControllers.getTopFollowedUsers)
@@ -56,7 +45,6 @@ usersRoute.get(
 
 usersRoute.post(
   '/change-password',
-  verifyAccessToken,
   requestBodyValidate(ChangePasswordDtoSchema),
   verifyUserActiveForChangePassword,
   asyncHandler(UsersControllers.changePassword)

@@ -7,11 +7,8 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const hashtagsRoute = Router()
 
-hashtagsRoute.get(
-  '/',
-  verifyAccessToken,
-  requestQueryValidate(QueryDtoSchema),
-  asyncHandler(HashtagsController.getMulti)
-)
+hashtagsRoute.use(verifyAccessToken)
+
+hashtagsRoute.get('/', requestQueryValidate(QueryDtoSchema), asyncHandler(HashtagsController.getMulti))
 
 export default hashtagsRoute

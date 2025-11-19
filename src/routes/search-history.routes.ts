@@ -12,26 +12,16 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const searchHistoryRoute = Router()
 
+searchHistoryRoute.use(verifyAccessToken, verifyUserEmail)
+
 searchHistoryRoute.post(
   '/',
-  verifyAccessToken,
   requestBodyValidate(CreateSearchHistoryDtoSchema),
   asyncHandler(SearchHistoryController.create)
 )
 
-searchHistoryRoute.get(
-  '/',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestQueryValidate(QueryDtoSchema),
-  asyncHandler(SearchHistoryController.getMulti)
-)
+searchHistoryRoute.get('/', requestQueryValidate(QueryDtoSchema), asyncHandler(SearchHistoryController.getMulti))
 
-searchHistoryRoute.delete(
-  '/:id',
-  verifyAccessToken,
-  requestParamsValidate(ParamIdDtoSchema),
-  asyncHandler(SearchHistoryController.delete)
-)
+searchHistoryRoute.delete('/:id', requestParamsValidate(ParamIdDtoSchema), asyncHandler(SearchHistoryController.delete))
 
 export default searchHistoryRoute

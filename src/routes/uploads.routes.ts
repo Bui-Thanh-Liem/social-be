@@ -8,14 +8,14 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const uploadsRoute = Router()
 
-uploadsRoute.post('/images', verifyAccessToken, verifyUserEmail, asyncHandler(UploadsControllers.uploadImages))
+uploadsRoute.use(verifyAccessToken, verifyUserEmail)
 
-uploadsRoute.post('/videos', verifyAccessToken, verifyUserEmail, asyncHandler(UploadsControllers.uploadVideos))
+uploadsRoute.post('/images', asyncHandler(UploadsControllers.uploadImages))
+
+uploadsRoute.post('/videos', asyncHandler(UploadsControllers.uploadVideos))
 
 uploadsRoute.delete(
   '/remove/images',
-  verifyAccessToken,
-  verifyUserEmail,
   requestBodyValidate(remoteImagesDtoSchema),
   asyncHandler(UploadsControllers.removeImages)
 )
