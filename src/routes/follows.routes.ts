@@ -9,10 +9,10 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const followsRoute = Router()
 
+followsRoute.use(verifyAccessToken, verifyUserEmail)
+
 followsRoute.post(
   '/toggle/:user_id',
-  verifyAccessToken,
-  verifyUserEmail,
   requestParamsValidate(UserIdDtoSchema),
   checkUserParams,
   asyncHandler(FollowsController.toggleFollow)

@@ -16,10 +16,10 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const conversationsRoute = Router()
 
+conversationsRoute.use(verifyAccessToken, verifyUserEmail)
+
 conversationsRoute.post(
   '/',
-  verifyAccessToken,
-  verifyUserEmail,
   requestBodyValidate(CreateConversationDtoSchema),
   checkExistParticipants,
   asyncHandler(ConversationsController.create)
@@ -27,8 +27,6 @@ conversationsRoute.post(
 
 conversationsRoute.post(
   '/add-participants/:conv_id',
-  verifyAccessToken,
-  verifyUserEmail,
   requestParamsValidate(ConversationIdDtoSchema),
   requestBodyValidate(ParticipantsDtoSchema),
   checkExistParticipants,
@@ -37,8 +35,6 @@ conversationsRoute.post(
 
 conversationsRoute.post(
   '/remove-participants/:conv_id',
-  verifyAccessToken,
-  verifyUserEmail,
   requestParamsValidate(ConversationIdDtoSchema),
   requestBodyValidate(ParticipantsDtoSchema),
   checkExistParticipants,
@@ -47,21 +43,13 @@ conversationsRoute.post(
 
 conversationsRoute.post(
   '/promote/:conv_id',
-  verifyAccessToken,
-  verifyUserEmail,
   requestParamsValidate(ConversationIdDtoSchema),
   requestBodyValidate(ParticipantsDtoSchema),
   checkExistParticipants,
   asyncHandler(ConversationsController.promoteMentor)
 )
 
-conversationsRoute.get(
-  '/',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestQueryValidate(QueryDtoSchema),
-  asyncHandler(ConversationsController.getMulti)
-)
+conversationsRoute.get('/', requestQueryValidate(QueryDtoSchema), asyncHandler(ConversationsController.getMulti))
 
 conversationsRoute.patch(
   '/read/:conv_id',
@@ -72,14 +60,12 @@ conversationsRoute.patch(
 
 conversationsRoute.patch(
   '/toggle-pin/:conv_id',
-  verifyAccessToken,
   requestParamsValidate(ConversationIdDtoSchema),
   asyncHandler(ConversationsController.togglePinConv)
 )
 
 conversationsRoute.delete(
   '/:conv_id',
-  verifyAccessToken,
   requestParamsValidate(ConversationIdDtoSchema),
   asyncHandler(ConversationsController.delete)
 )

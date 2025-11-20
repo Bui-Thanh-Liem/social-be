@@ -8,28 +8,12 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const searchRoute = Router()
 
-searchRoute.get(
-  '/pending',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestQueryValidate(QueryDtoSchema),
-  asyncHandler(SearchController.searchPending)
-)
+searchRoute.use(verifyAccessToken, verifyUserEmail)
 
-searchRoute.get(
-  '/tweets',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestQueryValidate(QueryDtoSchema),
-  asyncHandler(SearchController.searchTweet)
-)
+searchRoute.get('/pending', requestQueryValidate(QueryDtoSchema), asyncHandler(SearchController.searchPending))
 
-searchRoute.get(
-  '/users',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestQueryValidate(QueryDtoSchema),
-  asyncHandler(SearchController.searchUser)
-)
+searchRoute.get('/tweets', requestQueryValidate(QueryDtoSchema), asyncHandler(SearchController.searchTweet))
+
+searchRoute.get('/users', requestQueryValidate(QueryDtoSchema), asyncHandler(SearchController.searchUser))
 
 export default searchRoute

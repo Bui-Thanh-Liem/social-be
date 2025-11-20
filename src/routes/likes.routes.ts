@@ -9,10 +9,10 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const likesRoute = Router()
 
+likesRoute.use(verifyAccessToken, verifyUserEmail)
+
 likesRoute.post(
   '/toggle/:tweet_id',
-  verifyAccessToken,
-  verifyUserEmail,
   requestParamsValidate(paramIdTweetDtoSchema),
   checkTweetByIdParams,
   asyncHandler(LikesController.toggleLike)

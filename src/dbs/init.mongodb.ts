@@ -35,6 +35,9 @@ import { logger } from '~/utils/logger.util'
 const _MINPOOLSIZE = 5
 const _MAXPOOLSIZE = 50 // không bao giờ vượt, nếu hơn thì phải chờ
 const _SECOND_DLE = 30000
+
+console.log('mongodbConnection:::', mongodbConnection)
+
 class Database {
   static instance: Database | null = null
   static client: MongoClient

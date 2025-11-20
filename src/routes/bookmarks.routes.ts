@@ -9,10 +9,12 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const bookmarksRoute = Router()
 
+// Thêm middleware
+bookmarksRoute.use(verifyAccessToken, verifyUserEmail)
+
+//
 bookmarksRoute.post(
   '/toggle/:tweet_id',
-  verifyAccessToken,
-  verifyUserEmail,
   requestParamsValidate(paramIdTweetDtoSchema),
   checkTweetByIdParams,
   asyncHandler(BookmarksController.toggleBookmark)
