@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { z } from 'zod'
-import { BadRequestError } from '~/core/error.reponse'
+import { BadRequestError } from '~/core/error.response'
 
 export const requestQueryValidate = (schema: z.ZodSchema<any>) => (req: Request, res: Response, next: NextFunction) => {
   try {

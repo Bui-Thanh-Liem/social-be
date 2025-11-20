@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import UploadsService from '~/services/Uploads.service'
-import { OkResponse } from '~/core/success.reponse'
+import { OkResponse } from '~/core/success.response'
 import { RemoteImagesDto } from '~/shared/dtos/req/upload.dto'
 
 class UploadsController {

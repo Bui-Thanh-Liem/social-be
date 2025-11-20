@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
-import { OkResponse } from '~/core/success.reponse'
+import { OkResponse } from '~/core/success.response'
 import { UserCollection } from '~/models/schemas/User.schema'
 import UsersServices from '~/services/Users.service'
 import { ChangePasswordDto, UserIdDto, verifyEmailDto } from '~/shared/dtos/req/user.dto'

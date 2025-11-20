@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import HashtagsService from '~/services/Hashtags.service'
-import { OkResponse } from '~/core/success.reponse'
+import { OkResponse } from '~/core/success.response'
 
 class HashtagsController {
   async getMulti(req: Request, res: Response) {

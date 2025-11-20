@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import fs from 'fs'
 import mime from 'mime'
 import path from 'path'
-import { BadRequestError } from '~/core/error.reponse'
+import { BadRequestError } from '~/core/error.response'
 import { UPLOAD_VIDEO_FOLDER_PATH } from '~/shared/constants/path-static.constant'
 import { logger } from '~/utils/logger.util'
 

@@ -1,4 +1,4 @@
-import { AResponse } from './success.reponse'
+import { AResponse } from './success.response'
 
 export abstract class AError extends Error {
   // để lấy stack

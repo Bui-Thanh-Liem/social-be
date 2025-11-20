@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { BadRequestError, UnauthorizedError } from '~/core/error.reponse'
+import { BadRequestError, UnauthorizedError } from '~/core/error.response'
 import { ChangePasswordDto } from '~/shared/dtos/req/user.dto'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { verifyPassword } from '~/utils/crypto.util'

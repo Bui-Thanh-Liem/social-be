@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import CommunityService from '~/services/Communities.service'
 import CommunityInvitationService from '~/services/Community-invitation.service'
-import { CreatedResponse, OkResponse } from '~/core/success.reponse'
+import { CreatedResponse, OkResponse } from '~/core/success.response'
 import {
   ChangeStatusTweetInCommunityDto,
   CreateCommunityDto,

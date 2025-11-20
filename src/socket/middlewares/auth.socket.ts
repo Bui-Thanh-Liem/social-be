@@ -1,6 +1,6 @@
 import { ExtendedError, Socket } from 'socket.io'
 import { envs } from '~/configs/env.config'
-import { UnauthorizedError } from '~/core/error.reponse'
+import { UnauthorizedError } from '~/core/error.response'
 import { verifyToken } from '~/utils/jwt.util'
 
 // Middleware auth cho socket (VD: check token)

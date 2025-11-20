@@ -29,7 +29,7 @@ import { initTrendingCollection, TrendingCollection } from '~/models/schemas/Tre
 import { initTweetCollection, TweetCollection } from '~/models/schemas/Tweet.schema'
 import { initUserCollection, UserCollection } from '~/models/schemas/User.schema'
 import { initVideoCollection } from '~/models/schemas/Video.schema'
-import { BadRequestError } from '~/core/error.reponse'
+import { BadRequestError } from '~/core/error.response'
 import { logger } from '~/utils/logger.util'
 
 const _MINPOOLSIZE = 5
