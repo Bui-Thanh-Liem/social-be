@@ -46,7 +46,15 @@ export const envs = {
 
   MAX_REPORT_THRESHOLD: process.env.MAX_REPORT_THRESHOLD || '',
 
+  // Cloudinary
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || '',
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '',
-  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || ''
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || '',
+
+  // AWS
+  AWS_REGION: process.env.AWS_REGION || '',
+  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || '',
+  AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || '',
+  S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || '',
+  CLOUDFRONT_URL: process.env.CLOUDFRONT_URL || ''
 }

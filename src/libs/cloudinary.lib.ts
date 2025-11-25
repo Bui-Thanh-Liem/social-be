@@ -52,6 +52,7 @@ export const uploadToCloudinary = async (req: Request): Promise<UploadedFile[]> 
     }
   })
 
+  //
   try {
     const [, files] = await form.parse(req)
 
@@ -73,7 +74,7 @@ export const uploadToCloudinary = async (req: Request): Promise<UploadedFile[]> 
     const uploadSingleFile = async (file: formidable.File): Promise<UploadedFile> => {
       // file.filepath luôn tồn tại và là đường dẫn file tạm trên disk
       if (!file.filepath || typeof file.filepath !== 'string') {
-        throw new Error('File không có đường dẫn tạm')
+        throw new BadRequestError('File không có đường dẫn tạm')
       }
 
       const result = await new Promise<any>((resolve, reject) => {
