@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
 import { envs } from '~/configs/env.config'
-import { CreatedResponse, OkResponse } from '~/core/success.reponse'
+import { CreatedResponse, OkResponse } from '~/core/success.response'
 import AuthServices from '~/services/Auth.service'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 

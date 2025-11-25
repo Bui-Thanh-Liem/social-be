@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { envs } from '~/configs/env.config'
 import UsersService from '~/services/Users.service'
-import { UnauthorizedError } from '~/core/error.reponse'
+import { UnauthorizedError } from '~/core/error.response'
 import { verifyToken } from '~/utils/jwt.util'
 
 export async function verifyAccessToken(req: Request, res: Response, next: NextFunction) {

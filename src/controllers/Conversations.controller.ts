@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import ConversationsService from '~/services/Conversations.service'
-import { OkResponse } from '~/core/success.reponse'
+import { OkResponse } from '~/core/success.response'
 import {
   AddParticipantsBodyDto,
   AddParticipantsParamDto,

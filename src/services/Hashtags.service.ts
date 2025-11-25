@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { HashtagCollection, HashtagSchema } from '~/models/schemas/Hashtag.schema'
-import { BadRequestError } from '~/core/error.reponse'
+import { BadRequestError } from '~/core/error.response'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IHashtag } from '~/shared/interfaces/schemas/hashtag.interface'
 import { ResMultiType } from '~/shared/types/response.type'

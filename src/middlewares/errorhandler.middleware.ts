@@ -1,6 +1,6 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from 'express'
 import { ZodError } from 'zod'
-import { ErrorResponse } from '~/core/error.reponse'
+import { ErrorResponse } from '~/core/error.response'
 import { logger } from '~/utils/logger.util'
 
 export const errorHandler: ErrorRequestHandler = (err: any, req: Request, res: Response, next: NextFunction) => {

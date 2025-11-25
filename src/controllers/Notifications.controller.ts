@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import NotificationService from '~/services/Notification.service'
-import { OkResponse } from '~/core/success.reponse'
+import { OkResponse } from '~/core/success.response'
 import { DelNotiDto, GetMultiByTypeNotiDto, ReadNotiDto } from '~/shared/dtos/req/notification.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 

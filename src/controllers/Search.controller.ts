@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import SearchService from '~/services/Search.service'
-import { OkResponse } from '~/core/success.reponse'
+import { OkResponse } from '~/core/success.response'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class SearchController {

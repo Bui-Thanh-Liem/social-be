@@ -7,8 +7,8 @@ import path from 'path'
 import { compressionQueue } from '~/bull/queues'
 import cloudinary from '~/configs/cloudinary.config'
 import { envs } from '~/configs/env.config'
-import { BadRequestError } from '~/core/error.reponse'
 import VideosService from '~/services/Videos.service'
+import { BadRequestError } from '~/core/error.response'
 import {
   CONSTANT_JOB,
   MAX_LENGTH_IMAGE_UPLOAD,

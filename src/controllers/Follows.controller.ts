@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import FollowsService from '~/services/Follows.service'
-import { OkResponse } from '~/core/success.reponse'
+import { OkResponse } from '~/core/success.response'
 import { ToggleFollowDto } from '~/shared/dtos/req/user.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 

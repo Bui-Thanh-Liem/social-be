@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { envs } from '~/configs/env.config'
-import { UnauthorizedError } from '~/core/error.reponse'
+import { UnauthorizedError } from '~/core/error.response'
 import RefreshTokenService from '~/services/Tokens.service'
 import { verifyToken } from '~/utils/jwt.util'
 

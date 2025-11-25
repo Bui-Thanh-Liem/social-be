@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { UnauthorizedError } from '~/core/error.reponse'
+import { UnauthorizedError } from '~/core/error.response'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 
 // Verify user coi đã xác thực email chưa
