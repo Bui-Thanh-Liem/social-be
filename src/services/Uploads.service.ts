@@ -7,7 +7,7 @@ import { UPLOAD_IMAGE_FOLDER_PATH } from '~/shared/constants'
 import { ResUpload } from '~/shared/dtos/res/upload.dto'
 import { EMediaType } from '~/shared/enums/type.enum'
 import { logger } from '~/utils/logger.util'
-import { uploadImages, uploadVideos } from '~/utils/upload.util'
+import { deleteFromCloudinary, uploadImages, uploadToCloudinary, uploadVideos } from '~/utils/upload.util'
 
 class UploadsService {
   async uploadImages(req: Request): Promise<ResUpload[]> {
@@ -18,6 +18,29 @@ class UploadsService {
   async uploadVideos(req: Request): Promise<ResUpload[]> {
     const urls = await uploadVideos(req)
     return urls.map((url) => ({ type: EMediaType.Video, url }))
+  }
+
+  async uploadToCloudinary(req: Request): Promise<ResUpload[]> {
+    const uploaded = await uploadToCloudinary(req)
+    return uploaded.map((file) => {
+      let type = EMediaType.Image
+      if (file.resource_type === EMediaType.Video) type = EMediaType.Video
+      return { type, url: file.url }
+    })
+  }
+
+  async deleteFromCloudinary(urls: string[]) {
+    //
+    const deleteResults = await deleteFromCloudinary(urls)
+
+    //
+    const failed = deleteResults.filter((r) => !r.deleted)
+    if (failed.length > 0) {
+      console.warn('Không xóa được một số file:', failed)
+    }
+
+    //
+    return true
   }
 
   async removeImages(urls: string[]) {

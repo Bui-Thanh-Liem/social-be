@@ -10,12 +10,21 @@ const uploadsRoute = Router()
 
 uploadsRoute.use(verifyAccessToken, verifyUserEmail)
 
+//
 uploadsRoute.post('/images', asyncHandler(UploadsControllers.uploadImages))
 
+//
 uploadsRoute.post('/videos', asyncHandler(UploadsControllers.uploadVideos))
 
+//
+uploadsRoute.post('/cloudinary', asyncHandler(UploadsControllers.uploadToCloudinary))
+
+//
+uploadsRoute.delete('/cloudinary', asyncHandler(UploadsControllers.deleteFromCloudinary))
+
+//
 uploadsRoute.delete(
-  '/remove/images',
+  '/images',
   requestBodyValidate(remoteImagesDtoSchema),
   asyncHandler(UploadsControllers.removeImages)
 )
