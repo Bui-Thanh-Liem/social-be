@@ -1,13 +1,13 @@
 import { Filter, ObjectId } from 'mongodb'
 import { notificationQueue } from '~/bull/queues'
 import { cleanupQueue } from '~/bull/queues/cleanup.queue'
+import { BadRequestError, NotFoundError } from '~/core/error.response'
 import { clientMongodb } from '~/dbs/init.mongodb'
 import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
 import { CommunityCollection, CommunitySchema } from '~/models/schemas/Community.schema'
 import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
-import { BadRequestError, NotFoundError } from '~/core/error.response'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
@@ -1987,7 +1987,7 @@ class TweetsService {
               const folderName = parts[parts.length - 2] // "RXhw4s21AEzt_-VpjWIin"
               if (folderName) {
                 await VideosService.delete(folderName).catch((err) => {
-                  console.log('Tweet - delete - media - img:::', err)
+                  console.log('Tweet - delete - media - video:::', err)
                 })
               }
             }

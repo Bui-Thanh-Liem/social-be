@@ -1,5 +1,5 @@
 import compression from 'compression'
-import express from 'express'
+import express, { Response } from 'express'
 import helmet from 'helmet'
 import hpp from 'hpp'
 import swaggerUi from 'swagger-ui-express'
@@ -14,12 +14,11 @@ import { errorHandler } from './middlewares/errorhandler.middleware'
 import { loggerMiddleware } from './middlewares/logger.middleware'
 import { globalRateLimit } from './middlewares/ratelimit.middleware'
 import rootRoute from './routes'
-import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/constants'
 import { logger } from './utils/logger.util'
 
 //
+import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/constants'
 import './tasks/cleanup.task'
-
 const isDev = process.env.NODE_ENV === 'development'
 
 const app = express()
@@ -73,28 +72,21 @@ app.use((req, res, next) => {
 })
 app.use(express.urlencoded({ extended: true, limit: '50mb' })) // application/x-www-form-urlencoded
 
-// Static files
-app.use(
-  '/uploads',
-  express.static(UPLOAD_VIDEO_FOLDER_PATH, {
-    setHeaders: (res, path) => {
-      // Thêm CORS headers cho static files
-      res.set('Access-Control-Allow-Origin', envs.CLIENT_DOMAIN)
-      res.set('Cross-Origin-Resource-Policy', 'cross-origin')
-    }
-  })
-)
+// Static media (images + videos)
+const staticOptions = {
+  setHeaders: (res: Response) => {
+    // Thêm CORS headers cho static files
+    // Chỉ cho phép domain của bạn load ảnh (ngăn hotlink thô)
+    res.set('Access-Control-Allow-Origin', envs.CLIENT_DOMAIN) // domain có thể gửi request đến server này và nhận được response.  (fetch)
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin') // cho phép tài nguyên (vd: ảnh, video, file…) được nhúng hoặc load từ bất kỳ origin nào. (<img src="" />)
+  }
+}
 
-app.use(
-  '/uploads',
-  express.static(UPLOAD_IMAGE_FOLDER_PATH, {
-    setHeaders: (res, path) => {
-      // Thêm CORS headers cho static files
-      res.set('Access-Control-Allow-Origin', envs.CLIENT_DOMAIN) // domain có thể gửi request đến server này và nhận được response.  (fetch)
-      res.set('Cross-Origin-Resource-Policy', 'cross-origin') // cho phép tài nguyên (vd: ảnh, video, file…) được nhúng hoặc load từ bất kỳ origin nào. (<img src="" />)
-    }
-  })
-)
+// Static media
+app.use('/uploads', [
+  express.static(UPLOAD_IMAGE_FOLDER_PATH, staticOptions),
+  express.static(UPLOAD_VIDEO_FOLDER_PATH, staticOptions)
+])
 
 // API documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))

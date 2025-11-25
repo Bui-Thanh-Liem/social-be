@@ -3,11 +3,12 @@ import fs from 'fs'
 import path from 'path'
 import { envs } from '~/configs/env.config'
 import { BadRequestError } from '~/core/error.response'
+import { deleteFromCloudinary, uploadToCloudinary } from '~/libs/cloudinary.lib'
 import { UPLOAD_IMAGE_FOLDER_PATH } from '~/shared/constants'
 import { ResUpload } from '~/shared/dtos/res/upload.dto'
 import { EMediaType } from '~/shared/enums/type.enum'
 import { logger } from '~/utils/logger.util'
-import { deleteFromCloudinary, uploadImages, uploadToCloudinary, uploadVideos } from '~/utils/upload.util'
+import { uploadImages, uploadVideos } from '~/utils/upload.util'
 
 class UploadsService {
   async uploadImages(req: Request): Promise<ResUpload[]> {
@@ -20,13 +21,8 @@ class UploadsService {
     return urls.map((url) => ({ type: EMediaType.Video, url }))
   }
 
-  async uploadToCloudinary(req: Request): Promise<ResUpload[]> {
-    const uploaded = await uploadToCloudinary(req)
-    return uploaded.map((file) => {
-      let type = EMediaType.Image
-      if (file.resource_type === EMediaType.Video) type = EMediaType.Video
-      return { type, url: file.url }
-    })
+  async uploadToCloudinary(req: Request): Promise<any[]> {
+    return await uploadToCloudinary(req)
   }
 
   async deleteFromCloudinary(urls: string[]) {
