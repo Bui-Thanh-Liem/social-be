@@ -19,11 +19,6 @@ export interface UploadedCloudinaryFile {
   bytes: number
 }
 
-interface ParsedCloudinaryUrl {
-  public_id: string
-  resource_type: 'image' | 'video' | 'raw'
-}
-
 interface DeleteResult {
   public_id: string
   resource_type: EMediaType
@@ -87,7 +82,7 @@ export const uploadToCloudinary = async (req: Request): Promise<UploadedCloudina
             quality: 'auto',
             fetch_format: 'auto'
           },
-          (error, result) => {
+          (error: any, result: any) => {
             if (error) reject(error)
             else resolve(result!)
           }
@@ -130,6 +125,7 @@ export const uploadToCloudinary = async (req: Request): Promise<UploadedCloudina
  * @param filename Tên file ảnh (ví dụ: https://res.cloudinary.com/dfvk6nhrj/image/upload/v1764041443/profile/dev_hjqs6m.png)
  */
 export const deleteFromCloudinary = async (media: IMedia[]): Promise<DeleteResult[]> => {
+  console.log('Deleting media from Cloudinary:', media)
   if (!media || media.length === 0) {
     return []
   }
@@ -150,9 +146,9 @@ export const deleteFromCloudinary = async (media: IMedia[]): Promise<DeleteResul
 
   // Gom nhóm theo resource_type để xóa riêng
   const groups = {
-    image: media.filter((i) => i.resource_type === 'image'),
-    video: media.filter((i) => i.resource_type === 'video'),
-    raw: media.filter((i) => i.resource_type === 'raw')
+    image: media?.filter((i) => i.resource_type === 'image'),
+    video: media?.filter((i) => i.resource_type === 'video'),
+    raw: media?.filter((i) => i.resource_type === 'raw')
   }
 
   const results: DeleteResult[] = []
@@ -217,7 +213,7 @@ export const deleteFromCloudinary = async (media: IMedia[]): Promise<DeleteResul
 }
 
 // Hàm parse URL thành public_id + resource_type
-const parseCloudinaryUrl = (url: string): ParsedCloudinaryUrl => {
+export const parseCloudinaryUrl = (url: string): IMedia => {
   try {
     const urlObj = new URL(url)
     const pathParts = urlObj.pathname.split('/').filter(Boolean)
@@ -231,8 +227,8 @@ const parseCloudinaryUrl = (url: string): ParsedCloudinaryUrl => {
 
     if (uploadIndex === -1) throw new BadRequestError('Invalid upload path')
 
-    const resource_type = pathParts[resourceTypeIndex] as 'image' | 'video' | 'raw'
-    if (!['image', 'video', 'raw'].includes(resource_type)) {
+    const resource_type = pathParts[resourceTypeIndex] as EMediaType
+    if (!Object.values(EMediaType).includes(resource_type)) {
       throw new BadRequestError('Invalid resource type')
     }
 
@@ -252,7 +248,7 @@ const parseCloudinaryUrl = (url: string): ParsedCloudinaryUrl => {
 
     const public_id = public_id_with_folder
 
-    return { public_id, resource_type }
+    return { public_id, resource_type, url }
   } catch (err) {
     throw new BadRequestError(
       `Không thể parse URL Cloudinary: ${url} - ${err instanceof Error ? err.message : 'Invalid URL'}`

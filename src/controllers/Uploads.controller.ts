@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { OkResponse } from '~/core/success.response'
+import { parseCloudinaryUrl } from '~/libs/cloudinary.lib'
 import UploadsService from '~/services/Uploads.service'
 import { IMedia } from '~/shared/interfaces/common/media.interface'
 
@@ -34,7 +35,11 @@ class UploadsController {
   }
 
   async deleteFromCloudinary(req: Request, res: Response) {
-    const media = req.body as IMedia[]
+    const { urls } = req.body as { urls: string[] }
+
+    const media: IMedia[] = urls.map((url) => {
+      return parseCloudinaryUrl(url)
+    })
 
     const result = await UploadsService.deleteFromCloudinary(media)
     res.status(200).json(new OkResponse('Thành công', result))
