@@ -198,7 +198,20 @@ class TrendingService {
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
-          pipeline: [{ $project: { avatar: 1, name: 1, username: 1, verify: 1 } }]
+          pipeline: [
+            {
+              $project: {
+                avatar: 1,
+                name: 1,
+                username: 1,
+                verify: 1,
+                cover_photo: 1,
+                day_of_birth: 1,
+                location: 1,
+                website: 1
+              }
+            }
+          ]
         }
       },
       { $unwind: { path: '$user_id', preserveNullAndEmptyArrays: true } },
