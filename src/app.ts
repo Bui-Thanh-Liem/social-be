@@ -14,7 +14,7 @@ import { errorHandler } from './middlewares/errorhandler.middleware'
 import { loggerMiddleware } from './middlewares/logger.middleware'
 import { globalRateLimit } from './middlewares/ratelimit.middleware'
 import rootRoute from './routes'
-import { logger } from './utils/logger.util';
+import { logger } from './utils/logger.util'
 
 //
 import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/constants'
