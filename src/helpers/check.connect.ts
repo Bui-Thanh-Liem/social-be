@@ -1,5 +1,5 @@
 import * as os from 'os'
-import { clientMongodb, Database } from '~/dbs/init.mongodb'
+import { Database } from '~/dbs/init.mongodb'
 
 const _SECONDS = 15000
 export function checkOverload() {
@@ -13,8 +13,9 @@ export function checkOverload() {
     console.log('numConnections:::', numConnections)
 
     // Cho một core tối đa 3 connect
-    const maxConnections = numCores * 3
+    const maxConnections = numCores * 5
     if (numConnections > maxConnections - 3) {
+      console.log('Tối đa kết nối :::', maxConnections)
       console.error('Quá tải kết nối tới database.')
     }
   }, _SECONDS)
