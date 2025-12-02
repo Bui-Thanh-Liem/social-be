@@ -1,5 +1,4 @@
 import { Db, MongoClient, ServerApiVersion } from 'mongodb'
-import { mongodbConnection } from '~/configs/database.config'
 import { envs } from '~/configs/env.config'
 import { initBookmarkCollection } from '~/models/schemas/Bookmark.schema'
 import {
@@ -34,9 +33,7 @@ import { logger } from '~/utils/logger.util'
 
 const _MINPOOLSIZE = 5
 const _MAXPOOLSIZE = 50 // không bao giờ vượt, nếu hơn thì phải chờ
-const _SECOND_DLE = 30000
-
-console.log('mongodbConnection:::', mongodbConnection)
+const _SECOND_DLE = 30000 // 30s
 
 class Database {
   static instance: Database | null = null
@@ -49,7 +46,7 @@ class Database {
   private constructor() {
     // Chỉ khởi tạo client khi chưa có
     if (!Database.client) {
-      Database.client = new MongoClient(mongodbConnection, {
+      Database.client = new MongoClient(envs.DB_CONNECT_STRING, {
         serverApi: {
           strict: false,
           deprecationErrors: true,

@@ -20,5 +20,5 @@ export class ReportTweetSchema extends BaseSchema implements IReportTweet {
 export let ReportTweetCollection: Collection<ReportTweetSchema>
 
 export function initReportTweetCollection(db: Db) {
-  ReportTweetCollection = db.collection<ReportTweetSchema>('reports')
+  ReportTweetCollection = db.collection<ReportTweetSchema>('tweet-reports')
 }

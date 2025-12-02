@@ -40,7 +40,7 @@ cfg.members[0].host = "social.liemdev.info.vn:27017"
 rs.reconfig(cfg, { force: true })
 
 // Kết nối vào DB
-use twitter;
+use social;
 
 // Lấy danh sách tất cả collection
 let collections = db.getCollectionNames();
@@ -54,5 +54,5 @@ print(`Đã xóa xong: ${collName}`);
 
 print("Đã xóa toàn bộ dữ liệu trong tất cả collection!");
 
-git tag v3  #
+git tag v3 #
 git push origin v3 => CI/CD

@@ -26,5 +26,5 @@ export class SearchHistorySchema extends BaseSchema implements ISearchHistory {
 export let SearchHistoryCollection: Collection<SearchHistorySchema>
 
 export function initSearchHistoryCollection(db: Db) {
-  SearchHistoryCollection = db.collection<SearchHistorySchema>('search-history')
+  SearchHistoryCollection = db.collection<SearchHistorySchema>('search-histories')
 }

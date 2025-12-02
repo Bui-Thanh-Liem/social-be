@@ -2,10 +2,13 @@ import { Request } from 'express'
 import formidable from 'formidable'
 import { createReadStream, unlink } from 'fs'
 import cloudinary from '~/configs/cloudinary.config'
+import { envs } from '~/configs/env.config'
 import { BadRequestError } from '~/core/error.response'
 import { MAX_LENGTH_UPLOAD, MAX_SIZE_UPLOAD } from '~/shared/constants'
+import { EMediaType } from '~/shared/enums/type.enum'
+import { IMedia } from '~/shared/interfaces/common/media.interface'
 
-interface UploadedFile {
+export interface UploadedCloudinaryFile {
   url: string
   public_id: string
   format: string
@@ -22,14 +25,13 @@ interface ParsedCloudinaryUrl {
 }
 
 interface DeleteResult {
-  url: string
   public_id: string
-  resource_type: 'image' | 'video' | 'raw'
+  resource_type: EMediaType
   deleted: boolean
   error?: string
 }
 
-export const uploadToCloudinary = async (req: Request): Promise<UploadedFile[]> => {
+export const uploadToCloudinary = async (req: Request): Promise<UploadedCloudinaryFile[]> => {
   // Thiết lập formidable
   const form = formidable({
     multiples: true,
@@ -71,7 +73,7 @@ export const uploadToCloudinary = async (req: Request): Promise<UploadedFile[]> 
       throw new BadRequestError('Không có file nào được upload!')
     }
 
-    const uploadSingleFile = async (file: formidable.File): Promise<UploadedFile> => {
+    const uploadSingleFile = async (file: formidable.File): Promise<UploadedCloudinaryFile> => {
       // file.filepath luôn tồn tại và là đường dẫn file tạm trên disk
       if (!file.filepath || typeof file.filepath !== 'string') {
         throw new BadRequestError('File không có đường dẫn tạm')
@@ -80,7 +82,7 @@ export const uploadToCloudinary = async (req: Request): Promise<UploadedFile[]> 
       const result = await new Promise<any>((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
-            folder: 'twitter',
+            folder: envs.CLOUDINARY_FOLDER_NAME,
             resource_type: 'auto',
             quality: 'auto',
             fetch_format: 'auto'
@@ -127,38 +129,37 @@ export const uploadToCloudinary = async (req: Request): Promise<UploadedFile[]> 
  * Xoá 1 ảnh đã upload
  * @param filename Tên file ảnh (ví dụ: https://res.cloudinary.com/dfvk6nhrj/image/upload/v1764041443/profile/dev_hjqs6m.png)
  */
-export const deleteFromCloudinary = async (urls: string[]): Promise<DeleteResult[]> => {
-  if (!urls || urls.length === 0) {
+export const deleteFromCloudinary = async (media: IMedia[]): Promise<DeleteResult[]> => {
+  if (!media || media.length === 0) {
     return []
   }
 
-  const parsedItems: { url: string; data: ParsedCloudinaryUrl }[] = []
-
   // Parse tất cả URL trước
-  for (const url of urls) {
-    try {
-      const data = parseCloudinaryUrl(url.trim())
-      parsedItems.push({ url, data })
-    } catch (err) {
-      parsedItems.push({
-        url,
-        data: { public_id: '', resource_type: 'image' }
-      })
-    }
-  }
+  // const parsedItems: { url: string; data: ParsedCloudinaryUrl }[] = []
+  // for (const url of urls) {
+  //   try {
+  //     const data = parseCloudinaryUrl(url.trim())
+  //     parsedItems.push({ url, data })
+  //   } catch (err) {
+  //     parsedItems.push({
+  //       url,
+  //       data: { public_id: '', resource_type: 'image' }
+  //     })
+  //   }
+  // }
 
   // Gom nhóm theo resource_type để xóa riêng
   const groups = {
-    image: parsedItems.filter((i) => i.data.resource_type === 'image'),
-    video: parsedItems.filter((i) => i.data.resource_type === 'video'),
-    raw: parsedItems.filter((i) => i.data.resource_type === 'raw')
+    image: media.filter((i) => i.resource_type === 'image'),
+    video: media.filter((i) => i.resource_type === 'video'),
+    raw: media.filter((i) => i.resource_type === 'raw')
   }
 
   const results: DeleteResult[] = []
 
   // Hàm xóa 1 nhóm
-  const deleteGroup = async (items: typeof parsedItems, type: 'image' | 'video' | 'raw') => {
-    const publicIds = items.map((i) => i.data.public_id).filter(Boolean)
+  const deleteGroup = async (items: typeof media, type: EMediaType) => {
+    const publicIds = items.map((i) => i.public_id).filter(Boolean)
     if (publicIds.length === 0) return
 
     const chunks = []
@@ -174,18 +175,16 @@ export const deleteFromCloudinary = async (urls: string[]): Promise<DeleteResult
         })
 
         chunk.forEach((public_id) => {
-          const item = items.find((i) => i.data.public_id === public_id)!
+          const item = items.find((i) => i.public_id === public_id)!
           const status = result.deleted[public_id]
           if (status === 'deleted' || status === 'not_found') {
             results.push({
-              url: item.url,
               public_id,
               resource_type: type,
               deleted: true
             })
           } else {
             results.push({
-              url: item.url,
               public_id,
               resource_type: type,
               deleted: false,
@@ -195,9 +194,8 @@ export const deleteFromCloudinary = async (urls: string[]): Promise<DeleteResult
         })
       } catch (error: any) {
         chunk.forEach((public_id) => {
-          const item = items.find((i) => i.data.public_id === public_id)!
+          const item = items.find((i) => i.public_id === public_id)!
           results.push({
-            url: item.url,
             public_id,
             resource_type: type,
             deleted: false,
@@ -210,9 +208,9 @@ export const deleteFromCloudinary = async (urls: string[]): Promise<DeleteResult
 
   // Xóa từng nhóm song song
   await Promise.all([
-    deleteGroup(groups.image, 'image'),
-    deleteGroup(groups.video, 'video'),
-    deleteGroup(groups.raw, 'raw')
+    deleteGroup(groups.image, EMediaType.Image),
+    deleteGroup(groups.video, EMediaType.Video),
+    deleteGroup(groups.raw, EMediaType.Raw)
   ])
 
   return results

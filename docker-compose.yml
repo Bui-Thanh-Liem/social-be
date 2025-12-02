@@ -4,7 +4,7 @@ services:
   # =====================================================
   # 1. BACKEND
   # =====================================================
-  twitter-be:
+  social-be:
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -15,15 +15,15 @@ services:
     ports:
       - '9000:9000'
     depends_on:
-      - twitter-redis
-      - twitter-elasticsearch
+      - social-redis
+      - social-elasticsearch
     volumes:
       - ./uploads:/app/uploads:rw
       - ./logs:/app/logs:rw
     networks:
-      - twitter-network
+      - social-network
 
-  twitter-worker:
+  social-worker:
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -32,36 +32,36 @@ services:
     env_file:
       - .env
     depends_on:
-      - twitter-redis
-      - twitter-elasticsearch
+      - social-redis
+      - social-elasticsearch
     volumes:
       - ./uploads:/app/uploads:rw
       - ./app.log:/app/app.log
     networks:
-      - twitter-network
+      - social-network
 
   # =====================================================
   # 2. REDIS
   # =====================================================
-  twitter-redis:
+  social-redis:
     image: redis:7-alpine
-    container_name: twitter-redis
+    container_name: social-redis
     restart: always
     command: redis-server --save 60 1 --loglevel warning
     volumes:
       - redis-data:/data
     networks:
-      - twitter-network
+      - social-network
 
   # =====================================================
   # 3. ELASTICSEARCH
   # =====================================================
-  twitter-elasticsearch:
+  social-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: twitter-elasticsearch
+    container_name: social-elasticsearch
     restart: always
     environment:
-      - node.name=twitter_es
+      - node.name=social_es
       - discovery.type=single-node
       - xpack.security.enabled=false
       - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
@@ -79,7 +79,7 @@ services:
     volumes:
       - ./elasticsearch-data:/usr/share/elasticsearch/data
     networks:
-      - twitter-network
+      - social-network
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:9200/_cluster/health || exit 1']
       interval: 30s
@@ -89,19 +89,19 @@ services:
   # =====================================================
   # 4. KIBANA (UI for Elasticsearch)
   # =====================================================
-  twitter-kibana:
+  social-kibana:
     image: docker.elastic.co/kibana/kibana:8.11.0
-    container_name: twitter-kibana
+    container_name: social-kibana
     restart: always
     environment:
-      - ELASTICSEARCH_HOSTS=http://twitter-elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=http://social-elasticsearch:9200
       - xpack.security.enabled=false
     ports:
       - '5601:5601'
     depends_on:
-      - twitter-elasticsearch
+      - social-elasticsearch
     networks:
-      - twitter-network
+      - social-network
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:5601/api/status || exit 1']
       interval: 30s
@@ -117,5 +117,5 @@ volumes:
   elasticsearch-data:
 
 networks:
-  twitter-network:
+  social-network:
     driver: bridge

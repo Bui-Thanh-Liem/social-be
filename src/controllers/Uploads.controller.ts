@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
-import UploadsService from '~/services/Uploads.service'
 import { OkResponse } from '~/core/success.response'
-import { RemoteImagesDto } from '~/shared/dtos/req/upload.dto'
+import UploadsService from '~/services/Uploads.service'
+import { IMedia } from '~/shared/interfaces/common/media.interface'
 
 class UploadsController {
   async uploadImages(req: Request, res: Response) {
@@ -19,17 +19,24 @@ class UploadsController {
     res.status(200).json(new OkResponse('Thành công', result))
   }
 
+  async signedUrls(req: Request, res: Response) {
+    const result = await UploadsService.signedUrls(req.body)
+    res.status(200).json(new OkResponse('Thành công', result))
+  }
+
   async removeImages(req: Request, res: Response) {
-    const { urls } = req.body as RemoteImagesDto
+    const media = req.body as IMedia[]
+
+    const urls = media.map((m) => m.url).filter((url) => !!url)
 
     const result = await UploadsService.removeImages(urls)
     res.status(200).json(new OkResponse('Thành công', result))
   }
 
   async deleteFromCloudinary(req: Request, res: Response) {
-    const { urls } = req.body as RemoteImagesDto
+    const media = req.body as IMedia[]
 
-    const result = await UploadsService.deleteFromCloudinary(urls)
+    const result = await UploadsService.deleteFromCloudinary(media)
     res.status(200).json(new OkResponse('Thành công', result))
   }
 }

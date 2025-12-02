@@ -422,9 +422,9 @@ async function createRandomTweets(user_ids: ObjectId[]) {
           hashtags: ht1,
           mentions: getRandomMentions(user_ids),
           media: [
-            { url: faker.image.avatar(), type: EMediaType.Image },
-            { url: faker.image.avatar(), type: EMediaType.Image },
-            { url: faker.image.avatar(), type: EMediaType.Image }
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
           ]
         }),
         TweetsService.create(id.toString(), {
@@ -434,9 +434,9 @@ async function createRandomTweets(user_ids: ObjectId[]) {
           hashtags: ht2,
           mentions: getRandomMentions(user_ids),
           media: [
-            { url: faker.image.avatar(), type: EMediaType.Image },
-            { url: faker.image.avatar(), type: EMediaType.Image },
-            { url: faker.image.avatar(), type: EMediaType.Image }
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
           ]
         }),
         TweetsService.create(id.toString(), {
@@ -446,9 +446,9 @@ async function createRandomTweets(user_ids: ObjectId[]) {
           hashtags: ht3,
           mentions: getRandomMentions(user_ids),
           media: [
-            { url: faker.image.avatar(), type: EMediaType.Image },
-            { url: faker.image.avatar(), type: EMediaType.Image },
-            { url: faker.image.avatar(), type: EMediaType.Image }
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
           ]
         }),
         TweetsService.create(id.toString(), {
@@ -458,9 +458,9 @@ async function createRandomTweets(user_ids: ObjectId[]) {
           hashtags: ht4,
           mentions: getRandomMentions(user_ids),
           media: [
-            { url: faker.image.avatar(), type: EMediaType.Image },
-            { url: faker.image.avatar(), type: EMediaType.Image },
-            { url: faker.image.avatar(), type: EMediaType.Image }
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
           ]
         }),
         TweetsService.create(id.toString(), {
@@ -470,9 +470,9 @@ async function createRandomTweets(user_ids: ObjectId[]) {
           hashtags: ht5,
           mentions: getRandomMentions(user_ids),
           media: [
-            { url: faker.image.avatar(), type: EMediaType.Image },
-            { url: faker.image.avatar(), type: EMediaType.Image },
-            { url: faker.image.avatar(), type: EMediaType.Image }
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
+            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
           ]
         })
       ])

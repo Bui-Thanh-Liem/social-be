@@ -145,11 +145,11 @@ class MessagesService {
             if (msg.attachments?.length) {
               for (const file of msg.attachments) {
                 try {
-                  if (file.type === EMediaType.Image) {
-                    const filename = file.url.split('/').pop()
+                  if (file.resource_type === EMediaType.Image) {
+                    const filename = file.url!.split('/').pop()
                     if (filename) await deleteImage(filename)
-                  } else if (file.type === EMediaType.Video) {
-                    const parts = file.url.split('/')
+                  } else if (file.resource_type === EMediaType.Video) {
+                    const parts = file.url!.split('/')
                     const folderName = parts[parts.length - 2]
                     if (folderName) await VideosService.delete(folderName)
                   }
@@ -181,11 +181,11 @@ class MessagesService {
 
       for (const file of msg.attachments) {
         try {
-          if (file.type === EMediaType.Image) {
-            const filename = file.url.split('/').pop()
+          if (file.resource_type === EMediaType.Image) {
+            const filename = file.url!.split('/').pop()
             if (filename) await deleteImage(filename)
-          } else if (file.type === EMediaType.Video) {
-            const parts = file.url.split('/')
+          } else if (file.resource_type === EMediaType.Video) {
+            const parts = file.url!.split('/')
             const folderName = parts[parts.length - 2]
             if (folderName) await VideosService.delete(folderName)
           }

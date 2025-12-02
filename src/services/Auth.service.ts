@@ -15,6 +15,7 @@ import {
   ResetPasswordDto,
   UpdateMeDto
 } from '~/shared/dtos/req/auth.dto'
+import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { ENotificationType, ETokenType } from '~/shared/enums/type.enum'
 import { ISendVerifyEmail } from '~/shared/interfaces/common/mail.interface'
 import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oauth-google.interface'
@@ -44,31 +45,35 @@ class AuthService {
     }
 
     // Tạo token để verify email
-    const email_verify_token = await signToken({
-      payload: { user_id: '', type: ETokenType.VerifyToken },
-      privateKey: envs.JWT_SECRET_TEMP,
-      options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
-    })
+    let email_verify_token = ''
+    if (!payload.verify) {
+      email_verify_token = await signToken({
+        payload: { user_id: '', type: ETokenType.VerifyToken },
+        privateKey: envs.JWT_SECRET_TEMP,
+        options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
+      })
+    }
 
     // Mã hoá mật khẩu và chuyển đổi định dạng username user_name
     const password_hashed = hashPassword(payload.password)
     const snake_case_name = `@${_.snakeCase(payload.name)}`.slice(0, 20)
 
     // Lưu user vào database
-    const result = await UserCollection.insertOne(
+    const newUser = await UserCollection.insertOne(
       new UserSchema({
         ...payload,
         email_verify_token,
         username: snake_case_name,
         password: password_hashed,
-        day_of_birth: new Date(payload.day_of_birth)
+        day_of_birth: new Date(payload.day_of_birth),
+        verify: payload.verify || EUserVerifyStatus.Unverified
       })
     )
 
     // Tạo token/refresh
     const [access_token, refresh_token] = await createTokenPair({
       payload: {
-        user_id: result.insertedId.toString()
+        user_id: newUser.insertedId.toString()
       }
     })
 
@@ -79,22 +84,25 @@ class AuthService {
 
     // Khi đăng kí thành công thì cho người dùng đăng nhập vào ứng dụng ngay.
     const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-    await TokensService.create({ refresh_token, user_id: result.insertedId.toString(), iat, exp })
-
-    // Đưa qua worker gửi mail
-    await emailQueue.add(CONSTANT_JOB.VERIFY_MAIL, {
-      to_email: payload.email,
-      name: payload.name,
-      url: `${envs.CLIENT_DOMAIN}/verify?token=${email_verify_token}`
-    } as ISendVerifyEmail)
+    await TokensService.create({ refresh_token, user_id: newUser.insertedId.toString(), iat, exp })
 
     // Gửi thông báo xác thực email
-    await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
-      content: 'Kiểm tra mail để xác thực tài khoản, nếu bạn đã xác thực vui lòng bỏ qua thông báo này.',
-      receiver: result.insertedId.toString(),
-      sender: result.insertedId.toString(),
-      type: ENotificationType.Other
-    })
+    if (payload.verify !== EUserVerifyStatus.Verified) {
+      // Gửi email xác thực
+      await emailQueue.add(CONSTANT_JOB.VERIFY_MAIL, {
+        to_email: payload.email,
+        name: payload.name,
+        url: `${envs.CLIENT_DOMAIN}/verify?token=${email_verify_token}`
+      } as ISendVerifyEmail)
+
+      // Tạo thông báo trong hệ thống
+      await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+        content: 'Kiểm tra mail để xác thực tài khoản, nếu bạn đã xác thực vui lòng bỏ qua thông báo này.',
+        receiver: newUser.insertedId.toString(),
+        sender: newUser.insertedId.toString(),
+        type: ENotificationType.Other
+      })
+    }
 
     //
     return {
@@ -162,12 +170,13 @@ class AuthService {
     //
     const newPass = generatePassword()
     const register = await this.signup({
-      email: user_info.email,
+      password: newPass,
       name: user_info.name,
+      email: user_info.email,
       day_of_birth: new Date(),
       confirm_password: newPass,
-      password: newPass,
-      avatar: user_info.picture
+      avatar: user_info.picture,
+      verify: EUserVerifyStatus.Verified
     })
 
     return {
@@ -207,12 +216,13 @@ class AuthService {
     //
     const newPass = generatePassword()
     const register = await this.signup({
-      email: user_info.email,
+      password: newPass,
       name: user_info.name,
+      email: user_info.email,
       day_of_birth: new Date(),
       confirm_password: newPass,
-      password: newPass,
-      avatar: user_info.picture
+      avatar: user_info.picture,
+      verify: EUserVerifyStatus.Verified
     })
 
     return {
@@ -231,7 +241,7 @@ class AuthService {
       grant_type: 'authorization_code'
     }
 
-    const { data } = await axios.post('https://oauth2.googleapis.com/token', body, {
+    const { data } = await axios.post(envs.GOOGLE_URL_GET_CODE, body, {
       headers: {
         'Content-type': 'application/x-www-form-urlencoded'
       }
@@ -242,7 +252,7 @@ class AuthService {
 
   // Từ access_token lấy thông tin user google
   private async getOauthGoogleInfoUser(access_token: string, id_token: string): Promise<IGoogleUserProfile> {
-    const { data } = await axios.get('https://www.googleapis.com/oauth2/v1/userinfo', {
+    const { data } = await axios.get(envs.GOOGLE_URL_GET_INFO, {
       params: {
         access_token,
         alt: 'json'
@@ -269,7 +279,7 @@ class AuthService {
     try {
       const response = await axios({
         method: 'post',
-        url: 'https://graph.facebook.com/v21.0/oauth/access_token',
+        url: envs.FACEBOOK_URL_GET_CODE,
         data: {
           // Sử dụng data cho POST
           client_id: fb_client_id,
@@ -298,7 +308,7 @@ class AuthService {
 
   // Từ access_token lấy thông tin user facebook
   private async getOauthFacebookInfoUser(token: string) {
-    const res = await axios.get('https://graph.facebook.com/me', {
+    const res = await axios.get(envs.FACEBOOK_URL_GET_INFO, {
       params: {
         access_token: token,
         fields: 'id,name,email'

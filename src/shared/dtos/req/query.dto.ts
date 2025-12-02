@@ -26,7 +26,7 @@ export const QueryDtoSchema = z.object({
     .string()
     .trim()
     .optional()
-    .refine((val) => !val || val === 'on', { message: 'People follow invalid (on)' }),
+    .refine((val) => !val || val === 'on', { message: 'Người theo dõi không hợp lệ (on)' }),
   user_id: z
     .string()
     .trim()

@@ -12,14 +12,7 @@ import { CONSTANT_JOB } from '~/shared/constants'
 import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { ETweetStatus } from '~/shared/enums/status.enum'
-import {
-  EFeedType,
-  EFeedTypeItem,
-  EMediaType,
-  EMembershipType,
-  ENotificationType,
-  ETweetType
-} from '~/shared/enums/type.enum'
+import { EFeedType, EFeedTypeItem, EMembershipType, ENotificationType, ETweetType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
@@ -28,14 +21,13 @@ import CommentGateway from '~/socket/gateways/Comment.gateway'
 import CommunityGateway from '~/socket/gateways/Community.gateway'
 import { chunkArray } from '~/utils/chunk-array'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
-import { deleteImage } from '~/utils/upload.util'
 import BookmarksService from './Bookmarks.service'
 import CommunityService from './Communities.service'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
 import LikesService from './Likes.service'
 import TrendingService from './Trending.service'
-import VideosService from './Videos.service'
+import UploadsService from './Uploads.service'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
@@ -1966,32 +1958,33 @@ class TweetsService {
         }
 
         if (tweet.media) {
-          for (let i = 0; i < tweet?.media?.length; i++) {
-            const media = tweet.media[i]
+          await UploadsService.deleteFromCloudinary(tweet.media || [])
+          // for (let i = 0; i < tweet?.media?.length; i++) {
+          //   const media = tweet.media[i]
 
-            // Xóa ảnh
-            if (media?.type === EMediaType.Image) {
-              // Lấy filename từ url: http://domain/images/abc.png => abc.png
-              const filename = media?.url.split('/').pop()
-              if (filename) {
-                await deleteImage(filename).catch((err) => {
-                  console.log('Tweet - delete - media - img:::', err)
-                })
-              }
-            }
+          // Xóa ảnh
+          // if (media?.resource_type === EMediaType.Image) {
+          //   // Lấy filename từ url: http://domain/images/abc.png => abc.png
+          //   const filename = media?.url.split('/').pop()
+          //   if (filename) {
+          //     await deleteImage(filename).catch((err) => {
+          //       console.log('Tweet - delete - media - img:::', err)
+          //     })
+          //   }
+          // }
 
-            // Xóa video
-            if (media?.type === EMediaType.Video) {
-              // Lấy folderName: http://localhost:9000/videos-hls/RXhw4s21AEzt_-VpjWIin/master.m3u8
-              const parts = media?.url.split('/')
-              const folderName = parts[parts.length - 2] // "RXhw4s21AEzt_-VpjWIin"
-              if (folderName) {
-                await VideosService.delete(folderName).catch((err) => {
-                  console.log('Tweet - delete - media - video:::', err)
-                })
-              }
-            }
-          }
+          // Xóa video
+          // if (media?.resource_type === EMediaType.Video) {
+          //   // Lấy folderName: http://localhost:9000/videos-hls/RXhw4s21AEzt_-VpjWIin/master.m3u8
+          //   const parts = media?.url.split('/')
+          //   const folderName = parts[parts.length - 2] // "RXhw4s21AEzt_-VpjWIin"
+          //   if (folderName) {
+          //     await VideosService.delete(folderName).catch((err) => {
+          //       console.log('Tweet - delete - media - video:::', err)
+          //     })
+          //   }
+          // }
+          // }
         }
 
         // Xóa các record của bookmark/like/comment

@@ -6,8 +6,9 @@ export enum ETweetType {
 }
 
 export enum EMediaType {
-  Image,
-  Video
+  Image = 'image',
+  Video = 'video',
+  Raw = 'raw' // file khác
 }
 
 export enum ETokenType {

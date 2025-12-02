@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
+import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 
 export const RegisterUserDtoSchema = z
   .object({
@@ -18,7 +19,8 @@ export const RegisterUserDtoSchema = z
       }
       return arg
     }, z.date()),
-    avatar: z.string().trim().optional()
+    avatar: z.string().trim().optional(),
+    verify: z.nativeEnum(EUserVerifyStatus).optional()
   })
   .refine((data) => data.password === data.confirm_password, {
     path: ['confirm_password'],
