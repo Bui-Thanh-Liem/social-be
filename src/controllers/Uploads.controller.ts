@@ -37,9 +37,11 @@ class UploadsController {
   async deleteFromCloudinary(req: Request, res: Response) {
     const { urls } = req.body as { urls: string[] }
 
-    const media: IMedia[] = urls.map((url) => {
-      return parseCloudinaryUrl(url)
-    })
+    const media: IMedia[] = urls
+      .map((url) => {
+        return parseCloudinaryUrl(url)
+      })
+      .filter((m): m is IMedia => m !== null)
 
     const result = await UploadsService.deleteFromCloudinary(media)
     res.status(200).json(new OkResponse('Thành công', result))

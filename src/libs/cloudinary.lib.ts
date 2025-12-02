@@ -213,7 +213,9 @@ export const deleteFromCloudinary = async (media: IMedia[]): Promise<DeleteResul
 }
 
 // Hàm parse URL thành public_id + resource_type
-export const parseCloudinaryUrl = (url: string): IMedia => {
+export const parseCloudinaryUrl = (url: string): IMedia | null => {
+  if (!url || typeof url !== 'string') return null
+
   try {
     const urlObj = new URL(url)
     const pathParts = urlObj.pathname.split('/').filter(Boolean)
@@ -225,11 +227,11 @@ export const parseCloudinaryUrl = (url: string): IMedia => {
     const resourceTypeIndex = cloudNameIndex + 1
     const uploadIndex = pathParts.indexOf('upload', resourceTypeIndex)
 
-    if (uploadIndex === -1) throw new BadRequestError('Invalid upload path')
+    if (uploadIndex === -1) throw new BadRequestError('URL không hợp lệ')
 
     const resource_type = pathParts[resourceTypeIndex] as EMediaType
     if (!Object.values(EMediaType).includes(resource_type)) {
-      throw new BadRequestError('Invalid resource type')
+      throw new BadRequestError('URL không hợp lệ')
     }
 
     // Lấy từ sau "upload" đến hết
