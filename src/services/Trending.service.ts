@@ -203,6 +203,7 @@ class TrendingService {
               $project: {
                 avatar: 1,
                 name: 1,
+                bio: 1,
                 username: 1,
                 verify: 1,
                 cover_photo: 1,
@@ -375,6 +376,7 @@ class TrendingService {
             {
               $project: {
                 avatar: 1,
+                bio: 1,
                 name: 1,
                 username: 1,
                 verify: 1,
@@ -647,6 +649,7 @@ class TrendingService {
             {
               $project: {
                 avatar: 1,
+                bio: 1,
                 name: 1,
                 username: 1,
                 verify: 1,
@@ -721,6 +724,7 @@ class TrendingService {
             {
               $project: {
                 avatar: 1,
+                bio: 1,
                 name: 1,
                 username: 1,
                 verify: 1,
