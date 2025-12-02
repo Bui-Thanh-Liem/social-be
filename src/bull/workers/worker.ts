@@ -9,6 +9,12 @@ async function bootstrapWorker() {
     await instanceMongodb.connect()
     logger.info('✅ Worker: Database connected!')
 
+    instanceMongodb.initialCollections()
+    logger.info('Cerated collections!')
+
+    instanceMongodb.initialIndex()
+    logger.info('Cerated index!')
+
     // 3. Khởi tạo indexes (optional - có thể bỏ qua vì API server đã tạo rồi)
     // await database.initialIndex()
 
