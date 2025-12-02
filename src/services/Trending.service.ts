@@ -371,7 +371,20 @@ class TrendingService {
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
-          pipeline: [{ $project: { avatar: 1, name: 1, username: 1, verify: 1 } }]
+          pipeline: [
+            {
+              $project: {
+                avatar: 1,
+                name: 1,
+                username: 1,
+                verify: 1,
+                cover_photo: 1,
+                day_of_birth: 1,
+                location: 1,
+                website: 1
+              }
+            }
+          ]
         }
       },
       { $unwind: { path: '$user_id', preserveNullAndEmptyArrays: true } },
@@ -628,13 +641,14 @@ class TrendingService {
           pipeline: [
             {
               $project: {
-                bio: 1,
-                name: 1,
-                email: 1,
-                username: 1,
                 avatar: 1,
+                name: 1,
+                username: 1,
                 verify: 1,
-                cover_photo: 1
+                cover_photo: 1,
+                day_of_birth: 1,
+                location: 1,
+                website: 1
               }
             }
           ]
@@ -701,11 +715,14 @@ class TrendingService {
           pipeline: [
             {
               $project: {
+                avatar: 1,
                 name: 1,
                 username: 1,
-                avatar: 1,
                 verify: 1,
-                bio: 1
+                cover_photo: 1,
+                day_of_birth: 1,
+                location: 1,
+                website: 1
               }
             }
           ]
