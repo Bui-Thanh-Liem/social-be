@@ -218,12 +218,14 @@ class TweetsService {
           pipeline: [
             {
               $project: {
-                name: 1,
-                email: 1,
-                username: 1,
                 avatar: 1,
+                name: 1,
+                username: 1,
+                verify: 1,
                 cover_photo: 1,
-                verify: 1
+                day_of_birth: 1,
+                location: 1,
+                website: 1
               }
             }
           ]
@@ -434,10 +436,14 @@ class TweetsService {
           pipeline: [
             {
               $project: {
+                avatar: 1,
                 name: 1,
                 username: 1,
-                avatar: 1,
-                verify: 1
+                verify: 1,
+                cover_photo: 1,
+                day_of_birth: 1,
+                location: 1,
+                website: 1
               }
             }
           ]
@@ -704,13 +710,14 @@ class TweetsService {
             pipeline: [
               {
                 $project: {
-                  bio: 1,
-                  name: 1,
-                  email: 1,
-                  username: 1,
                   avatar: 1,
+                  name: 1,
+                  username: 1,
                   verify: 1,
-                  cover_photo: 1
+                  cover_photo: 1,
+                  day_of_birth: 1,
+                  location: 1,
+                  website: 1
                 }
               }
             ]

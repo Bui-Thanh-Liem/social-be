@@ -521,6 +521,11 @@ class TrendingService {
               avatar: (tw.user_id as unknown as IUser).avatar,
               verify: (tw.user_id as unknown as IUser).verify,
               username: (tw.user_id as unknown as IUser).username,
+              cover_photo: (tw.user_id as unknown as IUser).cover_photo,
+              day_of_birth: (tw.user_id as unknown as IUser).day_of_birth,
+              location: (tw.user_id as unknown as IUser).location,
+              website: (tw.user_id as unknown as IUser).website,
+              bio: (tw.user_id as unknown as IUser).bio,
               isFollow: (tw.user_id as unknown as IUser).isFollow
             }
           ])
