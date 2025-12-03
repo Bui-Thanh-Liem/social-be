@@ -18,7 +18,7 @@ export const ChangePasswordDtoSchema = z
     confirm_new_password: z.string().trim()
   })
   .refine((data) => data.new_password === data.confirm_new_password, {
-    path: ['confirm_password'],
+    path: ['confirm_new_password'],
     message: 'Mật khẩu mới không khớp.'
   })
 
