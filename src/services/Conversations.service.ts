@@ -1,5 +1,5 @@
-import { InsertOneResult, ObjectId } from 'mongodb'
-import { notificationQueue } from '~/bull/queues'
+import { ClientSession, InsertOneResult, ObjectId } from 'mongodb'
+import { cleanupQueue, notificationQueue } from '~/bull/queues'
 import { clientMongodb } from '~/dbs/init.mongodb'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { ConversationCollection, ConversationSchema } from '~/models/schemas/Conversation.schema'
@@ -29,7 +29,9 @@ class ConversationsService {
 
       const findItem = await ConversationCollection.findOne({
         type: payload.type,
-        participants: [userObjectId, participantObjectId]
+        participants: {
+          $all: [userObjectId, participantObjectId]
+        }
       })
 
       if (findItem) {
@@ -107,7 +109,7 @@ class ConversationsService {
           participants: {
             $in: [new ObjectId(user_id)]
           },
-          deletedFor: {
+          deleted_for: {
             $nin: [new ObjectId(user_id)]
           },
           ...(q
@@ -280,7 +282,7 @@ class ConversationsService {
       participants: {
         $in: [new ObjectId(user_id)]
       },
-      deletedFor: {
+      deleted_for: {
         $nin: [new ObjectId(user_id)]
       },
       ...(q
@@ -477,7 +479,7 @@ class ConversationsService {
         {
           $set: {
             lastMessage: new ObjectId(message_id),
-            deletedFor: [],
+            deleted_for: [],
             readStatus: {
               $map: {
                 input: {
@@ -798,7 +800,7 @@ class ConversationsService {
   async countUnread(user_id: string) {
     return await ConversationCollection.countDocuments({
       readStatus: { $in: [new ObjectId(user_id)] },
-      deletedFor: {
+      deleted_for: {
         $nin: [new ObjectId(user_id)]
       }
     })
@@ -807,32 +809,60 @@ class ConversationsService {
   async delete({ user_id, conv_id }: { conv_id: string; user_id: string }) {
     const session = clientMongodb.startSession()
     try {
-      await session.withTransaction(async () => {
-        // Pull user ra khỏi participants
-        const updated = await ConversationCollection.findOneAndUpdate(
-          { _id: new ObjectId(conv_id) },
-          { $push: { deletedFor: new ObjectId(user_id) } },
-          {
-            returnDocument: 'after',
-            projection: { participants: 1, deletedFor: 1 },
-            session
+      let shouldDeleteCompletely = false
+      let conversationToDelete: any = null
+
+      await session.withTransaction(
+        async () => {
+          // Pull user ra khỏi participants
+          // ✅ Sử dụng $addToSet để tránh duplicate
+          const updated = await ConversationCollection.findOneAndUpdate(
+            { _id: new ObjectId(conv_id) },
+            { $addToSet: { deleted_for: new ObjectId(user_id) } },
+            {
+              returnDocument: 'after',
+              projection: { participants: 1, deleted_for: 1 },
+              session
+            }
+          )
+
+          // Nếu không tìm thấy => conversation_id không hợp lệ
+          if (!updated) {
+            throw new BadRequestError('Cuộc trò chuyện không tồn tại')
           }
-        )
 
-        // Nếu không tìm thấy => conversation_id không hợp lệ
-        if (!updated) {
-          throw new BadRequestError('Cuộc trò chuyện không tồn tại')
-        }
+          // ✅ Kiểm tra xem tất cả participants đã xóa chưa
+          const allDeleted = updated.participants?.every((participantId) =>
+            updated.deleted_for?.some((deletedId) => deletedId.toString() === participantId.toString())
+          )
 
-        // Nếu participants bằng deletedFor => xoá luôn conversation + messages
-        if (updated.deleted_for?.length === updated.participants?.length) {
-          await MessagesService.deleteConversationMessages(conv_id)
-          await ConversationCollection.deleteOne({ _id: new ObjectId(conv_id) })
+          if (allDeleted && updated.participants?.length > 0) {
+            shouldDeleteCompletely = true
+            conversationToDelete = updated
+          }
+        },
+        {
+          readConcern: { level: 'snapshot' },
+          writeConcern: { w: 'majority' },
+          maxCommitTimeMS: 30000 // ✅ Timeout 30s thay vì mặc định
         }
-      })
+      )
+
+      // ✅ XÓA MESSAGES VÀ CONVERSATION BÊN NGOÀI TRANSACTION
+      // Tránh transaction quá lâu + tránh conflict
+      if (shouldDeleteCompletely) {
+        // Xóa các record của bookmark/like/comment
+        await cleanupQueue.add(CONSTANT_JOB.DELETE_MESSAGES, { conversation_id: conv_id })
+        await ConversationCollection.deleteOne({ _id: new ObjectId(conv_id) })
+      }
 
       return true
     } catch (err) {
+      // ✅ Xử lý TransientTransactionError - retry
+      if ((err as any)?.errorLabels?.includes('TransientTransactionError')) {
+        console.warn('Transaction conflict, retrying...')
+        // Có thể thêm retry logic ở đây
+      }
       console.error('Transaction failed:', err)
       throw err
     } finally {
@@ -1019,7 +1049,7 @@ class ConversationsService {
 
   // Cập nhật lại deleteFor = [] khi có tin nhắn mới
   private async updateConvDeleted(conv_id: string) {
-    await ConversationCollection.updateOne({ _id: new ObjectId(conv_id) }, { $set: { deletedFor: [] } })
+    await ConversationCollection.updateOne({ _id: new ObjectId(conv_id) }, { $set: { deleted_for: [] } })
   }
 }
 

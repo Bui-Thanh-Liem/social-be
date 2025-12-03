@@ -9,6 +9,7 @@ import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { deleteImage } from '~/utils/upload.util'
 import ConversationsService from './Conversations.service'
+import UploadsService from './Uploads.service'
 import VideosService from './Videos.service'
 
 class MessagesService {
@@ -172,31 +173,27 @@ class MessagesService {
   }
 
   async deleteConversationMessages(conversationId: string) {
+    const convObjId = new ObjectId(conversationId)
+
     // Lấy toàn bộ message trong cuộc hội thoại
-    const messages = await MessageCollection.find({ conversation_id: conversationId }).toArray()
+    const messages = await MessageCollection.find({ conversation: convObjId }).toArray()
 
     // Xóa file media trước
+    console.log('messages to delete:', messages)
+
     for (const msg of messages) {
+      console.log('msg to delete:', msg)
       if (!msg.attachments?.length) continue
 
-      for (const file of msg.attachments) {
-        try {
-          if (file.resource_type === EMediaType.Image) {
-            const filename = file.url!.split('/').pop()
-            if (filename) await deleteImage(filename)
-          } else if (file.resource_type === EMediaType.Video) {
-            const parts = file.url!.split('/')
-            const folderName = parts[parts.length - 2]
-            if (folderName) await VideosService.delete(folderName)
-          }
-        } catch (err) {
-          console.error(`❌ Lỗi xóa media của message ${msg._id}:`, err)
-        }
+      try {
+        await UploadsService.deleteFromCloudinary(msg.attachments)
+      } catch (err) {
+        console.error(`❌ Lỗi xóa media của message ${msg._id}:`, err)
       }
     }
 
     // Xóa toàn bộ message trong DB
-    const { deletedCount } = await MessageCollection.deleteMany({ conversation_id: conversationId })
+    const { deletedCount } = await MessageCollection.deleteMany({ conversation: convObjId })
     console.log(`🧹 Đã xóa ${deletedCount} message trong conversation ${conversationId}`)
   }
 }

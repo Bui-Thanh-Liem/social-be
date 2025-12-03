@@ -1,5 +1,6 @@
 import { Worker } from 'bullmq'
 import { redisConnection } from '~/configs/redis.config'
+import MessagesService from '~/services/Messages.service'
 import TweetsService from '~/services/Tweets.service'
 import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants'
 import { logger } from '~/utils/logger.util'
@@ -15,6 +16,14 @@ export const cleanupWorker = new Worker(
         console.log('Deleted children tweet of ', parent_id)
         break
       }
+      case CONSTANT_JOB.DELETE_MESSAGES: {
+        const { conversation_id } = job.data
+        await MessagesService.deleteConversationMessages(conversation_id)
+        console.log('Deleted messages of conversation ', conversation_id)
+        break
+      }
+      default:
+        break
     }
   },
   {

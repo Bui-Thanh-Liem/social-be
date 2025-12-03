@@ -74,12 +74,15 @@ export const uploadToCloudinary = async (req: Request): Promise<UploadedCloudina
         throw new BadRequestError('File không có đường dẫn tạm')
       }
 
+      const resource_type = file.mimetype?.startsWith('image/') ? 'image' : 'video'
+
       const result = await new Promise<any>((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
             folder: envs.CLOUDINARY_FOLDER_NAME,
-            resource_type: 'auto',
+            resource_type,
             quality: 'auto',
+            chunk_size: 6000000, // 6MB
             fetch_format: 'auto'
           },
           (error: any, result: any) => {
@@ -112,6 +115,7 @@ export const uploadToCloudinary = async (req: Request): Promise<UploadedCloudina
       }
     }
 
+    console.log('fileArray:::', fileArray)
     const uploadedFiles = await Promise.all(fileArray.map(uploadSingleFile))
 
     return uploadedFiles
@@ -119,6 +123,7 @@ export const uploadToCloudinary = async (req: Request): Promise<UploadedCloudina
     throw new BadRequestError(error.message || 'Upload thất bại')
   }
 }
+
 
 /**
  * Xoá 1 ảnh đã upload
