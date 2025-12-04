@@ -1,9 +1,9 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from 'express'
 import { ZodError } from 'zod'
 import { ErrorResponse } from '~/core/error.response'
-import { logger } from '~/utils/logger.util'
+import { DiscordLog } from '~/logs/discord/send-to-discord'
 
-export const errorHandler: ErrorRequestHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+export const errorHandler: ErrorRequestHandler = async (err: any, req: Request, res: Response, next: NextFunction) => {
   const isDev = process.env.NODE_ENV === 'development'
 
   // Thông tin cơ bản
@@ -25,15 +25,25 @@ export const errorHandler: ErrorRequestHandler = (err: any, req: Request, res: R
     message = formattedErrors.map((e) => e.message).join(' - ')
 
     //
-    logger.error('🛑 Zod Validation Error:', {
-      issues: err.issues,
-      formattedErrors
-    })
+    if (!isDev) {
+      await DiscordLog.sendLogError('🛑 Zod Validation Error:', {
+        clientIp: req.ip,
+        clientId: req.headers['x-client-id'] as string,
+        request: {
+          method: req.method,
+          url: req.originalUrl,
+          body: req.body,
+          params: req.params,
+          query: req.query
+        },
+        message: message,
+        statusCode: statusCode
+      })
+    }
   }
 
   // Log đầy đủ để dev dễ debug
-  logger.error(`🛑 Error caught (${req.ip}) by middleware:::`, { message })
-  console.log({
+  const resError = {
     message: message,
     statusCode: statusCode,
     stack: stack,
@@ -46,7 +56,22 @@ export const errorHandler: ErrorRequestHandler = (err: any, req: Request, res: R
         },
         {} as Record<string, any>
       )
-  })
+  }
+  console.log('resError :::', resError)
+  if (resError.statusCode !== 401 && !isDev) {
+    await DiscordLog.sendLogError(message, {
+      clientIp: req.ip,
+      clientId: req.headers['x-client-id'] as string,
+      request: {
+        method: req.method,
+        url: req.originalUrl
+      },
+      message: resError.message,
+      statusCode: resError.statusCode,
+      stack: resError.stack,
+      ...resError.otherFields
+    })
+  }
 
   // Trả response ra client
   res.status(statusCode).json(new ErrorResponse(statusCode, message, isDev ? stack : {}))

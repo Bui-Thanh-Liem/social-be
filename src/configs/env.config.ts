@@ -64,5 +64,12 @@ export const envs = {
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || '',
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || '',
   S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || '',
-  CLOUDFRONT_URL: process.env.CLOUDFRONT_URL || ''
+  CLOUDFRONT_URL: process.env.CLOUDFRONT_URL || '',
+
+  // Discord bot
+  DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN || '',
+  DISCORD_LOG_CHANNEL_ID: process.env.DISCORD_LOG_CHANNEL_ID || '',
+  DISCORD_URL_WEBHOOK: process.env.DISCORD_URL_WEBHOOK || '',
+  DISCORD_BOT_NAME: process.env.DISCORD_BOT_NAME || '',
+  DISCORD_BOT_AVATAR: process.env.DISCORD_BOT_AVATAR || ''
 }
