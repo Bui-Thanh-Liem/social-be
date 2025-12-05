@@ -1,7 +1,7 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from 'express'
 import { ZodError } from 'zod'
 import { ErrorResponse } from '~/core/error.response'
-import { DiscordLog } from '~/logs/discord/send-to-discord'
+import { DiscordLog } from '~/logs/discord/Send-to-discord'
 
 export const errorHandler: ErrorRequestHandler = async (err: any, req: Request, res: Response, next: NextFunction) => {
   const isDev = process.env.NODE_ENV === 'development'
