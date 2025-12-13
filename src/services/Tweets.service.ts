@@ -31,7 +31,7 @@ import UploadsService from './Uploads.service'
 import { createKeyTweetDetails, createKeyTweetLock } from '~/utils/create-key-cache.util'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { convertObjectId } from '~/utils/convert-object-id'
-import requiredLockServiceInstance from '~/helpers/required-lock.helper'
+import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
@@ -171,6 +171,7 @@ class TweetsService {
     }
   }
 
+  //
   async getOneById(user_active_id: string, tweet_id: string): Promise<TweetSchema | null> {
     // 1. Tạo key cache
     const key_cache = createKeyTweetDetails(tweet_id)
@@ -181,14 +182,16 @@ class TweetsService {
     // 3. Nếu có cache thì trả về luôn - "null" cũng là 1 giá trị hợp lệ
     if (tweet_cache) {
       console.log('Get in cached')
-      return tweet_cache
+
+      const tweet_processed = this._processUserSpecificFields(tweet_cache, user_active_id)
+      return tweet_processed
     }
 
     //  4. Thiết lập khóa với Redlock để tránh thundering herd problem
     const resource = createKeyTweetLock(tweet_id)
     const lockTTL = 10000 // 10 giây
     const lockVal = (Date.now() + lockTTL + 1).toString()
-    const lock = await requiredLockServiceInstance.set(resource, lockVal, lockTTL)
+    const lock = await pessimisticLockServiceInstance.set(resource, lockVal, lockTTL)
 
     //.   - Nếu có lock thì mới được truy vấn DB
     if (lock === 'OK') {
@@ -196,10 +199,10 @@ class TweetsService {
         // 5. Nếu không có cache thì truy vấn DB
         return await this._getOneById(user_active_id, tweet_id, key_cache)
       } finally {
-        // 7. Dù thành công hay lỗi thì cũng phải release lock
-        const lockValue = await requiredLockServiceInstance.get(resource)
+        // 6. Dù thành công hay lỗi thì cũng phải release lock
+        const lockValue = await pessimisticLockServiceInstance.get(resource)
         if (lockValue === lockVal) {
-          await requiredLockServiceInstance.release(resource)
+          await pessimisticLockServiceInstance.release(resource)
         }
       }
     } else {
@@ -209,11 +212,12 @@ class TweetsService {
     }
   }
 
+  //
   private async _getOneById(user_active_id: string, tweet_id: string, key_cache: string): Promise<TweetSchema> {
     const followed_user_ids = await FollowsService.getUserFollowing(user_active_id)
     followed_user_ids.push(user_active_id)
 
-    //    - Dynamic match condition based on feed type
+    // 1. Định nghĩa điều kiện match (không đổi)
     const match_condition = {
       _id: new ObjectId(tweet_id),
       status: ETweetStatus.Ready,
@@ -230,7 +234,7 @@ class TweetsService {
       ]
     }
 
-    //    - Aggregate để lấy chi tiết tweet
+    // 2. Aggregate để lấy chi tiết tweet (bỏ $addFields tính is_like, is_bookmark)
     const tweet_db = await TweetCollection.aggregate<TweetSchema>([
       {
         $match: match_condition
@@ -241,14 +245,7 @@ class TweetsService {
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
-          pipeline: [
-            {
-              $project: {
-                name: 1,
-                username: 1
-              }
-            }
-          ]
+          pipeline: [{ $project: { name: 1, username: 1 } }]
         }
       },
       {
@@ -295,7 +292,6 @@ class TweetsService {
           ]
         }
       },
-
       {
         $lookup: {
           from: 'bookmarks', // collection chứa bookmark
@@ -336,14 +332,13 @@ class TweetsService {
       },
       {
         $addFields: {
-          // bookmarks_count: { $size: '$bookmarks' },
           likes_count: { $size: '$likes' },
-          is_like: {
-            $in: [new ObjectId(user_active_id), '$likes.user_id']
-          },
-          is_bookmark: {
-            $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
-          },
+          // is_like: {
+          //   $in: [new ObjectId(user_active_id), '$likes.user_id']
+          // },
+          // is_bookmark: {
+          //   $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
+          // },
           // lấy id retweet của user (1 cái đầu tiên hoặc null)
           retweet: {
             $let: {
@@ -422,7 +417,7 @@ class TweetsService {
     ]).next()
     console.log('Get in DB')
 
-    //
+    // 3. Nếu không tìm thấy tweet
     if (!tweet_db) {
       //  - Flow bình thường thì sẽ không có trường hợp này xảy ra
       //  - Trường hợp không tìm thấy tweet, lưu cache null trong 3 giây để tránh tấn công dò tìm id (Anti-DDoS)
@@ -430,13 +425,38 @@ class TweetsService {
       throw new NotFoundError('Tweet không tồn tại')
     }
 
-    // 6. Lưu vào cache với ttl 5 phút
+    // 4. Lưu vào cache với ttl 5 phút
     await cacheServiceInstance.setCache(key_cache, tweet_db, { ttl: 300 })
 
-    //
-    return tweet_db
+    // 5. Tính toán is_like và is_bookmark ở tầng ứng dụng (Application Layer)
+    const tweet_processed = this._processUserSpecificFields(tweet_db, user_active_id)
+
+    // 6. Trả về kết quả đã xử lý
+    return tweet_processed
   }
 
+  /**
+   * @description Hàm tách riêng để xử lý các trường động theo user (is_like, is_bookmark)
+   * @param tweet_db Kết quả tweet từ MongoDB Aggregate
+   * @param user_active_id ID người dùng đang hoạt động
+   * @returns TweetSchema với các trường is_like, is_bookmark đã được thêm vào.
+   */
+  private _processUserSpecificFields(tweet_db: any, user_active_id: string): TweetSchema {
+    const userActiveObjectId = new ObjectId(user_active_id)
+
+    // Lấy mảng user_id đã like và bookmark từ kết quả Aggregate
+    const liked_user_ids = tweet_db.likes.map((like: any) => like.user_id.toString())
+    const bookmarked_user_ids = tweet_db.bookmarks.map((bookmark: any) => bookmark.user_id.toString())
+
+    // Kiểm tra và thêm trường mới vào object
+    tweet_db.is_like = liked_user_ids.includes(userActiveObjectId.toString())
+    tweet_db.is_bookmark = bookmarked_user_ids.includes(userActiveObjectId.toString())
+
+    //
+    return tweet_db as TweetSchema
+  }
+
+  //
   async getTweetChildren({
     query,
     user_id,
@@ -891,8 +911,6 @@ class TweetsService {
         },
         {
           $addFields: {
-            // bookmarks_count: { $size: '$bookmarks' },
-            likes_count: { $size: '$likes' },
             is_like: {
               $in: [new ObjectId(user_active_id), '$likes.user_id']
             },
@@ -1092,6 +1110,7 @@ class TweetsService {
     return result as Pick<ITweet, 'guest_view' | 'user_view' | 'created_at'>
   }
 
+  //
   async getTweetOnlyUserId(tweet_id: string) {
     return await TweetCollection.aggregate<TweetSchema>([
       {
@@ -1477,6 +1496,7 @@ class TweetsService {
     }
   }
 
+  //
   async getTweetLiked({
     query,
     user_active_id
@@ -1743,6 +1763,7 @@ class TweetsService {
     }
   }
 
+  //
   async getTweetBookmarked({
     query,
     user_active_id
@@ -2005,6 +2026,7 @@ class TweetsService {
     }
   }
 
+  //
   async delete(tweet_id: string) {
     const session = clientMongodb.startSession()
     try {
@@ -2459,6 +2481,7 @@ class TweetsService {
     }
   }
 
+  //
   async getCountTweetApprove({ community_id }: { community_id: string }) {
     return await TweetCollection.countDocuments({
       community_id: new ObjectId(community_id),

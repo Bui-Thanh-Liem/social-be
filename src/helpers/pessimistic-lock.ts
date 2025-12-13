@@ -2,7 +2,7 @@ import { createClient, RedisClientType } from 'redis'
 import { redisConnection } from '~/configs/redis.config'
 import { logger } from '~/utils/logger.util'
 
-class RequiredLockService {
+class PessimisticLockService {
   private client: RedisClientType
   private isConnected: boolean = false
 
@@ -58,5 +58,5 @@ class RequiredLockService {
   }
 }
 
-const requiredLockServiceInstance = new RequiredLockService()
-export default requiredLockServiceInstance
+const pessimisticLockServiceInstance = new PessimisticLockService()
+export default pessimisticLockServiceInstance

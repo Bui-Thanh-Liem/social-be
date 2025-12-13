@@ -18,7 +18,7 @@ import {
 import { ConversationCollection, initConversationCollection } from '~/models/schemas/Conversation.schema'
 import { initFollowerCollection } from '~/models/schemas/Follower.schema'
 import { HashtagCollection, initHashtagCollection } from '~/models/schemas/Hashtag.schema'
-import { initLikeCollection } from '~/models/schemas/Like.schema'
+import { initLikeCollection, LikeCollection } from '~/models/schemas/Like.schema'
 import { initMessageCollection, MessageCollection } from '~/models/schemas/Message.schema'
 import { initNotificationCollection } from '~/models/schemas/Notification.schema'
 import { initTokenCollection, TokenCollection } from '~/models/schemas/Token.schema'
@@ -28,12 +28,13 @@ import { initTrendingCollection, TrendingCollection } from '~/models/schemas/Tre
 import { initTweetCollection, TweetCollection } from '~/models/schemas/Tweet.schema'
 import { initUserCollection, UserCollection } from '~/models/schemas/User.schema'
 import { initVideoCollection } from '~/models/schemas/Video.schema'
-import { BadRequestError } from '~/core/error.response'
+import { BadRequestError, InternalServerError, NotFoundError } from '~/core/error.response'
 import { logger } from '~/utils/logger.util'
 
 const _MINPOOLSIZE = 5
-const _MAXPOOLSIZE = 50 // không bao giờ vượt, nếu hơn thì phải chờ
-const _SECOND_DLE = 300000 // 30s
+const _MAXPOOLSIZE = 20 // không bao giờ vượt, nếu hơn thì phải chờ
+const _SECOND_DLE = 600000 // 10 phút
+const _SOCKET_TIMEOUT_MS = 45000 // 45 giây
 console.log('envs.DB_CONNECT_STRING :::', envs.DB_CONNECT_STRING)
 
 class Database {
@@ -49,16 +50,19 @@ class Database {
     if (!Database.client) {
       Database.client = new MongoClient(envs.DB_CONNECT_STRING, {
         serverApi: {
-          strict: true,
+          // strict: true,  // 🆕 Bật không sử dụng được index-text
           deprecationErrors: true,
           version: ServerApiVersion.v1
         },
         // Cấu hình connection pool
         minPoolSize: _MINPOOLSIZE, // tối thiểu 5 kết nối trong pool
         maxPoolSize: _MAXPOOLSIZE, // tối đa 20 kết nối
-        maxIdleTimeMS: _SECOND_DLE, // 🆕 Connection idle > 30s sẽ bị đóng (mặc định)
+        maxIdleTimeMS: _SECOND_DLE, // 🆕 Connection idle > 10p sẽ bị đóng (mặc định)
         retryWrites: true, // 🆕 Tự động retry
-        retryReads: true
+        retryReads: true,
+
+        // Thời gian chờ tối đa cho một hoạt động socket (đọc/ghi)
+        socketTimeoutMS: _SOCKET_TIMEOUT_MS
       })
     }
     this.db = Database.client.db(envs.DB_NAME)
@@ -122,7 +126,7 @@ class Database {
     } catch (error) {
       this.isConnected = false // 🆕 Reset on error
       logger.error('MongoDB connection failed:', error)
-      throw error // Re-throw để app biết lỗi
+      throw new InternalServerError('MongoDB connection failed') // Re-throw để app biết lỗi
     } finally {
       this.isConnecting = false // 🆕 Always reset flag
     }
@@ -166,6 +170,7 @@ class Database {
     try {
       this.checkConnection()
       const indexUser = await UserCollection.indexExists(['email_1', 'username_1', 'bio_text'])
+      const indexLike = await LikeCollection.indexExists(['user_id_1_tweet_id_1'])
       const indexReportTweet = await ReportTweetCollection.indexExists(['tweet_id_1'])
       const indexToken = await TokenCollection.indexExists(['exp_1'])
       const indexTweet = await TweetCollection.indexExists(['content_text'])
@@ -223,6 +228,11 @@ class Database {
       // Hashtag
       if (!indexHashtag) {
         HashtagCollection.createIndex({ slug: 1 }, { unique: true })
+      }
+
+      // Like
+      if (!indexLike) {
+        LikeCollection.createIndex({ user_id: 1, tweet_id: 1 }, { unique: true })
       }
 
       // Message

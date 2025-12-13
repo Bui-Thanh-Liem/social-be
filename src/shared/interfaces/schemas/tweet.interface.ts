@@ -17,13 +17,13 @@ export interface ITweet extends IBase {
   media: IMedia[] | null
   guest_view: number
   user_view: number
+  likes_count: number
+  comments_count: number
 
   //
   community_id: null | ObjectId
 
   //
-  likes_count?: number
-  comments_count?: number
   shares_count?: number
   retweets_count?: number
   quotes_count?: number

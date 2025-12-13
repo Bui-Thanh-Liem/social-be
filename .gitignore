@@ -1,13 +1,16 @@
+# dependencies 
 node_modules/
-dist/
 
+# build
+dist/
 
 # env
 .env
 .env.dev
+.env.*
 
-# 
+# credentials
 google-login.json
 
 # logs
-app.log
+logs

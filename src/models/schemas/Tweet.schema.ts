@@ -19,11 +19,15 @@ export class TweetSchema extends BaseSchema implements ITweet {
   user_view: number
   community_id: ObjectId | null
   status: ETweetStatus
+  likes_count: number
+  comments_count: number
 
   constructor(tweet: Partial<ITweet>) {
     super()
     this.user_id = tweet.user_id || new ObjectId()
     this.type = tweet.type || ETweetType.Tweet
+    this.likes_count = tweet.likes_count || 0
+    this.comments_count = tweet.comments_count || 0
     this.audience = tweet.audience || ETweetAudience.Everyone
     this.content = tweet.content || ''
     this.parent_id = tweet.parent_id || null
