@@ -33,7 +33,7 @@ import { logger } from '~/utils/logger.util'
 
 const _MINPOOLSIZE = 5
 const _MAXPOOLSIZE = 50 // không bao giờ vượt, nếu hơn thì phải chờ
-const _SECOND_DLE = 30000 // 30s
+const _SECOND_DLE = 300000 // 30s
 console.log('envs.DB_CONNECT_STRING :::', envs.DB_CONNECT_STRING)
 
 class Database {
@@ -49,7 +49,7 @@ class Database {
     if (!Database.client) {
       Database.client = new MongoClient(envs.DB_CONNECT_STRING, {
         serverApi: {
-          strict: false,
+          strict: true,
           deprecationErrors: true,
           version: ServerApiVersion.v1
         },
