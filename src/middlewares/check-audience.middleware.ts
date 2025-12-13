@@ -8,6 +8,7 @@ import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
+import { convertObjectId } from '~/utils/convert-object-id'
 
 export async function checkAudience(req: Request, res: Response, next: NextFunction) {
   try {
@@ -15,7 +16,10 @@ export async function checkAudience(req: Request, res: Response, next: NextFunct
     const { _id: authorId } = author as unknown as IUser
 
     // Kiểm tra tác giả ổn không
-    const user = await UserCollection.findOne({ _id: authorId }, { projection: { _id: 1, verify: 1 } })
+    const user = await UserCollection.findOne(
+      { _id: convertObjectId(authorId!) },
+      { projection: { _id: 1, verify: 1 } }
+    )
 
     if (!user || user.verify === EUserVerifyStatus.Banned) {
       throw new UnauthorizedError('Author does not exist or is banned')

@@ -28,6 +28,10 @@ import HashtagsService from './Hashtags.service'
 import LikesService from './Likes.service'
 import TrendingService from './Trending.service'
 import UploadsService from './Uploads.service'
+import { createKeyTweetDetails, createKeyTweetLock } from '~/utils/create-key-cache.util'
+import cacheServiceInstance from '~/helpers/cache.helper'
+import { convertObjectId } from '~/utils/convert-object-id'
+import requiredLockServiceInstance from '~/helpers/required-lock.helper'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
@@ -167,12 +171,49 @@ class TweetsService {
     }
   }
 
-  async getOneById(user_active_id: string, tweet_id: string) {
-    //
+  async getOneById(user_active_id: string, tweet_id: string): Promise<TweetSchema | null> {
+    // 1. Tạo key cache
+    const key_cache = createKeyTweetDetails(tweet_id)
+
+    // 2. Kiểm tra cache trong Redis trước
+    const tweet_cache = await cacheServiceInstance.getCache<TweetSchema>(key_cache)
+
+    // 3. Nếu có cache thì trả về luôn - "null" cũng là 1 giá trị hợp lệ
+    if (tweet_cache) {
+      console.log('Get in cached')
+      return tweet_cache
+    }
+
+    //  4. Thiết lập khóa với Redlock để tránh thundering herd problem
+    const resource = createKeyTweetLock(tweet_id)
+    const lockTTL = 10000 // 10 giây
+    const lockVal = (Date.now() + lockTTL + 1).toString()
+    const lock = await requiredLockServiceInstance.set(resource, lockVal, lockTTL)
+
+    //.   - Nếu có lock thì mới được truy vấn DB
+    if (lock === 'OK') {
+      try {
+        // 5. Nếu không có cache thì truy vấn DB
+        return await this._getOneById(user_active_id, tweet_id, key_cache)
+      } finally {
+        // 7. Dù thành công hay lỗi thì cũng phải release lock
+        const lockValue = await requiredLockServiceInstance.get(resource)
+        if (lockValue === lockVal) {
+          await requiredLockServiceInstance.release(resource)
+        }
+      }
+    } else {
+      // Nếu không lấy được lock thì chờ 100ms và thử lại
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      return this._getOneById(user_active_id, tweet_id, key_cache)
+    }
+  }
+
+  private async _getOneById(user_active_id: string, tweet_id: string, key_cache: string): Promise<TweetSchema> {
     const followed_user_ids = await FollowsService.getUserFollowing(user_active_id)
     followed_user_ids.push(user_active_id)
 
-    // Dynamic match condition based on feed type
+    //    - Dynamic match condition based on feed type
     const match_condition = {
       _id: new ObjectId(tweet_id),
       status: ETweetStatus.Ready,
@@ -189,7 +230,8 @@ class TweetsService {
       ]
     }
 
-    const result = await TweetCollection.aggregate<TweetSchema>([
+    //    - Aggregate để lấy chi tiết tweet
+    const tweet_db = await TweetCollection.aggregate<TweetSchema>([
       {
         $match: match_condition
       },
@@ -378,8 +420,21 @@ class TweetsService {
         }
       }
     ]).next()
+    console.log('Get in DB')
 
-    return result
+    //
+    if (!tweet_db) {
+      //  - Flow bình thường thì sẽ không có trường hợp này xảy ra
+      //  - Trường hợp không tìm thấy tweet, lưu cache null trong 3 giây để tránh tấn công dò tìm id (Anti-DDoS)
+      await cacheServiceInstance.setCache(key_cache, null, { ttl: 3 }) // Negative Caching
+      throw new NotFoundError('Tweet không tồn tại')
+    }
+
+    // 6. Lưu vào cache với ttl 5 phút
+    await cacheServiceInstance.setCache(key_cache, tweet_db, { ttl: 300 })
+
+    //
+    return tweet_db
   }
 
   async getTweetChildren({
@@ -1017,7 +1072,7 @@ class TweetsService {
 
     const result = await TweetCollection.findOneAndUpdate(
       {
-        _id: tweet_id
+        _id: convertObjectId(tweet_id)
       },
       {
         $inc: inc,

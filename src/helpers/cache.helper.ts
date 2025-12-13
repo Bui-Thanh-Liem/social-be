@@ -8,8 +8,8 @@ export class CacheService {
   private isConnected: boolean = false
 
   //
-  private onlineSetKey = 'online_users'
-  private lastSeenHashKey = 'last_seen'
+  private onlineSetKey = 'user:onl' // online users set
+  private lastSeenHashKey = 'user:last_seen' // last seen hash
 
   constructor() {
     this.client = createClient({

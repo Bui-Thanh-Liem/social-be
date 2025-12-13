@@ -11,13 +11,11 @@ export async function checkTweetParamsId(req: Request, res: Response, next: Next
       throw new NotFoundError('Tweet_id is required')
     }
 
+    //
     const tweet = await TweetsService.getTweetOnlyUserId(tweet_id)
+    req.tweet = tweet!
 
-    if (!tweet) {
-      throw new NotFoundError('Tweet không tồn tại')
-    }
-
-    req.tweet = tweet
+    //
     next()
   } catch (error) {
     next(error)

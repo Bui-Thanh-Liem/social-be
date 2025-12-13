@@ -5,7 +5,7 @@ import { envs } from '~/configs/env.config'
 import { NotFoundError, UnauthorizedError } from '~/core/error.response'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
-import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
+import { CONSTANT_JOB } from '~/shared/constants'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { ETokenType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
@@ -16,6 +16,7 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
 import FollowsService from './Follows.service'
+import { createKeyUserActive } from '~/utils/create-key-cache.util'
 
 class UsersService {
   async verifyEmail({
@@ -105,7 +106,7 @@ class UsersService {
   }
 
   async getOneByUsername(username: string, user_id_active: string) {
-    const key_cache = `${CONSTANT_USER.user_active_key_cache}-${username}`
+    const key_cache = createKeyUserActive(user_id_active)
     let user = await cacheServiceInstance.getCache<IUser>(key_cache)
     if (!user) {
       user = await UserCollection.aggregate<IUser>([
@@ -489,7 +490,7 @@ class UsersService {
   }
 
   async getUserActive(user_id: string) {
-    const keyCache = `${CONSTANT_USER.user_active_key_cache}-${user_id}`
+    const keyCache = createKeyUserActive(user_id)
     let userActive = await cacheServiceInstance.getCache<IUser>(keyCache)
     if (!userActive) {
       console.log('❌ cache hết hạn lấy người dùng hiện tại trong database 🤦‍♂️')
@@ -508,7 +509,7 @@ class UsersService {
   }
 
   async resetUserActive(user_id: string) {
-    const keyCache = `${CONSTANT_USER.user_active_key_cache}-${user_id}`
+    const keyCache = createKeyUserActive(user_id)
     await cacheServiceInstance.del(keyCache)
   }
 
