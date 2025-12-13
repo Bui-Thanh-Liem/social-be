@@ -3,5 +3,17 @@ export function createKeyVerifyEmail(email: string) {
 }
 
 export function createKeyAllConversationIds(user_id: string) {
-  return `conversations_ids:${user_id}`
+  return `convs_ids:${user_id}`
+}
+
+export function createKeyTweetDetails(tweet_id: string) {
+  return `tweet:d:${tweet_id}`
+}
+
+export function createKeyTweetLock(tweet_id: string) {
+  return `tweet:l:${tweet_id}`
+}
+
+export function createKeyUserActive(user_id: string) {
+  return `user:active:${user_id}`
 }

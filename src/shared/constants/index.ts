@@ -6,5 +6,3 @@ export * from './queue.constant'
 export * from './regex.constant'
 export * from './socket.constant'
 export * from './tweet.constant'
-export * from './user.constant'
-

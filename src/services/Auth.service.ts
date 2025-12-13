@@ -7,7 +7,7 @@ import { envs } from '~/configs/env.config'
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from '~/core/error.response'
 import cacheServiceInstance from '~/helpers/cache.helper'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
-import { CONSTANT_JOB, CONSTANT_USER } from '~/shared/constants'
+import { CONSTANT_JOB } from '~/shared/constants'
 import {
   ForgotPasswordDto,
   LoginUserDto,
@@ -25,6 +25,7 @@ import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
 import TokensService from './Tokens.service'
 import UsersService from './Users.service'
+import { createKeyUserActive } from '~/utils/create-key-cache.util'
 
 class AuthService {
   async signup(payload: RegisterUserDto) {
@@ -320,7 +321,7 @@ class AuthService {
 
   async logout({ user_id, refresh_token }: { user_id: string; refresh_token: string }) {
     // Xoá Người dùng đang active trong cache
-    const key_cache = `${CONSTANT_USER.user_active_key_cache}-${user_id}`
+    const key_cache = createKeyUserActive(user_id)
     await cacheServiceInstance.del(key_cache)
 
     //

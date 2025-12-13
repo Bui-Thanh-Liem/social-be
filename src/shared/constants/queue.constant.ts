@@ -1,9 +1,9 @@
 export const CONSTANT_QUEUE = {
-  MAIL: 'email-queue',
-  CLEANUP: 'cleanup-queue',
-  COMPRESSION: 'compression-queue',
-  NOTIFICATION: 'notification-queue',
-  INVITE: 'invite-queue'
+  MAIL: 'email',
+  INVITE: 'invite',
+  CLEANUP: 'cleanup',
+  COMPRESSION: 'compression',
+  NOTIFICATION: 'notification'
 } as const
 
 export const CONSTANT_JOB = {
@@ -12,6 +12,6 @@ export const CONSTANT_JOB = {
   VERIFY_MAIL: 'verify-email',
   FORGOT_PASSWORD: 'forgot-password',
   COMPRESSION_HLS: 'compression-hls',
-  DELETE_CHILDREN_TWEET: 'delete-children-tweet',
-  DELETE_MESSAGES: 'delete-messages'
+  DELETE_MESSAGES: 'delete-messages',
+  DELETE_CHILDREN_TWEET: 'delete-children-tweet'
 } as const
