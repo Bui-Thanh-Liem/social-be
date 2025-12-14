@@ -1,15 +1,12 @@
 import { createClient, RedisClientType, SetOptions } from 'redis'
 import { redisConnection } from '~/configs/redis.config'
+import { createKeyUserLastSeen, createKeyUserOnline } from '~/utils/create-key-cache.util'
 import { logger } from '~/utils/logger.util'
 
 export class CacheService {
   private client: RedisClientType
   private defaultTTL: number = 600 // 10 minutes in seconds
   private isConnected: boolean = false
-
-  //
-  private onlineSetKey = 'user:onl' // online users set
-  private lastSeenHashKey = 'user:last_seen' // last seen hash
 
   constructor() {
     this.client = createClient({
@@ -44,7 +41,7 @@ export class CacheService {
     }
   }
 
-  async setCache<T>(key: string, value: T, options?: SetOptions & { ttl?: number }): Promise<boolean> {
+  async set<T>(key: string, value: T, options?: SetOptions & { ttl?: number }): Promise<boolean> {
     await this.connect()
 
     try {
@@ -64,7 +61,73 @@ export class CacheService {
     }
   }
 
-  async getCache<T>(key: string): Promise<T | null> {
+  async sAdd(key: string, member: string): Promise<boolean> {
+    await this.connect()
+    try {
+      const result = await this.client.sAdd(key, member)
+      return result === 1
+    } catch (err) {
+      console.error(`Failed to add member to set for key ${key}:`, err)
+      return false
+    }
+  }
+
+  async sRem(key: string, member: string): Promise<boolean> {
+    await this.connect()
+    try {
+      const result = await this.client.sRem(key, member)
+      return result === 1
+    } catch (err) {
+      console.error(`Failed to remove member from set for key ${key}:`, err)
+      return false
+    }
+  }
+
+  async sMembers(key: string): Promise<string[]> {
+    await this.connect()
+    try {
+      const members = await this.client.sMembers(key)
+      return members
+    } catch (err) {
+      console.error(`Failed to get members of set for key ${key}:`, err)
+      return []
+    }
+  }
+
+  async sIsMember(key: string, member: string): Promise<boolean> {
+    await this.connect()
+    try {
+      const isMember = await this.client.sIsMember(key, member)
+      return isMember === 1
+    } catch (err) {
+      console.error(`Failed to check membership in set for key ${key}:`, err)
+      return false
+    }
+  }
+
+  async hIncrBy(key: string, field: string, increment: number): Promise<number | null> {
+    await this.connect()
+    try {
+      const result = await this.client.hIncrBy(key, field, increment)
+      return result
+    } catch (err) {
+      console.error(`Failed to increment hash field ${field} for key ${key}:`, err)
+      return null
+    }
+  }
+
+  async hGet(key: string, field: string): Promise<string | null> {
+    await this.connect()
+    try {
+      const result = await this.client.hGet(key, field)
+      return result
+    } catch (err) {
+      console.error(`Failed to get hash field ${field} for key ${key}:`, err)
+      return null
+    }
+  }
+
+  async get<T>(key: string): Promise<T | null> {
     await this.connect()
 
     try {
@@ -94,7 +157,7 @@ export class CacheService {
     }
   }
 
-  async has(key: string): Promise<boolean> {
+  async exists(key: string): Promise<boolean> {
     await this.connect()
 
     try {
@@ -106,6 +169,16 @@ export class CacheService {
     }
   }
 
+  async pipeline(): Promise<ReturnType<RedisClientType['multi']>> {
+    await this.connect()
+    return this.client.multi()
+  }
+
+  async execPipeline(pipe: ReturnType<RedisClientType['multi']>) {
+    return await pipe.exec()
+  }
+
+  // Graceful disconnect
   async disconnect(): Promise<void> {
     if (this.isConnected) {
       try {
@@ -127,12 +200,16 @@ export class CacheService {
     }
   }
 
+  // ==========================================
+  // User Online/Offline Tracking Methods
+  // ==========================================
+
   /**
    * Đánh dấu user online (thêm vào Redis Set)
    */
   async markUserOnline(userId: string): Promise<void> {
     await this.connect()
-    await this.client.sAdd(this.onlineSetKey, userId)
+    await this.client.sAdd(createKeyUserOnline(), userId)
   }
 
   /**
@@ -140,8 +217,8 @@ export class CacheService {
    */
   async markUserOffline(userId: string): Promise<void> {
     await this.connect()
-    await this.client.sRem(this.onlineSetKey, userId)
-    await this.client.hSet(this.lastSeenHashKey, userId, Date.now().toString())
+    await this.client.sRem(createKeyUserOnline(), userId)
+    await this.client.hSet(createKeyUserLastSeen(), userId, Date.now().toString())
   }
 
   /**
@@ -149,7 +226,7 @@ export class CacheService {
    */
   async isUserOnline(userId: string): Promise<boolean> {
     await this.connect()
-    return (await this.client.sIsMember(this.onlineSetKey, userId)) === 1
+    return (await this.client.sIsMember(createKeyUserOnline(), userId)) === 1
   }
 
   /**
@@ -159,7 +236,7 @@ export class CacheService {
     if (!userIds || userIds.length === 0) return {}
 
     await this.connect()
-    const results = await this.client.sendCommand<number[]>(['SMISMEMBER', this.onlineSetKey, ...userIds])
+    const results = await this.client.sendCommand<number[]>(['SMISMEMBER', createKeyUserOnline(), ...userIds])
 
     // Map lại { userId: true/false }
     return userIds.reduce(
@@ -176,7 +253,7 @@ export class CacheService {
    */
   async getUserLastSeen(userId: string): Promise<Date | null> {
     await this.connect()
-    const ts = await this.client.hGet(this.lastSeenHashKey, userId)
+    const ts = await this.client.hGet(createKeyUserLastSeen(), userId)
     return ts ? new Date(Number(ts)) : null
   }
 
@@ -185,10 +262,10 @@ export class CacheService {
    */
   async getAllOnlineUsers(): Promise<string[]> {
     await this.connect()
-    return await this.client.sMembers(this.onlineSetKey)
+    return await this.client.sMembers(createKeyUserOnline())
   }
 }
 
 // Singleton instance
-const cacheServiceInstance = new CacheService()
-export default cacheServiceInstance
+const cacheService = new CacheService()
+export default cacheService

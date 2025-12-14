@@ -24,8 +24,7 @@ class BookmarksService {
   }
 
   async deleteByTweetId(tweet_id: string) {
-    await BookmarkCollection.deleteMany({ tweet_id: new ObjectId(tweet_id) })
-    return true
+    return await BookmarkCollection.deleteMany({ tweet_id: new ObjectId(tweet_id) })
   }
 }
 

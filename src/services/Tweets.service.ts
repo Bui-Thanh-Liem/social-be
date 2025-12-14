@@ -3,12 +3,15 @@ import { notificationQueue } from '~/bull/queues'
 import { cleanupQueue } from '~/bull/queues/cleanup.queue'
 import { BadRequestError, NotFoundError } from '~/core/error.response'
 import { clientMongodb } from '~/dbs/init.mongodb'
+import cacheService from '~/helpers/cache.helper'
+import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
 import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
 import { CommunityCollection, CommunitySchema } from '~/models/schemas/Community.schema'
 import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
-import { CONSTANT_JOB } from '~/shared/constants'
+import { CONSTANT_CHUNK_SIZE, CONSTANT_JOB, CONSTANT_REGEX } from '~/shared/constants'
+import { CreateNotiCommentDto } from '~/shared/dtos/req/notification.dto'
 import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { ETweetStatus } from '~/shared/enums/status.enum'
@@ -20,6 +23,8 @@ import { ResMultiType } from '~/shared/types/response.type'
 import CommentGateway from '~/socket/gateways/Comment.gateway'
 import CommunityGateway from '~/socket/gateways/Community.gateway'
 import { chunkArray } from '~/utils/chunk-array'
+import { convertObjectId } from '~/utils/convert-object-id'
+import { createKeyTweetDetails, createKeyTweetLock } from '~/utils/create-key-cache.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import BookmarksService from './Bookmarks.service'
 import CommunityService from './Communities.service'
@@ -28,15 +33,19 @@ import HashtagsService from './Hashtags.service'
 import LikesService from './Likes.service'
 import TrendingService from './Trending.service'
 import UploadsService from './Uploads.service'
-import { createKeyTweetDetails, createKeyTweetLock } from '~/utils/create-key-cache.util'
-import cacheServiceInstance from '~/helpers/cache.helper'
-import { convertObjectId } from '~/utils/convert-object-id'
-import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
 
 class TweetsService {
   async create(user_id: string, payload: CreateTweetDto) {
     let message = 'Đăng bài thành công'
     const { audience, type, content, parent_id, community_id, mentions, media } = payload
+
+    // Kiểm tra nếu có parent_id
+    if (parent_id) {
+      const exist = await TweetCollection.findOne({ _id: new ObjectId(parent_id) })
+      if (!exist) {
+        throw new NotFoundError('Có lỗi xảy ra vui lòng thử lại.')
+      }
+    }
 
     // Tạo hashtags chop tweet
     const hashtags = await HashtagsService.checkHashtags(payload.hashtags)
@@ -48,20 +57,11 @@ class TweetsService {
 
     // Thêm từ khóa vào trending (những từ trong content, nhưng được viết in hoa)
     if (content && type !== ETweetType.Comment) {
-      const keyWords = content.match(/\b[A-Z][a-zA-Z0-9]*\b/g) || []
+      const keyWords = content.match(CONSTANT_REGEX.FIND_KEYWORD) || []
       await Promise.all(keyWords.map((w) => TrendingService.createTrending(w)))
     }
 
-    //
-    if (parent_id) {
-      const exist = await TweetCollection.findOne({ _id: new ObjectId(parent_id) })
-      if (!exist) {
-        throw new NotFoundError('Có lỗi xảy ra vui lòng thử lại (không tìm thấy bài viết cha)')
-      }
-    }
-
     // Kiểm tra nếu đăng trong cộng đồng
-    // Ready giai đoạn 2 làm bảng điều khiển, sẽ duyệt
     let status = ETweetStatus.Ready
     let operatorIds = [] as ObjectId[]
     let community: null | ICommunity = null
@@ -70,18 +70,18 @@ class TweetsService {
         mentorIds,
         is_admin,
         is_mentor,
-        community: c
+        community: _community
       } = await CommunityService.validateCommunityAndMembership({
         user_id: user_id,
         community_id: community_id
       })
 
-      community = c
+      community = _community
       if (is_admin || is_mentor) {
         status = ETweetStatus.Ready
       } else {
         status = ETweetStatus.Pending
-        operatorIds = [...mentorIds, c.admin]
+        operatorIds = [...mentorIds, _community.admin]
         message = 'Đăng bài thành công, chờ điều hành viên phê duyệt.'
       }
     }
@@ -107,67 +107,77 @@ class TweetsService {
 
     // Gửi thông báo cho ai mà người comment/tweet nhắc đến
     if (mentions?.length) {
-      const jobs = mentions.map((receiverId) => ({
-        name: CONSTANT_JOB.SEND_NOTI,
-        data: {
-          content: `${sender?.name} đã nhắc đến bạn trong một ${
-            type === ETweetType.Comment ? 'bình luận' : 'bài viết'
-          }.`,
-          type: ENotificationType.Mention_like,
-          sender: user_id,
-          receiver: receiverId,
-          ref_id: newTweet.insertedId.toString()
-        },
-        opts: {
-          removeOnComplete: true,
-          attempts: 3 // retry nếu queue bị lỗi
-        }
-      }))
+      if (mentions.length > CONSTANT_CHUNK_SIZE) {
+        // Nếu nhiều hơn 50 thành viên → tách nhỏ thành nhiều chunk để tránh lỗi payload quá lớn
+        const chunks = chunkArray(mentions, CONSTANT_CHUNK_SIZE)
+        for (const chunk of chunks) {
+          //
+          const jobs = chunk.map((receiverId) => ({
+            name: CONSTANT_JOB.SEND_NOTI,
+            data: {
+              content: `${sender?.name} đã nhắc đến bạn trong một ${
+                type === ETweetType.Comment ? 'bình luận' : 'bài viết'
+              }.`,
+              type: ENotificationType.Mention_like,
+              sender: user_id,
+              receiver: receiverId,
+              ref_id: newTweet.insertedId.toString()
+            },
+            opts: {
+              removeOnComplete: true,
+              attempts: 3 // retry nếu queue bị lỗi
+            }
+          }))
 
-      await notificationQueue.addBulk(jobs)
+          await notificationQueue.addBulk(jobs)
+        }
+      }
     }
 
     // Gửi thông báo cho chủ bài viết là có người bình luận
     // ---
     // Emit comment mới về bài viết parent
     if (type === ETweetType.Comment && parent_id) {
-      const tw = await TweetCollection.findOne({ _id: new ObjectId(parent_id) }, { projection: { user_id: 1 } })
-      await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
-        content: `${sender?.name} đã bình luận bài viết của bạn.`,
-        type: ENotificationType.Mention_like,
-        sender: user_id,
-        receiver: tw!.user_id.toString(),
-        ref_id: tw?._id.toString()
-      })
+      await notificationQueue.add(CONSTANT_JOB.SEND_NOTI_COMMENT, {
+        sender_id: user_id,
+        tweet_id: parent_id
+      } as CreateNotiCommentDto)
 
       //
       const newTw = await this.getOneById(user_id, newTweet.insertedId.toString())
-      if (newTw && tw) {
-        await CommentGateway.sendNewComment(newTw, tw._id.toString())
+      if (newTw && parent_id) {
+        await CommentGateway.sendNewComment(newTw, parent_id)
       }
     }
 
     // Gửi thông báo cho điều hành viên của cộng đồng
     if (community_id && community && operatorIds.length > 0) {
-      const jobs = operatorIds.map((id) => ({
-        name: CONSTANT_JOB.SEND_NOTI,
-        data: {
-          content: `${sender?.name} đã đăng bài viết mới trong cộng đồng ${community.name}, đang chờ duyệt bài.`,
-          type: ENotificationType.Community,
-          sender: user_id,
-          receiver: id.toString(),
-          ref_id: community_id
+      if (operatorIds.length > CONSTANT_CHUNK_SIZE) {
+        // Nếu nhiều hơn 50 thành viên → tách nhỏ thành nhiều chunk để tránh lỗi payload quá lớn
+        const chunks = chunkArray(operatorIds, CONSTANT_CHUNK_SIZE)
+        for (const chunk of chunks) {
+          // tạo jobs
+          const jobs = chunk.map((id) => ({
+            name: CONSTANT_JOB.SEND_NOTI,
+            data: {
+              content: `${sender?.name} đã đăng bài viết mới trong cộng đồng ${community.name}, đang chờ duyệt bài.`,
+              type: ENotificationType.Community,
+              sender: user_id,
+              receiver: id.toString(),
+              ref_id: community_id
+            }
+          }))
+
+          //
+          await notificationQueue.addBulk(jobs)
+          await CommunityGateway.sendCountTweetApprove(community_id)
         }
-      }))
-
-      await notificationQueue.addBulk(jobs)
-
-      await CommunityGateway.sendCountTweetApprove(community_id)
+      }
     }
 
     return {
-      result: newTweet,
-      message
+      message,
+      result: newTweet
     }
   }
 
@@ -177,7 +187,7 @@ class TweetsService {
     const key_cache = createKeyTweetDetails(tweet_id)
 
     // 2. Kiểm tra cache trong Redis trước
-    const tweet_cache = await cacheServiceInstance.getCache<TweetSchema>(key_cache)
+    const tweet_cache = await cacheService.get<TweetSchema>(key_cache)
 
     // 3. Nếu có cache thì trả về luôn - "null" cũng là 1 giá trị hợp lệ
     if (tweet_cache) {
@@ -421,12 +431,12 @@ class TweetsService {
     if (!tweet_db) {
       //  - Flow bình thường thì sẽ không có trường hợp này xảy ra
       //  - Trường hợp không tìm thấy tweet, lưu cache null trong 3 giây để tránh tấn công dò tìm id (Anti-DDoS)
-      await cacheServiceInstance.setCache(key_cache, null, { ttl: 3 }) // Negative Caching
+      await cacheService.set(key_cache, null, { ttl: 3 }) // Negative Caching
       throw new NotFoundError('Tweet không tồn tại')
     }
 
     // 4. Lưu vào cache với ttl 5 phút
-    await cacheServiceInstance.setCache(key_cache, tweet_db, { ttl: 300 })
+    await cacheService.set(key_cache, tweet_db, { ttl: 300 })
 
     // 5. Tính toán is_like và is_bookmark ở tầng ứng dụng (Application Layer)
     const tweet_processed = this._processUserSpecificFields(tweet_db, user_active_id)
@@ -2044,34 +2054,9 @@ class TweetsService {
           throw new NotFoundError('Không tìm thấy bài viết để xóa')
         }
 
+        // Xóa media trên Cloudinary nếu có
         if (tweet.media) {
           await UploadsService.deleteFromCloudinary(tweet.media || [])
-          // for (let i = 0; i < tweet?.media?.length; i++) {
-          //   const media = tweet.media[i]
-
-          // Xóa ảnh
-          // if (media?.resource_type === EMediaType.Image) {
-          //   // Lấy filename từ url: http://domain/images/abc.png => abc.png
-          //   const filename = media?.url.split('/').pop()
-          //   if (filename) {
-          //     await deleteImage(filename).catch((err) => {
-          //       console.log('Tweet - delete - media - img:::', err)
-          //     })
-          //   }
-          // }
-
-          // Xóa video
-          // if (media?.resource_type === EMediaType.Video) {
-          //   // Lấy folderName: http://localhost:9000/videos-hls/RXhw4s21AEzt_-VpjWIin/master.m3u8
-          //   const parts = media?.url.split('/')
-          //   const folderName = parts[parts.length - 2] // "RXhw4s21AEzt_-VpjWIin"
-          //   if (folderName) {
-          //     await VideosService.delete(folderName).catch((err) => {
-          //       console.log('Tweet - delete - media - video:::', err)
-          //     })
-          //   }
-          // }
-          // }
         }
 
         // Xóa các record của bookmark/like/comment
@@ -2079,7 +2064,7 @@ class TweetsService {
       })
       return true
     } catch (error) {
-      console.error('Transaction failed:', error)
+      console.error('Lỗi xóa tweet:', error)
       throw error
     } finally {
       session.endSession()
@@ -2088,39 +2073,45 @@ class TweetsService {
 
   // Hàm xóa tất cả tweet con của 1 tweet cha (comment)
   async deleteChildrenTweet(parent_id: string) {
-    //
-    await BookmarksService.deleteByTweetId(parent_id)
-    await LikesService.deleteByTweetId(parent_id)
+    try {
+      // Xoá bookmark và like của tweet cha trước
+      // Lấy tất cả tweet con (comment)
+      const [children_ids] = await Promise.all([
+        TweetCollection.find(
+          { parent_id: new ObjectId(parent_id), type: ETweetType.Comment },
+          { projection: { _id: 1 } }
+        ).toArray(),
+        BookmarksService.deleteByTweetId(parent_id),
+        LikesService.deleteByTweetId(parent_id)
+      ])
 
-    //
-    const children_ids = await TweetCollection.find(
-      { parent_id: new ObjectId(parent_id), type: ETweetType.Comment },
-      { projection: { _id: 1 } }
-    ).toArray()
-
-    // tránh đẹ quy vô tận
-    if (!children_ids.length) {
-      console.log('Không có comment cần xóa')
-      return
-    }
-
-    const ids = children_ids.map((tw) => tw._id.toString())
-
-    // Chia nhỏ để tránh nghẽn — ví dụ mỗi chunk 100 tweet
-    const chunks = chunkArray(ids, 100)
-
-    for (const [index, batch] of chunks.entries()) {
-      console.log(`🔹 Deleting batch ${index + 1}/${chunks.length} (${batch.length} items)`)
-
-      // Giới hạn số lượng promise chạy song song (ví dụ 10 mỗi lần)
-      const CONCURRENCY = 10
-      for (let i = 0; i < batch.length; i += CONCURRENCY) {
-        const group = batch.slice(i, i + CONCURRENCY)
-        await Promise.allSettled(group.map((id) => this.delete(id)))
+      // ********** tránh đệ quy vô tận **********
+      if (!children_ids.length) {
+        console.log('Không có comment cần xóa')
+        return
       }
-    }
 
-    console.log(`✅ Finished deleting ${ids.length} children of ${parent_id}`)
+      // Chia nhỏ để tránh nghẽn — ví dụ mỗi chunk CONSTANT_CHUNK_SIZE tweet
+      const ids = children_ids.map((tw) => tw._id.toString())
+      const chunks = chunkArray(ids, CONSTANT_CHUNK_SIZE)
+
+      // Xoá từng chunk một
+      for (const [index, batch] of chunks.entries()) {
+        console.log(`🔹 Đang xóa batch ${index + 1}/${chunks.length} (${batch.length} items)`)
+
+        // Giới hạn số lượng promise chạy song song (ví dụ 10 mỗi lần)
+        const CONCURRENCY = 10
+        for (let i = 0; i < batch.length; i += CONCURRENCY) {
+          const group = batch.slice(i, i + CONCURRENCY)
+          await Promise.allSettled(group.map((id) => this.delete(id)))
+        }
+      }
+
+      console.log(`✅ Finished deleting ${ids.length} children of ${parent_id}`)
+    } catch (error) {
+      console.error('Lỗi xóa các tweet con:', error)
+      throw error
+    }
   }
 
   //

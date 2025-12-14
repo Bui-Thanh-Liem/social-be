@@ -2,38 +2,80 @@ import { ObjectId } from 'mongodb'
 import { notificationQueue } from '~/bull/queues'
 import { BadRequestError } from '~/core/error.response'
 import { clientMongodb } from '~/dbs/init.mongodb'
-import cacheServiceInstance from '~/helpers/cache.helper'
+import cacheService from '~/helpers/cache.helper'
 import { LikeCollection } from '~/models/schemas/Like.schema'
 import { TweetCollection } from '~/models/schemas/Tweet.schema'
-import { UserCollection } from '~/models/schemas/User.schema'
 import { CONSTANT_JOB } from '~/shared/constants'
+import { CreateNotiLikeDto } from '~/shared/dtos/req/notification.dto'
 import { ParamIdTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ResToggleLike } from '~/shared/dtos/res/like.dto'
-import { ENotificationType } from '~/shared/enums/type.enum'
 import { convertObjectId } from '~/utils/convert-object-id'
-import { createKeyTweetDetails } from '~/utils/create-key-cache.util'
+import { createKeyTweetDetails, createKeyTweetLikes, createKeyTweetLikesCount } from '~/utils/create-key-cache.util'
 
 class LikesService {
   async toggleLike(user_id: string, payload: ParamIdTweetDto): Promise<ResToggleLike> {
     const { tweet_id } = payload
 
-    // cập nhật cache
-    const key_cache = createKeyTweetDetails(tweet_id)
-    const tweet_cached = await cacheServiceInstance.getCache<any>(key_cache)
+    // optimistic update cache *****CACHE*****
+    // Get cache keys and cached data
+    const key_cache_tw_d = createKeyTweetDetails(tweet_id) // tweet details key
+    const key_cache_tw_likes = createKeyTweetLikes(tweet_id) // users likes key
+    const key_cache_tw_likes_count = createKeyTweetLikesCount() // users likes count key
+    const tw_d_cached = await cacheService.get<any>(key_cache_tw_d)
+    // const tw_likes_cached = await cacheService.sMembers(key_cache_tw_likes)
+    const tw_likes_count_cached = await cacheService.hGet(key_cache_tw_likes_count, tweet_id)
 
-    // ObjectId
-    const user_Obj_id = new ObjectId(user_id)
-    const tweet_obj_id = new ObjectId(tweet_id)
+    //
+    const isMember = await cacheService.sIsMember(key_cache_tw_likes, user_id)
 
-    // data handle
-    const dataHandle = {
-      user_id: user_Obj_id,
-      tweet_id: tweet_obj_id
+    //
+    const pipeline = await cacheService.pipeline()
+    if (isMember) {
+      try {
+        // Update likes & likes_count in cache
+        await pipeline.sRem(key_cache_tw_likes, user_id)
+        await pipeline.hIncrBy(key_cache_tw_likes_count, tweet_id, -1)
+
+        // Update cached tweet details
+        if (tw_d_cached && tw_d_cached.likes_count !== undefined) {
+          tw_d_cached.likes_count = parseInt(tw_likes_count_cached || '0') - 1
+          tw_d_cached.likes = tw_d_cached.likes.concat([{ user_id: new ObjectId(user_id) }])
+          await pipeline.set(key_cache_tw_d, JSON.stringify(tw_d_cached), { ttl: 300 })
+        }
+      } catch (error) {
+        throw new BadRequestError((error as any)?.message || 'Toggling like in cache failed')
+      }
+    } else {
+      try {
+        // Update likes & likes_count in cache
+        await pipeline.sAdd(key_cache_tw_likes, user_id, { ttl: 2592000 }) // 30 days
+        await pipeline.hIncrBy(key_cache_tw_likes_count, tweet_id, 1, { ttl: 2592000 }) // 30 days
+
+        //  Update cached tweet details
+        if (tw_d_cached && tw_d_cached.likes_count !== undefined) {
+          tw_d_cached.likes_count = parseInt(tw_likes_count_cached || '0') + 1
+          tw_d_cached.likes = tw_d_cached.likes.filter((like: any) => like.user_id.toString() !== user_id)
+          await pipeline.set(key_cache_tw_d, JSON.stringify(tw_d_cached), { ttl: 300 })
+        }
+      } catch (error) {
+        throw new BadRequestError((error as any)?.message || 'Toggling like in cache failed')
+      }
     }
+    pipeline.exec()
 
-    // Check and delete if like exists
+    // Check and delete if like exists  *****DB***** sẽ làm ở Queue sau (write-behind cache)
     const session = clientMongodb.startSession()
     try {
+      // Prepare object IDs
+      const user_Obj_id = new ObjectId(user_id)
+      const tweet_obj_id = new ObjectId(tweet_id)
+
+      // data handle
+      const dataHandle = {
+        user_id: user_Obj_id,
+        tweet_id: tweet_obj_id
+      }
+
       return await session.withTransaction(async () => {
         const deleted = await LikeCollection.findOneAndDelete(dataHandle, { session })
 
@@ -52,17 +94,6 @@ class LikesService {
             }
           )
 
-          // cache in tweet details
-          if (tweet_cached && tweet_cached.likes_count !== undefined) {
-            tweet_cached.likes_count = updatedTweet?.likes_count
-            tweet_cached.likes = tweet_cached.likes.filter((like: any) => like.user_id.toString() !== user_id)
-          }
-
-          // cache in tweet details
-          if (tweet_cached) {
-            await cacheServiceInstance.setCache(key_cache, tweet_cached, { ttl: 300 })
-          }
-
           return { status: 'UnLike', _id: deleted._id.toString(), likes_count: updatedTweet?.likes_count || 0 }
         } else {
           // Like didn’t exist → add new like (Like)
@@ -75,6 +106,7 @@ class LikesService {
             {
               returnDocument: 'after',
               projection: {
+                user_id,
                 likes_count: 1
               },
               session
@@ -82,29 +114,14 @@ class LikesService {
           )
 
           // Send notification to tweet owner
-          const [sender, tw] = await Promise.all([
-            UserCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { name: 1 } }),
-            TweetCollection.findOne({ _id: new ObjectId(tweet_id) }, { projection: { user_id: 1 } })
-          ])
-          await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
-            content: `${sender?.name} đã thích bài viết của bạn.`,
-            type: ENotificationType.Mention_like,
-            sender: user_id,
-            receiver: tw!.user_id.toString(),
-            ref_id: tw?._id.toString()
-          })
-
-          // cache  in tweet details
-          if (tweet_cached && tweet_cached.likes_count !== undefined) {
-            tweet_cached.likes_count = updatedTweet?.likes_count
-            tweet_cached.likes = tweet_cached.likes.concat([{ _id: inserted.insertedId, user_id: user_Obj_id }])
+          if (user_id !== updatedTweet?.user_id.toString()) {
+            await notificationQueue.add(CONSTANT_JOB.SEND_NOTI_LIKE, {
+              sender_id: user_id,
+              tweet_id: tweet_id
+            } as CreateNotiLikeDto)
           }
 
-          // cache in tweet details
-          if (tweet_cached) {
-            await cacheServiceInstance.setCache(key_cache, tweet_cached, { ttl: 300 })
-          }
-
+          // Return response
           return { status: 'Like', _id: inserted.insertedId.toString(), likes_count: updatedTweet?.likes_count || 0 }
         }
       })
@@ -124,8 +141,7 @@ class LikesService {
   }
 
   async deleteByTweetId(tweet_id: string) {
-    await LikeCollection.deleteMany({ tweet_id: new ObjectId(tweet_id) })
-    return true
+    return await LikeCollection.deleteMany({ tweet_id: new ObjectId(tweet_id) })
   }
 }
 

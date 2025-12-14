@@ -5,7 +5,7 @@ import { StringValue } from 'ms'
 import { emailQueue, notificationQueue } from '~/bull/queues'
 import { envs } from '~/configs/env.config'
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from '~/core/error.response'
-import cacheServiceInstance from '~/helpers/cache.helper'
+import cacheService from '~/helpers/cache.helper'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { CONSTANT_JOB } from '~/shared/constants'
 import {
@@ -322,7 +322,7 @@ class AuthService {
   async logout({ user_id, refresh_token }: { user_id: string; refresh_token: string }) {
     // Xoá Người dùng đang active trong cache
     const key_cache = createKeyUserActive(user_id)
-    await cacheServiceInstance.del(key_cache)
+    await cacheService.del(key_cache)
 
     //
     return await TokensService.deleteByToken({ refresh_token }) // Chỉ đăng xuất trên phiên hiện tại

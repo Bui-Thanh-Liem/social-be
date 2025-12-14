@@ -34,3 +34,11 @@ export type CreateNotiDto = z.infer<typeof CreateNotiDtoSchema>
 export type GetMultiByTypeNotiDto = z.infer<typeof GetMultiByTypeNotiDtoSchema>
 export type DelNotiDto = z.infer<typeof ParamIdNotiDtoSchema>
 export type ReadNotiDto = z.infer<typeof ParamIdNotiDtoSchema>
+
+//
+export type CreateNotiLikeDto = {
+  sender_id: string
+  tweet_id: string
+}
+
+export type CreateNotiCommentDto = CreateNotiLikeDto

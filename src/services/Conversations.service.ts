@@ -1,7 +1,7 @@
-import { ClientSession, InsertOneResult, ObjectId } from 'mongodb'
+import { InsertOneResult, ObjectId } from 'mongodb'
 import { cleanupQueue, notificationQueue } from '~/bull/queues'
 import { clientMongodb } from '~/dbs/init.mongodb'
-import cacheServiceInstance from '~/helpers/cache.helper'
+import cacheService from '~/helpers/cache.helper'
 import { ConversationCollection, ConversationSchema } from '~/models/schemas/Conversation.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
 import { BadRequestError, NotFoundError } from '~/core/error.response'
@@ -74,7 +74,7 @@ class ConversationsService {
 
         ConversationGateway.sendNewConversation(conversation, id)
 
-        await cacheServiceInstance.del(cacheKey)
+        await cacheService.del(cacheKey)
 
         return conversation
       })

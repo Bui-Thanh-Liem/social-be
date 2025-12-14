@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { Server } from 'socket.io'
-import cacheServiceInstance from '~/helpers/cache.helper'
+import cacheService from '~/helpers/cache.helper'
 import { ConversationCollection } from '~/models/schemas/Conversation.schema'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 import { IConversation } from '~/shared/interfaces/schemas/conversation.interface'
@@ -9,12 +9,12 @@ import { IConversation } from '~/shared/interfaces/schemas/conversation.interfac
 export async function statusHandler(io: Server, user_id: string, handle?: 'onl' | 'off') {
   //
   if (handle === 'onl') {
-    await cacheServiceInstance.markUserOnline(user_id)
+    await cacheService.markUserOnline(user_id)
   }
 
   //
   if (handle === 'off') {
-    await cacheServiceInstance.markUserOffline(user_id)
+    await cacheService.markUserOffline(user_id)
   }
 
   // 1. Lấy tất cả conversation của user
@@ -55,7 +55,7 @@ async function getConversationsWithOnlineParticipants(
   )
 
   // B2: Check online 1 lần cho tất cả users
-  const onlineMap = await cacheServiceInstance.areUsersOnline(allOtherUsers.map((i) => i.toString()))
+  const onlineMap = await cacheService.areUsersOnline(allOtherUsers.map((i) => i.toString()))
 
   // B3: Gắn vào từng conversation
   return conversations.map((c) => {

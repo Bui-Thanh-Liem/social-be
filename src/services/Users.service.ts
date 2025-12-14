@@ -3,7 +3,7 @@ import { StringValue } from 'ms'
 import { emailQueue } from '~/bull/queues'
 import { envs } from '~/configs/env.config'
 import { NotFoundError, UnauthorizedError } from '~/core/error.response'
-import cacheServiceInstance from '~/helpers/cache.helper'
+import cacheService from '~/helpers/cache.helper'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
@@ -107,7 +107,7 @@ class UsersService {
 
   async getOneByUsername(username: string, user_id_active: string) {
     const key_cache = createKeyUserActive(user_id_active)
-    let user = await cacheServiceInstance.getCache<IUser>(key_cache)
+    let user = await cacheService.get<IUser>(key_cache)
     if (!user) {
       user = await UserCollection.aggregate<IUser>([
         {
@@ -491,14 +491,14 @@ class UsersService {
 
   async getUserActive(user_id: string) {
     const keyCache = createKeyUserActive(user_id)
-    let userActive = await cacheServiceInstance.getCache<IUser>(keyCache)
+    let userActive = await cacheService.get<IUser>(keyCache)
     if (!userActive) {
       console.log('❌ cache hết hạn lấy người dùng hiện tại trong database 🤦‍♂️')
       userActive = await UserCollection.findOne(
         { _id: new ObjectId(user_id) },
         { projection: { email_verify_token: 0, forgot_password_token: 0, password: 0 } }
       )
-      await cacheServiceInstance.setCache(keyCache, userActive, { ttl: 300 })
+      await cacheService.set(keyCache, userActive, { ttl: 300 })
     }
 
     if (!userActive) {
@@ -510,7 +510,7 @@ class UsersService {
 
   async resetUserActive(user_id: string) {
     const keyCache = createKeyUserActive(user_id)
-    await cacheServiceInstance.del(keyCache)
+    await cacheService.del(keyCache)
   }
 
   async checkUsersExist(_ids: string[]) {
