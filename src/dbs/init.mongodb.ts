@@ -57,7 +57,7 @@ class Database {
         // Cấu hình connection pool
         minPoolSize: _MINPOOLSIZE, // tối thiểu 5 kết nối trong pool
         maxPoolSize: _MAXPOOLSIZE, // tối đa 20 kết nối
-        maxIdleTimeMS: _SECOND_DLE, // 🆕 Connection idle > 10p sẽ bị đóng (mặc định)
+        // maxIdleTimeMS: _SECOND_DLE, // 🆕 Connection idle > 10p sẽ bị đóng (mặc định)
         retryWrites: true, // 🆕 Tự động retry
         retryReads: true,
 
