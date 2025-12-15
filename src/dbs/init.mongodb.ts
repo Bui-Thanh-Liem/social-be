@@ -35,7 +35,7 @@ const _MINPOOLSIZE = 5
 const _MAXPOOLSIZE = 20 // không bao giờ vượt, nếu hơn thì phải chờ
 const _SECOND_DLE = 600000 // 10 phút
 const _SOCKET_TIMEOUT_MS = 45000 // 45 giây
-console.log('envs.DB_CONNECT_STRING :::', envs.DB_CONNECT_STRING)
+console.log('envs.DB_CONNECT_STRING :::', envs.DB_CONNECT_STRING);
 
 class Database {
   static instance: Database | null = null
