@@ -13,7 +13,7 @@ import { logger } from './logger.util'
 import CommunityService from '~/services/Communities.service'
 import { CreateCommunityDto } from '~/shared/dtos/req/community.dto'
 
-const MY_ID = new ObjectId('693fce22b3fced33008bf541')
+const MY_ID = new ObjectId('693fdea463493df19d766fc4')
 const PASS = 'User123@'
 
 function generateRandomTweet(hashtags: string[]): string {

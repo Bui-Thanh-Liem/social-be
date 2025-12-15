@@ -178,25 +178,6 @@ class TrendingService {
       { $limit: 500 },
       {
         $lookup: {
-          from: 'followers',
-          let: { target_user_id: '$user_id._id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$followed_user_id', '$$target_user_id'] },
-                    { $eq: ['$user_id', new ObjectId(user_id)] }
-                  ]
-                }
-              }
-            }
-          ],
-          as: 'userFollowCheck'
-        }
-      },
-      {
-        $lookup: {
           from: 'users',
           localField: 'user_id',
           foreignField: '_id',
@@ -219,6 +200,25 @@ class TrendingService {
         }
       },
       { $unwind: { path: '$user_id', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'followers',
+          let: { target_user_id: '$user_id._id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$followed_user_id', '$$target_user_id'] },
+                    { $eq: ['$user_id', new ObjectId(user_id)] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: 'userFollowCheck'
+        }
+      },
       // 👇 thêm isFollow vào trong user_id
       {
         $addFields: {
@@ -253,7 +253,8 @@ class TrendingService {
           media: 1,
           user_id: 1,
           hashtags: 1,
-          created_at: 1
+          created_at: 1,
+          userFollowCheck: 1
         }
       }
     ]
@@ -353,25 +354,6 @@ class TrendingService {
       { $limit: 500 },
       {
         $lookup: {
-          from: 'followers',
-          let: { target_user_id: '$user_id._id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$followed_user_id', '$$target_user_id'] },
-                    { $eq: ['$user_id', new ObjectId(user_id)] }
-                  ]
-                }
-              }
-            }
-          ],
-          as: 'userFollowCheck'
-        }
-      },
-      {
-        $lookup: {
           from: 'users',
           localField: 'user_id',
           foreignField: '_id',
@@ -395,6 +377,25 @@ class TrendingService {
       },
       { $unwind: { path: '$user_id', preserveNullAndEmptyArrays: true } },
       // 👇 thêm isFollow vào trong user_id
+      {
+        $lookup: {
+          from: 'followers',
+          let: { target_user_id: '$user_id._id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$followed_user_id', '$$target_user_id'] },
+                    { $eq: ['$user_id', new ObjectId(user_id)] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: 'userFollowCheck'
+        }
+      },
       {
         $addFields: {
           'user_id.isFollow': { $gt: [{ $size: '$userFollowCheck' }, 0] }
