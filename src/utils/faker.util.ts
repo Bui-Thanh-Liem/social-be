@@ -12,9 +12,8 @@ import { hashPassword } from './crypto.util'
 import { logger } from './logger.util'
 import CommunityService from '~/services/Communities.service'
 import { CreateCommunityDto } from '~/shared/dtos/req/community.dto'
-import { ad } from 'node_modules/@faker-js/faker/dist/airline-CLphikKp.cjs'
 
-const MY_ID = new ObjectId('6908b46af5ad61f93037688b')
+const MY_ID = new ObjectId('693fce22b3fced33008bf541')
 const PASS = 'User123@'
 
 function generateRandomTweet(hashtags: string[]): string {
