@@ -49,11 +49,11 @@ class Database {
     // Chỉ khởi tạo client khi chưa có
     if (!Database.client) {
       Database.client = new MongoClient(envs.DB_CONNECT_STRING, {
-        // serverApi: {
-        //   // strict: true,  // 🆕 Bật không sử dụng được index-text
-        //   deprecationErrors: true,
-        //   version: ServerApiVersion.v1
-        // },
+        serverApi: {
+          // strict: true,  // 🆕 Bật không sử dụng được index-text
+          deprecationErrors: true,
+          version: ServerApiVersion.v1
+        },
         // Cấu hình connection pool
         minPoolSize: _MINPOOLSIZE, // tối thiểu 5 kết nối trong pool
         maxPoolSize: _MAXPOOLSIZE, // tối đa 20 kết nối
