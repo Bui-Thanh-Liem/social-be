@@ -1,7 +1,7 @@
 import { instanceMongodb } from '~/dbs/init.mongodb'
 import { logger } from '~/utils/logger.util'
 import { inviteQueue } from '../queues'
-import { cleanupWorker, compressionWorker, emailWorker, notificationWorker } from './index'
+import { cleanupWorker, compressionWorker, emailWorker, notificationWorker, syncWorker } from './index'
 
 async function bootstrapWorker() {
   try {
@@ -23,6 +23,7 @@ async function bootstrapWorker() {
     logger.info(`  - Email Worker: ${emailWorker.name}`)
     logger.info(`  - Cleanup Worker: ${cleanupWorker.name}`)
     logger.info(`  - InviteQueue Worker: ${inviteQueue.name}`)
+    logger.info(`  - Sync Worker: ${syncWorker.name}`)
     logger.info(`  - Compression Worker: ${compressionWorker.name}`)
     logger.info(`  - Notification Worker: ${notificationWorker.name}`)
   } catch (err) {
@@ -42,7 +43,8 @@ async function shutdown() {
       cleanupWorker.close(),
       compressionWorker.close(),
       emailWorker.close(),
-      notificationWorker.close()
+      notificationWorker.close(),
+      syncWorker.close()
     ])
     logger.info('✅ All workers closed')
 

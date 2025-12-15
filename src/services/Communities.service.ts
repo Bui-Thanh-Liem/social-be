@@ -40,7 +40,7 @@ interface IPromoteDemote {
 }
 
 class CommunityService {
-  async create(user_id: string, payload: CreateCommunityDto): Promise<boolean> {
+  async create(user_id: string, payload: CreateCommunityDto): Promise<string> {
     const exists = await CommunityCollection.countDocuments({ slug: slug(payload.name) })
 
     if (exists) {
@@ -71,7 +71,7 @@ class CommunityService {
     } catch (err) {
       throw new BadRequestError('Không thể mời thành viên, vui lòng thử lại.')
     }
-    return true
+    return inserted.insertedId.toString()
   }
 
   async update({ user_id, payload }: { payload: UpdateDto; user_id: string }) {

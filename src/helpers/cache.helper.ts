@@ -105,6 +105,28 @@ export class CacheService {
     }
   }
 
+  async lPush(key: string, value: string): Promise<boolean> {
+    await this.connect()
+    try {
+      await this.client.lPush(key, value)
+      return true
+    } catch (err) {
+      console.error(`Failed to push value to list for key ${key}:`, err)
+      return false
+    }
+  }
+
+  async rPop(key: string): Promise<string | null> {
+    await this.connect()
+    try {
+      const value = await this.client.rPop(key)
+      return value
+    } catch (err) {
+      console.error(`Failed to pop value from list for key ${key}:`, err)
+      return null
+    }
+  }
+
   async hIncrBy(key: string, field: string, increment: number): Promise<number | null> {
     await this.connect()
     try {
@@ -124,6 +146,17 @@ export class CacheService {
     } catch (err) {
       console.error(`Failed to get hash field ${field} for key ${key}:`, err)
       return null
+    }
+  }
+
+  async hGetAll(key: string): Promise<Record<string, string>> {
+    await this.connect()
+    try {
+      const result = await this.client.hGetAll(key)
+      return result
+    } catch (err) {
+      console.error(`Failed to get all hash fields for key ${key}:`, err)
+      return {}
     }
   }
 

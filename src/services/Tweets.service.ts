@@ -463,6 +463,10 @@ class TweetsService {
     tweet_db.is_bookmark = bookmarked_user_ids.includes(userActiveObjectId.toString())
 
     //
+    console.log('liked_user_ids:::', liked_user_ids)
+    console.log('userActiveObjectId:::', userActiveObjectId)
+    // console.log('tweet_db:::', tweet_db)
+
     return tweet_db as TweetSchema
   }
 

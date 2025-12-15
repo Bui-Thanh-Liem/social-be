@@ -106,51 +106,47 @@ class UsersService {
   }
 
   async getOneByUsername(username: string, user_id_active: string) {
-    const key_cache = createKeyUserActive(user_id_active)
-    let user = await cacheService.get<IUser>(key_cache)
-    if (!user) {
-      user = await UserCollection.aggregate<IUser>([
-        {
-          $match: {
-            username
-          }
-        },
-        {
-          $lookup: {
-            from: 'followers',
-            localField: '_id',
-            foreignField: 'followed_user_id',
-            as: 'followers'
-          }
-        },
-        {
-          $lookup: {
-            from: 'followers',
-            localField: '_id',
-            foreignField: 'user_id',
-            as: 'following'
-          }
-        },
-        {
-          $addFields: {
-            follower_count: { $size: '$followers' },
-            following_count: { $size: '$following' },
-            isFollow: {
-              $in: [new ObjectId(user_id_active), '$followers.user_id']
-            }
-          }
-        },
-        {
-          $project: {
-            password: 0,
-            followers: 0,
-            following: 0,
-            email_verify_token: 0,
-            forgot_password_token: 0
+    const user = await UserCollection.aggregate<IUser>([
+      {
+        $match: {
+          username
+        }
+      },
+      {
+        $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'followed_user_id',
+          as: 'followers'
+        }
+      },
+      {
+        $lookup: {
+          from: 'followers',
+          localField: '_id',
+          foreignField: 'user_id',
+          as: 'following'
+        }
+      },
+      {
+        $addFields: {
+          follower_count: { $size: '$followers' },
+          following_count: { $size: '$following' },
+          isFollow: {
+            $in: [new ObjectId(user_id_active), '$followers.user_id']
           }
         }
-      ]).next()
-    }
+      },
+      {
+        $project: {
+          password: 0,
+          followers: 0,
+          following: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0
+        }
+      }
+    ]).next()
 
     if (!user) {
       throw new NotFoundError('User not found')

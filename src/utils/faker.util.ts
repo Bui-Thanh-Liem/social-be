@@ -7,9 +7,12 @@ import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import TweetsService from '~/services/Tweets.service'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
-import { EMediaType, ETweetType } from '~/shared/enums/type.enum'
+import { EMediaType, EMembershipType, ETweetType, EVisibilityType } from '~/shared/enums/type.enum'
 import { hashPassword } from './crypto.util'
 import { logger } from './logger.util'
+import CommunityService from '~/services/Communities.service'
+import { CreateCommunityDto } from '~/shared/dtos/req/community.dto'
+import { ad } from 'node_modules/@faker-js/faker/dist/airline-CLphikKp.cjs'
 
 const MY_ID = new ObjectId('6908b46af5ad61f93037688b')
 const PASS = 'User123@'
@@ -393,17 +396,19 @@ async function createRandomUsers() {
   )
 }
 
+// Tạo hashtag ngẫu nhiên
 function randomHashtag() {
   return faker.internet.username()
 }
 
+// Lấy ngẫu nhiên 3 mentions từ danh sách user_ids
 function getRandomMentions(user_ids: ObjectId[]) {
   const shuffled = [...user_ids].sort(() => 0.5 - Math.random())
   return shuffled.slice(0, 3).map((id) => id.toString())
 }
 
 // Tạo 500 tweet (1 user tạo 5 tweet)
-async function createRandomTweets(user_ids: ObjectId[]) {
+async function createRandomTweets(user_ids: ObjectId[], community_id?: string) {
   logger.info('Start create tweet...')
 
   await Promise.all(
@@ -425,7 +430,8 @@ async function createRandomTweets(user_ids: ObjectId[]) {
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
-          ]
+          ],
+          community_id: community_id ? community_id : undefined
         }),
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
@@ -437,7 +443,8 @@ async function createRandomTweets(user_ids: ObjectId[]) {
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
-          ]
+          ],
+          community_id: community_id ? community_id : undefined
         }),
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
@@ -449,7 +456,8 @@ async function createRandomTweets(user_ids: ObjectId[]) {
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
-          ]
+          ],
+          community_id: community_id ? community_id : undefined
         }),
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
@@ -461,7 +469,8 @@ async function createRandomTweets(user_ids: ObjectId[]) {
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
-          ]
+          ],
+          community_id: community_id ? community_id : undefined
         }),
         TweetsService.create(id.toString(), {
           type: ETweetType.Tweet,
@@ -473,7 +482,8 @@ async function createRandomTweets(user_ids: ObjectId[]) {
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
             { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
-          ]
+          ],
+          community_id: community_id ? community_id : undefined
         })
       ])
     })
@@ -504,8 +514,40 @@ async function follow(user_id: ObjectId, followed_user_ids: ObjectId[]) {
   logger.info('Finish follow')
 }
 
+// Tạo 50 Communities và 500 tweets trong communities
+async function createRandomCommunities(admin_id: ObjectId) {
+  logger.info('Start create communities...')
+
+  function func() {
+    const name = faker.company.name().slice(0, 30)
+    return {
+      name: name,
+      cover: faker.image.avatar(),
+      bio: faker.lorem.sentence(),
+      category: 'Technology',
+      membership_type: EMembershipType.Open,
+      visibility_type: EVisibilityType.Public
+    } as CreateCommunityDto
+  }
+
+  const data = faker.helpers.multiple(func, {
+    count: 30
+  })
+
+  const community_ids = await Promise.all(data.map((payload) => CommunityService.create(admin_id.toString(), payload)))
+
+  await Promise.all(
+    community_ids.map(async (res) => {
+      await createRandomTweets([admin_id], res.toString())
+    })
+  )
+
+  logger.info('Finish create communities...')
+}
+
 export async function startFaker() {
   const user_ids = await createRandomUsers()
   await follow(MY_ID, user_ids)
   await createRandomTweets(user_ids)
+  await createRandomCommunities(MY_ID)
 }

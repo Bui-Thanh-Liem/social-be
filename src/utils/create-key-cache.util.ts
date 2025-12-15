@@ -26,4 +26,10 @@ export function createKeyTweetLikes(tweet_id: string) {
 
 export const createKeyUserOnline = (): string => 'user:online'
 
+export const createKeyTweetLikeQueue = (): string => 'tweet:like_queue' // list key
+
+export function createKeyTweetLikesSync(tweet_id: string) {
+  return `tweet:${tweet_id}:likes:sync`
+}
+
 export const createKeyUserLastSeen = (): string => 'user:user:last_seen'
