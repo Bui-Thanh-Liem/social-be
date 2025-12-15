@@ -28,7 +28,7 @@ import { initTrendingCollection, TrendingCollection } from '~/models/schemas/Tre
 import { initTweetCollection, TweetCollection } from '~/models/schemas/Tweet.schema'
 import { initUserCollection, UserCollection } from '~/models/schemas/User.schema'
 import { initVideoCollection } from '~/models/schemas/Video.schema'
-import { BadRequestError, InternalServerError, NotFoundError } from '~/core/error.response'
+import { BadRequestError, InternalServerError } from '~/core/error.response'
 import { logger } from '~/utils/logger.util'
 
 const _MINPOOLSIZE = 5
@@ -49,11 +49,11 @@ class Database {
     // Chỉ khởi tạo client khi chưa có
     if (!Database.client) {
       Database.client = new MongoClient(envs.DB_CONNECT_STRING, {
-        serverApi: {
-          // strict: true,  // 🆕 Bật không sử dụng được index-text
-          deprecationErrors: true,
-          version: ServerApiVersion.v1
-        },
+        // serverApi: {
+        //   // strict: true,  // 🆕 Bật không sử dụng được index-text
+        //   deprecationErrors: true,
+        //   version: ServerApiVersion.v1
+        // },
         // Cấu hình connection pool
         minPoolSize: _MINPOOLSIZE, // tối thiểu 5 kết nối trong pool
         maxPoolSize: _MAXPOOLSIZE, // tối đa 20 kết nối
