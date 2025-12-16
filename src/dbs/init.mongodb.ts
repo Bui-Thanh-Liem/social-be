@@ -49,10 +49,10 @@ class Database {
     // Chỉ khởi tạo client khi chưa có
     if (!Database.client) {
       Database.client = new MongoClient(envs.DB_CONNECT_STRING, {
-        serverApi: {
-          deprecationErrors: true,
-          version: ServerApiVersion.v1
-        },
+        // serverApi: {
+        //   deprecationErrors: true,
+        //   version: ServerApiVersion.v1
+        // },
         minPoolSize: _MINPOOLSIZE,
         maxPoolSize: _MAXPOOLSIZE,
 
