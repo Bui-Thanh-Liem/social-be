@@ -7,6 +7,7 @@ import { BadRequestError } from '~/core/error.response'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { ENotificationType } from '~/shared/enums/type.enum'
 import TweetsService from './Tweets.service'
+import { ETweetStatus } from '~/shared/enums/status.enum'
 
 class ReportTweetService {
   async report({ reporter_id, tweet_id }: { tweet_id: string; reporter_id: string }) {
@@ -79,7 +80,9 @@ class ReportTweetService {
 
     //
     if (tweet_ids.length > 0) {
-      await Promise.all([tweet_ids.map((id) => TweetsService.delete(id))])
+      await Promise.all([
+        tweet_ids.map((id) => TweetsService.changeStatusTweet({ tweet_id: id, status: ETweetStatus.Reject }))
+      ])
     }
 
     //
