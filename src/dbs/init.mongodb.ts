@@ -49,21 +49,21 @@ class Database {
     // Chỉ khởi tạo client khi chưa có
     if (!Database.client) {
       Database.client = new MongoClient(envs.DB_CONNECT_STRING, {
-        // serverApi: {
-        //   deprecationErrors: true,
-        //   version: ServerApiVersion.v1
-        // },
+        serverApi: {
+          deprecationErrors: true,
+          version: ServerApiVersion.v1
+        },
         minPoolSize: _MINPOOLSIZE,
         maxPoolSize: _MAXPOOLSIZE,
 
         retryWrites: true,
         retryReads: true,
 
+        monitorCommands: false,
         socketTimeoutMS: _SOCKET_TIMEOUT_MS,
-        monitorCommands: true,
 
         // 🆕 Các option quan trọng để giảm lỗi monitor timeout
-        heartbeatFrequencyMS: 20000, // Gửi heartbeat chậm hơn: mỗi 20 giây thay vì 10 giây → ít nhạy cảm với latency ngắn
+        heartbeatFrequencyMS: 60000, // Gửi heartbeat chậm hơn: mỗi 20 giây thay vì 10 giây → ít nhạy cảm với latency ngắn
         connectTimeoutMS: 30000, // Thời gian chờ mở socket mới (default 30s, nhưng set rõ cho chắc)
         serverSelectionTimeoutMS: 30000 // Thời gian chọn server khi reconnect
         // maxIdleTimeMS: 300000,       // Optional: đóng connection idle sau 5 phút nếu muốn tiết kiệm
