@@ -197,7 +197,7 @@ class TweetsService {
       return tweet_processed
     }
 
-    //  4. Thiết lập khóa với Redlock để tránh thundering herd problem
+    //  4. Thiết lập khóa để tránh thundering herd problem
     const resource = createKeyTweetLock(tweet_id)
     const lockTTL = 10000 // 10 giây
     const lockVal = (Date.now() + lockTTL + 1).toString()
