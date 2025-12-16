@@ -21,6 +21,10 @@ import {
 class LikesService {
   async toggleLike(user_id: string, payload: ParamIdTweetDto): Promise<ResToggleLike> {
     const { tweet_id } = payload
+    const tweet = await TweetCollection.findOne({ _id: convertObjectId(tweet_id) }, { projection: { _id: 1 } })
+    if (!tweet) {
+      throw new BadRequestError('Bài viết không tồn tại')
+    }
 
     // Optimistic update cache *****CACHE*****
     // Get cache keys and cached data
@@ -160,23 +164,21 @@ class LikesService {
 
       // Send notification to tweet owner
       if (users_like?.length > 0) {
-        if (users_like.length > CONSTANT_CHUNK_SIZE) {
-          // Send in chunks
-          const chunks = chunkArray(users_like, CONSTANT_CHUNK_SIZE)
-          for (const chunk of chunks) {
-            const jobs = chunk.map((user_id) => ({
-              name: CONSTANT_JOB.SEND_NOTI_LIKE,
-              data: {
-                sender_id: user_id,
-                tweet_id: tweet_id
-              },
-              opts: {
-                removeOnComplete: true,
-                attempts: 3 // retry nếu queue bị lỗi
-              }
-            }))
-            await notificationQueue.addBulk(jobs)
-          }
+        // Send in chunks
+        const chunks = chunkArray(users_like, CONSTANT_CHUNK_SIZE)
+        for (const chunk of chunks) {
+          const jobs = chunk.map((user_id) => ({
+            name: CONSTANT_JOB.SEND_NOTI_LIKE,
+            data: {
+              sender_id: user_id,
+              tweet_id: tweet_id
+            },
+            opts: {
+              removeOnComplete: true,
+              attempts: 3 // retry nếu queue bị lỗi
+            }
+          }))
+          await notificationQueue.addBulk(jobs)
         }
       }
     } catch (error) {

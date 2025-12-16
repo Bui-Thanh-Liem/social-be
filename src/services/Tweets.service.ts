@@ -107,30 +107,28 @@ class TweetsService {
 
     // Gửi thông báo cho ai mà người comment/tweet nhắc đến
     if (mentions?.length) {
-      if (mentions.length > CONSTANT_CHUNK_SIZE) {
-        // Nếu nhiều hơn 50 thành viên → tách nhỏ thành nhiều chunk để tránh lỗi payload quá lớn
-        const chunks = chunkArray(mentions, CONSTANT_CHUNK_SIZE)
-        for (const chunk of chunks) {
-          //
-          const jobs = chunk.map((receiverId) => ({
-            name: CONSTANT_JOB.SEND_NOTI,
-            data: {
-              content: `${sender?.name} đã nhắc đến bạn trong một ${
-                type === ETweetType.Comment ? 'bình luận' : 'bài viết'
-              }.`,
-              type: ENotificationType.Mention_like,
-              sender: user_id,
-              receiver: receiverId,
-              ref_id: newTweet.insertedId.toString()
-            },
-            opts: {
-              removeOnComplete: true,
-              attempts: 3 // retry nếu queue bị lỗi
-            }
-          }))
+      // Nếu nhiều hơn 50 thành viên → tách nhỏ thành nhiều chunk để tránh lỗi payload quá lớn
+      const chunks = chunkArray(mentions, CONSTANT_CHUNK_SIZE)
+      for (const chunk of chunks) {
+        //
+        const jobs = chunk.map((receiverId) => ({
+          name: CONSTANT_JOB.SEND_NOTI,
+          data: {
+            content: `${sender?.name} đã nhắc đến bạn trong một ${
+              type === ETweetType.Comment ? 'bình luận' : 'bài viết'
+            }.`,
+            type: ENotificationType.Mention_like,
+            sender: user_id,
+            receiver: receiverId,
+            ref_id: newTweet.insertedId.toString()
+          },
+          opts: {
+            removeOnComplete: true,
+            attempts: 3 // retry nếu queue bị lỗi
+          }
+        }))
 
-          await notificationQueue.addBulk(jobs)
-        }
+        await notificationQueue.addBulk(jobs)
       }
     }
 
@@ -152,26 +150,24 @@ class TweetsService {
 
     // Gửi thông báo cho điều hành viên của cộng đồng
     if (community_id && community && operatorIds.length > 0) {
-      if (operatorIds.length > CONSTANT_CHUNK_SIZE) {
-        // Nếu nhiều hơn 50 thành viên → tách nhỏ thành nhiều chunk để tránh lỗi payload quá lớn
-        const chunks = chunkArray(operatorIds, CONSTANT_CHUNK_SIZE)
-        for (const chunk of chunks) {
-          // tạo jobs
-          const jobs = chunk.map((id) => ({
-            name: CONSTANT_JOB.SEND_NOTI,
-            data: {
-              content: `${sender?.name} đã đăng bài viết mới trong cộng đồng ${community.name}, đang chờ duyệt bài.`,
-              type: ENotificationType.Community,
-              sender: user_id,
-              receiver: id.toString(),
-              ref_id: community_id
-            }
-          }))
+      // Nếu nhiều hơn 50 thành viên → tách nhỏ thành nhiều chunk để tránh lỗi payload quá lớn
+      const chunks = chunkArray(operatorIds, CONSTANT_CHUNK_SIZE)
+      for (const chunk of chunks) {
+        // tạo jobs
+        const jobs = chunk.map((id) => ({
+          name: CONSTANT_JOB.SEND_NOTI,
+          data: {
+            content: `${sender?.name} đã đăng bài viết mới trong cộng đồng ${community.name}, đang chờ duyệt bài.`,
+            type: ENotificationType.Community,
+            sender: user_id,
+            receiver: id.toString(),
+            ref_id: community_id
+          }
+        }))
 
-          //
-          await notificationQueue.addBulk(jobs)
-          await CommunityGateway.sendCountTweetApprove(community_id)
-        }
+        //
+        await notificationQueue.addBulk(jobs)
+        await CommunityGateway.sendCountTweetApprove(community_id)
       }
     }
 
@@ -227,6 +223,9 @@ class TweetsService {
     const followed_user_ids = await FollowsService.getUserFollowing(user_active_id)
     followed_user_ids.push(user_active_id)
 
+    //
+    const userActiveObjectId = new ObjectId(user_active_id)
+
     // 1. Định nghĩa điều kiện match (không đổi)
     const match_condition = {
       _id: new ObjectId(tweet_id),
@@ -239,7 +238,10 @@ class TweetsService {
         },
         {
           audience: ETweetAudience.Mentions,
-          mentions: { $in: [user_active_id] }
+          mentions: { $in: [userActiveObjectId] }
+        },
+        {
+          user_id: userActiveObjectId // Chủ bài viết có quyền xem tất cả
         }
       ]
     }
@@ -372,7 +374,7 @@ class TweetsService {
                     cond: {
                       $and: [
                         { $eq: ['$$child.type', ETweetType.Retweet] },
-                        { $eq: ['$$child.user_id', new ObjectId(user_active_id)] }
+                        { $eq: ['$$child.user_id', userActiveObjectId] }
                       ]
                     }
                   }
@@ -392,7 +394,7 @@ class TweetsService {
                     cond: {
                       $and: [
                         { $eq: ['$$child.type', ETweetType.QuoteTweet] },
-                        { $eq: ['$$child.user_id', new ObjectId(user_active_id)] }
+                        { $eq: ['$$child.user_id', userActiveObjectId] }
                       ]
                     }
                   }
@@ -1194,7 +1196,7 @@ class TweetsService {
 
     // Nếu người xem profile là chính chủ
     if (user_active_id === user_id) {
-      match_condition.audience = { $in: [ETweetAudience.Everyone, ETweetAudience.Followers] }
+      match_condition.audience = { $in: [ETweetAudience.Everyone, ETweetAudience.Followers, ETweetAudience.Mentions] }
     } else {
       // Nếu người khác xem profile
       match_condition.$or = [

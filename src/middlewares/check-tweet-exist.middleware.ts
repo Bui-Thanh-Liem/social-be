@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express'
-import TweetsService from '~/services/Tweets.service'
 import { NotFoundError } from '~/core/error.response'
+import TweetsService from '~/services/Tweets.service'
 
-// Y rang checkTweetParams nhưng sẽ query kiểm tra tồn tại và lấy audience thôi
-export async function checkTweetParamsId(req: Request, res: Response, next: NextFunction) {
+// Y rang checkTweetParams nhưng sẽ query kiểm tra tồn tại và lấy author thôi
+export async function checkTweetExist(req: Request, res: Response, next: NextFunction) {
   try {
     const { tweet_id } = req.params as { tweet_id: string }
 

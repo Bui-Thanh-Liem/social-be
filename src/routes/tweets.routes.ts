@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import TweetsController from '~/controllers/Tweets.controller'
-import { checkAudience } from '~/middlewares/check-audience.middleware'
-import { checkTweetParamsId } from '~/middlewares/check-tweet-params-id.middleware'
+import { checkAudience } from '~/middlewares/tweet/check-audience.middleware'
 import { checkTweetByIdParams } from '~/middlewares/check-tweet-params.middleware'
 import { optionLogin } from '~/middlewares/option-login.middleware'
 import { requestBodyValidate } from '~/middlewares/request-body-validate.middleware'
@@ -19,6 +18,7 @@ import {
   paramIdTweetDtoSchema
 } from '~/shared/dtos/req/tweet.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
+import { checkTweetExist } from '~/middlewares/check-tweet-exist.middleware'
 
 const tweetsRoute = Router()
 
@@ -101,7 +101,7 @@ tweetsRoute.get(
   optionLogin(verifyUserEmail),
   requestParamsValidate(getTweetChildrenDtoSchemaParams),
   requestQueryValidate(QueryDtoSchema),
-  checkTweetParamsId, // chỉ  kiểm tra tồn tại và lấy audience cho checkAudience
+  checkTweetExist, // chỉ  kiểm tra tồn tại và lấy audience cho checkAudience
   checkAudience,
   asyncHandler(TweetsController.getTweetChildren)
 )
