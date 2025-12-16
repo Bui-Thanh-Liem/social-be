@@ -39,7 +39,7 @@ class TweetsController {
       tweet_id,
       tweet_type,
       query: req.query,
-      user_id: user.user_id
+      user_id: user?.user_id
     })
 
     res.status(200).json(new OkResponse('Get tweet children Success', tweets))

@@ -8,12 +8,12 @@ export async function checkUserParams(req: Request, res: Response, next: NextFun
     const { user_id } = req.params as { user_id: string }
 
     if (!user_id) {
-      throw new NotFoundError('User_id is required')
+      throw new NotFoundError('Người dùng không tồn tại')
     }
 
     const user = await UserCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { _id: 1 } })
     if (!user) {
-      throw new NotFoundError('User không tồn tại')
+      throw new NotFoundError('Người dùng không tồn tại')
     }
 
     req.user_local_one_lifecycle = user

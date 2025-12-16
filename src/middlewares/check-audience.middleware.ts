@@ -22,14 +22,14 @@ export async function checkAudience(req: Request, res: Response, next: NextFunct
     )
 
     if (!user || user.verify === EUserVerifyStatus.Banned) {
-      throw new UnauthorizedError('Author does not exist or is banned')
+      throw new UnauthorizedError('Tác giả không tồn tại hoặc đã bị khóa tài khoản')
     }
 
     // Kiểm tra audience của tweet là gì
     if (audience === ETweetAudience.Followers) {
       // Có đăng nhập không
       if (!req?.decoded_authorization) {
-        throw new UnauthorizedError('Tweet này bạn phải đăng nhập mới xem được')
+        throw new UnauthorizedError('Bài viết này bạn phải đăng nhập mới xem được')
       }
 
       // Kiểm tra người xem có trong follows không
@@ -41,7 +41,7 @@ export async function checkAudience(req: Request, res: Response, next: NextFunct
         followed_user_id: authorId
       })
       if (!follow) {
-        throw new BadRequestError('Bạn chưa follow tác giả')
+        throw new BadRequestError('Bạn chưa theo dõi tác giả bài viết này')
       }
     }
 

@@ -11,17 +11,17 @@ export async function verifyUserActiveForChangePassword(req: Request, res: Respo
 
     //
     if (old_password === new_password) {
-      throw new BadRequestError('The new password cannot be the same as the current password.')
+      throw new BadRequestError('Mật khẩu mới không được giống mật khẩu cũ.')
     }
 
     //
     if (user?.verify === EUserVerifyStatus.Unverified) {
-      throw new UnauthorizedError('Your account is not verified.')
+      throw new UnauthorizedError('Tài khoản của bạn chưa được xác thực.')
     }
 
     const verifyPass = verifyPassword(old_password, user!.password)
     if (!verifyPass) {
-      throw new UnauthorizedError('Password not correct')
+      throw new UnauthorizedError('Mật khẩu cũ không đúng')
     }
 
     next()

@@ -8,7 +8,7 @@ export async function checkTweetParamsId(req: Request, res: Response, next: Next
     const { tweet_id } = req.params as { tweet_id: string }
 
     if (!tweet_id) {
-      throw new NotFoundError('Tweet_id is required')
+      throw new NotFoundError('Bài viết không tồn tại.')
     }
 
     //

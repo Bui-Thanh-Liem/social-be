@@ -108,8 +108,8 @@ tweetsRoute.get(
 
 tweetsRoute.get(
   '/:tweet_id',
-  verifyAccessToken,
-  verifyUserEmail,
+  optionLogin(verifyAccessToken),
+  optionLogin(verifyUserEmail),
   requestParamsValidate(GetOneTweetByIdDtoSchema),
   checkTweetByIdParams,
   checkAudience,

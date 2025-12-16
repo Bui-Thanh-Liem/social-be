@@ -10,7 +10,7 @@ export async function verifyAccessToken(req: Request, res: Response, next: NextF
     const access_token = authorization.split(' ')[1]
 
     if (!access_token) {
-      throw new UnauthorizedError('Access token is required')
+      throw new UnauthorizedError('Vui lòng đăng nhập.')
     }
     const decoded = await verifyToken({ token: access_token, privateKey: envs.JWT_SECRET_ACCESS })
 

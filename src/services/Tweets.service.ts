@@ -260,6 +260,18 @@ class TweetsService {
       },
       {
         $lookup: {
+          from: 'communities',
+          localField: 'community_id',
+          foreignField: '_id',
+          as: 'community_id',
+          pipeline: [{ $project: { name: 1, slug: 1 } }]
+        }
+      },
+      {
+        $unwind: { path: '$community_id', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
           from: 'users', // tên collection chứa user
           localField: 'user_id', // field trong tweet
           foreignField: '_id', // field trong user
