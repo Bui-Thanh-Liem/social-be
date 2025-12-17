@@ -1,7 +1,6 @@
 import { instanceMongodb } from '~/dbs/init.mongodb'
 import { logger } from '~/utils/logger.util'
-import { inviteQueue } from '../queues'
-import { cleanupWorker, compressionWorker, emailWorker, notificationWorker, syncWorker } from './index'
+import { cleanupWorker, compressionWorker, emailWorker, inviteWorker, notificationWorker, syncWorker } from './index'
 
 async function bootstrapWorker() {
   try {
@@ -9,21 +8,12 @@ async function bootstrapWorker() {
     await instanceMongodb.connect()
     logger.info('✅ Worker: Database connected!')
 
-    instanceMongodb.initialCollections()
-    logger.info('Cerated collections!')
-
-    instanceMongodb.initialIndex()
-    logger.info('Cerated index!')
-
-    // 3. Khởi tạo indexes (optional - có thể bỏ qua vì API server đã tạo rồi)
-    // await database.initialIndex()
-
-    // 4. Log worker status
+    // 2. Log worker status
     logger.info('🚀 Workers are running...')
+    logger.info(`  - Sync Worker: ${syncWorker.name}`)
     logger.info(`  - Email Worker: ${emailWorker.name}`)
     logger.info(`  - Cleanup Worker: ${cleanupWorker.name}`)
-    logger.info(`  - InviteQueue Worker: ${inviteQueue.name}`)
-    logger.info(`  - Sync Worker: ${syncWorker.name}`)
+    logger.info(`  - InviteQueue Worker: ${inviteWorker.name}`)
     logger.info(`  - Compression Worker: ${compressionWorker.name}`)
     logger.info(`  - Notification Worker: ${notificationWorker.name}`)
   } catch (err) {
@@ -40,11 +30,12 @@ async function shutdown() {
   try {
     // 1. Đóng tất cả workers
     await Promise.all([
+      syncWorker.close(),
+      emailWorker.close(),
+      inviteWorker.close(),
       cleanupWorker.close(),
       compressionWorker.close(),
-      emailWorker.close(),
-      notificationWorker.close(),
-      syncWorker.close()
+      notificationWorker.close()
     ])
     logger.info('✅ All workers closed')
 
