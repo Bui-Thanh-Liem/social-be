@@ -1,4 +1,4 @@
-import { Db, MongoClient, ServerApiVersion, MongoClientOptions } from 'mongodb'
+import { Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { initBookmarkCollection } from '~/models/schemas/Bookmark.schema'
 import {
@@ -32,8 +32,7 @@ import { BadRequestError, InternalServerError } from '~/core/error.response'
 import { logger } from '~/utils/logger.util'
 
 const _MINPOOLSIZE = 5
-const _MAXPOOLSIZE = 20 // không bao giờ vượt, nếu hơn thì phải chờ
-const _SECOND_DLE = 600000 // 10 phút
+const _MAXPOOLSIZE = 50 // không bao giờ vượt, nếu hơn thì phải chờ
 const _SOCKET_TIMEOUT_MS = 45000 // 45 giây
 console.log('envs.DB_CONNECT_STRING :::', envs.DB_CONNECT_STRING)
 
@@ -46,30 +45,35 @@ class Database {
 
   // 1️⃣ PRIVATE constructor - Ngăn tạo instance từ bên ngoài
   private constructor() {
-    // Chỉ khởi tạo client khi chưa có
-    if (!Database.client) {
-      Database.client = new MongoClient(envs.DB_CONNECT_STRING, {
-        serverApi: {
-          deprecationErrors: true,
-          version: ServerApiVersion.v1
-        },
-        minPoolSize: _MINPOOLSIZE,
-        maxPoolSize: _MAXPOOLSIZE,
+    try {
+      // Chỉ khởi tạo client khi chưa có
+      if (!Database.client) {
+        Database.client = new MongoClient(envs.DB_CONNECT_STRING, {
+          serverApi: {
+            deprecationErrors: true,
+            version: ServerApiVersion.v1
+          },
+          minPoolSize: _MINPOOLSIZE,
+          maxPoolSize: _MAXPOOLSIZE,
 
-        retryWrites: true,
-        retryReads: true,
+          retryWrites: true,
+          retryReads: true,
 
-        monitorCommands: false,
-        socketTimeoutMS: _SOCKET_TIMEOUT_MS,
+          monitorCommands: false,
+          socketTimeoutMS: _SOCKET_TIMEOUT_MS,
 
-        // 🆕 Các option quan trọng để giảm lỗi monitor timeout
-        heartbeatFrequencyMS: 60000, // Gửi heartbeat chậm hơn: mỗi 20 giây thay vì 10 giây → ít nhạy cảm với latency ngắn
-        connectTimeoutMS: 30000, // Thời gian chờ mở socket mới (default 30s, nhưng set rõ cho chắc)
-        serverSelectionTimeoutMS: 30000 // Thời gian chọn server khi reconnect
-        // maxIdleTimeMS: 300000,       // Optional: đóng connection idle sau 5 phút nếu muốn tiết kiệm
-      })
+          // 🆕 Các option quan trọng để giảm lỗi monitor timeout
+          heartbeatFrequencyMS: 60000, // Gửi heartbeat chậm hơn: mỗi 20 giây thay vì 10 giây → ít nhạy cảm với latency ngắn
+          connectTimeoutMS: 30000, // Thời gian chờ mở socket mới (default 30s, nhưng set rõ cho chắc)
+          serverSelectionTimeoutMS: 30000 // Thời gian chọn server khi reconnect
+          // maxIdleTimeMS: 300000,       // Optional: đóng connection idle sau 5 phút nếu muốn tiết kiệm
+        })
+      }
+      this.db = Database.client.db(envs.DB_NAME)
+    } catch (error) {
+      console.error('MongoDB client initialization failed:', error)
+      throw new InternalServerError('MongoDB client initialization failed')
     }
-    this.db = Database.client.db(envs.DB_NAME)
   }
 
   // 2️⃣ PUBLIC getInstance() - Cách duy nhất để lấy instance
