@@ -12,8 +12,8 @@ async function bootstrapWorker() {
     logger.info('🚀 Workers are running...')
     logger.info(`  - Sync Worker: ${syncWorker.name}`)
     logger.info(`  - Email Worker: ${emailWorker.name}`)
+    logger.info(`  - Invite Worker: ${inviteWorker.name}`)
     logger.info(`  - Cleanup Worker: ${cleanupWorker.name}`)
-    logger.info(`  - InviteQueue Worker: ${inviteWorker.name}`)
     logger.info(`  - Compression Worker: ${compressionWorker.name}`)
     logger.info(`  - Notification Worker: ${notificationWorker.name}`)
   } catch (err) {
