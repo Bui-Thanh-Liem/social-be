@@ -142,7 +142,7 @@ class Database {
 
   async disconnect() {
     await Database.client.close()
-    logger.info('Disconnected from MongoDB')
+    logger.info('❌ Disconnected from MongoDB ❌')
   }
 
   async initialCollections() {
