@@ -7,7 +7,7 @@ import { verifyToken } from '~/utils/jwt.util'
 export async function verifyAccessToken(req: Request, res: Response, next: NextFunction) {
   try {
     const authorization = req.headers['authorization'] || ''
-    const access_token = authorization.split(' ')[1]
+    const access_token = authorization.split(' ')[1];
 
     if (!access_token) {
       throw new UnauthorizedError('Vui lòng đăng nhập.')
