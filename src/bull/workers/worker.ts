@@ -8,7 +8,11 @@ async function bootstrapWorker() {
     await instanceMongodb.connect()
     logger.info('✅ Worker: Database connected!')
 
-    // 2. Log worker status
+    // 2. Khởi tạo collections nếu chưa có
+    await instanceMongodb.initialCollections()
+    logger.info('✅ Worker: Collections are ready!')
+
+    // 3. Log worker status
     logger.info('🚀 Workers are running...')
     logger.info(`  - Sync Worker: ${syncWorker.name}`)
     logger.info(`  - Email Worker: ${emailWorker.name}`)

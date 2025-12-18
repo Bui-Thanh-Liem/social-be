@@ -34,7 +34,7 @@ import { logger } from '~/utils/logger.util'
 const _MINPOOLSIZE = 5
 const _MAXPOOLSIZE = 50 // không bao giờ vượt, nếu hơn thì phải chờ
 const _SOCKET_TIMEOUT_MS = 45000 // 45 giây
-console.log('envs.DB_CONNECT_STRING :::', envs.DB_CONNECT_STRING);
+console.log('envs.DB_CONNECT_STRING :::', envs.DB_CONNECT_STRING)
 
 class Database {
   private db: Db

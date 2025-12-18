@@ -14,7 +14,12 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { slug } from '~/utils/slug.util'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
-import { createKeyOutStandingThisWeek, createKeyTweetStandingThisWeekLock } from '~/utils/create-key-cache.util'
+import {
+  createKeyOutStandingThisWeek,
+  createKeyTodayTweet,
+  createKeyTweetStandingThisWeekLock,
+  createKeyTweetTodayLock
+} from '~/utils/create-key-cache.util'
 import cacheService from '~/helpers/cache.helper'
 import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
 
@@ -135,11 +140,69 @@ class TrendingService {
     return { total, total_page: Math.ceil(total / limit), items: trending }
   }
 
+  // (cache, pessimistic lock) => sử dụng vòng lặp để dễ dàng quản lý số lần thử lại
+  async getTodayNews({
+    query,
+    user_id
+  }: {
+    query: IQuery<ITrending>
+    user_id: string
+  }): Promise<IResTodayNewsOrOutstanding[]> {
+    // 1.
+    const key_cache = createKeyTodayTweet()
+
+    // 2.
+    const tweet_cache = await cacheService.get<IResTodayNewsOrOutstanding[]>(key_cache)
+
+    // 3.
+    if (tweet_cache) {
+      console.log('Get in cached - Today news')
+      return tweet_cache
+    }
+
+    // 4.
+    const resource = createKeyTweetTodayLock()
+    const lockTTL = 10000 // 10 giây
+    const lockVal = (Date.now() + lockTTL + 1).toString()
+    let retries = 0
+    const maxRetries = 50 // ~5 giây (100ms mỗi lần)
+
+    //
+    while (retries < maxRetries) {
+      const lock = await pessimisticLockServiceInstance.set(resource, lockVal, lockTTL)
+      // 5.
+      if (lock === 'OK') {
+        try {
+          const result = await this._getTodayNews({ query, user_id })
+          await cacheService.set(key_cache, result, { ttl: 300 }) // 5 phút
+          return result
+        } catch (error) {
+          throw new BadRequestError('Có lỗi xảy ra vui lòng thử lại.')
+        } finally {
+          // 6. Dù thành công hay lỗi thì cũng phải release lock
+          const lockValue = await pessimisticLockServiceInstance.get(resource)
+          if (lockValue === lockVal) {
+            await pessimisticLockServiceInstance.release(resource)
+          }
+        }
+      } else {
+        // Nếu không lấy được lock thì chờ 100ms
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        retries++
+      }
+    }
+
+    // Nếu hết retry thì fallback về cache cũ (nếu có) hoặc throw
+    const fallback = await cacheService.get<IResTodayNewsOrOutstanding[]>(key_cache)
+    if (fallback) return fallback
+    throw new BadRequestError('Hệ thống đang bận, vui lòng thử lại sau vài giây.')
+  }
+
   // Sử dụng cho today news (từ khoá hay hashtag tìm kiếm nhiều nhất tuần không tính ngày hôm qua)
   // Lấy trending topic/hashtag xu hướng  (query: page: 1, limit: 20)
   // Dùng trending lấy (1000) tweets thỏa topics/hashtags nổi bật hôm nay (nhiều lượt like/view)
   // Rồi group (trên node) theo topic/hashtag , trả về cho client
-  async getTodayNews({
+  private async _getTodayNews({
     query,
     user_id
   }: {
@@ -307,9 +370,11 @@ class TrendingService {
       (tweet, index, self) => index === self.findIndex((t) => t._id?.equals(tweet._id))
     )
 
+    console.log('Get in database - Today news')
     return this.grouped(trending.items, tweets, 'Tin tức')
   }
 
+  // (cache, pessimistic lock) => sử dụng vòng lặp để dễ dàng quản lý số lần thử lại
   async getOutStandingThisWeekNews({
     query,
     user_id
@@ -333,30 +398,41 @@ class TrendingService {
     const resource = createKeyTweetStandingThisWeekLock()
     const lockTTL = 10000 // 10 giây
     const lockVal = (Date.now() + lockTTL + 1).toString()
-    const lock = await pessimisticLockServiceInstance.set(resource, lockVal, lockTTL)
+    let retries = 0
+    const maxRetries = 50 // ~5 giây (100ms mỗi lần)
 
-    // 5.
-    if (lock === 'OK') {
-      try {
-        const result = await this._getOutStandingThisWeekNews({ query, user_id })
-        await cacheService.set(key_cache, result, { ttl: 3600 })
-        return result
-      } catch (error) {
-        throw new BadRequestError('Có lỗi xảy ra vui lòng thử lại.')
-      } finally {
-        // 6. Dù thành công hay lỗi thì cũng phải release lock
-        const lockValue = await pessimisticLockServiceInstance.get(resource)
-        if (lockValue === lockVal) {
-          await pessimisticLockServiceInstance.release(resource)
+    //
+    while (retries < maxRetries) {
+      const lock = await pessimisticLockServiceInstance.set(resource, lockVal, lockTTL)
+      // 5.
+      if (lock === 'OK') {
+        try {
+          const result = await this._getOutStandingThisWeekNews({ query, user_id })
+          await cacheService.set(key_cache, result, { ttl: 300 }) // 5 phút
+          return result
+        } catch (error) {
+          throw new BadRequestError('Có lỗi xảy ra vui lòng thử lại.')
+        } finally {
+          // 6. Dù thành công hay lỗi thì cũng phải release lock
+          const lockValue = await pessimisticLockServiceInstance.get(resource)
+          if (lockValue === lockVal) {
+            await pessimisticLockServiceInstance.release(resource)
+          }
         }
+      } else {
+        // Nếu không lấy được lock thì chờ 100ms
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        retries++
       }
-    } else {
-      // Nếu không lấy được lock thì chờ 100ms và thử lại
-      await new Promise((resolve) => setTimeout(resolve, 100))
-      return this._getOutStandingThisWeekNews({ query, user_id })
     }
+
+    // Nếu hết retry thì fallback về cache cũ (nếu có) hoặc throw
+    const fallback = await cacheService.get<IResTodayNewsOrOutstanding[]>(key_cache)
+    if (fallback) return fallback
+    throw new BadRequestError('Hệ thống đang bận, vui lòng thử lại sau vài giây.')
   }
 
+  //
   private async _getOutStandingThisWeekNews({ query, user_id }: { query: IQuery<ITrending>; user_id: string }) {
     // Today range
     const today = new Date()
@@ -523,9 +599,12 @@ class TrendingService {
       (tweet, index, self) => index === self.findIndex((t) => t._id?.equals(tweet._id))
     )
 
+    console.log('Get in database - Outstanding this week')
+
     return this.grouped(trending.items, tweets, 'Nổi bật')
   }
 
+  //
   private grouped(trending: ITrending[], tweets: ITweet[], category: string): IResTodayNewsOrOutstanding[] {
     if (!trending?.length || !tweets?.length) return []
 
@@ -596,6 +675,7 @@ class TrendingService {
     return grouped
   }
 
+  //
   async cleanupOldTrending() {
     try {
       const latest100 = await TrendingCollection.find({})
@@ -614,6 +694,7 @@ class TrendingService {
     }
   }
 
+  //
   async getTweetsByIds({ query, user_active_id }: { query: IQuery<ITweet>; user_active_id: string }) {
     //
     const { ids } = query
@@ -923,6 +1004,7 @@ class TrendingService {
     return tweets
   }
 
+  //
   async report(id: string) {
     await TrendingCollection.updateOne(
       { _id: new ObjectId(id) },
@@ -934,6 +1016,7 @@ class TrendingService {
     return true
   }
 
+  //
   async cleanupWeakTrending() {
     try {
       const now = new Date()

@@ -18,6 +18,10 @@ export function createKeyTweetStandingThisWeekLock() {
   return `tweet:standing_this_week:lock`
 }
 
+export function createKeyTweetTodayLock() {
+  return `tweet:today_tweet:lock`
+}
+
 export function createKeyUserActive(user_id: string) {
   return `user:active:${user_id}`
 }
@@ -38,4 +42,5 @@ export function createKeyTweetLikesSync(tweet_id: string) {
 
 export const createKeyUserLastSeen = (): string => 'user:user:last_seen'
 
-export const createKeyOutStandingThisWeek = (): string => 'user:outstanding_this_week'
+export const createKeyOutStandingThisWeek = (): string => 'tweet:outstanding_this_week'
+export const createKeyTodayTweet = (): string => 'tweet:today_tweet'

@@ -178,7 +178,7 @@ class TweetsService {
     }
   }
 
-  // (cache, pessimistic lock)
+  // (cache, pessimistic lock) => sử dụng đệ quy
   async getOneById(user_active_id: string, tweet_id: string): Promise<TweetSchema | null> {
     // 1. Tạo key cache
     const key_cache = createKeyTweetDetails(tweet_id)
