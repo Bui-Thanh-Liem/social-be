@@ -24,7 +24,7 @@ import CommentGateway from '~/socket/gateways/Comment.gateway'
 import CommunityGateway from '~/socket/gateways/Community.gateway'
 import { chunkArray } from '~/utils/chunk-array'
 import { convertObjectId } from '~/utils/convert-object-id'
-import { createKeyTweetDetails, createKeyTweetLock } from '~/utils/create-key-cache.util'
+import { createKeyTweetDetails, createKeyTweetDetailsLock } from '~/utils/create-key-cache.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import BookmarksService from './Bookmarks.service'
 import CommunityService from './Communities.service'
@@ -35,6 +35,7 @@ import TrendingService from './Trending.service'
 import UploadsService from './Uploads.service'
 
 class TweetsService {
+  //
   async create(user_id: string, payload: CreateTweetDto) {
     let message = 'Đăng bài thành công'
     const { audience, type, content, parent_id, community_id, mentions, media } = payload
@@ -177,7 +178,7 @@ class TweetsService {
     }
   }
 
-  //
+  // (cache, pessimistic lock)
   async getOneById(user_active_id: string, tweet_id: string): Promise<TweetSchema | null> {
     // 1. Tạo key cache
     const key_cache = createKeyTweetDetails(tweet_id)
@@ -188,13 +189,12 @@ class TweetsService {
     // 3. Nếu có cache thì trả về luôn - "null" cũng là 1 giá trị hợp lệ
     if (tweet_cache) {
       console.log('Get in cached')
-
       const tweet_processed = this._processUserSpecificFields(tweet_cache, user_active_id)
       return tweet_processed
     }
 
     //  4. Thiết lập khóa để tránh thundering herd problem
-    const resource = createKeyTweetLock(tweet_id)
+    const resource = createKeyTweetDetailsLock(tweet_id)
     const lockTTL = 10000 // 10 giây
     const lockVal = (Date.now() + lockTTL + 1).toString()
     const lock = await pessimisticLockServiceInstance.set(resource, lockVal, lockTTL)
@@ -203,7 +203,23 @@ class TweetsService {
     if (lock === 'OK') {
       try {
         // 5. Nếu không có cache thì truy vấn DB
-        return await this._getOneById(user_active_id, tweet_id, key_cache)
+        const tweet_db = await this._getOneById(user_active_id, tweet_id)
+
+        //    - Nếu không tìm thấy tweet
+        if (!tweet_db) {
+          //  - Flow bình thường thì sẽ không có trường hợp này xảy ra
+          //  - Trường hợp không tìm thấy tweet, lưu cache null trong 3 giây để tránh tấn công dò tìm id (Anti-DDoS)
+          await cacheService.set(key_cache, null, { ttl: 3 }) // Negative Caching
+          throw new NotFoundError('Tweet không tồn tại')
+        }
+
+        //    - Lưu vào cache với ttl 5 phút
+        await cacheService.set(key_cache, tweet_db, { ttl: 300 })
+
+        //    - Tính toán is_like và is_bookmark ở tầng ứng dụng (Application Layer)
+        return this._processUserSpecificFields(tweet_db, user_active_id)
+      } catch (err) {
+        throw new BadRequestError('Có lỗi xảy ra vui lòng thử lại.')
       } finally {
         // 6. Dù thành công hay lỗi thì cũng phải release lock
         const lockValue = await pessimisticLockServiceInstance.get(resource)
@@ -214,12 +230,12 @@ class TweetsService {
     } else {
       // Nếu không lấy được lock thì chờ 100ms và thử lại
       await new Promise((resolve) => setTimeout(resolve, 100))
-      return this._getOneById(user_active_id, tweet_id, key_cache)
+      return this.getOneById(user_active_id, tweet_id)
     }
   }
 
   //
-  private async _getOneById(user_active_id: string, tweet_id: string, key_cache: string): Promise<TweetSchema> {
+  private async _getOneById(user_active_id: string, tweet_id: string): Promise<TweetSchema | null> {
     const followed_user_ids = await FollowsService.getUserFollowing(user_active_id)
     followed_user_ids.push(user_active_id)
 
@@ -441,22 +457,8 @@ class TweetsService {
     ]).next()
     console.log('Get in DB')
 
-    // 3. Nếu không tìm thấy tweet
-    if (!tweet_db) {
-      //  - Flow bình thường thì sẽ không có trường hợp này xảy ra
-      //  - Trường hợp không tìm thấy tweet, lưu cache null trong 3 giây để tránh tấn công dò tìm id (Anti-DDoS)
-      await cacheService.set(key_cache, null, { ttl: 3 }) // Negative Caching
-      throw new NotFoundError('Tweet không tồn tại')
-    }
-
-    // 4. Lưu vào cache với ttl 5 phút
-    await cacheService.set(key_cache, tweet_db, { ttl: 300 })
-
-    // 5. Tính toán is_like và is_bookmark ở tầng ứng dụng (Application Layer)
-    const tweet_processed = this._processUserSpecificFields(tweet_db, user_active_id)
-
-    // 6. Trả về kết quả đã xử lý
-    return tweet_processed
+    // 3. Trả về kết quả
+    return tweet_db
   }
 
   /**
@@ -1113,6 +1115,7 @@ class TweetsService {
     }
   }
 
+  //
   async increaseView(tweet_id: ObjectId, user_id: string | null) {
     const inc = user_id ? { user_view: 1 } : { guest_view: 1 }
 

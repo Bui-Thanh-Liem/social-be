@@ -14,6 +14,9 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { slug } from '~/utils/slug.util'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
+import { createKeyOutStandingThisWeek, createKeyTweetStandingThisWeekLock } from '~/utils/create-key-cache.util'
+import cacheService from '~/helpers/cache.helper'
+import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
 
 class TrendingService {
   // Tạo khi đăng bài - khi tìm kiếm (>=5)
@@ -314,6 +317,47 @@ class TrendingService {
     query: IQuery<ITrending>
     user_id: string
   }): Promise<IResTodayNewsOrOutstanding[]> {
+    // 1.
+    const key_cache = createKeyOutStandingThisWeek()
+
+    // 2.
+    const tweet_cache = await cacheService.get<IResTodayNewsOrOutstanding[]>(key_cache)
+
+    // 3.
+    if (tweet_cache) {
+      console.log('Get in cached - Outstanding this week')
+      return tweet_cache
+    }
+
+    // 4.
+    const resource = createKeyTweetStandingThisWeekLock()
+    const lockTTL = 10000 // 10 giây
+    const lockVal = (Date.now() + lockTTL + 1).toString()
+    const lock = await pessimisticLockServiceInstance.set(resource, lockVal, lockTTL)
+
+    // 5.
+    if (lock === 'OK') {
+      try {
+        const result = await this._getOutStandingThisWeekNews({ query, user_id })
+        await cacheService.set(key_cache, result, { ttl: 3600 })
+        return result
+      } catch (error) {
+        throw new BadRequestError('Có lỗi xảy ra vui lòng thử lại.')
+      } finally {
+        // 6. Dù thành công hay lỗi thì cũng phải release lock
+        const lockValue = await pessimisticLockServiceInstance.get(resource)
+        if (lockValue === lockVal) {
+          await pessimisticLockServiceInstance.release(resource)
+        }
+      }
+    } else {
+      // Nếu không lấy được lock thì chờ 100ms và thử lại
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      return this._getOutStandingThisWeekNews({ query, user_id })
+    }
+  }
+
+  private async _getOutStandingThisWeekNews({ query, user_id }: { query: IQuery<ITrending>; user_id: string }) {
     // Today range
     const today = new Date()
     today.setHours(0, 0, 0, 0)
