@@ -39,7 +39,7 @@ async function bootstrap() {
     logger.info('Cerated index!')
 
     // Kiểm tra kết nối database
-    checkOverload()
+    // checkOverload()
 
     initializeSocket(io)
     logger.info('Socket.IO initialized!')

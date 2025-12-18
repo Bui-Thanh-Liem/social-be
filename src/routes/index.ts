@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express'
-import { startFaker } from '~/utils/faker.util'
+import { startMockData } from '~/utils/mock-data.util'
 import authRoute from './auth.routes'
 import bookmarksRoute from './bookmarks.routes'
 import communitiesRoute from './communities.routes'
@@ -36,16 +36,16 @@ rootRoute.use('/conversations', conversationsRoute)
 rootRoute.use('/communities', communitiesRoute)
 rootRoute.use('/search-history', searchHistoryRoute)
 
-rootRoute.post('/faker', async (req: Request, res: Response) => {
-  await startFaker()
+rootRoute.post('/mock', async (req: Request, res: Response) => {
+  await startMockData()
   res.status(200).json({
-    message: 'Faker data success'
+    message: 'Mock data created successfully'
   })
 })
 
 // Health check
 rootRoute.get('/health', (req: Request, res: Response) => {
-  console.log('client - ip:::', req.ip)
+  console.log('Call in docker-compose - client - ip:::', req.ip)
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),

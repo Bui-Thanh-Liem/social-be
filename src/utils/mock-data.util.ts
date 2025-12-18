@@ -544,7 +544,7 @@ async function createRandomCommunities(admin_id: ObjectId) {
   logger.info('Finish create communities...')
 }
 
-export async function startFaker() {
+export async function startMockData() {
   const user_ids = await createRandomUsers()
   await follow(MY_ID, user_ids)
   await createRandomTweets(user_ids)
