@@ -1,8 +1,9 @@
 import { createClient, RedisClientType, SetOptions } from 'redis'
-import { redisConnection } from '~/configs/redis.config'
+import { redisConfig } from '~/configs/redis.config'
 import { createKeyUserLastSeen, createKeyUserOnline } from '~/utils/create-key-cache.util'
 import { logger } from '~/utils/logger.util'
 
+console.log('config redis :::', redisConfig)
 export class CacheService {
   private client: RedisClientType
   private defaultTTL: number = 600 // 10 minutes in seconds
@@ -10,7 +11,7 @@ export class CacheService {
 
   constructor() {
     this.client = createClient({
-      url: `redis://${redisConnection.host}:${redisConnection.port}`,
+      url: `redis://${redisConfig.host}:${redisConfig.port}`,
       socket: {
         reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
       }

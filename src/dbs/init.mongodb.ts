@@ -58,6 +58,8 @@ class Database {
 
           retryWrites: true,
           retryReads: true,
+          tls: true,
+          w: 'majority',
 
           monitorCommands: false,
           socketTimeoutMS: _SOCKET_TIMEOUT_MS,

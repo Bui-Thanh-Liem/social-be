@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq'
-import { redisConnection } from '~/configs/redis.config'
+import { redisConfig } from '~/configs/redis.config'
 import mailServiceInstance from '~/helpers/mail.helper'
 import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants'
 import { logger } from '~/utils/logger.util'
@@ -24,7 +24,7 @@ export const emailWorker = new Worker(
   },
   {
     concurrency: 5,
-    connection: redisConnection
+    connection: redisConfig
   }
 )
 

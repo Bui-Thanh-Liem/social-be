@@ -40,7 +40,7 @@ RUN npm install --only=production && \
 FROM node:20-alpine
 
 # Install dumb-init + FFmpeg (production cần FFmpeg để worker chạy)
-RUN apk add --no-cache dumb-init ffmpeg
+RUN apk add --no-cache ca-certificates dumb-init ffmpeg
 
 # Tạo non-root user
 RUN addgroup -g 1001 -S nodejs && \

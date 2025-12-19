@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq'
-import { redisConnection } from '~/configs/redis.config'
+import { redisConfig } from '~/configs/redis.config'
 import { publishCompression } from '~/pubsub/publisher'
 import { CONSTANT_QUEUE } from '~/shared/constants'
 import { compressionVideo } from '~/utils/compression.util'
@@ -17,7 +17,7 @@ export const compressionWorker = new Worker(
     // Chuyển đổi trạng thái video, gửi thông báo client
     await publishCompression(_id.toString())
   },
-  { connection: redisConnection, concurrency: 5 }
+  { connection: redisConfig, concurrency: 5 }
 )
 
 compressionWorker.on('failed', (job, err) => {
