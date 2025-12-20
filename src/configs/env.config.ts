@@ -14,7 +14,7 @@ export const envs = {
 
   DOMAIN: process.env.DOMAIN || '',
 
-  REDIS_HOST: process.env.REDIS_HOST || '',
+  REDIS_HOST: process.env.REDIS_HOST || 'Error',
   REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
 
   SERVER_PORT: Number(process.env.SERVER_PORT) || 9000,

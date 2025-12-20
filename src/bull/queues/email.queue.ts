@@ -3,6 +3,8 @@ import { redisConfig } from '~/configs/redis.config'
 import { CONSTANT_QUEUE } from '~/shared/constants'
 import { configDefaultJobOptions } from './job.conf'
 
+console.log('redisConfig in email.queue.ts :::', redisConfig)
+
 export const emailQueue = new Queue(CONSTANT_QUEUE.MAIL, {
   connection: redisConfig,
   defaultJobOptions: {

@@ -3,6 +3,8 @@ import { redisConfig } from '~/configs/redis.config'
 import { CONSTANT_QUEUE } from '~/shared/constants'
 import { configDefaultJobOptions } from './job.conf'
 
+console.log('redisConfig in compression.queue.ts :::', redisConfig)
+
 export const compressionQueue = new Queue(CONSTANT_QUEUE.COMPRESSION, {
   connection: redisConfig,
   defaultJobOptions: {

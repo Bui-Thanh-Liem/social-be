@@ -3,6 +3,8 @@ import { redisConfig } from '~/configs/redis.config'
 import { CONSTANT_QUEUE } from '~/shared/constants'
 import { configDefaultJobOptions } from './job.conf'
 
+console.log('redisConfig in sync.queue.ts :::', redisConfig)
+
 export const syncQueue = new Queue(CONSTANT_QUEUE.SYNC, {
   connection: redisConfig,
   defaultJobOptions: {

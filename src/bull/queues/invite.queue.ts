@@ -3,6 +3,8 @@ import { redisConfig } from '~/configs/redis.config'
 import { CONSTANT_QUEUE } from '~/shared/constants'
 import { configDefaultJobOptions } from './job.conf'
 
+console.log('redisConfig in invite.queue.ts :::', redisConfig)
+
 export const inviteQueue = new Queue(CONSTANT_QUEUE.INVITE, {
   connection: redisConfig,
   defaultJobOptions: {
