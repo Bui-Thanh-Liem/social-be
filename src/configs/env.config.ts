@@ -10,11 +10,11 @@ export const envs = {
   DB_USERNAME: process.env.DB_USERNAME || '',
   DB_PASSWORD: process.env.DB_PASSWORD || '',
   DB_NAME: process.env.DB_NAME || '',
-  DB_CONNECT_STRING: process.env.DB_CONNECT_STRING || '',
+  DB_CONNECT_STRING: process.env.DB_CONNECT_STRING || 'Error',
 
   DOMAIN: process.env.DOMAIN || '',
 
-  REDIS_HOST: process.env.REDIS_HOST || 'Error',
+  REDIS_HOST: process.env.REDIS_HOST || 'social-redis',
   REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
 
   SERVER_PORT: Number(process.env.SERVER_PORT) || 9000,
