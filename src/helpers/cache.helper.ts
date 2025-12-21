@@ -3,7 +3,6 @@ import { redisConfig } from '~/configs/redis.config'
 import { createKeyUserLastSeen, createKeyUserOnline } from '~/utils/create-key-cache.util'
 import { logger } from '~/utils/logger.util'
 
-console.log('config redis :::', redisConfig)
 export class CacheService {
   private client: RedisClientType
   private defaultTTL: number = 600 // 10 minutes in seconds

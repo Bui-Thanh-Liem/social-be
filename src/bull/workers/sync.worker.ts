@@ -3,6 +3,9 @@ import { redisConfig } from '~/configs/redis.config'
 import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants'
 import { logger } from '~/utils/logger.util'
 import LikesService from '~/services/Likes.service'
+import { log } from 'node:console'
+
+console.log('syncWorker queue - redisConfig :::', redisConfig)
 
 //
 export const syncWorker = new Worker(

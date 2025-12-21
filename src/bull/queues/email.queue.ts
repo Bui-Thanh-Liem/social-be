@@ -1,9 +1,7 @@
 import { JobProgress, Queue, QueueEvents } from 'bullmq'
 import { redisConfig } from '~/configs/redis.config'
 import { CONSTANT_QUEUE } from '~/shared/constants'
-import { configDefaultJobOptions } from './job.conf'
-
-console.log('redisConfig in email.queue.ts :::', redisConfig)
+import { configDefaultJobOptions } from './config-job'
 
 export const emailQueue = new Queue(CONSTANT_QUEUE.MAIL, {
   connection: redisConfig,
@@ -12,7 +10,9 @@ export const emailQueue = new Queue(CONSTANT_QUEUE.MAIL, {
   }
 })
 
-const queueEvents = new QueueEvents(CONSTANT_QUEUE.MAIL)
+const queueEvents = new QueueEvents(CONSTANT_QUEUE.MAIL, {
+  connection: redisConfig
+})
 
 queueEvents.on('completed', (jobId, result) => {
   console.log(`Job ${jobId} completed ${result}`)

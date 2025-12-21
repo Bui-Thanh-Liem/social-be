@@ -14,7 +14,7 @@ export const envs = {
 
   DOMAIN: process.env.DOMAIN || '',
 
-  REDIS_HOST: process.env.REDIS_HOST || 'social-redis',
+  REDIS_HOST: process.env.REDIS_HOST || '127.0.0.1',
   REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
 
   SERVER_PORT: Number(process.env.SERVER_PORT) || 9000,

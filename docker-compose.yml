@@ -1,0 +1,62 @@
+# version: "3.8"
+
+services:
+  # =====================================================
+  # 1. BACKEND
+  # =====================================================
+  social-be:
+    container_name: social-be
+    # image: buithanhliem/social:v10
+    build: .
+    restart: always
+    command: npm run start:server:prod
+    env_file:
+      - .env
+    ports:
+      - '9000:9000'
+    depends_on:
+      - social-redis
+    volumes:
+      - ./uploads:/app/uploads:rw
+      - ./logs:/app/logs:rw
+    networks:
+      - social-network
+
+  social-worker:
+    container_name: social-worker
+    # image: buithanhliem/social:v10
+    build: .
+    restart: always
+    command: npm run start:worker:prod
+    env_file:
+      - .env
+    depends_on:
+      - social-redis
+    volumes:
+      - ./uploads:/app/uploads:rw
+      - ./logs:/app/logs:rw
+    networks:
+      - social-network
+
+  # =====================================================
+  # 2. REDIS
+  # =====================================================
+  social-redis:
+    image: redis:7-alpine
+    container_name: social-redis
+    restart: always
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis-data:/data
+    networks:
+      - social-network
+
+# =====================================================
+# VOLUMES & NETWORKS
+# =====================================================
+volumes:
+  redis-data:
+
+networks:
+  social-network:
+    driver: bridge
