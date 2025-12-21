@@ -6,8 +6,7 @@ services:
   # =====================================================
   social-be:
     container_name: social-be
-    # image: buithanhliem/social:v10
-    build: .
+    image: ${DOCKER_USERNAME}/${NAME_IMAGE}:${IMAGE_TAG}
     restart: always
     command: npm run start:server:prod
     env_file:
@@ -22,10 +21,12 @@ services:
     networks:
       - social-network
 
+  # =====================================================
+  # 2. WORKER
+  # =====================================================
   social-worker:
     container_name: social-worker
-    # image: buithanhliem/social:v10
-    build: .
+    image: ${DOCKER_USERNAME}/${NAME_IMAGE}:${IMAGE_TAG}
     restart: always
     command: npm run start:worker:prod
     env_file:
@@ -39,7 +40,7 @@ services:
       - social-network
 
   # =====================================================
-  # 2. REDIS
+  # 3. REDIS
   # =====================================================
   social-redis:
     image: redis:7-alpine
