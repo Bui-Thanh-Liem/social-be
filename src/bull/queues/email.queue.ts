@@ -15,11 +15,11 @@ const queueEvents = new QueueEvents(CONSTANT_QUEUE.MAIL, {
 })
 
 queueEvents.on('completed', (jobId, result) => {
-  console.log(`Job ${jobId} completed ${result}`)
+  console.log(`Job ${JSON.stringify(jobId)} completed ${result}`)
 })
 
 queueEvents.on('failed', (jobId, failedReason) => {
-  console.log(`Job ${jobId} failed ${failedReason}`)
+  console.log(`Job ${JSON.stringify(jobId)} failed ${failedReason}`)
 })
 
 queueEvents.on('progress', (e: { jobId: string; data: JobProgress }) => {
