@@ -13,7 +13,7 @@ export function withValidationDataFromClient<T>(
     //
     if (!result.success) {
       socket.emit(CONSTANT_EVENT_NAMES.ERROR, {
-        message: 'Invalid data format',
+        message: 'Dữ liệu không hợp lệ',
         issues: result.error.errors
       })
       return
