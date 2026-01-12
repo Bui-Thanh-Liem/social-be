@@ -27,7 +27,7 @@ import { initSearchHistoryCollection, SearchHistoryCollection } from '~/models/s
 import { initTrendingCollection, TrendingCollection } from '~/models/schemas/Trending.schema'
 import { initTweetCollection, TweetCollection } from '~/models/schemas/Tweet.schema'
 import { initUserCollection, UserCollection } from '~/models/schemas/User.schema'
-import { initVideoCollection } from '~/models/schemas/Video.schema'
+import { initMediaCollection, MediaCollection } from '~/models/schemas/Media.schema'
 import { BadRequestError, InternalServerError } from '~/core/error.response'
 import { logger } from '~/utils/logger.util'
 
@@ -153,7 +153,7 @@ class Database {
       initUserCollection(this.db)
       initTokenCollection(this.db)
       initFollowerCollection(this.db)
-      initVideoCollection(this.db)
+      initMediaCollection(this.db)
       initTweetCollection(this.db)
       initHashtagCollection(this.db)
       initBookmarkCollection(this.db)
@@ -206,6 +206,7 @@ class Database {
       ])
       const indexCommunityActivity = await CommunityActivityCollection.indexExists(['community_id_1'])
       const indexSearchHistory = await SearchHistoryCollection.indexExists(['owner_1'])
+      const indexMedia = await MediaCollection.indexExists(['s3_key_1'])
 
       // User
       if (!indexUser) {
@@ -304,6 +305,14 @@ class Database {
       if (!indexSearchHistory) {
         SearchHistoryCollection.createIndex({ owner: 1 })
       }
+
+      // Media
+      if (!indexMedia) {
+        MediaCollection.createIndex({ s3_key: 1 }, { unique: true })
+        MediaCollection.createIndex({ s3_key: 1, type: 1 }, { unique: true })
+      }
+
+      logger.info('All indexes are ensured successfully')
     } catch (error) {
       logger.error('Index initialization failed:', error)
       throw error

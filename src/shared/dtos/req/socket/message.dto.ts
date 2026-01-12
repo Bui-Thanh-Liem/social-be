@@ -1,12 +1,11 @@
 import { z } from 'zod'
-import { MediaSchema } from '../tweet.dto'
 
 export const sendMessageDtoSchema = z
   .object({
     conversation: z.string().min(1, 'bắt buộc phải có id cuộc trò chuyện.'),
     sender: z.string().min(1, 'Người gửi là bắt buộc'),
     content: z.string().optional(),
-    attachments: z.array(MediaSchema).optional()
+    attachments: z.array(z.string()).optional()
   })
   .refine(
     (data) => {

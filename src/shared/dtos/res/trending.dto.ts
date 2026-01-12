@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { IMedia } from '~/shared/interfaces/common/media.interface'
+import { IMedia } from '~/shared/interfaces/schemas/media.interface'
 import { ITrending } from '~/shared/interfaces/schemas/trending.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'

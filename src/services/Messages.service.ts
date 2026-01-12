@@ -2,24 +2,28 @@ import { ObjectId } from 'mongodb'
 import pLimit from 'p-limit'
 import { MessageCollection, MessageSchema } from '~/models/schemas/Message.schema'
 import { CreateMessageDto } from '~/shared/dtos/req/message.dto'
-import { EMediaType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IMessage } from '~/shared/interfaces/schemas/message.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
-import { deleteImage } from '~/utils/upload.util'
 import ConversationsService from './Conversations.service'
-import UploadsService from './Uploads.service'
-import VideosService from './Videos.service'
+import { IMedia } from '~/shared/interfaces/schemas/media.interface'
+import UploadsServices from './Uploads.service'
 
 class MessagesService {
   async create(sender_id: string, payload: CreateMessageDto) {
+    //
+    let media: undefined | IMedia[] = undefined
+    if (payload.attachments) {
+      media = await UploadsServices.getMultiByKeys(payload.attachments)
+    }
+
     //
     const newMessage = await MessageCollection.insertOne(
       new MessageSchema({
         content: payload.content,
         sender: new ObjectId(sender_id),
-        attachments: payload.attachments,
+        attachments: media,
         conversation: new ObjectId(payload.conversation)
       })
     )
@@ -143,22 +147,7 @@ class MessagesService {
       await Promise.all(
         oldMessages.map((msg) =>
           limit(async () => {
-            if (msg.attachments?.length) {
-              for (const file of msg.attachments) {
-                try {
-                  if (file.resource_type === EMediaType.Image) {
-                    const filename = file.url!.split('/').pop()
-                    if (filename) await deleteImage(filename)
-                  } else if (file.resource_type === EMediaType.Video) {
-                    const parts = file.url!.split('/')
-                    const folderName = parts[parts.length - 2]
-                    if (folderName) await VideosService.delete(folderName)
-                  }
-                } catch (err) {
-                  console.error('Delete media error:', err)
-                }
-              }
-            }
+            await UploadsServices.delete({ s3_keys: msg.attachments?.map((att) => att.s3_key) || [] })
           })
         )
       )
@@ -186,7 +175,7 @@ class MessagesService {
       if (!msg.attachments?.length) continue
 
       try {
-        await UploadsService.deleteFromCloudinary(msg.attachments)
+        await UploadsServices.delete({ s3_keys: msg.attachments?.map((att) => att.s3_key) || [] })
       } catch (err) {
         console.error(`❌ Lỗi xóa media của message ${msg._id}:`, err)
       }

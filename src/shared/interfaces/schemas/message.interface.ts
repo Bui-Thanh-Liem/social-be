@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { IMedia } from '../common/media.interface'
+import { IMedia } from './media.interface'
 import { IBase } from './base.interface'
 import { IConversation } from './conversation.interface'
 

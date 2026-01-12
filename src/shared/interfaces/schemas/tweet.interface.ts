@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { ETweetStatus } from '~/shared/enums/status.enum'
 import { ETweetType } from '~/shared/enums/type.enum'
-import { IMedia } from '../common/media.interface'
+import { IMedia } from './media.interface'
 import { IBase } from './base.interface'
 
 export interface ITweet extends IBase {

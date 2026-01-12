@@ -14,7 +14,6 @@ import searchHistoryRoute from './search-history.routes'
 import searchRoute from './search.route'
 import trendingRoute from './trending.routes'
 import tweetsRoute from './tweets.routes'
-import uploadsRoute from './uploads.routes'
 import usersRoute from './users.routes'
 
 const rootRoute = Router()
@@ -24,7 +23,6 @@ rootRoute.use('/users', usersRoute)
 rootRoute.use('/likes', likesRoute)
 rootRoute.use('/tweets', tweetsRoute)
 rootRoute.use('/follows', followsRoute)
-rootRoute.use('/uploads', uploadsRoute)
 rootRoute.use('/search', searchRoute)
 rootRoute.use('/hashtags', hashtagsRoute)
 rootRoute.use('/bookmarks', bookmarksRoute)
