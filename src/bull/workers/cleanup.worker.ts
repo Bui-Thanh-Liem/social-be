@@ -28,7 +28,9 @@ export const cleanupWorker = new Worker(
   },
   {
     concurrency: 5,
-    connection: redisConfig
+    connection: redisConfig,
+    stalledInterval: 30000, // 30 seconds
+    lockDuration: 30000 // 30 seconds
   }
 )
 
