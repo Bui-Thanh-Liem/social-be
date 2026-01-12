@@ -1,10 +1,11 @@
 import { InsertOneResult, ObjectId } from 'mongodb'
 import { cleanupQueue, notificationQueue } from '~/bull/queues'
+import { BadRequestError, NotFoundError } from '~/core/error.response'
 import { clientMongodb } from '~/dbs/init.mongodb'
 import cacheService from '~/helpers/cache.helper'
+import { signedCloudfrontUrl } from '~/libs/cloudfront.lib'
 import { ConversationCollection, ConversationSchema } from '~/models/schemas/Conversation.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
-import { BadRequestError, NotFoundError } from '~/core/error.response'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { CreateConversationDto } from '~/shared/dtos/req/conversation.dto'
 import { EConversationType, ENotificationType } from '~/shared/enums/type.enum'
@@ -1050,6 +1051,25 @@ class ConversationsService {
   // Cập nhật lại deleteFor = [] khi có tin nhắn mới
   private async updateConvDeleted(conv_id: string) {
     await ConversationCollection.updateOne({ _id: new ObjectId(conv_id) }, { $set: { deleted_for: [] } })
+  }
+
+  //
+  private signedCloudfrontAvatarUrl = (conv: IConversation[] | IConversation | null) => {
+    //
+    if (!conv) return conv
+
+    //
+    if (!Array.isArray(conv))
+      return {
+        ...conv,
+        avatar: conv.avatar ? signedCloudfrontUrl(conv.avatar) : conv.avatar
+      }
+
+    //
+    return conv.map((c) => ({
+      ...c,
+      avatar: c.avatar ? signedCloudfrontUrl(c.avatar) : c.avatar
+    }))
   }
 }
 

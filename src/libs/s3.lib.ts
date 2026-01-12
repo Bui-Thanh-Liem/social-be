@@ -27,7 +27,7 @@ export const s3Client = new S3Client({
 // Tạo presigned URL để upload file lớn từ client lên S3 trực tiếp
 export const presignedURL = async ({ file_name, file_type }: PresignedUrlDto): Promise<ResPresignedUrl> => {
   if (!file_name || !file_type) {
-    throw new BadRequestError('fileName và fileType là bắt buộc')
+    throw new BadRequestError('file_name và file_type là bắt buộc')
   }
 
   const key = generateKey(file_name)
@@ -67,7 +67,7 @@ export const deleteFromS3 = async (keys: string[]) => {
 
         return s3Client.send(
           new DeleteObjectsCommand({
-            Bucket: process.env.S3_BUCKET_NAME,
+            Bucket: envs.AWS_S3_BUCKET_NAME,
             Delete: {
               Objects,
               Quiet: false // Chỉnh thành false để biết file nào lỗi

@@ -104,7 +104,7 @@ app.use('/api', rootRoute)
 // 404 handler
 app.use((req, res, next) => {
   res.status(404).json({
-    status: 'error',
+    status: 404,
     message: `🔍 - Not Found - ${req.originalUrl}`
   })
 })

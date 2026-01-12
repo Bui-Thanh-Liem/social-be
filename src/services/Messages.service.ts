@@ -1,13 +1,14 @@
 import { ObjectId } from 'mongodb'
 import pLimit from 'p-limit'
+import { signedCloudfrontUrl } from '~/libs/cloudfront.lib'
 import { MessageCollection, MessageSchema } from '~/models/schemas/Message.schema'
 import { CreateMessageDto } from '~/shared/dtos/req/message.dto'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
+import { IMedia } from '~/shared/interfaces/schemas/media.interface'
 import { IMessage } from '~/shared/interfaces/schemas/message.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import ConversationsService from './Conversations.service'
-import { IMedia } from '~/shared/interfaces/schemas/media.interface'
 import UploadsServices from './Uploads.service'
 
 class MessagesService {
@@ -38,7 +39,7 @@ class MessagesService {
     }
 
     //
-    return await MessageCollection.aggregate([
+    const message = await MessageCollection.aggregate<IMessage>([
       {
         $match: { _id: newMessage.insertedId }
       },
@@ -61,6 +62,8 @@ class MessagesService {
       },
       { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } }
     ]).next()
+
+    return this.signedCloudfrontMediaUrls(message) as IMessage
   }
 
   async getMultiByConversation({
@@ -112,7 +115,7 @@ class MessagesService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: messages
+      items: this.signedCloudfrontMediaUrls(messages) as IMessage[]
     }
   }
 
@@ -184,6 +187,31 @@ class MessagesService {
     // Xóa toàn bộ message trong DB
     const { deletedCount } = await MessageCollection.deleteMany({ conversation: convObjId })
     console.log(`🧹 Đã xóa ${deletedCount} message trong conversation ${conversationId}`)
+  }
+
+  //
+  private signedCloudfrontMediaUrls = (mess: IMessage[] | IMessage | null) => {
+    //
+    if (!mess) return mess
+
+    //
+    if (!Array.isArray(mess))
+      return {
+        ...mess,
+        medias: mess.attachments?.map((a) => ({
+          ...a,
+          url: signedCloudfrontUrl(a.s3_key)
+        })) as any
+      }
+
+    //
+    return mess.map((m) => ({
+      ...m,
+      medias: m.attachments?.map((a) => ({
+        ...a,
+        url: signedCloudfrontUrl(a.s3_key)
+      })) as any
+    }))
   }
 }
 

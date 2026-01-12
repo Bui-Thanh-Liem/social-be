@@ -1,13 +1,13 @@
 import { ObjectId } from 'mongodb'
 import { BadRequestError } from '~/core/error.response'
+import { signedCloudfrontUrl } from '~/libs/cloudfront.lib'
 import { deleteFromS3, presignedURL } from '~/libs/s3.lib'
 import { MediaCollection } from '~/models/schemas/Media.schema'
 import { DeleteDto, PresignedUrlDto, UploadConfirmDto } from '~/shared/dtos/req/upload.dto'
 import { ResPresignedUrl } from '~/shared/dtos/res/upload.dto'
 import { EMediaStatus } from '~/shared/enums/status.enum'
-import { getSignedUrl } from '@aws-sdk/cloudfront-signer'
-import { envs } from '~/configs/env.config'
 import { IMedia } from '~/shared/interfaces/schemas/media.interface'
+import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 
 class UploadsServices {
   //
@@ -58,7 +58,7 @@ class UploadsServices {
       // Trả về kèm URL đã ký
       return medias.map((media) => ({
         ...media,
-        url: this.signedCloudfrontUrl(media.s3_key)
+        url: signedCloudfrontUrl(media.s3_key) as string
       }))
     } catch (error) {
       console.log('Error confirming upload:', error)
@@ -75,16 +75,6 @@ class UploadsServices {
     await MediaCollection.deleteMany({ s3_key: { $in: body.s3_keys } })
 
     return true
-  }
-
-  //
-  signedCloudfrontUrl = (s3_key: string) => {
-    return getSignedUrl({
-      url: `${envs.AWS_CLOUDFRONT_DOMAIN}/${s3_key}`,
-      keyPairId: envs.AWS_CLOUDFRONT_KEY_PAIR_ID,
-      privateKey: envs.AWS_CLOUDFRONT_PRIVATE_KEY,
-      dateLessThan: new Date(Date.now() + Number(envs.AWS_SIGNED_URL_EXPIRES_IN)).toISOString()
-    })
   }
 }
 

@@ -1,6 +1,8 @@
 import { ObjectId } from 'mongodb'
 import { notificationQueue } from '~/bull/queues'
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '~/core/error.response'
 import { clientMongodb } from '~/dbs/init.mongodb'
+import { signedCloudfrontUrl } from '~/libs/cloudfront.lib'
 import {
   CommunityActivityCollection,
   CommunityActivitySchema,
@@ -10,7 +12,6 @@ import {
   CommunityPinCollection,
   CommunitySchema
 } from '~/models/schemas/Community.schema'
-import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '~/core/error.response'
 import { CONSTANT_JOB } from '~/shared/constants'
 import {
   CreateCommunityActivityDto,
@@ -349,7 +350,8 @@ class CommunityService {
     if (joinedObjIds.length > 0) query.$or.push({ _id: { $in: joinedObjIds } })
 
     // Trả về danh sách cộng đồng (chỉ cần name)
-    return CommunityCollection.find(query, { projection: { name: 1, cover: 1 } }).toArray()
+    const communities = await CommunityCollection.find(query, { projection: { name: 1, cover: 1 } }).toArray()
+    return this.signedCloudfrontCoverUrls(communities)
   }
 
   async getMultiOwner({
@@ -452,7 +454,7 @@ class CommunityService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: communities
+      items: this.signedCloudfrontCoverUrls(communities) as ICommunity[]
     }
   }
 
@@ -565,7 +567,7 @@ class CommunityService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: communities
+      items: this.signedCloudfrontCoverUrls(communities) as ICommunity[]
     }
   }
 
@@ -723,7 +725,7 @@ class CommunityService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: communities
+      items: this.signedCloudfrontCoverUrls(communities) as ICommunity[]
     }
   }
 
@@ -879,7 +881,7 @@ class CommunityService {
       throw new NotFoundError(`Không tìm thấy cộng đồng với slug ${slug}`)
     }
 
-    return community
+    return this.signedCloudfrontCoverUrls(community) as ICommunity
   }
 
   async getMultiMMById({
@@ -1046,7 +1048,7 @@ class CommunityService {
       throw new NotFoundError(`Không tìm thấy cộng đồng với id ${community_id}`)
     }
 
-    return community
+    return this.signedCloudfrontCoverUrls(community) as ICommunity
   }
 
   async togglePin({ user_id, community_id }: ICommonPayload) {
@@ -1211,6 +1213,25 @@ class CommunityService {
       })
     )
     return !!res.insertedId
+  }
+
+  //
+  signedCloudfrontCoverUrls = (communities: ICommunity[] | ICommunity | null) => {
+    //
+    if (!communities) return communities
+
+    //
+    if (!Array.isArray(communities))
+      return {
+        ...communities,
+        cover: signedCloudfrontUrl(communities.cover || '')
+      }
+
+    //
+    return communities.map((community) => ({
+      ...community,
+      cover: signedCloudfrontUrl(community.cover || '')
+    }))
   }
 }
 

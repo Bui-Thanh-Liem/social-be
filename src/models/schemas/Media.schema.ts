@@ -27,5 +27,5 @@ export class MediaSchema extends BaseSchema implements IMedia {
 export let MediaCollection: Collection<MediaSchema>
 
 export function initMediaCollection(db: Db) {
-  MediaCollection = db.collection<MediaSchema>('media')
+  MediaCollection = db.collection<MediaSchema>('medias')
 }

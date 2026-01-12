@@ -5,6 +5,7 @@ import { BadRequestError, NotFoundError } from '~/core/error.response'
 import { clientMongodb } from '~/dbs/init.mongodb'
 import cacheService from '~/helpers/cache.helper'
 import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
+import { signedCloudfrontUrl } from '~/libs/cloudfront.lib'
 import { BookmarkCollection } from '~/models/schemas/Bookmark.schema'
 import { CommunityCollection, CommunitySchema } from '~/models/schemas/Community.schema'
 import { LikeCollection } from '~/models/schemas/Like.schema'
@@ -18,6 +19,7 @@ import { ETweetStatus } from '~/shared/enums/status.enum'
 import { EFeedType, EFeedTypeItem, EMembershipType, ENotificationType, ETweetType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
+import { IMedia } from '~/shared/interfaces/schemas/media.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import CommentGateway from '~/socket/gateways/Comment.gateway'
@@ -32,7 +34,6 @@ import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
 import LikesService from './Likes.service'
 import TrendingService from './Trending.service'
-import { IMedia } from '~/shared/interfaces/schemas/media.interface'
 import UploadsServices from './Uploads.service'
 
 class TweetsService {
@@ -105,7 +106,7 @@ class TweetsService {
         parent_id: parent_id ? new ObjectId(parent_id) : null,
         community_id: community_id ? new ObjectId(community_id) : null,
         mentions: mentions ? mentions.map((id) => new ObjectId(id)) : [],
-        media: _media,
+        medias: _media,
         status: status
       })
     )
@@ -490,7 +491,7 @@ class TweetsService {
     console.log('userActiveObjectId:::', userActiveObjectId)
     // console.log('tweet_db:::', tweet_db)
 
-    return tweet_db as TweetSchema
+    return this.signedCloudfrontMediaUrls(tweet_db) as TweetSchema
   }
 
   //
@@ -728,7 +729,7 @@ class TweetsService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: tweets
+      items: this.signedCloudfrontMediaUrls(tweets) as TweetSchema[]
     }
   }
 
@@ -1117,7 +1118,7 @@ class TweetsService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: tweets,
+      items: this.signedCloudfrontMediaUrls(tweets) as TweetSchema[],
       extra: { type: EFeedTypeItem.Community, items: communities || [] }
     }
   }
@@ -1150,7 +1151,7 @@ class TweetsService {
 
   //
   async getTweetOnlyUserId(tweet_id: string) {
-    return await TweetCollection.aggregate<TweetSchema>([
+    const tweet = await TweetCollection.aggregate<TweetSchema>([
       {
         $match: { _id: new ObjectId(tweet_id) }
       },
@@ -1173,6 +1174,8 @@ class TweetsService {
         }
       }
     ]).next()
+
+    return this.signedCloudfrontMediaUrls(tweet) as TweetSchema
   }
 
   //
@@ -1530,7 +1533,7 @@ class TweetsService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: tweets
+      items: this.signedCloudfrontMediaUrls(tweets) as TweetSchema[]
     }
   }
 
@@ -1797,7 +1800,7 @@ class TweetsService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: tweets
+      items: this.signedCloudfrontMediaUrls(tweets) as TweetSchema[]
     }
   }
 
@@ -2060,7 +2063,7 @@ class TweetsService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: tweets
+      items: this.signedCloudfrontMediaUrls(tweets) as TweetSchema[]
     }
   }
 
@@ -2083,8 +2086,8 @@ class TweetsService {
         }
 
         // Xóa media trên Cloudinary nếu có
-        if (tweet.media) {
-          await UploadsServices.delete({ s3_keys: tweet.media.map((m) => m.s3_key) })
+        if (tweet.medias) {
+          await UploadsServices.delete({ s3_keys: tweet.medias.map((m) => m.s3_key) })
         }
 
         // Xóa các record của bookmark/like/comment
@@ -2172,7 +2175,7 @@ class TweetsService {
       }
     )
 
-    return tweet
+    return this.signedCloudfrontMediaUrls(tweet) as TweetSchema
   }
 
   // ============================ COMMUNITY ============================
@@ -2496,7 +2499,7 @@ class TweetsService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: tweets
+      items: this.signedCloudfrontMediaUrls(tweets) as TweetSchema[]
     }
   }
 
@@ -2583,7 +2586,36 @@ class TweetsService {
 
     const total = await TweetCollection.countDocuments(match_condition)
 
-    return { items: tweets, total, total_page: Math.ceil(total / limit) }
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: this.signedCloudfrontMediaUrls(tweets) as TweetSchema[]
+    }
+  }
+
+  //
+  signedCloudfrontMediaUrls = (tweets: ITweet[] | ITweet | null) => {
+    //
+    if (!tweets) return tweets
+
+    //
+    if (!Array.isArray(tweets))
+      return {
+        ...tweets,
+        medias: tweets.medias?.map((m) => ({
+          ...m,
+          url: signedCloudfrontUrl(m.s3_key)
+        })) as any
+      }
+
+    //
+    return tweets.map((tweet) => ({
+      ...tweet,
+      medias: tweet.medias?.map((m) => ({
+        ...m,
+        url: signedCloudfrontUrl(m.s3_key)
+      })) as any
+    }))
   }
 }
 

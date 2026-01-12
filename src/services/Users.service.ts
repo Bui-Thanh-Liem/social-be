@@ -4,6 +4,7 @@ import { emailQueue } from '~/bull/queues'
 import { envs } from '~/configs/env.config'
 import { NotFoundError, UnauthorizedError } from '~/core/error.response'
 import cacheService from '~/helpers/cache.helper'
+import { signedCloudfrontUrl } from '~/libs/cloudfront.lib'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
@@ -11,12 +12,12 @@ import { ETokenType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
+import { createKeyUserActive } from '~/utils/create-key-cache.util'
 import { hashPassword } from '~/utils/crypto.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
 import FollowsService from './Follows.service'
-import { createKeyUserActive } from '~/utils/create-key-cache.util'
 
 class UsersService {
   async verifyEmail({
@@ -152,7 +153,7 @@ class UsersService {
       throw new NotFoundError('User not found')
     }
 
-    return user
+    return this.signedCloudfrontAvatarUrls(user) as IUser
   }
 
   async getMultiForMentions(username: string) {
@@ -175,7 +176,7 @@ class UsersService {
       }
     ]).toArray()
 
-    return users
+    return this.signedCloudfrontAvatarUrls(users) as IUser[]
   }
 
   async getFollowedUsersBasic({
@@ -257,7 +258,7 @@ class UsersService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: users
+      items: this.signedCloudfrontAvatarUrls(users) as IUser[]
     }
   }
 
@@ -341,7 +342,7 @@ class UsersService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: users
+      items: this.signedCloudfrontAvatarUrls(users) as IUser[]
     }
   }
 
@@ -453,9 +454,9 @@ class UsersService {
     const total_page = Math.ceil(total / limit)
 
     return {
-      items: users,
+      total,
       total_page,
-      total
+      items: this.signedCloudfrontAvatarUrls(users) as IUser[]
     }
   }
 
@@ -501,7 +502,7 @@ class UsersService {
       throw new NotFoundError('Người dùng không tồn tại.')
     }
 
-    return userActive
+    return this.signedCloudfrontAvatarUrls(userActive) as IUser
   }
 
   async resetUserActive(user_id: string) {
@@ -533,7 +534,7 @@ class UsersService {
 
   //
   async findOneById(id: string) {
-    return await UserCollection.findOne(
+    const user = await UserCollection.findOne(
       { _id: new ObjectId(id) },
       {
         projection: {
@@ -541,6 +542,27 @@ class UsersService {
         }
       }
     )
+
+    return this.signedCloudfrontAvatarUrls(user) as IUser
+  }
+
+  //
+  signedCloudfrontAvatarUrls = (users: IUser[] | IUser | null) => {
+    //
+    if (!users) return users
+
+    //
+    if (!Array.isArray(users))
+      return {
+        ...users,
+        avatar: users?.avatar ? signedCloudfrontUrl(users.avatar || '') : null
+      }
+
+    //
+    return users.map((user) => ({
+      ...user,
+      avatar: user?.avatar ? signedCloudfrontUrl(user.avatar || '') : null
+    }))
   }
 }
 

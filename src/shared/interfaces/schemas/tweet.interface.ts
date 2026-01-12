@@ -14,7 +14,7 @@ export interface ITweet extends IBase {
   hashtags: ObjectId[]
   status: ETweetStatus
   mentions: ObjectId[] // nhắc đến
-  media: IMedia[] | null
+  medias: IMedia[] | null
   guest_view: number
   user_view: number
   likes_count: number

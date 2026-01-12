@@ -7,14 +7,18 @@ import { ResSearchPending } from '~/shared/dtos/res/search.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { ETweetType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
+import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 import { ITrending } from '~/shared/interfaces/schemas/trending.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { slug } from '~/utils/slug.util'
+import CommunityService from './Communities.service'
 import FollowsService from './Follows.service'
 import TrendingService from './Trending.service'
+import TweetsService from './Tweets.service'
+import UsersService from './Users.service'
 
 // Những hàm search sẽ ưu tiên sort sau limit
 class SearchService {
@@ -94,7 +98,11 @@ class SearchService {
       }
     ]).toArray()
 
-    return { trending, users, communities }
+    return {
+      trending,
+      users: UsersService.signedCloudfrontAvatarUrls(users) as IUser[],
+      communities: CommunityService.signedCloudfrontCoverUrls(communities) as ICommunity[]
+    }
   }
 
   // Sử dụng cho thanh tìm kiếm search
@@ -491,7 +499,11 @@ class SearchService {
     await TrendingService.createTrending(q)
 
     //
-    return { total, total_page: Math.ceil(total / limit), items: tweets }
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: TweetsService.signedCloudfrontMediaUrls(tweets) as ITweet[]
+    }
   }
 
   // Sử dụng cho tìm kiếm
@@ -597,7 +609,7 @@ class SearchService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: users
+      items: UsersService.signedCloudfrontAvatarUrls(users) as IUser[]
     }
   }
 }

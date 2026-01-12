@@ -1,10 +1,13 @@
 import { ObjectId } from 'mongodb'
+import { send } from 'process'
+import { signedCloudfrontUrl } from '~/libs/cloudfront.lib'
 import { NotificationCollection, NotificationSchema } from '~/models/schemas/Notification.schema'
 import { publishNotification } from '~/pubsub/publisher'
 import { CreateNotiDto } from '~/shared/dtos/req/notification.dto'
 import { ENotificationType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { INotification } from '~/shared/interfaces/schemas/notification.interface'
+import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import NotificationGateway from '~/socket/gateways/Notification.gateway'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
@@ -192,7 +195,7 @@ class NotificationService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: notis
+      items: this.signedCloudfrontUserUrls(notis) as INotification[]
     }
   }
 
@@ -269,6 +272,31 @@ class NotificationService {
         _id: { $nin: keepIds }
       })
     }
+  }
+
+  //
+  private signedCloudfrontUserUrls = (noti: INotification[] | INotification | null) => {
+    //
+    if (!noti) return noti
+
+    //
+    if (!Array.isArray(noti))
+      return {
+        ...noti,
+        sender: {
+          ...noti.sender,
+          avatar: (noti.sender as IUser)?.avatar ? signedCloudfrontUrl((noti.sender as IUser).avatar || '') : null
+        }
+      }
+
+    //
+    return noti.map((n) => ({
+      ...n,
+      sender: {
+        ...n.sender,
+        avatar: (n.sender as IUser)?.avatar ? signedCloudfrontUrl((n.sender as IUser).avatar || '') : null
+      }
+    }))
   }
 }
 
