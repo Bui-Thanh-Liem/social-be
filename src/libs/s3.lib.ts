@@ -1,23 +1,98 @@
-import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
+import { PutObjectCommand, DeleteObjectsCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { randomBytes } from 'node:crypto'
 import { readFileSync, unlinkSync } from 'fs'
-import path, { extname } from 'node:path'
-import { envs } from '~/configs/env.config'
-import s3Client from '~/configs/s3.config'
 import { Request } from 'express'
 import formidable from 'formidable'
 import { MAX_LENGTH_UPLOAD, MAX_SIZE_UPLOAD } from '~/shared/constants'
 import { BadRequestError } from '~/core/error.response'
+import { envs } from '~/configs/env.config'
+import { generateKey } from '~/utils/create-key-upload-media.util'
+import { PresignedUrlDto } from '~/shared/dtos/req/upload.dto'
+import { ResPresignedUrl } from '~/shared/dtos/res/upload.dto'
 
-// Helper: tạo key duy nhất
-const generateKey = (originalName: string) => {
-  const ext = path.extname(originalName)
-  const name = randomBytes(16).toString('hex')
-  return `uploads/${Date.now()}-${name}${ext}`
+//
+const isDev = process.env.NODE_ENV === 'development'
+
+// Khởi tạo S3 client (.env.dev, prod thì dùng IAM Role)
+export const s3Client = new S3Client({
+  region: envs.AWS_REGION,
+  credentials: isDev
+    ? {
+        accessKeyId: envs.AWS_ACCESS_KEY_ID,
+        secretAccessKey: envs.AWS_SECRET_ACCESS_KEY
+      }
+    : undefined
+})
+
+// Tạo presigned URL để upload file lớn từ client lên S3 trực tiếp
+export const presignedURL = async ({ file_name, file_type }: PresignedUrlDto): Promise<ResPresignedUrl> => {
+  if (!file_name || !file_type) {
+    throw new BadRequestError('fileName và fileType là bắt buộc')
+  }
+
+  const key = generateKey(file_name)
+
+  const signed_url = await getSignedUrl(
+    s3Client,
+    new PutObjectCommand({
+      Key: key,
+      ContentType: file_type,
+      Bucket: envs.AWS_S3_BUCKET_NAME,
+      CacheControl: 'public, max-age=31536000, immutable'
+    }),
+    { expiresIn: Number(envs.AWS_PRESIGNED_URL_EXPIRES_IN) }
+  )
+
+  return {
+    key,
+    presigned_url: signed_url
+  }
 }
 
-// Upload file lên S3 và trả về URL và key (file nhỏ)
+// Xóa file từ S3 dựa trên mảng URL
+export const deleteFromS3 = async (keys: string[]) => {
+  if (!keys || keys.length === 0) return
+
+  // 1. Chia nhỏ mảng nếu có hơn 1000 keys (Chunking)
+  const MAX_DELETE_SIZE = 1000
+  const chunks = []
+  for (let i = 0; i < keys.length; i += MAX_DELETE_SIZE) {
+    chunks.push(keys.slice(i, i + MAX_DELETE_SIZE))
+  }
+
+  try {
+    const results = await Promise.all(
+      chunks.map((chunk) => {
+        const Objects = chunk.map((key) => ({ Key: key }))
+
+        return s3Client.send(
+          new DeleteObjectsCommand({
+            Bucket: process.env.S3_BUCKET_NAME,
+            Delete: {
+              Objects,
+              Quiet: false // Chỉnh thành false để biết file nào lỗi
+            }
+          })
+        )
+      })
+    )
+
+    // 2. Kiểm tra xem có file nào xóa lỗi không
+    results.forEach((res) => {
+      if (res.Errors && res.Errors.length > 0) {
+        console.error('Các file xóa lỗi:', res.Errors)
+      }
+    })
+
+    console.log(`Đã xử lý xóa ${keys.length} file.`)
+  } catch (error) {
+    // Lỗi này thường là lỗi kết nối hoặc quyền hạn (IAM Role)
+    console.error('Lỗi hệ thống khi xóa hàng loạt:', error)
+    throw error
+  }
+}
+
+// Upload file lên S3 và trả về URL và key (thường không sử dụng, resize và watermark nên dùng lambda)
 export const uploadToS3 = async (req: Request) => {
   // Thiết lập formidable
   const form = formidable({
@@ -57,9 +132,9 @@ export const uploadToS3 = async (req: Request) => {
 
     await s3Client.send(
       new PutObjectCommand({
-        Bucket: envs.S3_BUCKET_NAME,
         Key: key,
         Body: buffer,
+        Bucket: envs.AWS_S3_BUCKET_NAME,
         ContentType: file.mimetype!,
         CacheControl: 'public, max-age=31536000, immutable'
       })
@@ -68,63 +143,10 @@ export const uploadToS3 = async (req: Request) => {
     // Xóa file tạm
     unlinkSync(file.filepath)
 
-    const url = `${envs.CLOUDFRONT_URL}/${key}`
+    const url = `${''}/${key}`
 
     return { url, key }
   } catch (err) {
     throw new BadRequestError((err as any)?.message || 'Upload thất bại')
   }
-}
-
-// Tạo presigned URL để upload file lớn từ client lên S3 trực tiếp
-export const presignedURL = async (req: Request) => {
-  const { fileName, fileType } = req.body
-
-  if (!fileName || !fileType) {
-    throw new BadRequestError('fileName và fileType là bắt buộc')
-  }
-
-  const key = generateKey(fileName)
-
-  const signedUrl = await getSignedUrl(
-    s3Client,
-    new PutObjectCommand({
-      Bucket: envs.S3_BUCKET_NAME,
-      Key: key,
-      ContentType: fileType,
-      CacheControl: 'public, max-age=31536000, immutable'
-    }),
-    { expiresIn: 600 } // 10 phút
-  )
-
-  return {
-    success: true,
-    presignedUrl: signedUrl,
-    finalUrl: `${envs.CLOUDFRONT_URL}/${key}`,
-    key
-  }
-}
-
-// Xóa file từ S3 dựa trên mảng URL
-export const deleteFromS3 = async (urls: string[]) => {
-  const keys = urls.map((url) => {
-    const urlObj = new URL(url)
-    return urlObj.pathname.substring(1) // Bỏ dấu '/' đầu tiên
-  })
-
-  // Xóa từng file
-  for (const key of keys) {
-    try {
-      await s3Client.send(
-        new DeleteObjectCommand({
-          Bucket: envs.S3_BUCKET_NAME,
-          Key: key
-        })
-      )
-    } catch (error) {
-      console.error(`Không thể xóa file với key ${key}:`, (error as any).message)
-    }
-  }
-
-  return true
 }

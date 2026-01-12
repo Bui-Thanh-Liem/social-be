@@ -5,7 +5,7 @@ import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { ResSearchPending } from '~/shared/dtos/res/search.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
-import { EMediaType, ETweetType } from '~/shared/enums/type.enum'
+import { ETweetType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ITrending } from '~/shared/interfaces/schemas/trending.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
@@ -138,7 +138,7 @@ class SearchService {
     if (f) {
       hasF.query = {
         'media.type': {
-          $in: [EMediaType.Image, EMediaType.Video]
+          'media.type': { $ne: null }
         }
       }
     }

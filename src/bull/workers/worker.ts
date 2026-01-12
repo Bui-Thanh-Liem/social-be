@@ -1,6 +1,6 @@
 import { instanceMongodb } from '~/dbs/init.mongodb'
 import { logger } from '~/utils/logger.util'
-import { cleanupWorker, compressionWorker, emailWorker, inviteWorker, notificationWorker, syncWorker } from './index'
+import { cleanupWorker, emailWorker, inviteWorker, notificationWorker, syncWorker } from './index'
 
 async function bootstrapWorker() {
   try {
@@ -18,7 +18,6 @@ async function bootstrapWorker() {
     logger.info(`  - Email Worker: ${emailWorker.name}`)
     logger.info(`  - Invite Worker: ${inviteWorker.name}`)
     logger.info(`  - Cleanup Worker: ${cleanupWorker.name}`)
-    logger.info(`  - Compression Worker: ${compressionWorker.name}`)
     logger.info(`  - Notification Worker: ${notificationWorker.name}`)
   } catch (err) {
     logger.error('❌ Worker: Failed to start:', err)
@@ -38,7 +37,6 @@ async function shutdown() {
       emailWorker.close(),
       inviteWorker.close(),
       cleanupWorker.close(),
-      compressionWorker.close(),
       notificationWorker.close()
     ])
     logger.info('✅ All workers closed')

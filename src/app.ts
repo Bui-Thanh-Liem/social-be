@@ -7,8 +7,8 @@ import swaggerUi from 'swagger-ui-express'
 //
 import morgan from 'morgan'
 import { envs } from './configs/env.config'
-import { swaggerSpec } from './configs/swagger'
-import StreamVideoController from './controllers/StreamVideo.controller'
+import { swaggerSpec } from './configs/swagger.config'
+// import StreamVideoController from './controllers/StreamVideo.controller'
 import { corsMiddleware } from './middlewares/cors.middleware'
 import { errorHandler } from './middlewares/errorhandler.middleware'
 import { loggerMiddleware } from './middlewares/logger.middleware'
@@ -17,7 +17,7 @@ import rootRoute from './routes'
 import { logger } from './utils/logger.util'
 
 //
-import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/constants'
+// import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/constants'
 import './tasks/cleanup.task'
 import './tasks/sync.task'
 const isDev = process.env.NODE_ENV === 'development'
@@ -84,18 +84,19 @@ const staticOptions = {
 }
 
 // Static media
-app.use('/uploads', [
-  express.static(UPLOAD_IMAGE_FOLDER_PATH, staticOptions),
-  express.static(UPLOAD_VIDEO_FOLDER_PATH, staticOptions)
-])
+// app.use('/uploads', [
+//   express.static(UPLOAD_IMAGE_FOLDER_PATH, staticOptions),
+//   express.static(UPLOAD_VIDEO_FOLDER_PATH, staticOptions)
+// ])
 
 // API documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 // Streaming
-app.get('/videos-streaming/:filename', StreamVideoController.streamVideo)
-app.get('/videos-hls/:foldername/master.m3u8', StreamVideoController.streamMaster)
-app.get('/videos-hls/:foldername/:v/:segment', StreamVideoController.streamSegment)
+// Streaming
+// app.get('/videos-streaming/:filename', StreamVideoController.streamVideo)
+// app.get('/videos-hls/:foldername/master.m3u8', StreamVideoController.streamMaster)
+// app.get('/videos-hls/:foldername/:v/:segment', StreamVideoController.streamSegment)
 
 // API routes
 app.use('/api', rootRoute)

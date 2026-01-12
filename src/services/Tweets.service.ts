@@ -32,13 +32,20 @@ import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
 import LikesService from './Likes.service'
 import TrendingService from './Trending.service'
-import UploadsService from './Uploads.service'
+import { IMedia } from '~/shared/interfaces/schemas/media.interface'
+import UploadsServices from './Uploads.service'
 
 class TweetsService {
   //
   async create(user_id: string, payload: CreateTweetDto) {
     let message = 'Đăng bài thành công'
     const { audience, type, content, parent_id, community_id, mentions, media } = payload
+
+    //
+    let _media: undefined | IMedia[] = undefined
+    if (media) {
+      _media = await UploadsServices.getMultiByKeys(media)
+    }
 
     // Kiểm tra nếu có parent_id
     if (parent_id) {
@@ -98,7 +105,7 @@ class TweetsService {
         parent_id: parent_id ? new ObjectId(parent_id) : null,
         community_id: community_id ? new ObjectId(community_id) : null,
         mentions: mentions ? mentions.map((id) => new ObjectId(id)) : [],
-        media: media,
+        media: _media,
         status: status
       })
     )
@@ -2077,7 +2084,7 @@ class TweetsService {
 
         // Xóa media trên Cloudinary nếu có
         if (tweet.media) {
-          await UploadsService.deleteFromCloudinary(tweet.media || [])
+          await UploadsServices.delete({ s3_keys: tweet.media.map((m) => m.s3_key) })
         }
 
         // Xóa các record của bookmark/like/comment

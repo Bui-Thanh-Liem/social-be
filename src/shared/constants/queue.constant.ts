@@ -3,7 +3,6 @@ export const CONSTANT_QUEUE = {
   SYNC: 'sync',
   INVITE: 'invite',
   CLEANUP: 'cleanup',
-  COMPRESSION: 'compression',
   NOTIFICATION: 'notification'
 } as const
 
@@ -14,7 +13,6 @@ export const CONSTANT_JOB = {
   SYNC_LIKE: 'sync-like',
   SEND_NOTI_LIKE: 'send-noti-like',
   FORGOT_PASSWORD: 'forgot-password',
-  COMPRESSION_HLS: 'compression-hls',
   DELETE_MESSAGES: 'delete-messages',
   SEND_NOTI_COMMENT: 'send-noti-comment',
   DELETE_CHILDREN_TWEET: 'delete-children-tweet'

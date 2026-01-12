@@ -1,15 +1,17 @@
 import { z } from 'zod'
-import { EMediaType } from '~/shared/enums/type.enum'
 
-export const signedDtoSchema = z.object({
-  public_data_signed: z
-    .array(
-      z.object({
-        public_id: z.string().trim(),
-        resource_type: z.nativeEnum(EMediaType).default(EMediaType.Image)
-      })
-    )
-    .nonempty()
+export const presignedUrlDtoSchema = z.object({
+  file_name: z.string().trim(),
+  file_type: z.string().trim(),
+  file_size: z.number().min(1, 'file_size phải lớn hơn 0')
 })
 
-export type SignedDto = z.infer<typeof signedDtoSchema>
+export const deleteDtoSchema = z.object({
+  s3_keys: z.array(z.string().trim()).min(1, 'Cần ít nhất 1 s3_key để xóa')
+})
+
+export const uploadConfirmDtoSchema = deleteDtoSchema
+
+export type PresignedUrlDto = z.infer<typeof presignedUrlDtoSchema>
+export type DeleteDto = z.infer<typeof deleteDtoSchema>
+export type UploadConfirmDto = z.infer<typeof uploadConfirmDtoSchema>

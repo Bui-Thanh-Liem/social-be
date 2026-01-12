@@ -1,7 +1,6 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from 'express'
 import { ZodError } from 'zod'
 import { ErrorResponse } from '~/core/error.response'
-import { DiscordLog } from '~/helpers/send-to-discord'
 
 export const errorHandler: ErrorRequestHandler = async (err: any, req: Request, res: Response, next: NextFunction) => {
   const isDev = process.env.NODE_ENV === 'development'
@@ -26,19 +25,19 @@ export const errorHandler: ErrorRequestHandler = async (err: any, req: Request, 
 
     //
     if (!isDev) {
-      await DiscordLog.sendLogError('🛑 Zod Validation Error:', {
-        clientIp: req.ip,
-        clientId: req.headers['x-client-id'] as string,
-        request: {
-          method: req.method,
-          url: req.originalUrl,
-          body: req.body,
-          params: req.params,
-          query: req.query
-        },
-        message: message,
-        statusCode: statusCode
-      })
+      // await DiscordLog.sendLogError('🛑 Zod Validation Error:', {
+      //   clientIp: req.ip,
+      //   clientId: req.headers['x-client-id'] as string,
+      //   request: {
+      //     method: req.method,
+      //     url: req.originalUrl,
+      //     body: req.body,
+      //     params: req.params,
+      //     query: req.query
+      //   },
+      //   message: message,
+      //   statusCode: statusCode
+      // })
     }
   }
 
@@ -59,18 +58,18 @@ export const errorHandler: ErrorRequestHandler = async (err: any, req: Request, 
   }
   console.log('resError :::', resError)
   if (resError.statusCode !== 401 && !isDev) {
-    await DiscordLog.sendLogError(message, {
-      clientIp: req.ip,
-      clientId: req.headers['x-client-id'] as string,
-      request: {
-        method: req.method,
-        url: req.originalUrl
-      },
-      message: resError.message,
-      statusCode: resError.statusCode,
-      stack: resError.stack,
-      ...resError.otherFields
-    })
+    // await DiscordLog.sendLogError(message, {
+    //   clientIp: req.ip,
+    //   clientId: req.headers['x-client-id'] as string,
+    //   request: {
+    //     method: req.method,
+    //     url: req.originalUrl
+    //   },
+    //   message: resError.message,
+    //   statusCode: resError.statusCode,
+    //   stack: resError.stack,
+    //   ...resError.otherFields
+    // })
   }
 
   // Trả response ra client

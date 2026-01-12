@@ -1,10 +1,9 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
-import { MediaSchema } from './tweet.dto'
 
 export const CreateMessageDtoSchema = z.object({
   content: z.string().trim().optional(),
-  attachments: z.array(MediaSchema).optional(),
+  attachments: z.array(z.string().trim()).optional(),
   conversation: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, { message: 'ObjectId không hợp lệ' })
 })
 

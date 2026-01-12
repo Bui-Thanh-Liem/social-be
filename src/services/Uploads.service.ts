@@ -1,107 +1,91 @@
-import { Request } from 'express'
-import fs from 'fs'
-import path from 'path'
-import cloudinary from '~/configs/cloudinary.config'
-import { envs } from '~/configs/env.config'
+import { ObjectId } from 'mongodb'
 import { BadRequestError } from '~/core/error.response'
-import { deleteFromCloudinary, uploadToCloudinary } from '~/libs/cloudinary.lib'
-import { UPLOAD_IMAGE_FOLDER_PATH } from '~/shared/constants'
-import { SignedDto } from '~/shared/dtos/req/upload.dto'
-import { EMediaType } from '~/shared/enums/type.enum'
-import { IMedia } from '~/shared/interfaces/common/media.interface'
-import { logger } from '~/utils/logger.util'
-import { uploadImages, uploadVideos } from '~/utils/upload.util'
+import { deleteFromS3, presignedURL } from '~/libs/s3.lib'
+import { MediaCollection } from '~/models/schemas/Media.schema'
+import { DeleteDto, PresignedUrlDto, UploadConfirmDto } from '~/shared/dtos/req/upload.dto'
+import { ResPresignedUrl } from '~/shared/dtos/res/upload.dto'
+import { EMediaStatus } from '~/shared/enums/status.enum'
+import { getSignedUrl } from '@aws-sdk/cloudfront-signer'
+import { envs } from '~/configs/env.config'
+import { IMedia } from '~/shared/interfaces/schemas/media.interface'
 
-class UploadsService {
-  async uploadImages(req: Request): Promise<IMedia[]> {
-    const urls = await uploadImages(req)
-    return urls.map((url) => ({ resource_type: EMediaType.Image, url, public_id: path.basename(url) }))
+class UploadsServices {
+  //
+  async getMultiByKeys(s3_keys: string[]) {
+    return await MediaCollection.find({ s3_key: { $in: s3_keys } }).toArray()
   }
 
-  async uploadVideos(req: Request): Promise<IMedia[]> {
-    const urls = await uploadVideos(req)
-    return urls.map((url) => ({ resource_type: EMediaType.Video, url, public_id: path.basename(url) }))
-  }
-
-  async uploadToCloudinary(req: Request): Promise<IMedia[]> {
-    const uploaded = await uploadToCloudinary(req)
-    return uploaded.map((file) => ({
-      url: file.url,
-      public_id: file.public_id,
-      resource_type: file.resource_type as unknown as EMediaType
-    }))
-  }
-
-  async deleteFromCloudinary(media: IMedia[]) {
+  //
+  async presignedURL(body: PresignedUrlDto, user_id: string): Promise<ResPresignedUrl> {
     //
-    const deleteResults = await deleteFromCloudinary(media)
+    const { key, presigned_url } = await presignedURL(body)
 
     //
-    const failed = deleteResults.filter((r) => !r.deleted)
-    if (failed.length > 0) {
-      console.warn('Không xóa được một số file:', failed)
+    try {
+      await MediaCollection.insertOne({
+        s3_key: key,
+        file_type: body.file_type,
+        file_name: body.file_name,
+        status: EMediaStatus.Pending,
+        user_id: new ObjectId(user_id),
+        file_size: body.file_size
+      })
+
+      return { key, presigned_url }
+    } catch (error) {
+      console.log('Error creating media:', error)
+      throw new BadRequestError('Tạo media thất bại, vui lòng thử lại.')
     }
+  }
 
-    //
+  //
+  async confirmUpload(body: UploadConfirmDto): Promise<IMedia[]> {
+    try {
+      // Cập nhật trạng thái media từ Pending -> Active
+      await MediaCollection.updateMany(
+        {
+          s3_key: { $in: body.s3_keys },
+          status: EMediaStatus.Pending
+        },
+        {
+          $set: { status: EMediaStatus.Active }
+        }
+      )
+
+      // Lấy thông tin media đã được upload
+      const medias = await MediaCollection.find({ s3_key: { $in: body.s3_keys } }).toArray()
+
+      // Trả về kèm URL đã ký
+      return medias.map((media) => ({
+        ...media,
+        url: this.signedCloudfrontUrl(media.s3_key)
+      }))
+    } catch (error) {
+      console.log('Error confirming upload:', error)
+      throw new BadRequestError('Xác nhận upload thất bại, vui lòng thử lại.')
+    }
+  }
+
+  //
+  async delete(body: DeleteDto) {
+    // Xóa file khỏi S3
+    await deleteFromS3(body?.s3_keys)
+
+    // Xóa khỏi DB
+    await MediaCollection.deleteMany({ s3_key: { $in: body.s3_keys } })
+
     return true
   }
 
-  async signedUrls({ public_data_signed }: { public_data_signed: SignedDto }): Promise<IMedia[]> {
-    if (!public_data_signed || !Array.isArray(public_data_signed) || public_data_signed.length === 0) {
-      throw new BadRequestError('public_data_signed thì phải là một mảng không rỗng')
-    }
-
-    return public_data_signed.map((x) => {
-      const url = cloudinary.url(x.public_id, {
-        secure: true, // luôn dùng HTTPS
-        sign_url: true, // bắt buộc ký
-        expires_at: Math.floor(Date.now() / 1000) + 900, // hết hạn sau 15 phút
-        resource_type: x.resource_type || 'auto' // tự nhận diện image/video/raw
-      })
-
-      return {
-        url,
-        resource_type: (x.resource_type as unknown as EMediaType) || EMediaType.Image,
-        public_id: x.public_id
-      }
-    })
-  }
-
-  async removeImages(urls: string[]) {
-    return new Promise((resolve, reject) => {
-      try {
-        // Validate that the image URLs are provided
-        if (!urls || !Array.isArray(urls) || urls.length === 0) {
-          return reject(new BadRequestError('No image URLs provided'))
-        }
-
-        // Process each image URL
-        urls.forEach((url) => {
-          // Extract the relative path from the URL (remove the server domain)
-          const relativePath = url.replace(`${envs.SERVER_DOMAIN}/uploads/`, '')
-          const filePath = path.join(UPLOAD_IMAGE_FOLDER_PATH, relativePath)
-
-          // Security check: Ensure the file path is within the upload directory
-          if (!filePath.startsWith(UPLOAD_IMAGE_FOLDER_PATH)) {
-            throw new BadRequestError('Invalid file path')
-          }
-
-          // Check if the file exists and delete it
-          if (fs.existsSync(filePath) && url) {
-            fs.unlinkSync(filePath) // Synchronously delete the file
-            logger.info(`Deleted image: ${filePath}`)
-          } else {
-            console.error(`Image not found: ${filePath}`)
-            console.error('Không tìm thấy ảnh trước cũ ?')
-          }
-        })
-
-        resolve(true)
-      } catch (error) {
-        reject(new BadRequestError((error as any)?.message || 'Error removing images'))
-      }
+  //
+  signedCloudfrontUrl = (s3_key: string) => {
+    return getSignedUrl({
+      url: `${envs.AWS_CLOUDFRONT_DOMAIN}/${s3_key}`,
+      keyPairId: envs.AWS_CLOUDFRONT_KEY_PAIR_ID,
+      privateKey: envs.AWS_CLOUDFRONT_PRIVATE_KEY,
+      dateLessThan: new Date(Date.now() + Number(envs.AWS_SIGNED_URL_EXPIRES_IN)).toISOString()
     })
   }
 }
 
-export default new UploadsService()
+export default new UploadsServices()

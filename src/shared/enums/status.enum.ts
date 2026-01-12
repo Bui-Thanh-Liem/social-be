@@ -4,10 +4,10 @@ export enum EUserVerifyStatus {
   Banned
 }
 
-export enum EVideoStatus {
+export enum EMediaStatus {
   Pending,
   Reject,
-  Success
+  Active
 }
 
 export enum ETweetStatus {

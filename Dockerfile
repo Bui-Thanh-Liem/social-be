@@ -1,10 +1,7 @@
 # ============================================
 # STAGE 1: Build TypeScript
 # ============================================
-FROM node:20-alpine AS builder
-
-# Install FFmpeg để build/testing nếu cần
-RUN apk add --no-cache ffmpeg
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -23,7 +20,7 @@ RUN npm run build && rm -rf node_modules
 # ============================================
 # STAGE 2: Production Dependencies
 # ============================================
-FROM node:20-alpine AS prod-dependencies
+FROM node:22-alpine AS prod-dependencies
 
 WORKDIR /app
 
@@ -37,10 +34,7 @@ RUN npm install --only=production && \
 # ============================================
 # STAGE 3: Final Production Image
 # ============================================
-FROM node:20-alpine
-
-# Install dumb-init + FFmpeg (production cần FFmpeg để worker chạy)
-RUN apk add --no-cache ca-certificates dumb-init ffmpeg
+FROM node:22-alpine
 
 # Tạo non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -77,5 +71,5 @@ HEALTHCHECK --interval=60s --timeout=3s --start-period=5s --retries=3 \
 # Use dumb-init
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start production (server + worker)
+# Start production (server/worker)
 CMD ["npm", "run", "start:prod"]
