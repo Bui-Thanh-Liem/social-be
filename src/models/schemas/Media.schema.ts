@@ -4,8 +4,9 @@ import { IMedia } from '~/shared/interfaces/schemas/media.interface'
 import { EMediaStatus } from '~/shared/enums/status.enum'
 
 export class MediaSchema extends BaseSchema implements IMedia {
-  size: number
-  type: string
+  file_size: number
+  url?: string | undefined
+  file_type: string
   s3_key: string
   file_name: string
   status: EMediaStatus
@@ -13,8 +14,9 @@ export class MediaSchema extends BaseSchema implements IMedia {
 
   constructor(media: Partial<IMedia>) {
     super()
-    this.size = media.size || 0
-    this.type = media.type || ''
+    this.file_size = media.file_size || 0
+    this.url = media.url || undefined
+    this.file_type = media.file_type || ''
     this.s3_key = media.s3_key || ''
     this.file_name = media.file_name || ''
     this.user_id = media.user_id || undefined

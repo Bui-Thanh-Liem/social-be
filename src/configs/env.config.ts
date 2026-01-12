@@ -64,6 +64,12 @@ export const envs = {
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || 'Error',
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || 'Error',
   AWS_REGION: process.env.AWS_REGION || 'Error',
-  S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME || 'Error',
+
+  AWS_CLOUDFRONT_DOMAIN: process.env.AWS_CLOUDFRONT_DOMAIN || 'Error',
+  AWS_CLOUDFRONT_KEY_PAIR_ID: process.env.AWS_CLOUDFRONT_KEY_PAIR_ID || 'Error',
+  AWS_CLOUDFRONT_PRIVATE_KEY: process.env.AWS_CLOUDFRONT_PRIVATE_KEY || 'Error',
+  AWS_SIGNED_URL_EXPIRES_IN: process.env.AWS_SIGNED_URL_EXPIRES_IN || '0',
+
+  AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME || 'Error',
   AWS_PRESIGNED_URL_EXPIRES_IN: process.env.AWS_PRESIGNED_URL_EXPIRES_IN || '0'
 }

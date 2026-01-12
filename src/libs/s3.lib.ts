@@ -7,7 +7,8 @@ import { MAX_LENGTH_UPLOAD, MAX_SIZE_UPLOAD } from '~/shared/constants'
 import { BadRequestError } from '~/core/error.response'
 import { envs } from '~/configs/env.config'
 import { generateKey } from '~/utils/create-key-upload-media.util'
-import { PresignedURLDto } from '~/shared/dtos/req/upload.dto'
+import { PresignedUrlDto } from '~/shared/dtos/req/upload.dto'
+import { ResPresignedUrl } from '~/shared/dtos/res/upload.dto'
 
 //
 const isDev = process.env.NODE_ENV === 'development'
@@ -24,19 +25,19 @@ export const s3Client = new S3Client({
 })
 
 // Tạo presigned URL để upload file lớn từ client lên S3 trực tiếp
-export const presignedURL = async ({ fileName, fileType }: PresignedURLDto) => {
-  if (!fileName || !fileType) {
+export const presignedURL = async ({ file_name, file_type }: PresignedUrlDto): Promise<ResPresignedUrl> => {
+  if (!file_name || !file_type) {
     throw new BadRequestError('fileName và fileType là bắt buộc')
   }
 
-  const key = generateKey(fileName)
+  const key = generateKey(file_name)
 
-  const signedUrl = await getSignedUrl(
+  const signed_url = await getSignedUrl(
     s3Client,
     new PutObjectCommand({
       Key: key,
-      ContentType: fileType,
-      Bucket: envs.S3_BUCKET_NAME,
+      ContentType: file_type,
+      Bucket: envs.AWS_S3_BUCKET_NAME,
       CacheControl: 'public, max-age=31536000, immutable'
     }),
     { expiresIn: Number(envs.AWS_PRESIGNED_URL_EXPIRES_IN) }
@@ -44,7 +45,7 @@ export const presignedURL = async ({ fileName, fileType }: PresignedURLDto) => {
 
   return {
     key,
-    presignedUrl: signedUrl
+    presigned_url: signed_url
   }
 }
 
@@ -133,7 +134,7 @@ export const uploadToS3 = async (req: Request) => {
       new PutObjectCommand({
         Key: key,
         Body: buffer,
-        Bucket: envs.S3_BUCKET_NAME,
+        Bucket: envs.AWS_S3_BUCKET_NAME,
         ContentType: file.mimetype!,
         CacheControl: 'public, max-age=31536000, immutable'
       })

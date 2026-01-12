@@ -7,7 +7,7 @@ import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import TweetsService from '~/services/Tweets.service'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
-import { EMediaType, EMembershipType, ETweetType, EVisibilityType } from '~/shared/enums/type.enum'
+import { EMembershipType, ETweetType, EVisibilityType } from '~/shared/enums/type.enum'
 import { hashPassword } from './crypto.util'
 import { logger } from './logger.util'
 import CommunityService from '~/services/Communities.service'
@@ -418,73 +418,73 @@ async function createRandomTweets(user_ids: ObjectId[], community_id?: string) {
       const ht4 = [randomHashtag(), randomHashtag(), randomHashtag()]
       const ht5 = [randomHashtag(), randomHashtag(), randomHashtag()]
 
-      await Promise.all([
-        TweetsService.create(id.toString(), {
-          type: ETweetType.Tweet,
-          audience: ETweetAudience.Everyone,
-          content: generateRandomTweet(ht1),
-          hashtags: ht1,
-          mentions: getRandomMentions(user_ids),
-          media: [
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
-          ],
-          community_id: community_id ? community_id : undefined
-        }),
-        TweetsService.create(id.toString(), {
-          type: ETweetType.Tweet,
-          audience: ETweetAudience.Everyone,
-          content: generateRandomTweet(ht2),
-          hashtags: ht2,
-          mentions: getRandomMentions(user_ids),
-          media: [
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
-          ],
-          community_id: community_id ? community_id : undefined
-        }),
-        TweetsService.create(id.toString(), {
-          type: ETweetType.Tweet,
-          audience: ETweetAudience.Everyone,
-          content: generateRandomTweet(ht3),
-          hashtags: ht3,
-          mentions: getRandomMentions(user_ids),
-          media: [
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
-          ],
-          community_id: community_id ? community_id : undefined
-        }),
-        TweetsService.create(id.toString(), {
-          type: ETweetType.Tweet,
-          audience: ETweetAudience.Everyone,
-          content: generateRandomTweet(ht4),
-          hashtags: ht4,
-          mentions: getRandomMentions(user_ids),
-          media: [
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
-          ],
-          community_id: community_id ? community_id : undefined
-        }),
-        TweetsService.create(id.toString(), {
-          type: ETweetType.Tweet,
-          audience: ETweetAudience.Everyone,
-          content: generateRandomTweet(ht5),
-          hashtags: ht5,
-          mentions: getRandomMentions(user_ids),
-          media: [
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' },
-            { url: faker.image.avatar(), resource_type: EMediaType.Image, public_id: '' }
-          ],
-          community_id: community_id ? community_id : undefined
-        })
-      ])
+      // await Promise.all([
+      //   TweetsService.create(id.toString(), {
+      //     type: ETweetType.Tweet,
+      //     audience: ETweetAudience.Everyone,
+      //     content: generateRandomTweet(ht1),
+      //     hashtags: ht1,
+      //     mentions: getRandomMentions(user_ids),
+      //     media: [
+      //       { url: faker.image.avatar(), type: 'image/' },
+      //       { url: faker.image.avatar(), type: 'image/' },
+      //       { url: faker.image.avatar(), type: 'image/' }
+      //     ],
+      //     community_id: community_id ? community_id : undefined
+      //   }),
+      //   TweetsService.create(id.toString(), {
+      //     type: ETweetType.Tweet,
+      //     audience: ETweetAudience.Everyone,
+      //     content: generateRandomTweet(ht2),
+      //     hashtags: ht2,
+      //     mentions: getRandomMentions(user_ids),
+      //     media: [
+      //       { url: faker.image.avatar(), type: 'image/' },
+      //       { url: faker.image.avatar(), type: 'image/' },
+      //       { url: faker.image.avatar(), type: 'image/' }
+      //     ],
+      //     community_id: community_id ? community_id : undefined
+      //   }),
+      //   TweetsService.create(id.toString(), {
+      //     type: ETweetType.Tweet,
+      //     audience: ETweetAudience.Everyone,
+      //     content: generateRandomTweet(ht3),
+      //     hashtags: ht3,
+      //     mentions: getRandomMentions(user_ids),
+      //     media: [
+      //       { url: faker.image.avatar(), type: 'image/' },
+      //       { url: faker.image.avatar(), type: 'image/' },
+      //       { url: faker.image.avatar(), type: 'image/' }
+      //     ],
+      //     community_id: community_id ? community_id : undefined
+      //   }),
+      //   TweetsService.create(id.toString(), {
+      //     type: ETweetType.Tweet,
+      //     audience: ETweetAudience.Everyone,
+      //     content: generateRandomTweet(ht4),
+      //     hashtags: ht4,
+      //     mentions: getRandomMentions(user_ids),
+      //     media: [
+      //       { url: faker.image.avatar(), type: 'image/' },
+      //       { url: faker.image.avatar(), type: 'image/' },
+      //       { url: faker.image.avatar(), type: 'image/' }
+      //     ],
+      //     community_id: community_id ? community_id : undefined
+      //   }),
+      //   TweetsService.create(id.toString(), {
+      //     type: ETweetType.Tweet,
+      //     audience: ETweetAudience.Everyone,
+      //     content: generateRandomTweet(ht5),
+      //     hashtags: ht5,
+      //     mentions: getRandomMentions(user_ids),
+      //     media: [
+      //       { url: faker.image.avatar(), type: 'image/' },
+      //       { url: faker.image.avatar(), type: 'image/' },
+      //       { url: faker.image.avatar(), type: 'image/' }
+      //     ],
+      //     community_id: community_id ? community_id : undefined
+      //   })
+      // ])
     })
   )
 

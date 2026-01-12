@@ -2,10 +2,13 @@ import { ObjectId } from 'mongodb'
 import { EMediaStatus } from '~/shared/enums/status.enum'
 
 export interface IMedia {
-  size: number
-  type: string
-  s3_key: string
+  file_type: string
+  file_size: number
   file_name: string
+
+  url?: string | undefined
+  s3_key: string
+
   user_id?: ObjectId
   status: EMediaStatus
 }

@@ -1,8 +1,9 @@
 import { z } from 'zod'
 
-export const presignedURLDtoSchema = z.object({
-  fileName: z.string().trim(),
-  fileType: z.string().trim()
+export const presignedUrlDtoSchema = z.object({
+  file_name: z.string().trim(),
+  file_type: z.string().trim(),
+  file_size: z.number().min(1, 'file_size phải lớn hơn 0')
 })
 
 export const deleteDtoSchema = z.object({
@@ -11,6 +12,6 @@ export const deleteDtoSchema = z.object({
 
 export const uploadConfirmDtoSchema = deleteDtoSchema
 
-export type PresignedURLDto = z.infer<typeof presignedURLDtoSchema>
+export type PresignedUrlDto = z.infer<typeof presignedUrlDtoSchema>
 export type DeleteDto = z.infer<typeof deleteDtoSchema>
 export type UploadConfirmDto = z.infer<typeof uploadConfirmDtoSchema>
