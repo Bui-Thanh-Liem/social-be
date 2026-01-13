@@ -4,7 +4,7 @@ import { verifyUserEmail } from '~/middlewares/verify-user-email.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 import UploadsControllers from '~/controllers/Upload.controller'
 import { requestBodyValidate } from '~/middlewares/request-body-validate.middleware'
-import { deleteDtoSchema, presignedUrlDtoSchema, uploadConfirmDtoSchema } from '~/shared/dtos/req/upload.dto'
+import { deleteMediaDtoSchema, presignedUrlDtoSchema, uploadConfirmDtoSchema } from '~/shared/dtos/req/upload.dto'
 
 const uploadsRoute = Router()
 
@@ -25,6 +25,6 @@ uploadsRoute.post(
 )
 
 //
-uploadsRoute.delete('/', requestBodyValidate(deleteDtoSchema), asyncHandler(UploadsControllers.delete))
+uploadsRoute.delete('/', requestBodyValidate(deleteMediaDtoSchema), asyncHandler(UploadsControllers.delete))
 
 export default uploadsRoute

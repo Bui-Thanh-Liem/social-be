@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { CONSTANT_MAX_LENGTH_CONTENT, CONSTANT_REGEX } from '~/shared/constants'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EFeedType, ETweetType } from '~/shared/enums/type.enum'
+import { MediaBareDtoSchema } from './common/media-bare.dto'
 
 export const CreateTweetDtoSchema = z.object({
   type: z.nativeEnum(ETweetType),
@@ -29,7 +30,7 @@ export const CreateTweetDtoSchema = z.object({
       })
     )
     .optional(),
-  media: z.array(z.string()).optional().nullable() // array of s3_key
+  medias: z.array(MediaBareDtoSchema).optional()
 })
 
 export const GetOneTweetByIdDtoSchema = z.object({

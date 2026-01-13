@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
+import { MediaBareDtoSchema } from './common/media-bare.dto'
 
 export const RegisterUserDtoSchema = z
   .object({
@@ -19,7 +20,7 @@ export const RegisterUserDtoSchema = z
       }
       return arg
     }, z.date()),
-    avatar: z.string().trim().optional(),
+    avatar: MediaBareDtoSchema.optional(),
     verify: z.nativeEnum(EUserVerifyStatus).optional()
   })
   .refine((data) => data.password === data.confirm_password, {
@@ -76,8 +77,8 @@ export const UpdateMeDtoSchema = z.object({
     .trim()
     .regex(CONSTANT_REGEX.USERNAME, { message: 'Tên người dùng không hợp lệ (@liem_dev)' })
     .optional(),
-  avatar: z.string().max(400).trim().optional(),
-  cover_photo: z.string().max(400).trim().optional()
+  avatar: MediaBareDtoSchema.optional(),
+  cover_photo: MediaBareDtoSchema.optional()
 })
 
 export type RegisterUserDto = z.infer<typeof RegisterUserDtoSchema>

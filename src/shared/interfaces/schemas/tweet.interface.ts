@@ -2,8 +2,8 @@ import { ObjectId } from 'mongodb'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { ETweetStatus } from '~/shared/enums/status.enum'
 import { ETweetType } from '~/shared/enums/type.enum'
-import { IMedia } from './media.interface'
 import { IBase } from './base.interface'
+import { IMediaBare } from './media.interface'
 
 export interface ITweet extends IBase {
   user_id: ObjectId
@@ -14,7 +14,7 @@ export interface ITweet extends IBase {
   hashtags: ObjectId[]
   status: ETweetStatus
   mentions: ObjectId[] // nhắc đến
-  medias: IMedia[] | null
+  medias: IMediaBare[] | null
   guest_view: number
   user_view: number
   likes_count: number

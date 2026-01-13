@@ -12,11 +12,12 @@ import { hashPassword } from './crypto.util'
 import { logger } from './logger.util'
 import CommunityService from '~/services/Communities.service'
 import { CreateCommunityDto } from '~/shared/dtos/req/community.dto'
+import { IUser } from '~/shared/interfaces/schemas/user.interface'
 
-const MY_ID = new ObjectId('693fdea463493df19d766fc4')
+const MY_ID = new ObjectId('69660fd724201294452be842')
 const PASS = 'User123@'
 
-function generateRandomTweet(hashtags: string[]): string {
+function generateRandomTweet(hashtags: string[], username: string): string {
   const openers = [
     // Lập trình viên
     'Sáng nay tôi',
@@ -160,19 +161,27 @@ function generateRandomTweet(hashtags: string[]): string {
 
   const random = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)]
 
+  // 1. Tạo các phần nội dung chính
   const parts = [random(openers), random(middles), random(closers)]
 
-  // chọn 1–2 hashtag ngẫu nhiên để chèn vào giữa nội dung
-  const pickedTags = hashtags
-    .sort(() => 0.5 - Math.random())
-    .slice(0, Math.floor(Math.random() * 2) + 1)
-    .map((h) => (h.startsWith('#') ? h : `#${h}`))
+  // 2. Xử lý Hashtags (Lấy 1-2 cái ngẫu nhiên)
+  if (hashtags.length > 0) {
+    const pickedTags = hashtags
+      .sort(() => 0.5 - Math.random())
+      .slice(0, Math.floor(Math.random() * 2) + 1)
+      .map((h) => (h.startsWith('#') ? h : `#${h}`))
 
-  // chọn vị trí chèn ngẫu nhiên, tránh đầu & cuối quá sớm
-  const insertIndex = Math.floor(Math.random() * (parts.length - 1)) + 1
-  parts.splice(insertIndex, 0, pickedTags.join(' '))
+    // Chèn hashtag vào một vị trí ngẫu nhiên
+    parts.splice(Math.floor(Math.random() * parts.length), 0, pickedTags.join(' '))
+  }
 
-  return parts.join(' ')
+  // 3. Chèn duy nhất 1 username vào vị trí ngẫu nhiên
+  // Vì username đã có sẵn @, ta chèn trực tiếp vào mảng
+  const userInsertIndex = Math.floor(Math.random() * (parts.length + 1))
+  parts.splice(userInsertIndex, 0, username)
+
+  // Kết nối lại và làm sạch khoảng trắng
+  return parts.join(' ').replace(/\s+/g, ' ').trim()
 }
 
 function generateRandomBio(): string {
@@ -387,10 +396,15 @@ async function createRandomUsers() {
       const res = await UserCollection.insertOne(
         new UserSchema({
           ...d,
-          email_verify_token: ''
+          email_verify_token: '',
+          avatar: { url: d.avatar, s3_key: '' },
+          cover_photo: { url: d.cover_photo, s3_key: '' }
         })
       )
-      return res.insertedId
+      return {
+        _id: res.insertedId,
+        username: d.username
+      }
     })
   )
 }
@@ -400,91 +414,85 @@ function randomHashtag() {
   return faker.internet.username()
 }
 
-// Lấy ngẫu nhiên 3 mentions từ danh sách user_ids
-function getRandomMentions(user_ids: ObjectId[]) {
-  const shuffled = [...user_ids].sort(() => 0.5 - Math.random())
-  return shuffled.slice(0, 3).map((id) => id.toString())
-}
-
 // Tạo 500 tweet (1 user tạo 5 tweet)
-async function createRandomTweets(user_ids: ObjectId[], community_id?: string) {
+async function createRandomTweets(users: Pick<IUser, '_id' | 'username'>[], community_id?: string) {
   logger.info('Start create tweet...')
 
   await Promise.all(
-    user_ids.map(async (id) => {
+    users.map(async (user) => {
       const ht1 = [randomHashtag(), randomHashtag(), randomHashtag()]
       const ht2 = [randomHashtag(), randomHashtag(), randomHashtag()]
       const ht3 = [randomHashtag(), randomHashtag(), randomHashtag()]
       const ht4 = [randomHashtag(), randomHashtag(), randomHashtag()]
       const ht5 = [randomHashtag(), randomHashtag(), randomHashtag()]
 
-      // await Promise.all([
-      //   TweetsService.create(id.toString(), {
-      //     type: ETweetType.Tweet,
-      //     audience: ETweetAudience.Everyone,
-      //     content: generateRandomTweet(ht1),
-      //     hashtags: ht1,
-      //     mentions: getRandomMentions(user_ids),
-      //     media: [
-      //       { url: faker.image.avatar(), type: 'image/' },
-      //       { url: faker.image.avatar(), type: 'image/' },
-      //       { url: faker.image.avatar(), type: 'image/' }
-      //     ],
-      //     community_id: community_id ? community_id : undefined
-      //   }),
-      //   TweetsService.create(id.toString(), {
-      //     type: ETweetType.Tweet,
-      //     audience: ETweetAudience.Everyone,
-      //     content: generateRandomTweet(ht2),
-      //     hashtags: ht2,
-      //     mentions: getRandomMentions(user_ids),
-      //     media: [
-      //       { url: faker.image.avatar(), type: 'image/' },
-      //       { url: faker.image.avatar(), type: 'image/' },
-      //       { url: faker.image.avatar(), type: 'image/' }
-      //     ],
-      //     community_id: community_id ? community_id : undefined
-      //   }),
-      //   TweetsService.create(id.toString(), {
-      //     type: ETweetType.Tweet,
-      //     audience: ETweetAudience.Everyone,
-      //     content: generateRandomTweet(ht3),
-      //     hashtags: ht3,
-      //     mentions: getRandomMentions(user_ids),
-      //     media: [
-      //       { url: faker.image.avatar(), type: 'image/' },
-      //       { url: faker.image.avatar(), type: 'image/' },
-      //       { url: faker.image.avatar(), type: 'image/' }
-      //     ],
-      //     community_id: community_id ? community_id : undefined
-      //   }),
-      //   TweetsService.create(id.toString(), {
-      //     type: ETweetType.Tweet,
-      //     audience: ETweetAudience.Everyone,
-      //     content: generateRandomTweet(ht4),
-      //     hashtags: ht4,
-      //     mentions: getRandomMentions(user_ids),
-      //     media: [
-      //       { url: faker.image.avatar(), type: 'image/' },
-      //       { url: faker.image.avatar(), type: 'image/' },
-      //       { url: faker.image.avatar(), type: 'image/' }
-      //     ],
-      //     community_id: community_id ? community_id : undefined
-      //   }),
-      //   TweetsService.create(id.toString(), {
-      //     type: ETweetType.Tweet,
-      //     audience: ETweetAudience.Everyone,
-      //     content: generateRandomTweet(ht5),
-      //     hashtags: ht5,
-      //     mentions: getRandomMentions(user_ids),
-      //     media: [
-      //       { url: faker.image.avatar(), type: 'image/' },
-      //       { url: faker.image.avatar(), type: 'image/' },
-      //       { url: faker.image.avatar(), type: 'image/' }
-      //     ],
-      //     community_id: community_id ? community_id : undefined
-      //   })
-      // ])
+      await Promise.all([
+        TweetsService.create(user._id!.toString(), {
+          type: ETweetType.Tweet,
+          audience: ETweetAudience.Everyone,
+          content: generateRandomTweet(ht1, user.username!),
+          hashtags: ht1,
+          mentions: [user._id?.toString() || ''],
+          medias: [
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any
+          ],
+          community_id: community_id ? community_id : undefined
+        }),
+        TweetsService.create(user._id!.toString(), {
+          type: ETweetType.Tweet,
+          audience: ETweetAudience.Everyone,
+          content: generateRandomTweet([...ht2], user.username!),
+          hashtags: ht2,
+          mentions: [user._id?.toString() || ''],
+          medias: [
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any
+          ],
+          community_id: community_id ? community_id : undefined
+        }),
+        TweetsService.create(user._id!.toString(), {
+          type: ETweetType.Tweet,
+          audience: ETweetAudience.Everyone,
+          content: generateRandomTweet([...ht3], user.username!),
+          hashtags: ht3,
+          mentions: [user._id?.toString() || ''],
+          medias: [
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any
+          ],
+          community_id: community_id ? community_id : undefined
+        }),
+        TweetsService.create(user._id!.toString(), {
+          type: ETweetType.Tweet,
+          audience: ETweetAudience.Everyone,
+          content: generateRandomTweet([...ht4], user.username!),
+          hashtags: ht4,
+          mentions: [user._id?.toString() || ''],
+          medias: [
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any
+          ],
+          community_id: community_id ? community_id : undefined
+        }),
+        TweetsService.create(user._id!.toString(), {
+          type: ETweetType.Tweet,
+          audience: ETweetAudience.Everyone,
+          content: generateRandomTweet([...ht5], user.username!),
+          hashtags: ht5,
+          mentions: [user._id?.toString() || ''],
+          medias: [
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any
+          ],
+          community_id: community_id ? community_id : undefined
+        })
+      ])
     })
   )
 
@@ -521,7 +529,9 @@ async function createRandomCommunities(admin_id: ObjectId) {
     const name = faker.company.name().slice(0, 30)
     return {
       name: name,
-      cover: faker.image.avatar(),
+      cover: {
+        url: faker.image.avatar()
+      },
       bio: faker.lorem.sentence(),
       category: 'Technology',
       membership_type: EMembershipType.Open,
@@ -537,7 +547,7 @@ async function createRandomCommunities(admin_id: ObjectId) {
 
   await Promise.all(
     community_ids.map(async (res) => {
-      await createRandomTweets([admin_id], res.toString())
+      await createRandomTweets([{ _id: admin_id }], res.toString())
     })
   )
 
@@ -545,8 +555,12 @@ async function createRandomCommunities(admin_id: ObjectId) {
 }
 
 export async function startMockData() {
-  const user_ids = await createRandomUsers()
-  await follow(MY_ID, user_ids)
-  await createRandomTweets(user_ids)
+  const users = await createRandomUsers()
+
+  await follow(
+    MY_ID,
+    users.map((u) => u._id)
+  )
+  await createRandomTweets(users)
   await createRandomCommunities(MY_ID)
 }

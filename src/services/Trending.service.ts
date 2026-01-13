@@ -316,7 +316,7 @@ class TrendingService {
         $project: {
           _id: 1,
           content: 1,
-          media: 1,
+          medias: 1,
           user_id: 1,
           hashtags: 1,
           created_at: 1,
@@ -546,7 +546,7 @@ class TrendingService {
         $project: {
           _id: 1,
           content: 1,
-          media: 1,
+          medias: 1,
           user_id: 1,
           hashtags: 1,
           created_at: 1
@@ -663,7 +663,7 @@ class TrendingService {
       return {
         trending: t,
         category: category,
-        media: highlight_tweet[0].media?.[0],
+        media: highlight_tweet[0].medias?.[0],
         posts: relatedTweet,
         id: highlight_tweet[0]._id as unknown,
         time: highlight_tweet[0].created_at,

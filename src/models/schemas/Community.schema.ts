@@ -13,12 +13,13 @@ import {
 } from '~/shared/interfaces/schemas/community.interface'
 import { slug } from '~/utils/slug.util'
 import { BaseSchema } from './Base.schema'
+import { IMediaBare } from '~/shared/interfaces/common/media-bare.interface'
 
 // Cộng đồngđồng
 export class CommunitySchema extends BaseSchema implements ICommunity {
   name: string
   slug: string
-  cover: string
+  cover?: IMediaBare
   desc: string
   bio: string
   admin: ObjectId
@@ -39,7 +40,7 @@ export class CommunitySchema extends BaseSchema implements ICommunity {
     this.name = community.name || ''
     this.slug = slug(community?.name || '')
     this.desc = community.desc || ''
-    this.cover = community.cover || ''
+    this.cover = community.cover || undefined
     this.bio = community.bio || ''
     this.admin = community.admin || new ObjectId()
     this.category = community.category || ''

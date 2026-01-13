@@ -1,5 +1,4 @@
 import { ObjectId } from 'mongodb'
-import { send } from 'process'
 import { signedCloudfrontUrl } from '~/libs/cloudfront.lib'
 import { NotificationCollection, NotificationSchema } from '~/models/schemas/Notification.schema'
 import { publishNotification } from '~/pubsub/publisher'
@@ -285,7 +284,12 @@ class NotificationService {
         ...noti,
         sender: {
           ...noti.sender,
-          avatar: (noti.sender as IUser)?.avatar ? signedCloudfrontUrl((noti.sender as IUser).avatar || '') : null
+          avatar: (noti.sender as IUser)?.avatar
+            ? {
+                ...(noti.sender as IUser).avatar,
+                ...signedCloudfrontUrl((noti.sender as IUser).avatar)
+              }
+            : null
         }
       }
 
@@ -294,7 +298,12 @@ class NotificationService {
       ...n,
       sender: {
         ...n.sender,
-        avatar: (n.sender as IUser)?.avatar ? signedCloudfrontUrl((n.sender as IUser).avatar || '') : null
+        avatar: (n.sender as IUser)?.avatar
+          ? {
+              ...(n.sender as IUser).avatar,
+              ...signedCloudfrontUrl((n.sender as IUser).avatar)
+            }
+          : null
       }
     }))
   }

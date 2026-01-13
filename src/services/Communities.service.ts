@@ -1224,13 +1224,19 @@ class CommunityService {
     if (!Array.isArray(communities))
       return {
         ...communities,
-        cover: signedCloudfrontUrl(communities.cover || '')
+        cover: {
+          ...communities.cover,
+          ...signedCloudfrontUrl(communities.cover)
+        }
       }
 
     //
     return communities.map((community) => ({
       ...community,
-      cover: signedCloudfrontUrl(community.cover || '')
+      cover: {
+        ...community.cover,
+        ...signedCloudfrontUrl(community.cover)
+      }
     }))
   }
 }

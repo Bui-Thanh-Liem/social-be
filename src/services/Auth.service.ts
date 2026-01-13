@@ -176,7 +176,10 @@ class AuthService {
       email: user_info.email,
       day_of_birth: new Date(),
       confirm_password: newPass,
-      avatar: user_info.picture,
+      avatar: {
+        s3_key: '',
+        url: user_info.picture
+      },
       verify: EUserVerifyStatus.Verified
     })
 

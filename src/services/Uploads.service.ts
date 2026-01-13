@@ -3,16 +3,15 @@ import { BadRequestError } from '~/core/error.response'
 import { signedCloudfrontUrl } from '~/libs/cloudfront.lib'
 import { deleteFromS3, presignedURL } from '~/libs/s3.lib'
 import { MediaCollection } from '~/models/schemas/Media.schema'
-import { DeleteDto, PresignedUrlDto, UploadConfirmDto } from '~/shared/dtos/req/upload.dto'
+import { DeleteMediaDto, PresignedUrlDto, UploadConfirmDto } from '~/shared/dtos/req/upload.dto'
 import { ResPresignedUrl } from '~/shared/dtos/res/upload.dto'
 import { EMediaStatus } from '~/shared/enums/status.enum'
 import { IMedia } from '~/shared/interfaces/schemas/media.interface'
-import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 
 class UploadsServices {
   //
   async getMultiByKeys(s3_keys: string[]) {
-    return await MediaCollection.find({ s3_key: { $in: s3_keys } }).toArray()
+    return await MediaCollection.find({ s3_key: { $in: s3_keys }, status: EMediaStatus.Active }).toArray()
   }
 
   //
@@ -33,8 +32,8 @@ class UploadsServices {
 
       return { key, presigned_url }
     } catch (error) {
-      console.log('Error creating media:', error)
-      throw new BadRequestError('Tạo media thất bại, vui lòng thử lại.')
+      console.log('Error creating medias:', error)
+      throw new BadRequestError('Tạo medias thất bại, vui lòng thử lại.')
     }
   }
 
@@ -53,21 +52,29 @@ class UploadsServices {
       )
 
       // Lấy thông tin media đã được upload
-      const medias = await MediaCollection.find({ s3_key: { $in: body.s3_keys } }).toArray()
+      const medias = await MediaCollection.find(
+        { s3_key: { $in: body.s3_keys } },
+        {
+          projection: {
+            s3_key: 1,
+            url: 1
+          }
+        }
+      ).toArray()
 
       // Trả về kèm URL đã ký
       return medias.map((media) => ({
         ...media,
-        url: signedCloudfrontUrl(media.s3_key) as string
+        ...signedCloudfrontUrl(media)
       }))
     } catch (error) {
       console.log('Error confirming upload:', error)
-      throw new BadRequestError('Xác nhận upload thất bại, vui lòng thử lại.')
+      throw new BadRequestError('Xác nhận tải lên ảnh/video thất bại.')
     }
   }
 
   //
-  async delete(body: DeleteDto) {
+  async delete(body: DeleteMediaDto) {
     // Xóa file khỏi S3
     await deleteFromS3(body?.s3_keys)
 

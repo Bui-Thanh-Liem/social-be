@@ -1,5 +1,6 @@
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { IBase } from './base.interface'
+import { IMediaBare } from '../common/media-bare.interface'
 
 export interface IUser extends IBase {
   name: string
@@ -14,8 +15,8 @@ export interface IUser extends IBase {
   location?: string
   website?: string
   username?: string
-  avatar?: string
-  cover_photo?: string
+  avatar?: IMediaBare
+  cover_photo?: IMediaBare
 
   //
   follower_count?: number

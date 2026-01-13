@@ -12,3 +12,5 @@ export interface IMedia {
   user_id?: ObjectId
   status: EMediaStatus
 }
+
+export type IMediaBare = Pick<IMedia, 's3_key' | 'url'>

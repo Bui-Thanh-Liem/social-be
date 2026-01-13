@@ -144,11 +144,7 @@ class SearchService {
 
     //
     if (f) {
-      hasF.query = {
-        'media.type': {
-          'media.type': { $ne: null }
-        }
-      }
+      hasF.query = { medias: { $exists: true, $not: { $size: 0 } } }
     }
 
     //

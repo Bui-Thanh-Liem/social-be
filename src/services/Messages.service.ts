@@ -200,7 +200,7 @@ class MessagesService {
         ...mess,
         medias: mess.attachments?.map((a) => ({
           ...a,
-          url: signedCloudfrontUrl(a.s3_key)
+          ...signedCloudfrontUrl(a)
         })) as any
       }
 
@@ -209,7 +209,7 @@ class MessagesService {
       ...m,
       medias: m.attachments?.map((a) => ({
         ...a,
-        url: signedCloudfrontUrl(a.s3_key)
+        ...signedCloudfrontUrl(a)
       })) as any
     }))
   }

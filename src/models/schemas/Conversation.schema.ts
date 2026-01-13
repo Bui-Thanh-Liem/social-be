@@ -2,6 +2,7 @@ import { Collection, Db, ObjectId } from 'mongodb'
 import { EConversationType } from '~/shared/enums/type.enum'
 import { IConversation, IPinned } from '~/shared/interfaces/schemas/conversation.interface'
 import { BaseSchema } from './Base.schema'
+import { IMediaBare } from '~/shared/interfaces/common/media-bare.interface'
 
 export class ConversationSchema extends BaseSchema implements IConversation {
   type: EConversationType
@@ -10,7 +11,7 @@ export class ConversationSchema extends BaseSchema implements IConversation {
   deleted_for: ObjectId[]
   lastMessage: null | ObjectId
   name: string | null
-  avatar: string | string[] | null
+  avatar?: IMediaBare[] | IMediaBare | null
   readStatus: ObjectId[] | null
   pinned: IPinned[]
 
@@ -23,7 +24,7 @@ export class ConversationSchema extends BaseSchema implements IConversation {
     this.pinned = conversation.pinned || []
     this.lastMessage = conversation.lastMessage || null
     this.name = conversation.name || null
-    this.avatar = conversation.avatar || null
+    this.avatar = conversation.avatar || undefined
     this.readStatus = conversation.readStatus || null
   }
 }

@@ -1,12 +1,13 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
 import { EConversationType } from '~/shared/enums/type.enum'
+import { MediaBareDtoSchema } from './common/media-bare.dto'
 
 export const CreateConversationDtoSchema = z
   .object({
     type: z.nativeEnum(EConversationType),
     name: z.string().trim().max(16).optional(),
-    avatar: z.string().trim().optional(),
+    avatar: MediaBareDtoSchema.optional(),
     participants: z
       .array(z.string().trim().regex(CONSTANT_REGEX.ID_MONGO), {
         message: 'ObjectId không hợp lệ'

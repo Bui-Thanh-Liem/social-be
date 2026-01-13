@@ -17,6 +17,7 @@ import ConversationGateway from '~/socket/gateways/Conversation.gateway'
 import { createKeyAllConversationIds } from '~/utils/create-key-cache.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import MessagesService from './Messages.service'
+import { IMediaBare } from '~/shared/interfaces/common/media-bare.interface'
 
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {
@@ -1055,21 +1056,32 @@ class ConversationsService {
 
   //
   private signedCloudfrontAvatarUrl = (conv: IConversation[] | IConversation | null) => {
-    //
     if (!conv) return conv
 
-    //
-    if (!Array.isArray(conv))
+    // Hàm helper xử lý việc ký URL cho 1 object media bare
+    const signSingleMedia = (media: IMediaBare) => {
+      if (!media || !media.s3_key) return media
       return {
-        ...conv,
-        avatar: conv.avatar ? signedCloudfrontUrl(conv.avatar) : conv.avatar
+        ...media,
+        // Đảm bảo truyền string (s3_key), không truyền cả object media
+        ...signedCloudfrontUrl(media)
       }
+    }
 
-    //
-    return conv.map((c) => ({
-      ...c,
-      avatar: c.avatar ? signedCloudfrontUrl(c.avatar) : c.avatar
-    }))
+    // Hàm helper xử lý cho một Conversation
+    const processConversation = (item: IConversation) => {
+      if (!item.avatar) return item
+
+      return {
+        ...item,
+        avatar: Array.isArray(item.avatar)
+          ? item.avatar.map(signSingleMedia) // Nếu là mảng: map qua từng cái để ký
+          : signSingleMedia(item.avatar) // Nếu là object đơn: ký trực tiếp
+      }
+    }
+
+    // Xử lý đầu vào là mảng conversation hoặc 1 conversation đơn lẻ
+    return Array.isArray(conv) ? conv.map(processConversation) : processConversation(conv)
   }
 }
 

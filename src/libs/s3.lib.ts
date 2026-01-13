@@ -51,7 +51,9 @@ export const presignedURL = async ({ file_name, file_type }: PresignedUrlDto): P
 
 // Xóa file từ S3 dựa trên mảng URL
 export const deleteFromS3 = async (keys: string[]) => {
-  if (!keys || keys.length === 0) return
+  console.log('Deleting keys from S3:', keys)
+
+  if (!keys[0] || keys.length === 0) return true
 
   // 1. Chia nhỏ mảng nếu có hơn 1000 keys (Chunking)
   const MAX_DELETE_SIZE = 1000

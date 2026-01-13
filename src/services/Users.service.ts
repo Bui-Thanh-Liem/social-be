@@ -150,7 +150,7 @@ class UsersService {
     ]).next()
 
     if (!user) {
-      throw new NotFoundError('User not found')
+      throw new NotFoundError('Người dùng không tồn tại.')
     }
 
     return this.signedCloudfrontAvatarUrls(user) as IUser
@@ -555,13 +555,23 @@ class UsersService {
     if (!Array.isArray(users))
       return {
         ...users,
-        avatar: users?.avatar ? signedCloudfrontUrl(users.avatar || '') : null
+        avatar: users?.avatar
+          ? {
+              s3_key: users.avatar.s3_key,
+              ...signedCloudfrontUrl(users.avatar)
+            }
+          : null
       }
 
     //
     return users.map((user) => ({
       ...user,
-      avatar: user?.avatar ? signedCloudfrontUrl(user.avatar || '') : null
+      avatar: user?.avatar
+        ? {
+            s3_key: user.avatar.s3_key,
+            ...signedCloudfrontUrl(user.avatar)
+          }
+        : null
     }))
   }
 }

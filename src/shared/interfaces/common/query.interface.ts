@@ -5,7 +5,7 @@ export interface IQuery<T> {
   q?: string
   qe?: string // p extra
   t?: 'top'
-  f?: 'media' // trả về những tweet có media
+  f?: 'media' // trả về những tweet có medias
   pf?: string // people follow
   sd?: Date
   ed?: Date

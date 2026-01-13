@@ -40,12 +40,12 @@ class TweetsService {
   //
   async create(user_id: string, payload: CreateTweetDto) {
     let message = 'Đăng bài thành công'
-    const { audience, type, content, parent_id, community_id, mentions, media } = payload
+    const { audience, type, content, parent_id, community_id, mentions, medias } = payload
 
     //
-    let _media: undefined | IMedia[] = undefined
-    if (media) {
-      _media = await UploadsServices.getMultiByKeys(media)
+    let _medias: undefined | IMedia[] = undefined
+    if (medias) {
+      _medias = await UploadsServices.getMultiByKeys(medias.map((m) => m.s3_key))
     }
 
     // Kiểm tra nếu có parent_id
@@ -106,7 +106,7 @@ class TweetsService {
         parent_id: parent_id ? new ObjectId(parent_id) : null,
         community_id: community_id ? new ObjectId(community_id) : null,
         mentions: mentions ? mentions.map((id) => new ObjectId(id)) : [],
-        medias: _media,
+        medias: _medias?.length ? _medias : medias,
         status: status
       })
     )
@@ -2085,7 +2085,7 @@ class TweetsService {
           throw new NotFoundError('Không tìm thấy bài viết để xóa')
         }
 
-        // Xóa media trên Cloudinary nếu có
+        // Xóa medias khỏi S3
         if (tweet.medias) {
           await UploadsServices.delete({ s3_keys: tweet.medias.map((m) => m.s3_key) })
         }
@@ -2580,7 +2580,7 @@ class TweetsService {
         }
       },
       {
-        $project: { user_id: 1, content: 1, media: 1 }
+        $project: { user_id: 1, content: 1, medias: 1 }
       }
     ]).toArray()
 
@@ -2604,7 +2604,7 @@ class TweetsService {
         ...tweets,
         medias: tweets.medias?.map((m) => ({
           ...m,
-          url: signedCloudfrontUrl(m.s3_key)
+          ...signedCloudfrontUrl(m)
         })) as any
       }
 
@@ -2613,7 +2613,7 @@ class TweetsService {
       ...tweet,
       medias: tweet.medias?.map((m) => ({
         ...m,
-        url: signedCloudfrontUrl(m.s3_key)
+        ...signedCloudfrontUrl(m)
       })) as any
     }))
   }

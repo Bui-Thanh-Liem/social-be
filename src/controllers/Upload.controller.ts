@@ -13,12 +13,12 @@ class UploadsControllers {
 
   async confirmUpload(req: Request, res: Response) {
     const result = await UploadsServices.confirmUpload(req.body as UploadConfirmDto)
-    res.json(new OkResponse('Xác nhận tải lên thành công', result))
+    res.json(new OkResponse('Xác nhận tải ảnh/ video lên thành công', result))
   }
 
   async delete(req: Request, res: Response) {
     const result = await UploadsServices.delete(req.body)
-    res.json(new OkResponse('Xoá tệp thành công', result))
+    res.json(new OkResponse('Xoá ảnh/ video thành công', result))
   }
 }
 
