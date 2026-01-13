@@ -17,7 +17,7 @@ import ConversationGateway from '~/socket/gateways/Conversation.gateway'
 import { createKeyAllConversationIds } from '~/utils/create-key-cache.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import MessagesService from './Messages.service'
-import { IMediaBare } from '~/shared/interfaces/common/media-bare.interface'
+import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
 
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {

@@ -669,7 +669,7 @@ class TrendingService {
         time: highlight_tweet[0].created_at,
         relevant_ids: related_tweets.map((tw) => tw._id),
         highlight: highlight
-      } as IResTodayNewsOrOutstanding
+      } as unknown as IResTodayNewsOrOutstanding
     })
 
     return grouped

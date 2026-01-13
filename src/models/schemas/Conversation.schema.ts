@@ -2,7 +2,7 @@ import { Collection, Db, ObjectId } from 'mongodb'
 import { EConversationType } from '~/shared/enums/type.enum'
 import { IConversation, IPinned } from '~/shared/interfaces/schemas/conversation.interface'
 import { BaseSchema } from './Base.schema'
-import { IMediaBare } from '~/shared/interfaces/common/media-bare.interface'
+import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
 
 export class ConversationSchema extends BaseSchema implements IConversation {
   type: EConversationType

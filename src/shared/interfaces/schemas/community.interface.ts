@@ -3,7 +3,7 @@ import { EInvitationStatus } from '~/shared/enums/status.enum'
 import type { EActivityType, EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
 import { type IBase } from './base.interface'
 import { IUser } from './user.interface'
-import { IMediaBare } from '../common/media-bare.interface'
+import { IMediaBare } from './media.interface'
 
 export interface ICommunity extends IBase {
   name: string

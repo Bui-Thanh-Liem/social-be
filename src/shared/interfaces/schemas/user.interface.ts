@@ -1,6 +1,6 @@
 import { EUserVerifyStatus } from '~/shared/enums/status.enum'
 import { IBase } from './base.interface'
-import { IMediaBare } from '../common/media-bare.interface'
+import { IMediaBare } from './media.interface'
 
 export interface IUser extends IBase {
   name: string
