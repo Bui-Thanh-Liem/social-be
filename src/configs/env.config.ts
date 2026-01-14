@@ -12,8 +12,6 @@ export const envs = {
   DB_NAME: process.env.DB_NAME || 'Error',
   DB_CONNECT_STRING: process.env.DB_CONNECT_STRING || 'Error',
 
-  DOMAIN: process.env.DOMAIN || 'Error',
-
   REDIS_HOST: process.env.REDIS_HOST || '127.0.0.1',
   REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
 

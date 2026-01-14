@@ -1,23 +1,22 @@
-# version: "3.8"
-
 services:
   # =====================================================
   # 1. BACKEND
   # =====================================================
   social-be:
     container_name: social-be
-    image: ${DOCKER_USERNAME}/${NAME_IMAGE}:${IMAGE_TAG}
+    image: 664418987796.dkr.ecr.ap-southeast-1.amazonaws.com/liemdev/social:latest
     restart: always
     command: npm run start:server:prod
+    healthcheck:
+      test: ['executable', 'arg']
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
     env_file:
       - .env
     ports:
       - '9000:9000'
-    depends_on:
-      - social-redis
-    volumes:
-      - ./uploads:/app/uploads:rw
-      - ./logs:/app/logs:rw
     networks:
       - social-network
 
@@ -26,37 +25,27 @@ services:
   # =====================================================
   social-worker:
     container_name: social-worker
-    image: ${DOCKER_USERNAME}/${NAME_IMAGE}:${IMAGE_TAG}
+    image: 664418987796.dkr.ecr.ap-southeast-1.amazonaws.com/liemdev/social:latest
     restart: always
     command: npm run start:worker:prod
+    healthcheck:
+      test: ['executable', 'arg']
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
     env_file:
       - .env
-    depends_on:
-      - social-redis
-    volumes:
-      - ./uploads:/app/uploads:rw
-      - ./logs:/app/logs:rw
     networks:
       - social-network
 
   # =====================================================
-  # 3. REDIS
+  # 3. REDIS - Elastic Cache AWS
   # =====================================================
-  social-redis:
-    image: redis:7-alpine
-    container_name: social-redis
-    restart: always
-    command: redis-server --save 60 1 --loglevel warning
-    volumes:
-      - redis-data:/data
-    networks:
-      - social-network
 
 # =====================================================
 # VOLUMES & NETWORKS
 # =====================================================
-volumes:
-  redis-data:
 
 networks:
   social-network:
