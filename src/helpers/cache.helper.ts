@@ -6,7 +6,6 @@ import { logger } from '~/utils/logger.util'
 export class CacheService {
   private client: RedisClientType
   private defaultTTL: number = 600 // 10 minutes in seconds
-  private isConnected: boolean = false
 
   constructor() {
     this.client = createClient({
@@ -17,26 +16,28 @@ export class CacheService {
     })
 
     this.client.on('error', (err) => console.error('Redis Client Error:', err))
-    this.client.on('connect', () => {
-      this.isConnected = true
-      logger.info('Redis Client Connected')
-    })
+    if (!this.client.isOpen)
+      this.client.on('connect', () => {
+        logger.info('Redis Client Connected')
+      })
     this.client.on('end', () => {
-      this.isConnected = false
       logger.info('Redis Client Disconnected')
     })
 
     // Connect immediately
-    this.connect()
+    // this.connect()
   }
 
   private async connect(): Promise<void> {
-    if (!this.isConnected) {
+    // Sửa lỗi: Chỉ kết nối nếu client chưa mở
+    if (!this.client.isOpen) {
       try {
         await this.client.connect()
       } catch (err) {
-        console.error('Failed to connect to Redis:', err)
-        throw err
+        // Nếu lỗi do socket đã mở thì bỏ qua, ngược lại thì throw
+        if (!(err instanceof Error && err.message.includes('Socket already opened'))) {
+          throw err
+        }
       }
     }
   }
@@ -213,10 +214,9 @@ export class CacheService {
 
   // Graceful disconnect
   async disconnect(): Promise<void> {
-    if (this.isConnected) {
+    if (this.client.isOpen) {
       try {
         await this.client.quit()
-        this.isConnected = false
       } catch (err) {
         console.error('Failed to disconnect Redis client:', err)
         throw err

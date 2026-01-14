@@ -5,7 +5,6 @@ import { logger } from '~/utils/logger.util'
 class PubSubService {
   private publisher: RedisClientType
   private subscriber: RedisClientType
-  private isConnected = false
 
   constructor() {
     const redisUrl = `redis://${redisConfig.host}:${redisConfig.port}`
@@ -20,32 +19,37 @@ class PubSubService {
     this.setupLogging(this.publisher, 'Publisher')
     this.setupLogging(this.subscriber, 'Subscriber')
 
-    this.connect()
+    // this.connect()
+  }
+
+  // Hàm helper để kết nối an toàn
+  private async safeConnect(client: RedisClientType) {
+    if (!client.isOpen) {
+      try {
+        await client.connect()
+      } catch (err: any) {
+        if (!err.message.includes('Socket already opened')) throw err
+      }
+    }
   }
 
   private setupLogging(client: RedisClientType, label: string) {
     client.on('error', (err) => console.error(`Redis ${label} Error:`, err))
-    client.on('connect', () => logger.info(`Redis ${label} Connected`))
+    if (!client.isOpen) client.on('connect', () => logger.info(`Redis ${label} Connected`))
     client.on('end', () => logger.info(`Redis ${label} Disconnected`))
   }
 
   private async connect(): Promise<void> {
-    try {
-      await Promise.all([this.publisher.connect(), this.subscriber.connect()])
-      this.isConnected = true
-    } catch (err) {
-      console.error('Failed to connect to Redis:', err)
-      throw err
-    }
+    await Promise.all([this.safeConnect(this.publisher), this.safeConnect(this.subscriber)])
   }
 
   async publish(event: string, payload: any) {
-    if (!this.isConnected) await this.connect()
+    await this.connect()
     await this.publisher.publish(event, JSON.stringify(payload))
   }
 
   async subscribe(event: string, cb: (payload: any) => void) {
-    if (!this.isConnected) await this.connect()
+    await this.connect()
     await this.subscriber.subscribe(event, (message) => {
       try {
         cb(JSON.parse(message))
@@ -58,7 +62,6 @@ class PubSubService {
   async shutdown(): Promise<void> {
     try {
       await Promise.all([this.publisher.quit(), this.subscriber.quit()])
-      this.isConnected = false
       logger.info('Redis PubSubService shutdown complete')
     } catch (err) {
       console.error('Error during Redis shutdown:', err)

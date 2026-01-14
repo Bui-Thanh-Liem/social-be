@@ -28,32 +28,31 @@ const io = new Server(httpServer, {
 //
 async function bootstrap() {
   try {
-    await instanceMongodb.connect() // chỉ có một kết nối tại đây
+    // 1. Kết nối DB trước
+    await instanceMongodb.connect()
     logger.info('Database connected!')
 
+    // 2. Khởi tạo data
     instanceMongodb.initialCollections()
-    logger.info('Cerated collections!')
-
     instanceMongodb.initialIndex()
-    logger.info('Cerated index!')
 
-    // Kiểm tra kết nối database
-    // checkOverload()
-
+    // 3. Khởi tạo Socket và Redis (Nên bọc try catch riêng cho Redis)
     initializeSocket(io)
-    logger.info('Socket.IO initialized!')
 
-    // Subscribe từ redis
-    await initSubscriber()
+    try {
+      await initSubscriber()
+      logger.info('Redis PubSub initialized!')
+    } catch (redisErr) {
+      logger.error('Redis failing but continuing server...', redisErr)
+      // Tùy bạn muốn dừng app hay chạy tiếp nếu Redis lỗi
+    }
 
-    //
     httpServer.listen(port, host, () => {
       logger.info(`App listening on ${host}:${port}`)
     })
   } catch (err) {
-    await instanceMongodb.disconnect()
-    logger.error('Failed to connect database:', err)
-    process.exit(1) // dừng app nếu không connect được
+    logger.error('Bootstrap failed:', err)
+    process.exit(1)
   }
 }
 

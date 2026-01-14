@@ -36,6 +36,9 @@ RUN npm install --only=production && \
 # ============================================
 FROM node:22-alpine
 
+# Install dumb-init to handle PID 1 properly
+RUN apk add --no-cache dumb-init
+
 # Tạo non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
