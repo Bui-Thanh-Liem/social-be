@@ -14,7 +14,8 @@ import CommunityService from '~/services/Communities.service'
 import { CreateCommunityDto } from '~/shared/dtos/req/community.dto'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 
-const MY_ID = new ObjectId('69660fd724201294452be842')
+const MY_ID = new ObjectId('696711f73b80f19dced1070c')
+const MY_USERNAME = '@bui_thanh_liem'
 const PASS = 'User123@'
 
 function generateRandomTweet(hashtags: string[], username: string): string {
@@ -522,7 +523,7 @@ async function follow(user_id: ObjectId, followed_user_ids: ObjectId[]) {
 }
 
 // Tạo 50 Communities và 500 tweets trong communities
-async function createRandomCommunities(admin_id: ObjectId) {
+async function createRandomCommunities(admin: { username: string; _id: ObjectId }) {
   logger.info('Start create communities...')
 
   function func() {
@@ -543,11 +544,11 @@ async function createRandomCommunities(admin_id: ObjectId) {
     count: 30
   })
 
-  const community_ids = await Promise.all(data.map((payload) => CommunityService.create(admin_id.toString(), payload)))
+  const community_ids = await Promise.all(data.map((payload) => CommunityService.create(admin._id.toString(), payload)))
 
   await Promise.all(
     community_ids.map(async (res) => {
-      await createRandomTweets([{ _id: admin_id }], res.toString())
+      await createRandomTweets([{ _id: admin._id, username: admin.username }], res.toString())
     })
   )
 
@@ -562,5 +563,5 @@ export async function startMockData() {
     users.map((u) => u._id)
   )
   await createRandomTweets(users)
-  await createRandomCommunities(MY_ID)
+  await createRandomCommunities({ username: MY_USERNAME, _id: MY_ID })
 }

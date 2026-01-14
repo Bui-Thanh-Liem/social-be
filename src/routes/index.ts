@@ -36,7 +36,8 @@ rootRoute.use('/conversations', conversationsRoute)
 rootRoute.use('/communities', communitiesRoute)
 rootRoute.use('/search-history', searchHistoryRoute)
 
-rootRoute.post('/mock', async (req: Request, res: Response) => {
+// Route tạo dữ liệu giả lập (mock data) cho việc phát triển và thử nghiệm
+rootRoute.post('/mock-data', async (req: Request, res: Response) => {
   await startMockData()
   res.status(200).json({
     message: 'Mock data created successfully'
@@ -45,9 +46,8 @@ rootRoute.post('/mock', async (req: Request, res: Response) => {
 
 // Health check
 rootRoute.get('/health', (req: Request, res: Response) => {
-  console.log('Call in docker-compose - client - ip:::', req.ip)
   res.status(200).json({
-    status: 'OK',
+    status: 200,
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   })

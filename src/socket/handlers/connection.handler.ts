@@ -6,14 +6,13 @@ export async function connectionHandler(io: Server, socket: Socket) {
   // Đã qua middleware rồi thì chắc chắn có
   const decoded = socket.decoded_authorization
 
-  console.log(`🔌 User connected - socket.id::: ${socket.id}`)
+  //
   console.log(`🔌 User connected - decoded - user_id::: ${decoded?.user_id}`)
-
   if (decoded?.user_id) await statusHandler(io, decoded?.user_id, 'onl')
 
   //
   socket.on('disconnect', async (reason) => {
-    console.log(`❌ User disconnected: ${socket.id} (reason: ${reason})`)
+    console.log(`❌ User disconnected - decoded - user_id::: ${decoded?.user_id}`)
     if (decoded?.user_id) await statusHandler(io, decoded?.user_id, 'off')
   })
 }

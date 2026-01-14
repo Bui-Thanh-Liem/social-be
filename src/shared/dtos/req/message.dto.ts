@@ -1,9 +1,10 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
+import { MediaBareDtoSchema } from './common/media-bare.dto'
 
 export const CreateMessageDtoSchema = z.object({
   content: z.string().trim().optional(),
-  attachments: z.array(z.string().trim()).optional(),
+  attachments: z.array(MediaBareDtoSchema).optional(),
   conversation: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, { message: 'ObjectId không hợp lệ' })
 })
 

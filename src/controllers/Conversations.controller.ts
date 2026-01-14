@@ -30,7 +30,7 @@ class ConversationsController {
       user_id,
       participants
     })
-    res.json(new OkResponse(`Thêm thành viên vào cuộc trò chuyện thành công.`, result))
+    res.json(new OkResponse(`Đã thêm thành viên vào cuộc trò chuyện.`, result))
   }
 
   async removeParticipants(req: Request, res: Response) {

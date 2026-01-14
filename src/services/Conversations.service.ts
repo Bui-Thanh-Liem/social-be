@@ -14,7 +14,7 @@ import { IConversation } from '~/shared/interfaces/schemas/conversation.interfac
 import { ResMultiType } from '~/shared/types/response.type'
 import { getSocket } from '~/socket'
 import ConversationGateway from '~/socket/gateways/Conversation.gateway'
-import { createKeyAllConversationIds } from '~/utils/create-key-cache.util'
+import { createKeyAllConversationIds, createKeyConvIdsByUserId } from '~/utils/create-key-cache.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import MessagesService from './Messages.service'
 import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
@@ -297,7 +297,7 @@ class ConversationsService {
     return {
       total,
       total_page: Math.ceil(total / limit),
-      items: conversations
+      items: this.signedCloudfrontAvatarUrl(conversations) as IConversation[]
     }
   }
 
@@ -1049,12 +1049,37 @@ class ConversationsService {
     })
   }
 
+  async getIdsByUserId(user_id: string): Promise<string[]> {
+    // Try get from cache
+    const keyCache = createKeyConvIdsByUserId(user_id)
+    const cached = await cacheService.get<string[]>(keyCache)
+    if (cached) return cached
+
+    // If not exist, get from DB
+    const conversations = await ConversationCollection.find(
+      {
+        participants: { $in: [new ObjectId(user_id)] }
+      },
+      { projection: { _id: 1 } }
+    ).toArray()
+
+    // Set to cache (tối ưu: dùng set sau)
+    await cacheService.set(
+      keyCache,
+      conversations.map((conv) => conv._id.toString()),
+      { ttl: 300 } // TTL 5 phút
+    )
+
+    // Return
+    return conversations.map((conv) => conv._id.toString())
+  }
+
   // Cập nhật lại deleteFor = [] khi có tin nhắn mới
   private async updateConvDeleted(conv_id: string) {
     await ConversationCollection.updateOne({ _id: new ObjectId(conv_id) }, { $set: { deleted_for: [] } })
   }
 
-  //
+  // Ký URL Cloudfront cho avatar của conversation
   private signedCloudfrontAvatarUrl = (conv: IConversation[] | IConversation | null) => {
     if (!conv) return conv
 

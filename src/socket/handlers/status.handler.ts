@@ -1,65 +1,28 @@
-import { ObjectId } from 'mongodb'
 import { Server } from 'socket.io'
 import cacheService from '~/helpers/cache.helper'
-import { ConversationCollection } from '~/models/schemas/Conversation.schema'
+import ConversationsService from '~/services/Conversations.service'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
-import { IConversation } from '~/shared/interfaces/schemas/conversation.interface'
 
 //
-export async function statusHandler(io: Server, user_id: string, handle?: 'onl' | 'off') {
-  //
+export async function statusHandler(io: Server, user_id: string, handle: 'onl' | 'off') {
+  // 1. Cập nhật Cache Redis (Nhanh, không tốn tài nguyên)
   if (handle === 'onl') {
     await cacheService.markUserOnline(user_id)
-  }
-
-  //
-  if (handle === 'off') {
+  } else {
     await cacheService.markUserOffline(user_id)
   }
 
-  // 1. Lấy tất cả conversation của user
-  const userObjectId = new ObjectId(user_id)
-  const convs = await ConversationCollection.find(
-    {
-      participants: {
-        $in: [userObjectId]
-      },
-      deletedFor: {
-        $nin: [userObjectId]
-      }
-    },
-    {
-      projection: {
-        participants: 1
-      }
-    }
-  ).toArray()
+  // 2. Lấy tất cả conversationId mà user này tham gia
+  const convIds = await ConversationsService.getIdsByUserId(user_id)
 
-  // Đánh dấu phòng nào onl/off
-  const result = await getConversationsWithOnlineParticipants(convs, user_id)
+  // 3. Chỉ gửi đúng thông tin: "Thằng A vừa Online"
+  const eventData = {
+    _id: user_id,
+    hasOnline: handle === 'onl'
+  }
 
-  //
-  result.forEach((conv) => {
-    io.to(conv._id!.toString()).emit(CONSTANT_EVENT_NAMES.USER_ONLINE, conv)
-  })
-}
-
-//
-async function getConversationsWithOnlineParticipants(
-  conversations: IConversation[],
-  currentUserId: string
-): Promise<{ _id: ObjectId | undefined; hasOnline: boolean }[]> {
-  // B1: Lấy toàn bộ participants (trừ currentUser)
-  const allOtherUsers = Array.from(
-    new Set(conversations.flatMap((c) => c.participants).filter((u) => !u.equals(new ObjectId(currentUserId))))
-  )
-
-  // B2: Check online 1 lần cho tất cả users
-  const onlineMap = await cacheService.areUsersOnline(allOtherUsers.map((i) => i.toString()))
-
-  // B3: Gắn vào từng conversation
-  return conversations.map((c) => {
-    const hasOnline = c.participants.some((u) => u.toString() !== currentUserId && onlineMap[u.toString()] === true)
-    return { _id: c._id, hasOnline }
+  convIds.forEach((convId) => {
+    // Gửi cho tất cả mọi người trong phòng đó
+    io.to(convId).emit(CONSTANT_EVENT_NAMES.USER_ONLINE, eventData)
   })
 }

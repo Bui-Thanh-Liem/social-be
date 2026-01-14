@@ -14,9 +14,9 @@ import UploadsServices from './Uploads.service'
 class MessagesService {
   async create(sender_id: string, payload: CreateMessageDto) {
     //
-    let media: undefined | IMedia[] = undefined
+    let _attachments: undefined | IMedia[] = undefined
     if (payload.attachments) {
-      media = await UploadsServices.getMultiByKeys(payload.attachments)
+      _attachments = await UploadsServices.getMultiByKeys(payload.attachments.map((a) => a.s3_key))
     }
 
     //
@@ -24,7 +24,7 @@ class MessagesService {
       new MessageSchema({
         content: payload.content,
         sender: new ObjectId(sender_id),
-        attachments: media,
+        attachments: _attachments,
         conversation: new ObjectId(payload.conversation)
       })
     )
@@ -38,7 +38,7 @@ class MessagesService {
       })
     }
 
-    //
+    // Lấy lại message vừa tạo với thông tin đầy đủ
     const message = await MessageCollection.aggregate<IMessage>([
       {
         $match: { _id: newMessage.insertedId }
@@ -53,8 +53,8 @@ class MessagesService {
             {
               $project: {
                 name: 1,
-                username: 1,
-                avatar: 1
+                avatar: 1,
+                username: 1
               }
             }
           ]
@@ -198,7 +198,7 @@ class MessagesService {
     if (!Array.isArray(mess))
       return {
         ...mess,
-        medias: mess.attachments?.map((a) => ({
+        attachments: mess.attachments?.map((a) => ({
           ...a,
           ...signedCloudfrontUrl(a)
         })) as any
@@ -207,7 +207,7 @@ class MessagesService {
     //
     return mess.map((m) => ({
       ...m,
-      medias: m.attachments?.map((a) => ({
+      attachments: m.attachments?.map((a) => ({
         ...a,
         ...signedCloudfrontUrl(a)
       })) as any

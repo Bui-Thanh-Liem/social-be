@@ -5,16 +5,16 @@ import { verifyToken } from '~/utils/jwt.util'
 
 // Middleware auth cho socket (VD: check token)
 export async function authMiddleware(socket: Socket, next: (err?: ExtendedError) => void) {
-  // Get token
+  // Lấy token
   const token = socket.handshake.auth?.token || socket.handshake.headers['authorization']
 
-  // Check exist token
+  // Nếu không có token thì báo lỗi
   if (!token) {
-    return next(new UnauthorizedError('Missing token'))
+    return next(new UnauthorizedError('Không tìm thấy token'))
   }
 
   try {
-    // Verify token
+    // Xác thực token
     const decoded = await verifyToken({ token, privateKey: envs.JWT_SECRET_ACCESS })
     socket.decoded_authorization = decoded
     next()

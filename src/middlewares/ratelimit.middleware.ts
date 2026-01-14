@@ -30,13 +30,13 @@ export const loginRateLimit = rateLimit({
   max: 5,
   // message: {
   //   status: 429,
-  //   error: 'Có quá nhiều yêu cầu từ thiết bị này, vui lòng thử lại sau 5 phút nữa.'
+  //   error: 'Có quá nhiều yêu cầu từ thiết bị của bạn, vui lòng thử lại sau 5 phút nữa.'
   // },
   standardHeaders: true,
 
   // Dùng handler để ném error vào error middleware
   handler: () => {
-    const error: any = new Error('Có quá nhiều yêu cầu từ thiết bị này, vui lòng thử lại sau 5 phút nữa.')
+    const error: any = new Error('Có quá nhiều yêu cầu từ thiết bị của bạn, vui lòng thử lại sau 5 phút nữa.')
     error.statusCode = 429
     error.type = 'RATE_LIMIT_EXCEEDED'
     throw error
@@ -49,13 +49,13 @@ export const resendRateLimit = rateLimit({
   max: 5,
   // message: {
   //   status: 429,
-  //   error: 'Có quá nhiều yêu cầu từ thiết bị này, vui lòng thử lại sau 5 phút nữa.'
+  //   error: 'Có quá nhiều yêu cầu từ thiết bị của bạn, vui lòng thử lại sau 5 phút nữa.'
   // },
   standardHeaders: true,
 
   // Dùng handler để ném error vào error middleware
   handler: () => {
-    const error: any = new Error('Có quá nhiều yêu cầu từ thiết bị này, vui lòng thử lại sau 5 phút nữa.')
+    const error: any = new Error('Có quá nhiều yêu cầu từ thiết bị của bạn, vui lòng thử lại sau 5 phút nữa.')
     error.statusCode = 429
     error.type = 'RATE_LIMIT_EXCEEDED'
     throw error

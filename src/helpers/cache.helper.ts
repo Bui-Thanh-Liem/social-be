@@ -269,11 +269,15 @@ export class CacheService {
     if (!userIds || userIds.length === 0) return {}
 
     await this.connect()
-    const results = await this.client.sendCommand<number[]>(['SMISMEMBER', createKeyUserOnline(), ...userIds])
+    const key = createKeyUserOnline()
 
-    // Map lại { userId: true/false }
+    // smIsMember (số nhiều) nhận: (key, [member1, member2, ...])
+    // Trả về mảng boolean[]
+    const results = await this.client.smIsMember(key, userIds)
+
     return userIds.reduce(
       (acc, userId, idx) => {
+        // Ép kiểu number (0, 1) sang boolean (false, true)
         acc[userId] = results[idx] === 1
         return acc
       },

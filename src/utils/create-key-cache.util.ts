@@ -40,6 +40,10 @@ export function createKeyTweetLikesSync(tweet_id: string) {
   return `tweet:${tweet_id}:likes:sync`
 }
 
+export function createKeyConvIdsByUserId(user_id: string) {
+  return `conv:${user_id}`
+}
+
 export const createKeyUserLastSeen = (): string => 'user:user:last_seen'
 
 export const createKeyOutStandingThisWeek = (): string => 'tweet:outstanding_this_week'

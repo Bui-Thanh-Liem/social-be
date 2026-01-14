@@ -18,6 +18,7 @@ export function initializeSocket(io: Server) {
   // Apply global middleware
   io.use(authMiddleware)
 
+  // Lắng nghe kết nối từ client
   io.on('connection', async (socket) => {
     _socket = socket
 
