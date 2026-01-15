@@ -4,11 +4,14 @@ services:
   # =====================================================
   social-be:
     container_name: social-be
-    image: 664418987796.dkr.ecr.ap-southeast-1.amazonaws.com/liemdev/social:latest
+    # image: 664418987796.dkr.ecr.ap-southeast-1.amazonaws.com/liemdev/social:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     restart: always
     command: npm run start:server:prod
     healthcheck:
-      test: ['executable', 'arg']
+      test: ['CMD', 'arg']
       interval: 1m30s
       timeout: 30s
       retries: 5
@@ -25,11 +28,14 @@ services:
   # =====================================================
   social-worker:
     container_name: social-worker
-    image: 664418987796.dkr.ecr.ap-southeast-1.amazonaws.com/liemdev/social:latest
+    # image: 664418987796.dkr.ecr.ap-southeast-1.amazonaws.com/liemdev/social:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     restart: always
     command: npm run start:worker:prod
     healthcheck:
-      test: ['executable', 'arg']
+      test: ['CMD', 'arg']
       interval: 1m30s
       timeout: 30s
       retries: 5
@@ -42,6 +48,14 @@ services:
   # =====================================================
   # 3. REDIS - Elastic Cache AWS
   # =====================================================
+  social-redis:
+    container_name: social-redis
+    image: redis:7.0.11-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    networks:
+      - social-network
 
 # =====================================================
 # VOLUMES & NETWORKS

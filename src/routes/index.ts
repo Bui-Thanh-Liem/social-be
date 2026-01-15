@@ -45,7 +45,7 @@ rootRoute.post('/mock-data', async (req: Request, res: Response) => {
 
 // Health check
 rootRoute.get('/health', (req: Request, res: Response) => {
-  res.status(200).json(new OkResponse('✅ - devandbug.info.vn BE is healthy!'))
+  res.status(200).json(new OkResponse('✅ - devandbug.info.vn is healthy!'))
 })
 
 export default rootRoute
