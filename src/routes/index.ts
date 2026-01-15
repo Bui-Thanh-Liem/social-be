@@ -16,6 +16,7 @@ import trendingRoute from './trending.routes'
 import tweetsRoute from './tweets.routes'
 import usersRoute from './users.routes'
 import uploadsRoute from './upload.route'
+import { OkResponse } from '~/core/success.response'
 
 const rootRoute = Router()
 
@@ -39,18 +40,12 @@ rootRoute.use('/search-history', searchHistoryRoute)
 // Route tạo dữ liệu giả lập (mock data) cho việc phát triển và thử nghiệm
 rootRoute.post('/mock-data', async (req: Request, res: Response) => {
   await startMockData()
-  res.status(200).json({
-    message: 'Mock data created successfully'
-  })
+  res.status(200).json(new OkResponse('✅ - Mock data created successfully'))
 })
 
 // Health check
 rootRoute.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({
-    status: 200,
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  })
+  res.status(200).json(new OkResponse('✅ - devandbug.info.vn BE is healthy!'))
 })
 
 export default rootRoute

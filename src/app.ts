@@ -20,6 +20,7 @@ import { logger } from './utils/logger.util'
 // import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/constants'
 import './tasks/cleanup.task'
 import './tasks/sync.task'
+import { NotFoundError } from './core/error.response'
 const isDev = process.env.NODE_ENV === 'development'
 
 const app = express()
@@ -103,10 +104,7 @@ app.use('/api', rootRoute)
 
 // 404 handler
 app.use((req, res, next) => {
-  res.status(404).json({
-    status: 404,
-    message: `🔍 - Not Found - ${req.originalUrl}`
-  })
+  res.status(404).json(new NotFoundError(`🔍 - Not Found - ${req.originalUrl}`))
 })
 
 // Error handler
