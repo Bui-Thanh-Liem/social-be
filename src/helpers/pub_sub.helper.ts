@@ -7,7 +7,7 @@ class PubSubService {
   private subscriber: RedisClientType
 
   constructor() {
-    const redisUrl = `redis://${redisConfig.host}:${redisConfig.port}`
+    const redisUrl = `rediss://${redisConfig.host}:${redisConfig.port}`
 
     this.publisher = createClient({
       url: redisUrl,

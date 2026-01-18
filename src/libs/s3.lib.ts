@@ -40,7 +40,7 @@ export const presignedURL = async ({ file_name, file_type }: PresignedUrlDto): P
       Bucket: envs.AWS_S3_BUCKET_NAME,
       CacheControl: 'public, max-age=31536000, immutable'
     }),
-    { expiresIn: Number(envs.AWS_PRESIGNED_URL_EXPIRES_IN) }
+    { expiresIn: Number(envs.AWS_PRESIGNED_URL_EXPIRES_IN) || 300 } // Mặc định 5 phút
   )
 
   return {

@@ -27,30 +27,38 @@ const io = new Server(httpServer, {
 //
 async function bootstrap() {
   try {
-    // 1. Kết nối DB trước
+    // 1. Kết nối DB cơ bản (Phải có để App chạy)
     await instanceMongodb.connect()
     console.log('Database connected!')
 
-    // 2. Khởi tạo data
-    instanceMongodb.initialCollections()
-    instanceMongodb.initialIndex()
-
-    // 3. Khởi tạo Socket và Redis (Nên bọc try catch riêng cho Redis)
-    initializeSocket(io)
-
-    try {
-      await initSubscriber()
-      console.log('Redis PubSub initialized!')
-    } catch (redisErr) {
-      console.error('Redis failing but continuing server...', redisErr)
-      // Tùy bạn muốn dừng app hay chạy tiếp nếu Redis lỗi
-    }
-
+    // 2. MỞ CỔNG SERVER NGAY LẬP TỨC 🚀
+    // Việc này giúp ALB check-health thành công ngay khi container vừa up
     httpServer.listen(port, host, () => {
-      console.log(`App listening on ${host}:${port}`)
+      console.log(`✅ App listening on ${host}:${port}`)
     })
+
+    // 3. Khởi tạo các thành phần chạy ngầm (Không dùng await để không chặn luồng chính)
+    instanceMongodb.initialCollections()
+
+    // Khởi tạo Index (chạy ngầm, nếu lỗi cũng không sập app)
+    instanceMongodb.initialIndex().catch((err) => {
+      console.error('❌ MongoDB Indexing failed:', err)
+    })
+
+    // Khởi tạo Redis (chạy ngầm)
+    initSubscriber()
+      .then(() => {
+        console.log('✅ Redis PubSub initialized!')
+      })
+      .catch((redisErr) => {
+        console.error('❌ Redis Sub error:', redisErr)
+      })
+
+    // Khởi tạo Socket.IO
+    initializeSocket(io)
+    console.log('✅ Socket.IO initialized!')
   } catch (err) {
-    console.error('Bootstrap failed:', err)
+    console.error('💥 Bootstrap failed:', err)
     process.exit(1)
   }
 }

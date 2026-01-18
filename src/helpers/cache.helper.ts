@@ -9,7 +9,7 @@ export class CacheService {
 
   constructor() {
     this.client = createClient({
-      url: `redis://${redisConfig.host}:${redisConfig.port}`,
+      url: `rediss://${redisConfig.host}:${redisConfig.port}`,
       socket: {
         reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
       }
