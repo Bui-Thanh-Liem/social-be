@@ -21,6 +21,7 @@ export default defineConfig([
       prettier: eslintPluginPrettier
     },
     rules: {
+      '@typescript-eslint/no-unused-expressions': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': 'warn',
       'prettier/prettier': [

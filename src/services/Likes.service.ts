@@ -46,14 +46,15 @@ class LikesService {
     if (isMember) {
       try {
         // Update likes & likes_count in cache
-        await pipeline.sRem(key_cache_tw_likes, user_id)
-        await pipeline.hIncrBy(key_cache_tw_likes_count, tweet_id, -1)
+        pipeline.sRem(key_cache_tw_likes, user_id)
+        pipeline.hIncrBy(key_cache_tw_likes_count, tweet_id, -1)
 
         // Update cached tweet details
         if (tw_d_cached && tw_d_cached.likes_count !== undefined) {
           tw_d_cached.likes_count = parseInt(tw_likes_count_cached || '0') - 1
           tw_d_cached.likes = tw_d_cached.likes.filter((like: any) => like.user_id.toString() !== user_id)
-          await pipeline.set(key_cache_tw_d, JSON.stringify(tw_d_cached), { ttl: 300 })
+          pipeline.expire(key_cache_tw_d, 300)
+          pipeline.set(key_cache_tw_d, JSON.stringify(tw_d_cached))
         }
       } catch (error) {
         throw new BadRequestError((error as any)?.message || 'Toggling like in cache failed')
@@ -61,14 +62,19 @@ class LikesService {
     } else {
       try {
         // Update likes & likes_count in cache
-        await pipeline.sAdd(key_cache_tw_likes, user_id, { ttl: 2592000 }) // 30 days
-        await pipeline.hIncrBy(key_cache_tw_likes_count, tweet_id, 1, { ttl: 2592000 }) // 30 days
+
+        pipeline.expire(key_cache_tw_likes, 2592000) // 30 days
+        pipeline.sAdd(key_cache_tw_likes, user_id)
+
+        pipeline.expire(key_cache_tw_likes_count, 2592000) // 30 days
+        pipeline.hIncrBy(key_cache_tw_likes_count, tweet_id, 1)
 
         //  Update cached tweet details
         if (tw_d_cached && tw_d_cached.likes_count !== undefined) {
           tw_d_cached.likes_count = parseInt(tw_likes_count_cached || '0') + 1
           tw_d_cached.likes = tw_d_cached.likes.concat([{ user_id: new ObjectId(user_id) }])
-          await pipeline.set(key_cache_tw_d, JSON.stringify(tw_d_cached), { ttl: 300 })
+          pipeline.expire(key_cache_tw_d, 300)
+          pipeline.set(key_cache_tw_d, JSON.stringify(tw_d_cached))
         }
       } catch (error) {
         throw new BadRequestError((error as any)?.message || 'Toggling like in cache failed')
@@ -100,22 +106,21 @@ class LikesService {
   }
 
   async syncLikesFromCacheToDB() {
-    // Pop tweet_id from like queue
-    const key_cache_tw_like_queue = createKeyTweetLikeQueue()
-    const tweet_id = await cacheService.rPop(key_cache_tw_like_queue)
-    if (!tweet_id) return // no tweet to process
+    const key_queue = createKeyTweetLikeQueue()
+    const tweet_id = await cacheService.rPop(key_queue)
+    if (!tweet_id) return
 
-    // Get user_ids & their like status from likes sync hash
-    const key_cache_tw_likes_sync = createKeyTweetLikesSync(tweet_id)
-    const users_liked = await cacheService.hGetAll(key_cache_tw_likes_sync)
-    await cacheService.del(key_cache_tw_likes_sync)
-    if (Object.keys(users_liked).length === 0) return // no user to process
+    const key_sync = createKeyTweetLikesSync(tweet_id)
+    const users_liked = await cacheService.hGetAll(key_sync)
 
-    //
+    // Xóa ngay key sync để tránh xử lý lặp
+    await cacheService.del(key_sync)
+
+    if (Object.keys(users_liked).length === 0) return
+
     const [users_unlike, users_like] = Object.entries(users_liked).reduce(
-      (acc, [user_id, status]) => {
-        if (status === '0') acc[0].push(user_id)
-        else acc[1].push(user_id)
+      (acc, [id, status]) => {
+        status === '0' ? acc[0].push(id) : acc[1].push(id)
         return acc
       },
       [[] as string[], [] as string[]]
@@ -123,66 +128,46 @@ class LikesService {
 
     const session = clientMongodb.startSession()
     try {
-      // Prepare object IDs
       const tweet_obj_id = new ObjectId(tweet_id)
+      const likes_count = await cacheService.hGet(createKeyTweetLikesCount(), tweet_id)
 
-      //
-      const key_cache_tw_likes_count = createKeyTweetLikesCount()
-      const likes_count = await cacheService.hGet(key_cache_tw_likes_count, tweet_id)
-
-      //
       await session.withTransaction(async () => {
-        // Unlike existed → deleted successfully (UnLike)
         if (users_unlike.length > 0) {
-          const dataHandle = users_unlike.map((user_id) => ({
-            user_id: new ObjectId(user_id),
-            tweet_id: tweet_obj_id
-          }))
-          for (const data of dataHandle) {
-            await LikeCollection.deleteMany(data, { session })
-          }
+          await LikeCollection.deleteMany(
+            {
+              tweet_id: tweet_obj_id,
+              user_id: { $in: users_unlike.map((id) => new ObjectId(id)) }
+            },
+            { session }
+          )
         }
 
-        // Like didn’t exist → add new like (Like)
         if (users_like.length > 0) {
-          const dataHandle = users_like.map((user_id) => ({
-            user_id: new ObjectId(user_id),
-            tweet_id: tweet_obj_id
-          }))
-          await LikeCollection.insertMany(dataHandle, { session })
+          const docs = users_like.map((id) => ({ user_id: new ObjectId(id), tweet_id: tweet_obj_id }))
+          await LikeCollection.insertMany(docs, { session })
         }
 
-        // Update likes_count in Tweet collection
-        await TweetCollection.findOneAndUpdate(
-          { _id: convertObjectId(tweet_id) },
+        await TweetCollection.updateOne(
+          { _id: tweet_obj_id },
           { $set: { likes_count: Number(likes_count || '0') } },
-          {
-            session
-          }
+          { session }
         )
       })
 
-      // Send notification to tweet owner
-      if (users_like?.length > 0) {
-        // Send in chunks
+      // Notification logic
+      if (users_like.length > 0) {
         const chunks = chunkArray(users_like, CONSTANT_CHUNK_SIZE)
         for (const chunk of chunks) {
-          const jobs = chunk.map((user_id) => ({
+          const jobs = chunk.map((uid) => ({
             name: CONSTANT_JOB.SEND_NOTI_LIKE,
-            data: {
-              sender_id: user_id,
-              tweet_id: tweet_id
-            },
-            opts: {
-              removeOnComplete: true,
-              attempts: 3 // retry nếu queue bị lỗi
-            }
+            data: { sender_id: uid, tweet_id },
+            opts: { removeOnComplete: true, attempts: 3 }
           }))
           await notificationQueue.addBulk(jobs)
         }
       }
     } catch (error) {
-      throw new BadRequestError((error as any)?.message || 'Sync likes from cache to DB failed')
+      console.error('>>> Sync DB Error:', error)
     } finally {
       await session.endSession()
     }

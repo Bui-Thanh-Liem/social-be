@@ -8,8 +8,16 @@ export const signedCloudfrontUrl = (bareMedia: IMediaBare | IMediaBare[] | undef
     //
     if (!bareMedia) return { s3_key: '', url: '' }
 
-    //
-    const privateKey = envs.AWS_CLOUDFRONT_PRIVATE_KEY.replace(/\\n/g, '\n')
+    // 1. XỬ LÝ PRIVATE KEY: Loại bỏ dấu ngoặc kép dư thừa và xử lý ký tự xuống dòng
+    let privateKey = (envs.AWS_CLOUDFRONT_PRIVATE_KEY || '').trim()
+
+    // Nếu bị bao bởi dấu ngoặc kép (do dán vào env bị dư)
+    if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+      privateKey = privateKey.substring(1, privateKey.length - 1)
+    }
+
+    // Thay thế chuỗi "\n" thành ký tự xuống dòng thực tế
+    privateKey = privateKey.replace(/\\n/g, '\n')
 
     //
     if (Array.isArray(bareMedia)) {
@@ -21,7 +29,7 @@ export const signedCloudfrontUrl = (bareMedia: IMediaBare | IMediaBare[] | undef
             url: `${envs.AWS_CLOUDFRONT_DOMAIN}/${media.s3_key}`,
             keyPairId: envs.AWS_CLOUDFRONT_KEY_PAIR_ID,
             privateKey: privateKey,
-            dateLessThan: new Date(Date.now() + Number(envs.AWS_SIGNED_URL_EXPIRES_IN)).toISOString()
+            dateLessThan: new Date(Date.now() + (Number(envs.AWS_SIGNED_URL_EXPIRES_IN) || 43200000)).toISOString()
           })
         }))
     }

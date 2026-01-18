@@ -1,17 +1,26 @@
-import { createClient, RedisClientType } from 'redis'
+import { createCluster, RedisClusterType } from 'redis'
 import { redisConfig } from '~/configs/redis.config'
 import { logger } from '~/utils/logger.util'
 
 class PessimisticLockService {
-  private client: RedisClientType
+  private client: RedisClusterType
   private isConnected: boolean = false
 
   constructor() {
     const redisUrl = `rediss://${redisConfig.host}:${redisConfig.port}`
 
-    this.client = createClient({
-      url: redisUrl,
-      socket: { reconnectStrategy: (retries) => Math.min(retries * 100, 3000) }
+    this.client = createCluster({
+      rootNodes: [
+        {
+          url: redisUrl
+        }
+      ],
+      defaults: {
+        socket: {
+          tls: true,
+          reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
+        }
+      }
     })
 
     this.client.on('error', (err) => console.error('Redis Client Error:', err))

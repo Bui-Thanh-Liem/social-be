@@ -1,17 +1,24 @@
-import { createClient, RedisClientType, SetOptions } from 'redis'
+import { createCluster, RedisClusterType, SetOptions } from 'redis'
 import { redisConfig } from '~/configs/redis.config'
 import { createKeyUserLastSeen, createKeyUserOnline } from '~/utils/create-key-cache.util'
 import { logger } from '~/utils/logger.util'
 
 export class CacheService {
-  private client: RedisClientType
+  private client: RedisClusterType
   private defaultTTL: number = 600 // 10 minutes in seconds
 
   constructor() {
-    this.client = createClient({
-      url: `rediss://${redisConfig.host}:${redisConfig.port}`,
-      socket: {
-        reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
+    this.client = createCluster({
+      rootNodes: [
+        {
+          url: `rediss://${redisConfig.host}:${redisConfig.port}`
+        }
+      ],
+      defaults: {
+        socket: {
+          tls: true,
+          reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
+        }
       }
     })
 
@@ -203,12 +210,12 @@ export class CacheService {
     }
   }
 
-  async pipeline(): Promise<ReturnType<RedisClientType['multi']>> {
+  async pipeline(): Promise<ReturnType<RedisClusterType['multi']>> {
     await this.connect()
     return this.client.multi()
   }
 
-  async execPipeline(pipe: ReturnType<RedisClientType['multi']>) {
+  async execPipeline(pipe: ReturnType<RedisClusterType['multi']>) {
     return await pipe.exec()
   }
 

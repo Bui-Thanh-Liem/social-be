@@ -1,19 +1,27 @@
-import { createClient, RedisClientType } from 'redis'
+import { createCluster, RedisClusterType } from 'redis'
 import { redisConfig } from '~/configs/redis.config'
 import { logger } from '~/utils/logger.util'
 
 class PubSubService {
-  private publisher: RedisClientType
-  private subscriber: RedisClientType
+  private publisher: RedisClusterType
+  private subscriber: RedisClusterType
 
   constructor() {
     const redisUrl = `rediss://${redisConfig.host}:${redisConfig.port}`
 
-    this.publisher = createClient({
-      url: redisUrl,
-      socket: { reconnectStrategy: (retries) => Math.min(retries * 100, 3000) }
+    this.publisher = createCluster({
+      rootNodes: [
+        {
+          url: redisUrl
+        }
+      ],
+      defaults: {
+        socket: {
+          tls: true,
+          reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
+        }
+      }
     })
-
     this.subscriber = this.publisher.duplicate()
 
     this.setupLogging(this.publisher, 'Publisher')
@@ -23,7 +31,7 @@ class PubSubService {
   }
 
   // Hàm helper để kết nối an toàn
-  private async safeConnect(client: RedisClientType) {
+  private async safeConnect(client: RedisClusterType) {
     if (!client.isOpen) {
       try {
         await client.connect()
@@ -33,7 +41,7 @@ class PubSubService {
     }
   }
 
-  private setupLogging(client: RedisClientType, label: string) {
+  private setupLogging(client: RedisClusterType, label: string) {
     client.on('error', (err) => console.error(`Redis ${label} Error:`, err))
     if (!client.isOpen) client.on('connect', () => logger.info(`Redis ${label} Connected`))
     client.on('end', () => logger.info(`Redis ${label} Disconnected`))
