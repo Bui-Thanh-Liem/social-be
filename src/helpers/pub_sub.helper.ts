@@ -1,78 +1,82 @@
-import { createCluster, RedisClusterType } from 'redis'
-import { redisConfig } from '~/configs/redis.config'
+import { redisCluster } from '~/configs/redis.config'
 import { logger } from '~/utils/logger.util'
+import { Cluster } from 'ioredis'
 
 class PubSubService {
-  private publisher: RedisClusterType
-  private subscriber: RedisClusterType
+  private publisher: Cluster
+  private subscriber: Cluster
 
   constructor() {
-    const redisUrl = `rediss://${redisConfig.host}:${redisConfig.port}`
+    // Trong ioredis, chúng ta sử dụng lại cấu hình của publisher
+    this.publisher = redisCluster
 
-    this.publisher = createCluster({
-      rootNodes: [
-        {
-          url: redisUrl
-        }
-      ],
-      defaults: {
-        socket: {
-          tls: true,
-          reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
-        }
-      }
-    })
-    this.subscriber = this.publisher.duplicate()
+    // Subscriber cần một connection riêng biệt hoàn toàn
+    // duplicate() sẽ sao chép toàn bộ cấu hình (bao gồm cả natMap)
+    this.subscriber = (this.publisher as any).duplicate()
 
     this.setupLogging(this.publisher, 'Publisher')
     this.setupLogging(this.subscriber, 'Subscriber')
-
-    // this.connect()
   }
 
-  // Hàm helper để kết nối an toàn
-  private async safeConnect(client: RedisClusterType) {
-    if (!client.isOpen) {
-      try {
-        await client.connect()
-      } catch (err: any) {
-        if (!err.message.includes('Socket already opened')) throw err
-      }
-    }
-  }
-
-  private setupLogging(client: RedisClusterType, label: string) {
-    client.on('error', (err) => console.error(`Redis ${label} Error:`, err))
-    if (!client.isOpen) client.on('connect', () => logger.info(`Redis ${label} Connected`))
+  private setupLogging(client: Cluster, label: string) {
+    client.on('ready', () => logger.info(`Redis ${label} - Ready`))
+    client.on('error', (err) => logger.error(`Redis ${label} Error:`, err))
     client.on('end', () => logger.info(`Redis ${label} Disconnected`))
   }
 
-  private async connect(): Promise<void> {
-    await Promise.all([this.safeConnect(this.publisher), this.safeConnect(this.subscriber)])
-  }
-
+  /**
+   * Gửi thông điệp
+   */
   async publish(event: string, payload: any) {
-    await this.connect()
-    await this.publisher.publish(event, JSON.stringify(payload))
+    try {
+      const message = typeof payload === 'string' ? payload : JSON.stringify(payload)
+      await this.publisher.publish(event, message)
+    } catch (err) {
+      logger.error(`Publish Error on event ${event}:`, err)
+    }
   }
 
+  /**
+   * Đăng ký nhận thông điệp
+   */
   async subscribe(event: string, cb: (payload: any) => void) {
-    await this.connect()
-    await this.subscriber.subscribe(event, (message) => {
-      try {
-        cb(JSON.parse(message))
-      } catch {
-        cb(message)
-      }
-    })
+    try {
+      await this.subscriber.subscribe(event)
+
+      this.subscriber.on('message', (channel, message) => {
+        if (channel === event) {
+          try {
+            cb(JSON.parse(message))
+          } catch {
+            cb(message)
+          }
+        }
+      })
+
+      logger.info(`Subscribed to channel: ${event}`)
+    } catch (err) {
+      logger.error(`Subscribe Error on event ${event}:`, err)
+    }
   }
 
+  /**
+   * Hủy đăng ký một channel
+   */
+  async unsubscribe(event: string) {
+    await this.subscriber.unsubscribe(event)
+    logger.info(`Unsubscribed from channel: ${event}`)
+  }
+
+  /**
+   * Đóng các kết nối
+   */
   async shutdown(): Promise<void> {
     try {
+      // .quit() đợi các lệnh đang chạy hoàn tất rồi mới đóng
       await Promise.all([this.publisher.quit(), this.subscriber.quit()])
       logger.info('Redis PubSubService shutdown complete')
     } catch (err) {
-      console.error('Error during Redis shutdown:', err)
+      logger.error('Error during Redis shutdown:', err)
     }
   }
 }

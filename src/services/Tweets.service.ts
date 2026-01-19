@@ -205,10 +205,10 @@ class TweetsService {
     const resource = createKeyTweetDetailsLock(tweet_id)
     const lockTTL = 10000 // 10 giây
     const lockVal = (Date.now() + lockTTL + 1).toString()
-    const lock = await pessimisticLockServiceInstance.set(resource, lockVal, lockTTL)
+    const lock = await pessimisticLockServiceInstance.acquire(resource, lockVal, lockTTL)
 
     //.   - Nếu có lock thì mới được truy vấn DB
-    if (lock === 'OK') {
+    if (lock) {
       try {
         // 5. Nếu không có cache thì truy vấn DB
         const tweet_db = await this._getOneById(user_active_id, tweet_id)
@@ -217,12 +217,12 @@ class TweetsService {
         if (!tweet_db) {
           //  - Flow bình thường thì sẽ không có trường hợp này xảy ra
           //  - Trường hợp không tìm thấy tweet, lưu cache null trong 3 giây để tránh tấn công dò tìm id (Anti-DDoS)
-          await cacheService.set(key_cache, null, { ttl: 3 }) // Negative Caching
+          await cacheService.set(key_cache, null, 3) // Negative Caching
           throw new NotFoundError('Tweet không tồn tại')
         }
 
         //    - Lưu vào cache với ttl 5 phút
-        await cacheService.set(key_cache, tweet_db, { ttl: 300 })
+        await cacheService.set(key_cache, tweet_db, 300)
 
         //    - Tính toán is_like và is_bookmark ở tầng ứng dụng (Application Layer)
         return this._processUserSpecificFields(tweet_db, user_active_id)
@@ -230,9 +230,9 @@ class TweetsService {
         throw new BadRequestError('Có lỗi xảy ra vui lòng thử lại.')
       } finally {
         // 6. Dù thành công hay lỗi thì cũng phải release lock
-        const lockValue = await pessimisticLockServiceInstance.get(resource)
-        if (lockValue === lockVal) {
-          await pessimisticLockServiceInstance.release(resource)
+        const lockValue = await pessimisticLockServiceInstance.isLocked(resource)
+        if (lockValue) {
+          await pessimisticLockServiceInstance.release(resource, lockVal)
         }
       }
     } else {

@@ -1,5 +1,4 @@
-import { createCluster, RedisClusterType } from 'redis'
-import { redisConfig } from '~/configs/redis.config'
+import { redisCluster } from '~/configs/redis.config' // ioredis instance
 import { logger } from '~/utils/logger.util'
 
 interface OptimisticValue<T> {
@@ -8,56 +7,56 @@ interface OptimisticValue<T> {
 }
 
 class OptimisticLockService {
-  private client: RedisClusterType
-  private isConnected = false
+  // ioredis Cluster tự động quản lý việc kết nối và reconnect nội bộ
+  private client = redisCluster
 
   constructor() {
-    const redisUrl = `rediss://${redisConfig.host}:${redisConfig.port}`
-
-    this.client = createCluster({
-      rootNodes: [{ url: redisUrl }],
-      defaults: {
-        socket: {
-          tls: true,
-          reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
-        }
-      }
-    })
-
-    this.client.on('connect', () => {
-      this.isConnected = true
-      logger.info('Redis Cluster Connected')
-    })
+    this.client.on('ready', () => logger.info('Redis Cluster - OptimisticLock is Ready'))
     this.client.on('error', (err) => logger.error('Redis Cluster Error', err))
-    this.connect()
   }
 
-  private async connect() {
-    if (!this.isConnected) await this.client.connect()
+  /**
+   * Khởi tạo dữ liệu ban đầu
+   */
+  async init<T>(key: string, data: T, ttl?: number) {
+    const value: OptimisticValue<T> = { data, version: 1 }
+    const payload = JSON.stringify(value)
+
+    if (ttl) {
+      // ioredis dùng tham số trực tiếp cho TTL: 'PX' (milliseconds) hoặc 'EX' (seconds)
+      await this.client.set(key, payload, 'PX', ttl)
+    } else {
+      await this.client.set(key, payload)
+    }
   }
 
+  /**
+   * Lấy dữ liệu kèm version
+   */
   async get<T>(key: string): Promise<OptimisticValue<T> | null> {
-    await this.connect()
     const value = await this.client.get(key)
     if (!value) return null
-    return JSON.parse(value)
+    try {
+      return JSON.parse(value)
+    } catch (e) {
+      logger.error('JSON Parse Error in Redis Get', e)
+      return null
+    }
   }
 
   /**
    * Cập nhật sử dụng Lua Script (Atomic Compare-and-Set)
    */
   async set<T>(key: string, newData: T, expectedVersion: number, ttl?: number): Promise<boolean> {
-    await this.connect()
-
     const newValue: OptimisticValue<T> = {
       data: newData,
       version: expectedVersion + 1
     }
 
-    // Lua Script:
-    // 1. Lấy giá trị hiện tại
-    // 2. Kiểm tra version
-    // 3. Nếu đúng version thì SET giá trị mới và trả về 1, ngược lại trả về 0
+    /**
+     * LƯU Ý ioredis cú pháp EVAL:
+     * .eval(script, numKeys, key1, key2..., arg1, arg2...)
+     */
     const luaScript = `
       local current = redis.call('GET', KEYS[1])
       if not current then return 0 end
@@ -75,25 +74,23 @@ class OptimisticLockService {
     `
 
     try {
-      const result = await this.client.eval(luaScript, {
-        keys: [key],
-        arguments: [expectedVersion.toString(), JSON.stringify(newValue), ttl ? ttl.toString() : '0']
-      })
+      const result = await this.client.eval(
+        luaScript,
+        1, // Số lượng keys
+        key, // KEYS[1]
+        expectedVersion.toString(), // ARGV[1]
+        JSON.stringify(newValue), // ARGV[2]
+        ttl ? ttl.toString() : '0' // ARGV[3]
+      )
 
       return result === 1
-    } catch (err) {
+    } catch (err: any) {
+      // Nếu là lỗi MOVED, ioredis sẽ tự động retry
+      // trừ khi NAT mapping config sai
       logger.error('Optimistic Lock Lua Error', err)
       return false
     }
   }
-
-  async init<T>(key: string, data: T, ttl?: number) {
-    await this.connect()
-    const value: OptimisticValue<T> = { data, version: 1 }
-    const options = ttl ? { PX: ttl } : {}
-    await this.client.set(key, JSON.stringify(value), options)
-  }
 }
 
-const optimisticLockServiceInstance = new OptimisticLockService()
-export default optimisticLockServiceInstance
+export default new OptimisticLockService()

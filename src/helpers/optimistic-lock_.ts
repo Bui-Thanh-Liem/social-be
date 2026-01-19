@@ -1,123 +1,81 @@
-import { createClient, RedisClientType } from 'redis'
-import { redisConfig } from '~/configs/redis.config'
+import { redisCluster } from '~/configs/redis.config'
 import { logger } from '~/utils/logger.util'
 
-/**
- * 1. GET value + version
- * 2. WATCH key
- * 3. MULTI
- * 4. SET value mới (nếu version chưa đổi)
- * 5. EXEC
- *   - null → conflict → retry
- */
 interface OptimisticValue<T> {
   data: T
   version: number
 }
 
 class OptimisticLockService {
-  private client: RedisClientType
-  private isConnected = false
+  private client = redisCluster
 
   constructor() {
-    const redisUrl = `rediss://${redisConfig.host}:${redisConfig.port}`
-
-    this.client = createClient({
-      url: redisUrl,
-      socket: { reconnectStrategy: (retries) => Math.min(retries * 100, 3000) }
-    })
-
-    this.client.on('connect', () => {
-      this.isConnected = true
-      logger.info('Redis Client Connected')
-    })
-
-    this.client.on('end', () => {
-      this.isConnected = false
-      logger.info('Redis Client Disconnected')
+    // ioredis tự quản lý kết nối, ta chỉ cần lắng nghe sự kiện
+    this.client.on('ready', () => {
+      logger.info('Redis Cluster is Ready')
     })
 
     this.client.on('error', (err) => {
-      logger.error('Redis Client Error', err)
+      logger.error('Redis Cluster Error', err)
     })
-
-    this.connect()
   }
 
-  private async connect() {
-    if (!this.isConnected) {
-      await this.client.connect()
+  async init<T>(key: string, data: T, ttl?: number) {
+    const value: OptimisticValue<T> = { data, version: 1 }
+    const payload = JSON.stringify(value)
+
+    if (ttl) {
+      await this.client.set(key, payload, 'PX', ttl)
+    } else {
+      await this.client.set(key, payload)
     }
   }
 
-  /**
-   * Read data with version
-   */
   async get<T>(key: string): Promise<OptimisticValue<T> | null> {
-    await this.connect()
-
     const value = await this.client.get(key)
     if (!value) return null
-
     return JSON.parse(value)
   }
 
-  /**
-   * Update with optimistic lock
-   */
   async set<T>(key: string, newData: T, expectedVersion: number, ttl?: number): Promise<boolean> {
-    await this.connect()
+    const luaScript = `
+      local current = redis.call('GET', KEYS[1])
+      if not current then return -1 end
+      
+      local decoded = cjson.decode(current)
+      if decoded.version ~= tonumber(ARGV[1]) then
+        return 0
+      end
+      
+      decoded.data = cjson.decode(ARGV[2])
+      decoded.version = decoded.version + 1
+      
+      local newValue = cjson.encode(decoded)
+      if ARGV[3] ~= "" then
+        redis.call('PSETEX', KEYS[1], ARGV[3], newValue)
+      else
+        redis.call('SET', KEYS[1], newValue)
+      end
+      return 1
+    `
 
-    await this.client.watch(key)
+    try {
+      // Cú pháp ioredis: .eval(script, numberOfKeys, ...keys, ...args)
+      const result = await this.client.eval(
+        luaScript,
+        1,
+        key,
+        expectedVersion.toString(),
+        JSON.stringify(newData),
+        ttl ? ttl.toString() : ''
+      )
 
-    const current = await this.client.get(key)
-    if (!current) {
-      await this.client.unwatch()
+      return result === 1
+    } catch (err) {
+      logger.error('Lua Execution Error', err)
       return false
-    }
-
-    const parsed: OptimisticValue<T> = JSON.parse(current)
-
-    // version changed → conflict
-    if (parsed.version !== expectedVersion) {
-      await this.client.unwatch()
-      return false
-    }
-
-    const multi = this.client.multi()
-
-    const newValue: OptimisticValue<T> = {
-      data: newData,
-      version: expectedVersion + 1
-    }
-
-    multi.set(key, JSON.stringify(newValue))
-    if (ttl) multi.pExpire(key, ttl)
-
-    const result = await multi.exec()
-
-    // null = conflict
-    return result !== null
-  }
-
-  /**
-   * Init data (no lock)
-   */
-  async init<T>(key: string, data: T, ttl?: number) {
-    await this.connect()
-
-    const value: OptimisticValue<T> = {
-      data,
-      version: 1
-    }
-
-    if (ttl) {
-      await this.client.set(key, JSON.stringify(value), { PX: ttl })
-    } else {
-      await this.client.set(key, JSON.stringify(value))
     }
   }
 }
 
-const optimisticLockServiceInstance = new OptimisticLockService()
-export default optimisticLockServiceInstance
+export default new OptimisticLockService()

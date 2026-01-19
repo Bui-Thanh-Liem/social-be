@@ -1,6 +1,6 @@
 import { Worker } from 'bullmq'
 import { ObjectId } from 'mongodb'
-import { redisConfig } from '~/configs/redis.config'
+import { redisCluster } from '~/configs/redis.config'
 import { TweetCollection } from '~/models/schemas/Tweet.schema'
 import { UserCollection } from '~/models/schemas/User.schema'
 import NotificationService from '~/services/Notification.service'
@@ -72,7 +72,7 @@ export const notificationWorker = new Worker(
   },
   {
     concurrency: 5,
-    connection: redisConfig
+    connection: redisCluster
   }
 )
 

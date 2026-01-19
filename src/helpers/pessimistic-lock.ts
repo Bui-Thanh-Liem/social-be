@@ -1,69 +1,56 @@
-import { createCluster, RedisClusterType } from 'redis'
-import { redisConfig } from '~/configs/redis.config'
+import { redisCluster } from '~/configs/redis.config'
 import { logger } from '~/utils/logger.util'
 
 class PessimisticLockService {
-  private client: RedisClusterType
-  private isConnected: boolean = false
+  private client = redisCluster
 
   constructor() {
-    const redisUrl = `rediss://${redisConfig.host}:${redisConfig.port}`
-
-    this.client = createCluster({
-      rootNodes: [
-        {
-          url: redisUrl
-        }
-      ],
-      defaults: {
-        socket: {
-          tls: true,
-          reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
-        }
-      }
-    })
-
-    this.client.on('error', (err) => console.error('Redis Client Error:', err))
-    this.client.on('connect', () => {
-      this.isConnected = true
-      logger.info('Redis Client Connected')
-    })
-    this.client.on('end', () => {
-      this.isConnected = false
-      logger.info('Redis Client Disconnected')
-    })
-
-    this.connect()
+    this.client.on('ready', () => logger.info('Redis Cluster - PessimisticLock is Ready'))
   }
 
-  async set(key: string, value: string, ttl: number): Promise<string | null> {
-    await this.connect()
-
-    return await this.client.set(key, value, {
-      NX: true,
-      PX: ttl
-    })
+  /**
+   * Chiếm khóa (Acquire Lock)
+   * @param key Tên khóa
+   * @param value Giá trị duy nhất (thường là requestID hoặc userID)
+   * @param ttl Thời gian sống của khóa (ms)
+   * @returns boolean (true nếu chiếm được khóa)
+   */
+  async acquire(key: string, value: string, ttl: number): Promise<boolean> {
+    // NX: Chỉ set nếu chưa tồn tại
+    // PX: Thời gian hết hạn tính bằng miliseconds
+    const result = await this.client.set(key, value, 'PX', ttl, 'NX')
+    return result === 'OK'
   }
 
-  async get(key: string): Promise<string | null> {
-    await this.connect()
-    return await this.client.get(key)
-  }
+  /**
+   * Giải phóng khóa an toàn (Safe Release)
+   * Chỉ xóa khóa nếu giá trị bên trong khớp với giá trị lúc chiếm khóa
+   */
+  async release(key: string, value: string): Promise<boolean> {
+    // Lua script đảm bảo tính nguyên tử: Check-then-Delete
+    const luaScript = `
+      if redis.call("get", KEYS[1]) == ARGV[1] then
+        return redis.call("del", KEYS[1])
+      else
+        return 0
+      end
+    `
 
-  async release(key: string): Promise<number> {
-    await this.connect()
-    return await this.client.del(key)
-  }
-
-  private async connect(): Promise<void> {
-    if (!this.isConnected) {
-      try {
-        await this.client.connect()
-      } catch (err) {
-        console.error('Failed to connect to Redis:', err)
-        throw err
-      }
+    try {
+      const result = await this.client.eval(luaScript, 1, key, value)
+      return result === 1
+    } catch (err) {
+      logger.error('Pessimistic Lock Release Error', err)
+      return false
     }
+  }
+
+  /**
+   * Kiểm tra xem khóa có đang tồn tại không
+   */
+  async isLocked(key: string): Promise<boolean> {
+    const val = await this.client.get(key)
+    return val !== null
   }
 }
 

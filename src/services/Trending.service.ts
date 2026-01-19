@@ -1,7 +1,9 @@
 import { ObjectId } from 'mongodb'
+import { BadRequestError } from '~/core/error.response'
+import cacheService from '~/helpers/cache.helper'
+import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
 import { TrendingCollection, TrendingSchema } from '~/models/schemas/Trending.schema'
 import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
-import { BadRequestError } from '~/core/error.response'
 import { IResTodayNewsOrOutstanding } from '~/shared/dtos/res/trending.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { ETweetType } from '~/shared/enums/type.enum'
@@ -10,18 +12,16 @@ import { ITrending } from '~/shared/interfaces/schemas/trending.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
-import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
-import { slug } from '~/utils/slug.util'
-import FollowsService from './Follows.service'
-import HashtagsService from './Hashtags.service'
 import {
   createKeyOutStandingThisWeek,
   createKeyTodayTweet,
   createKeyTweetStandingThisWeekLock,
   createKeyTweetTodayLock
 } from '~/utils/create-key-cache.util'
-import cacheService from '~/helpers/cache.helper'
-import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
+import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
+import { slug } from '~/utils/slug.util'
+import FollowsService from './Follows.service'
+import HashtagsService from './Hashtags.service'
 
 class TrendingService {
   // Tạo khi đăng bài - khi tìm kiếm (>=5)
@@ -169,20 +169,20 @@ class TrendingService {
 
     //
     while (retries < maxRetries) {
-      const lock = await pessimisticLockServiceInstance.set(resource, lockVal, lockTTL)
+      const lock = await pessimisticLockServiceInstance.acquire(resource, lockVal, lockTTL)
       // 5.
-      if (lock === 'OK') {
+      if (lock) {
         try {
           const result = await this._getTodayNews({ query, user_id })
-          await cacheService.set(key_cache, result, { ttl: 300 }) // 5 phút
+          await cacheService.set(key_cache, result, 300) // 5 phút
           return result
         } catch (error) {
           throw new BadRequestError('Có lỗi xảy ra vui lòng thử lại.')
         } finally {
           // 6. Dù thành công hay lỗi thì cũng phải release lock
-          const lockValue = await pessimisticLockServiceInstance.get(resource)
-          if (lockValue === lockVal) {
-            await pessimisticLockServiceInstance.release(resource)
+          const lockValue = await pessimisticLockServiceInstance.isLocked(resource)
+          if (lockValue) {
+            await pessimisticLockServiceInstance.release(resource, lockVal)
           }
         }
       } else {
@@ -403,20 +403,20 @@ class TrendingService {
 
     //
     while (retries < maxRetries) {
-      const lock = await pessimisticLockServiceInstance.set(resource, lockVal, lockTTL)
+      const lock = await pessimisticLockServiceInstance.acquire(resource, lockVal, lockTTL)
       // 5.
-      if (lock === 'OK') {
+      if (lock) {
         try {
           const result = await this._getOutStandingThisWeekNews({ query, user_id })
-          await cacheService.set(key_cache, result, { ttl: 300 }) // 5 phút
+          await cacheService.set(key_cache, result, 300) // 5 phút
           return result
         } catch (error) {
           throw new BadRequestError('Có lỗi xảy ra vui lòng thử lại.')
         } finally {
           // 6. Dù thành công hay lỗi thì cũng phải release lock
-          const lockValue = await pessimisticLockServiceInstance.get(resource)
-          if (lockValue === lockVal) {
-            await pessimisticLockServiceInstance.release(resource)
+          const lockValue = await pessimisticLockServiceInstance.isLocked(resource)
+          if (lockValue) {
+            await pessimisticLockServiceInstance.release(resource, lockVal)
           }
         }
       } else {

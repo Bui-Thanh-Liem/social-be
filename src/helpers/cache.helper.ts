@@ -1,290 +1,133 @@
-import { createCluster, RedisClusterType, SetOptions } from 'redis'
-import { redisConfig } from '~/configs/redis.config'
+import { redisCluster } from '~/configs/redis.config'
 import { createKeyUserLastSeen, createKeyUserOnline } from '~/utils/create-key-cache.util'
 import { logger } from '~/utils/logger.util'
 
 export class CacheService {
-  private client: RedisClusterType
+  private client = redisCluster
   private defaultTTL: number = 600 // 10 minutes in seconds
 
   constructor() {
-    this.client = createCluster({
-      rootNodes: [
-        {
-          url: `rediss://${redisConfig.host}:${redisConfig.port}`
-        }
-      ],
-      defaults: {
-        socket: {
-          tls: true,
-          reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
-        }
-      }
-    })
-
-    this.client.on('error', (err) => console.error('Redis Client Error:', err))
-    if (!this.client.isOpen)
-      this.client.on('connect', () => {
-        logger.info('Redis Client Connected')
-      })
-    this.client.on('end', () => {
-      logger.info('Redis Client Disconnected')
-    })
-
-    // Connect immediately
-    // this.connect()
+    this.client.on('ready', () => logger.info('Redis Cluster - CacheService is Ready'))
+    this.client.on('error', (err) => logger.error('Redis Cluster Error:', err))
   }
 
-  private async connect(): Promise<void> {
-    // Sửa lỗi: Chỉ kết nối nếu client chưa mở
-    if (!this.client.isOpen) {
-      try {
-        await this.client.connect()
-      } catch (err) {
-        // Nếu lỗi do socket đã mở thì bỏ qua, ngược lại thì throw
-        if (!(err instanceof Error && err.message.includes('Socket already opened'))) {
-          throw err
-        }
-      }
-    }
-  }
+  // ioredis tự động quản lý connection nên không cần hàm connect() thủ công
 
-  async set<T>(key: string, value: T, options?: SetOptions & { ttl?: number }): Promise<boolean> {
-    await this.connect()
-
+  async set<T>(key: string, value: T, ttl?: number): Promise<boolean> {
     try {
-      const storeValue =
-        typeof value === 'string' || typeof value === 'number' ? value.toString() : JSON.stringify(value)
+      const storeValue = typeof value === 'object' ? JSON.stringify(value) : String(value)
+      const expiry = ttl ?? this.defaultTTL
 
-      const finalOptions: SetOptions = {
-        ...options,
-        EX: options?.ttl ?? options?.EX ?? this.defaultTTL
-      }
-
-      await this.client.set(key, storeValue, finalOptions)
+      // ioredis: set(key, value, 'EX', seconds)
+      await this.client.set(key, storeValue, 'EX', expiry)
       return true
     } catch (err) {
-      console.error(`Failed to set cache for key ${key}:`, err)
+      logger.error(`Failed to set cache for key ${key}:`, err)
       return false
     }
   }
 
-  async sAdd(key: string, member: string): Promise<boolean> {
-    await this.connect()
+  async get<T>(key: string): Promise<T | null> {
     try {
-      const result = await this.client.sAdd(key, member)
-      return result === 1
+      const rawValue = await this.client.get(key)
+      if (rawValue === null) return null
+      try {
+        return JSON.parse(rawValue) as T
+      } catch {
+        return rawValue as unknown as T
+      }
     } catch (err) {
-      console.error(`Failed to add member to set for key ${key}:`, err)
-      return false
+      logger.error(`Failed to get cache for key ${key}:`, err)
+      return null
     }
+  }
+
+  // ==========================================
+  // Set & List Operations
+  // ==========================================
+
+  async sAdd(key: string, member: string): Promise<boolean> {
+    const result = await this.client.sadd(key, member)
+    return result > 0
   }
 
   async sRem(key: string, member: string): Promise<boolean> {
-    await this.connect()
+    const result = await this.client.srem(key, member)
+    return result > 0
+  }
+
+  async sIsMember(key: string, member: string): Promise<boolean> {
     try {
-      const result = await this.client.sRem(key, member)
+      const result = await this.client.sismember(key, member)
       return result === 1
     } catch (err) {
-      console.error(`Failed to remove member from set for key ${key}:`, err)
+      logger.error(`Failed to check sIsMember for key ${key}:`, err)
       return false
     }
   }
 
   async sMembers(key: string): Promise<string[]> {
-    await this.connect()
-    try {
-      const members = await this.client.sMembers(key)
-      return members
-    } catch (err) {
-      console.error(`Failed to get members of set for key ${key}:`, err)
-      return []
-    }
+    return await this.client.smembers(key)
   }
 
-  async sIsMember(key: string, member: string): Promise<boolean> {
-    await this.connect()
-    try {
-      const isMember = await this.client.sIsMember(key, member)
-      return isMember === 1
-    } catch (err) {
-      console.error(`Failed to check membership in set for key ${key}:`, err)
-      return false
-    }
-  }
-
-  async lPush(key: string, value: string): Promise<boolean> {
-    await this.connect()
-    try {
-      await this.client.lPush(key, value)
-      return true
-    } catch (err) {
-      console.error(`Failed to push value to list for key ${key}:`, err)
-      return false
-    }
+  async lPush(key: string, value: string): Promise<number> {
+    return await this.client.lpush(key, value)
   }
 
   async rPop(key: string): Promise<string | null> {
-    await this.connect()
-    try {
-      const value = await this.client.rPop(key)
-      return value
-    } catch (err) {
-      console.error(`Failed to pop value from list for key ${key}:`, err)
-      return null
-    }
+    return await this.client.rpop(key)
   }
 
-  async hIncrBy(key: string, field: string, increment: number): Promise<number | null> {
-    await this.connect()
-    try {
-      const result = await this.client.hIncrBy(key, field, increment)
-      return result
-    } catch (err) {
-      console.error(`Failed to increment hash field ${field} for key ${key}:`, err)
-      return null
-    }
-  }
+  // ==========================================
+  // Hash Operations
+  // ==========================================
 
-  async hGet(key: string, field: string): Promise<string | null> {
-    await this.connect()
-    try {
-      const result = await this.client.hGet(key, field)
-      return result
-    } catch (err) {
-      console.error(`Failed to get hash field ${field} for key ${key}:`, err)
-      return null
-    }
+  async hIncrBy(key: string, field: string, increment: number): Promise<number> {
+    return await this.client.hincrby(key, field, increment)
   }
 
   async hGetAll(key: string): Promise<Record<string, string>> {
-    await this.connect()
-    try {
-      const result = await this.client.hGetAll(key)
-      return result
-    } catch (err) {
-      console.error(`Failed to get all hash fields for key ${key}:`, err)
-      return {}
-    }
-  }
-
-  async get<T>(key: string): Promise<T | null> {
-    await this.connect()
-
-    try {
-      const rawValue = await this.client.get(key)
-      if (rawValue === null) return null
-
-      try {
-        return JSON.parse(rawValue) as T
-      } catch {
-        return rawValue as T
-      }
-    } catch (err) {
-      console.error(`Failed to get cache for key ${key}:`, err)
-      return null
-    }
-  }
-
-  async del(key: string): Promise<boolean> {
-    await this.connect()
-
-    try {
-      const result = await this.client.del(key)
-      return result === 1
-    } catch (err) {
-      console.error(`Failed to delete cache for key ${key}:`, err)
-      return false
-    }
-  }
-
-  async exists(key: string): Promise<boolean> {
-    await this.connect()
-
-    try {
-      const exists = await this.client.exists(key)
-      return exists === 1
-    } catch (err) {
-      console.error(`Failed to check existence of key ${key}:`, err)
-      return false
-    }
-  }
-
-  async pipeline(): Promise<ReturnType<RedisClusterType['multi']>> {
-    await this.connect()
-    return this.client.multi()
-  }
-
-  async execPipeline(pipe: ReturnType<RedisClusterType['multi']>) {
-    return await pipe.exec()
-  }
-
-  // Graceful disconnect
-  async disconnect(): Promise<void> {
-    if (this.client.isOpen) {
-      try {
-        await this.client.quit()
-      } catch (err) {
-        console.error('Failed to disconnect Redis client:', err)
-        throw err
-      }
-    }
-  }
-
-  // Graceful shutdown
-  async shutdown(): Promise<void> {
-    try {
-      await this.disconnect()
-    } catch (err) {
-      console.error('Error during Redis shutdown:', err)
-    }
+    return await this.client.hgetall(key)
   }
 
   // ==========================================
-  // User Online/Offline Tracking Methods
+  // Pipeline (Multi trong ioredis)
   // ==========================================
 
   /**
-   * Đánh dấu user online (thêm vào Redis Set)
+   * Pipeline trong Cluster chỉ hoạt động nếu các keys nằm trên cùng 1 slot (dùng Hash Tags)
    */
+  pipeline() {
+    return this.client.pipeline()
+  }
+
+  // ==========================================
+  // User Status Tracking (Online/Offline)
+  // ==========================================
+
   async markUserOnline(userId: string): Promise<void> {
-    await this.connect()
-    await this.client.sAdd(createKeyUserOnline(), userId)
+    // Dùng Hash Tag {user_status} để đảm bảo toàn bộ Set online nằm trên cùng 1 node
+    const key = `{user_status}:${createKeyUserOnline()}`
+    await this.client.sadd(key, userId)
   }
 
-  /**
-   * Đánh dấu user offline (xóa khỏi online set, lưu lastSeen)
-   */
   async markUserOffline(userId: string): Promise<void> {
-    await this.connect()
-    await this.client.sRem(createKeyUserOnline(), userId)
-    await this.client.hSet(createKeyUserLastSeen(), userId, Date.now().toString())
+    const onlineKey = `{user_status}:${createKeyUserOnline()}`
+    const lastSeenKey = `{user_status}:${createKeyUserLastSeen()}`
+
+    // Sử dụng Pipeline để thực hiện 2 lệnh cùng lúc
+    await this.client.pipeline().srem(onlineKey, userId).hset(lastSeenKey, userId, Date.now().toString()).exec()
   }
 
-  /**
-   * Kiểm tra user có đang online không
-   */
-  async isUserOnline(userId: string): Promise<boolean> {
-    await this.connect()
-    return (await this.client.sIsMember(createKeyUserOnline(), userId)) === 1
-  }
-
-  /**
-   * Kiểm tra nhiều users có đang online không (dùng Redis SMISMEMBER)
-   */
   async areUsersOnline(userIds: string[]): Promise<Record<string, boolean>> {
-    if (!userIds || userIds.length === 0) return {}
+    if (!userIds.length) return {}
+    const key = `{user_status}:${createKeyUserOnline()}`
 
-    await this.connect()
-    const key = createKeyUserOnline()
-
-    // smIsMember (số nhiều) nhận: (key, [member1, member2, ...])
-    // Trả về mảng boolean[]
-    const results = await this.client.smIsMember(key, userIds)
+    // ioredis sử dụng smismember (không viết hoa camelCase như node-redis)
+    const results = await this.client.smismember(key, ...userIds)
 
     return userIds.reduce(
       (acc, userId, idx) => {
-        // Ép kiểu number (0, 1) sang boolean (false, true)
         acc[userId] = results[idx] === 1
         return acc
       },
@@ -292,24 +135,15 @@ export class CacheService {
     )
   }
 
-  /**
-   * Lấy lastSeen của user
-   */
-  async getUserLastSeen(userId: string): Promise<Date | null> {
-    await this.connect()
-    const ts = await this.client.hGet(createKeyUserLastSeen(), userId)
-    return ts ? new Date(Number(ts)) : null
+  async del(key: string): Promise<boolean> {
+    const result = await this.client.del(key)
+    return result > 0
   }
 
-  /**
-   * Lấy toàn bộ user đang online (cẩn thận performance nếu >100k)
-   */
-  async getAllOnlineUsers(): Promise<string[]> {
-    await this.connect()
-    return await this.client.sMembers(createKeyUserOnline())
+  async shutdown(): Promise<void> {
+    await this.client.quit()
+    logger.info('CacheService shutdown complete')
   }
 }
 
-// Singleton instance
-const cacheService = new CacheService()
-export default cacheService
+export default new CacheService()

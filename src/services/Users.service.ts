@@ -495,7 +495,7 @@ class UsersService {
         { _id: new ObjectId(user_id) },
         { projection: { email_verify_token: 0, forgot_password_token: 0, password: 0 } }
       )
-      await cacheService.set(keyCache, userActive, { ttl: 300 })
+      await cacheService.set(keyCache, userActive, 300)
     }
 
     if (!userActive) {

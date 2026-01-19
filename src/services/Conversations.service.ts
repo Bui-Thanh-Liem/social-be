@@ -11,13 +11,13 @@ import { CreateConversationDto } from '~/shared/dtos/req/conversation.dto'
 import { EConversationType, ENotificationType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IConversation } from '~/shared/interfaces/schemas/conversation.interface'
+import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getSocket } from '~/socket'
 import ConversationGateway from '~/socket/gateways/Conversation.gateway'
 import { createKeyAllConversationIds, createKeyConvIdsByUserId } from '~/utils/create-key-cache.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import MessagesService from './Messages.service'
-import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
 
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {
@@ -1067,7 +1067,7 @@ class ConversationsService {
     await cacheService.set(
       keyCache,
       conversations.map((conv) => conv._id.toString()),
-      { ttl: 300 } // TTL 5 phút
+      300 // TTL 5 phút
     )
 
     // Return
