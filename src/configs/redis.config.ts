@@ -18,8 +18,7 @@ const redisClusterOptionsDev: ClusterOptions = {
   redisOptions: {
     showFriendlyErrorStack: true,
     enableReadyCheck: true,
-    connectTimeout: 10000,
-    tls: {}
+    connectTimeout: 10000
   },
   // ioredis sẽ tự động gọi natMap khi nhận được phản hồi MOVED từ Redis Cluster
   natMap: (address: string) => {
