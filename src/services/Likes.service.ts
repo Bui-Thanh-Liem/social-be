@@ -13,14 +13,13 @@ class LikesService {
   async toggleLike(user_id: string, payload: ParamIdTweetDto): Promise<ResToggleLike> {
     const { tweet_id } = payload
 
-    // Dùng Hash Tag {tweet_id} cho TẤT CẢ các key liên quan đến tweet này
-    // Việc này đảm bảo Pipeline chạy được trên Cluster mà không bị lỗi CROSSSLOT
+    // Dùng Hash Tag {tw:${tweet_id}} để tất cả key liên quan đến tweet này cùng slot
     const key_cache_tw_d = `{tw:${tweet_id}}:details`
     const key_cache_tw_likes = `{tw:${tweet_id}}:likes`
     const key_cache_tw_likes_count = `{tw:${tweet_id}}:count`
-    const key_cache_tw_sync_status = `{tw:${tweet_id}}:sync_status` // Thay cho hash sync toàn cục
+    const key_cache_tw_sync_status = `{tw:${tweet_id}}:sync_status`
 
-    // Key Queue có thể để riêng vì nó là hàng đợi xử lý chung
+    // Key queue là global → KHÔNG dùng hash tag
     const key_cache_tw_like_queue = `tweet_like_sync_queue`
 
     const [tw_d_cached, isMember, currentCount] = await Promise.all([
@@ -37,16 +36,16 @@ class LikesService {
       newCount = Math.max(0, newCount - 1)
       pipeline.srem(key_cache_tw_likes, user_id)
       pipeline.set(key_cache_tw_likes_count, newCount.toString())
-      pipeline.hset(key_cache_tw_sync_status, user_id, '0') // 0 là Unlike
+      pipeline.hset(key_cache_tw_sync_status, user_id, '0') // 0 = Unlike
     } else {
       // LIKE
       newCount = newCount + 1
       pipeline.sadd(key_cache_tw_likes, user_id)
       pipeline.set(key_cache_tw_likes_count, newCount.toString())
-      pipeline.hset(key_cache_tw_sync_status, user_id, '1') // 1 là Like
+      pipeline.hset(key_cache_tw_sync_status, user_id, '1') // 1 = Like
     }
 
-    // Cập nhật chi tiết Tweet trong cache nếu có
+    // Cập nhật chi tiết Tweet trong cache nếu đã có
     if (tw_d_cached) {
       tw_d_cached.likes_count = newCount
       if (isMember) {
@@ -57,10 +56,12 @@ class LikesService {
       pipeline.set(key_cache_tw_d, JSON.stringify(tw_d_cached), 'EX', 300)
     }
 
-    // Đẩy vào queue để Cronjob sync DB
-    pipeline.lpush(key_cache_tw_like_queue, tweet_id)
-
+    // Thực hiện pipeline trước (chỉ chứa các key cùng slot)
     await pipeline.exec()
+
+    // Tách riêng lệnh đẩy vào queue vì key này nằm ở slot khác
+    // Không ảnh hưởng atomicity vì queue chỉ dùng để sync async sau
+    await cacheService.lPush(key_cache_tw_like_queue, tweet_id)
 
     return {
       _id: '',
@@ -109,7 +110,6 @@ class LikesService {
 
         // 2. Xử lý Like
         if (users_like.length > 0) {
-          // Dùng update/upsert để tránh lỗi duplicate key nếu sync lỗi
           for (const doc of users_like) {
             await LikeCollection.updateOne(
               { tweet_id: doc.tweet_id, user_id: doc.user_id },
@@ -128,7 +128,7 @@ class LikesService {
         )
       })
 
-      // 4. Gửi thông báo (Chỉ gửi cho những người mới Like)
+      // 4. Gửi thông báo (chỉ cho những người mới Like)
       if (users_like.length > 0) {
         const jobs = users_like.map((doc) => ({
           name: CONSTANT_JOB.SEND_NOTI_LIKE,
@@ -139,7 +139,7 @@ class LikesService {
       }
     } catch (error) {
       logger.error('>>> Sync DB Error:', error)
-      // Nếu lỗi, có thể đẩy ngược lại queue để xử lý lại
+      // Nếu lỗi, đẩy lại queue để retry
       await cacheService.lPush(key_queue, tweet_id)
     } finally {
       await session.endSession()
