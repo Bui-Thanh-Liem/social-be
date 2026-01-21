@@ -7,7 +7,6 @@ export function createKeyAllConversationIds(user_id: string) {
 }
 
 export function createKeyTweetDetails(tweet_id: string) {
-  ;``
   return `{tweet}:details:${tweet_id}`
 }
 
@@ -25,12 +24,6 @@ export function createKeyTweetTodayLock() {
 
 export function createKeyUserActive(user_id: string) {
   return `{user}:active:${user_id}`
-}
-
-export const createKeyTweetLikesCount = () => '{tweet}:likes_count' // hash key
-
-export function createKeyTweetLikes(tweet_id: string) {
-  return `{tweet}:${tweet_id}:likes`
 }
 
 export const createKeyUserOnline = (): string => '{user}:online'

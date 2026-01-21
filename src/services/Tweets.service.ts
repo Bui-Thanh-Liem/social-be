@@ -1530,11 +1530,6 @@ class TweetsService {
       }
     })
 
-    for (let index = 0; index < tweets.length; index++) {
-      const element = tweets[index]
-      console.log('Updated tweet views and timestamps :::', element.medias)
-    }
-
     return {
       total,
       total_page: Math.ceil(total / limit),

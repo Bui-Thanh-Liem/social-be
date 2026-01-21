@@ -20,6 +20,7 @@ const redisClusterOptionsDev: ClusterOptions = {
     enableReadyCheck: true,
     connectTimeout: 10000
   },
+  enableOfflineQueue: false, // Không xếp hàng lệnh khi node lỗi -> tránh treo app
   // ioredis sẽ tự động gọi natMap khi nhận được phản hồi MOVED từ Redis Cluster
   natMap: (address: string) => {
     const [ip, port] = address.split(':')
@@ -31,7 +32,7 @@ const redisClusterOptionsDev: ClusterOptions = {
       // Công thức ánh xạ dựa trên Compose của bạn:
       // .2 (redis-1) => 6371
       // .5 (redis-4) => 6374
-      const mappedPort = 6371 + (lastOctet - 2)
+      const mappedPort = 6379 + (lastOctet - 2)
 
       console.log(`[REDIS-CLUSTER] Map nội bộ ${address} thành localhost:${mappedPort}`)
 
@@ -43,8 +44,8 @@ const redisClusterOptionsDev: ClusterOptions = {
 
 const redisCluster = new Redis.Cluster(
   [
-    { host: envs.REDIS_HOST, port: Number(envs.REDIS_PORT) }, // 6371
-    { host: envs.REDIS_HOST, port: Number(envs.REDIS_PORT) + 1 } // 6372
+    { host: envs.REDIS_HOST, port: Number(envs.REDIS_PORT) }, // 6379
+    { host: envs.REDIS_HOST, port: Number(envs.REDIS_PORT) + 1 } // 6380
   ],
   {
     ...(envs.NODE_ENV === 'production' ? redisClusterOptionsProd : redisClusterOptionsDev)
