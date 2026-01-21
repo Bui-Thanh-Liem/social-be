@@ -14,8 +14,8 @@ import CommunityService from '~/services/Communities.service'
 import { CreateCommunityDto } from '~/shared/dtos/req/community.dto'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 
-const MY_ID = new ObjectId('696711f73b80f19dced1070c')
-const MY_USERNAME = '@bui_thanh_liem'
+const MY_ID = new ObjectId('69708f6ab776baa192a24a3f')
+const MY_USERNAME = '@liem_buithanh'
 const PASS = 'User123@'
 
 function generateRandomTweet(hashtags: string[], username: string): string {
