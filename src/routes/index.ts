@@ -17,6 +17,7 @@ import tweetsRoute from './tweets.routes'
 import usersRoute from './users.routes'
 import uploadsRoute from './upload.route'
 import { OkResponse } from '~/core/success.response'
+import { startMockDataTweets } from '~/utils/mock-data-tweet.util'
 
 const rootRoute = Router()
 
@@ -39,7 +40,8 @@ rootRoute.use('/search-history', searchHistoryRoute)
 
 // Route tạo dữ liệu giả lập (mock data) cho việc phát triển và thử nghiệm
 rootRoute.post('/mock-data', async (req: Request, res: Response) => {
-  await startMockData()
+  // await startMockData()
+  await startMockDataTweets()
   res.status(200).json(new OkResponse('✅ - Mock data created successfully'))
 })
 
