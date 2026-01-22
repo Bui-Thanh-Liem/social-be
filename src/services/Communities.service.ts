@@ -763,6 +763,21 @@ class CommunityService {
           preserveNullAndEmptyArrays: true
         }
       },
+      {
+        $lookup: {
+          from: 'community-invitations',
+          localField: '_id',
+          foreignField: 'community_id',
+          as: 'invited',
+          pipeline: [
+            {
+              $project: {
+                user_id: 1
+              }
+            }
+          ]
+        }
+      },
 
       // check if user follows admin
       {
