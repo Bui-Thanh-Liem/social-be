@@ -22,7 +22,7 @@ export async function conversationHandler(io: Server, socket: Socket) {
 
     // 1. Lưu vào Redis
     for (const conversationId of ids) {
-      await cacheService.sAdd(`user_rooms:${user_id}`, conversationId)
+      await cacheService.sAdd(`{user_rooms:${user_id}}`, conversationId)
     }
 
     // 2. Join socket.io room

@@ -5,13 +5,17 @@ const redisClusterOptionsProd: ClusterOptions = {
   // KHÔNG dùng natMap ở đây nữa
   dnsLookup: (address, callback) => callback(null, address),
   redisOptions: {
-    tls: {}, // Bắt buộc phải có nếu ElastiCache bật Encryption in-transit
-    username: process.env.REDIS_USERNAME, // Nếu có đặt username
-    password: process.env.REDIS_PASSWORD, // Nếu có đặt Auth Token
-    connectTimeout: 10000
+    // tls: {}, // Bắt buộc phải có nếu ElastiCache bật Encryption in-transit
+    // username: process.env.REDIS_USERNAME, // Nếu có đặt username
+    // password: process.env.REDIS_PASSWORD, // Nếu có đặt password
+    connectTimeout: 10000,
+    showFriendlyErrorStack: true
   },
-  // AWS thỉnh thoảng bảo trì node, cấu hình này giúp tự động cập nhật danh sách node mới
-  slotsRefreshTimeout: 2000
+
+  // Giúp ioredis tự tìm lại các node nếu bạn khởi động lại container Redis
+  slotsRefreshTimeout: 5000,
+  // Rất quan trọng: cho phép kết nối lại khi cluster có biến động
+  clusterRetryStrategy: (times) => Math.min(times * 100, 2000)
 }
 
 const redisClusterOptionsDev: ClusterOptions = {
@@ -32,7 +36,7 @@ const redisClusterOptionsDev: ClusterOptions = {
       // Công thức ánh xạ dựa trên Compose của bạn:
       // .2 (redis-1) => 6371
       // .5 (redis-4) => 6374
-      const mappedPort = 6379 + (lastOctet - 2)
+      const mappedPort = Number(envs.REDIS_PORT) + (lastOctet - 2)
 
       console.log(`[REDIS-CLUSTER] Map nội bộ ${address} thành localhost:${mappedPort}`)
 
