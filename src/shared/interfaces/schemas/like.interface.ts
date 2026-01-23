@@ -1,7 +1,3 @@
-import { ObjectId } from 'mongodb'
-import { IBase } from './base.interface'
+import { IBookmark } from './bookmark.interface'
 
-export interface ILike extends IBase {
-  user_id: ObjectId
-  tweet_id: ObjectId
-}
+export type ILike = IBookmark

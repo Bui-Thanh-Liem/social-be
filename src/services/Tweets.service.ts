@@ -35,9 +35,9 @@ import HashtagsService from './Hashtags.service'
 import LikesService from './Likes.service'
 import TrendingService from './Trending.service'
 import UploadsServices from './Uploads.service'
-import { createTask } from 'node-cron'
 import { normalizeWeekData } from '~/utils/normalize-week-data.util'
 import { ResCountViewLinkBookmarkInWeek } from '~/shared/dtos/res/tweet.dto'
+import { IUser } from '~/shared/interfaces/schemas/user.interface'
 
 class TweetsService {
   //
@@ -2181,6 +2181,173 @@ class TweetsService {
     return this.signedCloudfrontMediaUrls(tweet) as TweetSchema
   }
 
+  //
+  async getUserIdByTweetId(tweet_id: string) {
+    // Nhớ cache
+    const tweet = await TweetCollection.aggregate<TweetSchema>([
+      {
+        $match: { _id: new ObjectId(tweet_id) }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user_id'
+        }
+      },
+      {
+        $unwind: '$user_id'
+      },
+      {
+        $project: {
+          _id: 0,
+          user_id: 1
+        }
+      }
+    ]).next()
+    return (tweet?.user_id as unknown as IUser)?._id || null
+  }
+
+  // Thống kê view, link, bookmark trong tuần
+  async countViewLinkBookmarkInWeek(user_id: string): Promise<ResCountViewLinkBookmarkInWeek> {
+    const now = new Date()
+
+    /**
+     * =========================
+     * TÍNH THỨ 2 TUẦN NÀY (UTC)
+     * =========================
+     * getUTCDay():
+     *  - CN = 0 → đổi thành 7
+     *  - T2 = 1
+     */
+    const utcDay = now.getUTCDay() || 7
+
+    // Thứ 2 tuần này (00:00 UTC)
+    const startOfThisWeek = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - utcDay + 1, 0, 0, 0, 0)
+    )
+
+    // Thứ 2 tuần trước
+    const startOfLastWeek = new Date(startOfThisWeek)
+    startOfLastWeek.setUTCDate(startOfLastWeek.getUTCDate() - 7)
+
+    /* =======================
+      1️⃣ VIEW
+  ======================== */
+    const tweetViewsRaw = await TweetCollection.aggregate([
+      {
+        $match: {
+          user_id: new ObjectId(user_id),
+          created_at: { $gte: startOfLastWeek }
+        }
+      },
+      {
+        $project: {
+          day: { $isoDayOfWeek: '$created_at' }, // 1 = Thứ 2
+          views: { $add: ['$user_view', '$guest_view'] },
+          isThisWeek: { $gte: ['$created_at', startOfThisWeek] }
+        }
+      },
+      {
+        $group: {
+          _id: '$day',
+          tt: {
+            $sum: { $cond: [{ $eq: ['$isThisWeek', false] }, '$views', 0] }
+          },
+          tn: {
+            $sum: { $cond: [{ $eq: ['$isThisWeek', true] }, '$views', 0] }
+          }
+        }
+      },
+      { $project: { _id: 0, day: '$_id', tt: 1, tn: 1 } }
+    ]).toArray()
+
+    const tweet_views_data = normalizeWeekData(tweetViewsRaw)
+
+    /* =======================
+      2️⃣ LIKE (THEO NGÀY LIKE)
+  ======================== */
+    const tweetLikesRaw = await LikeCollection.aggregate([
+      {
+        $match: {
+          tweet_owner_id: new ObjectId(user_id),
+          created_at: { $gte: startOfLastWeek }
+        }
+      },
+      {
+        $project: {
+          day: { $isoDayOfWeek: '$created_at' }, // 1 = Thứ 2
+          isThisWeek: { $gte: ['$created_at', startOfThisWeek] }
+        }
+      },
+      {
+        $group: {
+          _id: '$day',
+          tt: {
+            $sum: { $cond: [{ $eq: ['$isThisWeek', false] }, 1, 0] }
+          },
+          tn: {
+            $sum: { $cond: [{ $eq: ['$isThisWeek', true] }, 1, 0] }
+          }
+        }
+      },
+      { $project: { _id: 0, day: '$_id', tt: 1, tn: 1 } }
+    ]).toArray()
+
+    const tweet_likes_data = normalizeWeekData(tweetLikesRaw)
+
+    /* =======================
+      3️⃣ BOOKMARK
+  ======================== */
+    const tweetBookmarksRaw = await BookmarkCollection.aggregate([
+      {
+        $match: {
+          tweet_owner_id: new ObjectId(user_id),
+          created_at: { $gte: startOfLastWeek }
+        }
+      },
+      {
+        $project: {
+          day: { $isoDayOfWeek: '$created_at' },
+          isThisWeek: { $gte: ['$created_at', startOfThisWeek] }
+        }
+      },
+      {
+        $group: {
+          _id: '$day',
+          tt: {
+            $sum: { $cond: [{ $eq: ['$isThisWeek', false] }, 1, 0] }
+          },
+          tn: {
+            $sum: { $cond: [{ $eq: ['$isThisWeek', true] }, 1, 0] }
+          }
+        }
+      },
+      { $project: { _id: 0, day: '$_id', tt: 1, tn: 1 } }
+    ]).toArray()
+
+    const tweet_bookmarks_data = normalizeWeekData(tweetBookmarksRaw)
+
+    /* =======================
+      RETURN
+  ======================== */
+    return {
+      tweet_views_count: {
+        data: tweet_views_data,
+        total_views: tweet_views_data.reduce((s, i) => s + i.tn, 0)
+      },
+      tweet_likes_count: {
+        data: tweet_likes_data,
+        total_views: tweet_likes_data.reduce((s, i) => s + i.tn, 0)
+      },
+      tweet_bookmarks_count: {
+        data: tweet_bookmarks_data,
+        total_views: tweet_bookmarks_data.reduce((s, i) => s + i.tn, 0)
+      }
+    }
+  }
+
   // ============================ COMMUNITY ============================
   // Lấy tất cả bài viết trong cộng đồng
   async getCommunityTweets({
@@ -2593,173 +2760,6 @@ class TweetsService {
       total,
       total_page: Math.ceil(total / limit),
       items: this.signedCloudfrontMediaUrls(tweets) as TweetSchema[]
-    }
-  }
-
-  async countViewLinkBookmarkInWeek(user_id: string): Promise<ResCountViewLinkBookmarkInWeek> {
-    const now = new Date()
-
-    // Thứ 2 tuần này
-    const startOfThisWeek = new Date(now)
-    startOfThisWeek.setDate(now.getDate() - now.getDay() + 1)
-    startOfThisWeek.setHours(0, 0, 0, 0)
-
-    // Thứ 2 tuần trước
-    const startOfLastWeek = new Date(startOfThisWeek)
-    startOfLastWeek.setDate(startOfThisWeek.getDate() - 7)
-
-    /* =======================
-      1️⃣ VIEW
-  ======================== */
-    const tweetViewsRaw = await TweetCollection.aggregate([
-      {
-        $match: {
-          user_id: new ObjectId(user_id),
-          created_at: { $gte: startOfLastWeek }
-        }
-      },
-      {
-        $project: {
-          day: { $dayOfWeek: '$created_at' },
-          views: { $add: ['$user_view', '$guest_view'] },
-          isThisWeek: { $gte: ['$created_at', startOfThisWeek] }
-        }
-      },
-      {
-        $group: {
-          _id: '$day',
-          tt: {
-            $sum: { $cond: [{ $eq: ['$isThisWeek', false] }, '$views', 0] }
-          },
-          tn: {
-            $sum: { $cond: [{ $eq: ['$isThisWeek', true] }, '$views', 0] }
-          }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          day: '$_id',
-          tt: 1,
-          tn: 1
-        }
-      }
-    ]).toArray()
-
-    const tweet_views_data = normalizeWeekData(tweetViewsRaw)
-
-    /* =======================
-      2️⃣ LIKE
-  ======================== */
-    const tweetLikesRaw = await LikeCollection.aggregate([
-      {
-        $match: {
-          created_at: { $gte: startOfLastWeek }
-        }
-      },
-      {
-        $lookup: {
-          from: 'tweets',
-          localField: 'tweet_id',
-          foreignField: '_id',
-          as: 'tweet'
-        }
-      },
-      { $unwind: '$tweet' },
-      {
-        $match: {
-          'tweet.user_id': new ObjectId(user_id)
-        }
-      },
-      {
-        $project: {
-          day: { $dayOfWeek: '$created_at' },
-          isThisWeek: { $gte: ['$created_at', startOfThisWeek] }
-        }
-      },
-      {
-        $group: {
-          _id: '$day',
-          tt: { $sum: { $cond: [{ $eq: ['$isThisWeek', false] }, 1, 0] } },
-          tn: { $sum: { $cond: [{ $eq: ['$isThisWeek', true] }, 1, 0] } }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          day: '$_id',
-          tt: 1,
-          tn: 1
-        }
-      }
-    ]).toArray()
-
-    const tweet_likes_data = normalizeWeekData(tweetLikesRaw)
-
-    /* =======================
-      3️⃣ BOOKMARK
-  ======================== */
-    const tweetBookmarksRaw = await BookmarkCollection.aggregate([
-      {
-        $match: {
-          created_at: { $gte: startOfLastWeek }
-        }
-      },
-      {
-        $lookup: {
-          from: 'tweets',
-          localField: 'tweet_id',
-          foreignField: '_id',
-          as: 'tweet'
-        }
-      },
-      { $unwind: '$tweet' },
-      {
-        $match: {
-          'tweet.user_id': new ObjectId(user_id)
-        }
-      },
-      {
-        $project: {
-          day: { $dayOfWeek: '$created_at' },
-          isThisWeek: { $gte: ['$created_at', startOfThisWeek] }
-        }
-      },
-      {
-        $group: {
-          _id: '$day',
-          tt: { $sum: { $cond: [{ $eq: ['$isThisWeek', false] }, 1, 0] } },
-          tn: { $sum: { $cond: [{ $eq: ['$isThisWeek', true] }, 1, 0] } }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          day: '$_id',
-          tt: 1,
-          tn: 1
-        }
-      }
-    ]).toArray()
-
-    const tweet_bookmarks_data = normalizeWeekData(tweetBookmarksRaw)
-
-    /* =======================
-      RETURN
-  ======================== */
-    return {
-      tweet_views_count: {
-        data: tweet_views_data,
-        total_views: tweet_views_data.reduce((s, i) => s + i.tn, 0)
-      },
-      tweet_likes_count: {
-        data: tweet_likes_data,
-        total_views: tweet_likes_data.reduce((s, i) => s + i.tn, 0)
-      },
-      tweet_bookmarks_count: {
-        data: tweet_bookmarks_data,
-        total_views: tweet_bookmarks_data.reduce((s, i) => s + i.tn, 0)
-      }
     }
   }
 

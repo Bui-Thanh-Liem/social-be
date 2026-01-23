@@ -8,6 +8,8 @@ import { CONSTANT_JOB } from '~/shared/constants'
 import { ParamIdTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ResToggleLike } from '~/shared/dtos/res/like.dto'
 import { logger } from '~/utils/logger.util'
+import TweetsService from './Tweets.service'
+import { NotFoundError } from '~/core/error.response'
 
 class LikesService {
   async toggleLike(user_id: string, payload: ParamIdTweetDto): Promise<ResToggleLike> {
@@ -89,9 +91,15 @@ class LikesService {
     const users_like: any[] = []
     const tweet_obj_id = new ObjectId(tweet_id)
 
+    //
+    const tweet_owner_id = await TweetsService.getUserIdByTweetId(tweet_id)
+    if (!tweet_owner_id) {
+      throw new NotFoundError('Bài viết không tồn tại')
+    }
+
     Object.entries(users_status).forEach(([uid, status]) => {
       if (status === '0') users_unlike.push(new ObjectId(uid))
-      else users_like.push({ user_id: new ObjectId(uid), tweet_id: tweet_obj_id })
+      else users_like.push({ user_id: new ObjectId(uid), tweet_id: tweet_obj_id, tweet_owner_id: tweet_owner_id })
     })
 
     const session = clientMongodb.startSession()
@@ -113,7 +121,13 @@ class LikesService {
           for (const doc of users_like) {
             await LikeCollection.updateOne(
               { tweet_id: doc.tweet_id, user_id: doc.user_id },
-              { $set: doc },
+              {
+                $set: doc,
+                $setOnInsert: {
+                  created_at: new Date()
+                }
+              },
+
               { upsert: true, session }
             )
           }
