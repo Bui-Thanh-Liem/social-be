@@ -104,7 +104,7 @@ class TweetsController {
       query: req.query,
       user_active_id: user_id
     })
-    res.status(200).json(new OkResponse('Get profile liked success', result))
+    res.status(200).json(new OkResponse('Lấy bài viết đã thích thành công', result))
   }
 
   async getTweetBookmarked(req: Request, res: Response) {
@@ -114,13 +114,19 @@ class TweetsController {
       query: req.query,
       user_active_id: user_id
     })
-    res.status(200).json(new OkResponse('Get profile liked success', result))
+    res.status(200).json(new OkResponse('Lấy bài viết đã lưu thành công', result))
   }
 
   async delete(req: Request, res: Response) {
     const { tweet_id } = req.params as ParamIdTweetDto
     const result = await TweetsService.delete(tweet_id)
     res.status(200).json(new OkResponse('Gỡ bài viết thành công', result))
+  }
+
+  async countViewLinkBookmarkInWeek(req: Request, res: Response) {
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const result = await TweetsService.countViewLinkBookmarkInWeek(user_id)
+    res.status(200).json(new OkResponse('Thống kê lượt xem, thích, lưu trong tuần thành công', result))
   }
 }
 

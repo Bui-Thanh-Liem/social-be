@@ -107,6 +107,13 @@ tweetsRoute.get(
 )
 
 tweetsRoute.get(
+  '/view-like-bookmark',
+  verifyAccessToken,
+  verifyUserEmail,
+  asyncHandler(TweetsController.countViewLinkBookmarkInWeek)
+)
+
+tweetsRoute.get(
   '/:tweet_id',
   optionLogin(verifyAccessToken),
   optionLogin(verifyUserEmail),
