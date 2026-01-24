@@ -6,7 +6,6 @@ import { getIO } from '..'
 class NotificationGateway {
   async sendNotification(noti: INotification, receiverId: string) {
     const io = getIO()
-    console.log('NotificationGateway - sendNotification:::', noti)
 
     //
     await this.sendCountUnreadNoti(receiverId)
