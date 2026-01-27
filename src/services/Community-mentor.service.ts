@@ -36,6 +36,15 @@ class CommunityMentorService {
       throw new BadRequestError(`Đã đạt tối đa số lượng điều hành viên ${CONSTANT_MAX_LENGTH_MENTOR}`)
     }
   }
+
+  async isMentorOfCommunity(user_id: string, community_id: string) {
+    const count_member = await CommunityMentorCollection.countDocuments({
+      user_id: new ObjectId(user_id),
+      community_id: new ObjectId(community_id)
+    })
+
+    return count_member > 0
+  }
 }
 
 export default new CommunityMentorService()

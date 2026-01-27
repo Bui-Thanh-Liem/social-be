@@ -21,6 +21,8 @@ export class TweetSchema extends BaseSchema implements ITweet {
   status: ETweetStatus
   likes_count: number
   comments_count: number
+  textColor: string
+  bgColor: string
 
   constructor(tweet: Partial<ITweet>) {
     super()
@@ -34,6 +36,8 @@ export class TweetSchema extends BaseSchema implements ITweet {
     this.hashtags = tweet.hashtags || []
     this.mentions = tweet.mentions || []
     this.medias = tweet.medias || null
+    this.textColor = tweet.textColor || '' // Fe set default màu chữ
+    this.bgColor = tweet.bgColor || '' // Fe set default màu nền
     this.guest_view = tweet.guest_view || 0
     this.user_view = tweet.user_view || 0
     this.community_id = tweet.community_id || null

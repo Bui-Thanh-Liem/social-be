@@ -19,6 +19,8 @@ export interface ITweet extends IBase {
   user_view: number
   likes_count: number
   comments_count: number
+  textColor: string // màu chữ
+  bgColor: string // màu nền
 
   //
   community_id: null | ObjectId

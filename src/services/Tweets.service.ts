@@ -16,7 +16,14 @@ import { CreateNotiCommentDto } from '~/shared/dtos/req/notification.dto'
 import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { ETweetStatus } from '~/shared/enums/status.enum'
-import { EFeedType, EFeedTypeItem, EMembershipType, ENotificationType, ETweetType } from '~/shared/enums/type.enum'
+import {
+  EFeedType,
+  EFeedTypeItem,
+  EMembershipType,
+  ENotificationType,
+  ETweetType,
+  EVisibilityType
+} from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 import { IMedia } from '~/shared/interfaces/schemas/media.interface'
@@ -110,7 +117,9 @@ class TweetsService {
         community_id: community_id ? new ObjectId(community_id) : null,
         mentions: mentions ? mentions.map((id) => new ObjectId(id)) : [],
         medias: _medias?.length ? _medias : medias,
-        status: status
+        status: status,
+        textColor: payload.textColor || '',
+        bgColor: payload.bgColor || ''
       })
     )
 
@@ -200,8 +209,7 @@ class TweetsService {
     // 3. Nếu có cache thì trả về luôn - "null" cũng là 1 giá trị hợp lệ
     if (tweet_cache) {
       console.log('Get in cached')
-      const tweet_processed = this._processUserSpecificFields(tweet_cache, user_active_id)
-      return tweet_processed
+      return this._processUserSpecificFields(tweet_cache, user_active_id)
     }
 
     //  4. Thiết lập khóa để tránh thundering herd problem
@@ -230,7 +238,8 @@ class TweetsService {
         //    - Tính toán is_like và is_bookmark ở tầng ứng dụng (Application Layer)
         return this._processUserSpecificFields(tweet_db, user_active_id)
       } catch (err) {
-        throw new BadRequestError('Có lỗi xảy ra vui lòng thử lại.')
+        console.log('Error in getOneById:', err)
+        throw err
       } finally {
         // 6. Dù thành công hay lỗi thì cũng phải release lock
         const lockValue = await pessimisticLockServiceInstance.isLocked(resource)
@@ -293,7 +302,7 @@ class TweetsService {
           localField: 'community_id',
           foreignField: '_id',
           as: 'community_id',
-          pipeline: [{ $project: { name: 1, slug: 1 } }]
+          pipeline: [{ $project: { _id: 1, name: 1, slug: 1, visibility_type: 1 } }]
         }
       },
       {
@@ -467,6 +476,14 @@ class TweetsService {
       }
     ]).next()
     console.log('Get in DB')
+
+    //
+    if (tweet_db?.community_id) {
+      const community = tweet_db?.community_id as unknown as CommunitySchema
+      if (community.visibility_type === EVisibilityType.Private) {
+        throw new NotFoundError('Bài viết trong cộng đồng riêng tư không được phép xem ở chế độ này.')
+      }
+    }
 
     // 3. Trả về kết quả
     return tweet_db

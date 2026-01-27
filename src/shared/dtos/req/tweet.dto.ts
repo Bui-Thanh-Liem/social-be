@@ -30,7 +30,9 @@ export const CreateTweetDtoSchema = z.object({
       })
     )
     .optional(),
-  medias: z.array(MediaBareDtoSchema).optional()
+  medias: z.array(MediaBareDtoSchema).optional(),
+  textColor: z.string().trim().optional(),
+  bgColor: z.string().trim().optional()
 })
 
 export const GetOneTweetByIdDtoSchema = z.object({
