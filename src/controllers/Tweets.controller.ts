@@ -67,6 +67,7 @@ class TweetsController {
       query: queries,
       user_active_id: user.user_id,
       isHighlight: queries?.ishl === '1',
+      isMedia: queries?.isMedia === '1',
       user_id: queries?.user_id as string
     })
     res.status(200).json(new OkResponse('Get profile tweet success', result))
@@ -80,6 +81,7 @@ class TweetsController {
       query: queries,
       user_active_id: user.user_id,
       isHighlight: queries?.ishl === '1',
+      isMedia: queries?.isMedia === '1',
       community_id: queries?.community_id as string
     })
     res.status(200).json(new OkResponse('Get community tweet success', result))

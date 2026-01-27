@@ -26,6 +26,7 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const communitiesRoute = Router()
 
+// Thêm middleware xác thực
 communitiesRoute.use(verifyAccessToken, verifyUserEmail)
 
 // Tạo cộng đồng mới
@@ -42,7 +43,10 @@ communitiesRoute.get('/categories', asyncHandler(CommunityController.getAllCateg
 // Lấy danh sách name, id của cộng đồng
 communitiesRoute.get('/bare', asyncHandler(CommunityController.getAllBare))
 
-// Ghim cộng đồng lên đầu trang
+// Lấy danh sách slug, tên của cộng đồng đã ghim
+communitiesRoute.get('/pinned-bare', asyncHandler(CommunityController.getPinnedBare))
+
+// Ghim cộng đồng lên đầu trang1
 communitiesRoute.patch(
   '/toggle-pin/:community_id',
   requestParamsValidate(PinCommunityDtoSchema),

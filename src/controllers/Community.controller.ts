@@ -76,6 +76,12 @@ class CommunityController {
     res.json(new OkResponse(`Lấy danh sách id và tên cộng đồng thành công.`, result))
   }
 
+  async getPinnedBare(req: Request, res: Response) {
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const result = await CommunityService.getPinnedBare(user_id)
+    res.json(new OkResponse(`Lấy danh sách slug và tên cộng đồng thành công.`, result))
+  }
+
   async getMultiOwner(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await CommunityService.getMultiOwner({ user_id, query: req.query })

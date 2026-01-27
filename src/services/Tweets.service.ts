@@ -1184,16 +1184,18 @@ class TweetsService {
   //
   async getProfileTweets({
     query,
-    user_active_id,
+    user_id,
+    isMedia,
     tweet_type,
     isHighlight,
-    user_id
+    user_active_id
   }: {
-    user_active_id: string
-    tweet_type: ETweetType
-    query: IQuery<ITweet>
     user_id: string
+    isMedia?: boolean
+    query: IQuery<ITweet>
     isHighlight?: boolean
+    tweet_type: ETweetType
+    user_active_id: string
   }): Promise<ResMultiType<ITweet>> {
     //
     let { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
@@ -1222,6 +1224,11 @@ class TweetsService {
 
       // Nếu là người khác xem profile của mình thì không cho thấy
       match_condition.community_id = { $eq: null }
+    }
+
+    //
+    if (isMedia) {
+      match_condition['medias.0'] = { $exists: true }
     }
 
     //
@@ -2352,10 +2359,12 @@ class TweetsService {
   // Lấy tất cả bài viết trong cộng đồng
   async getCommunityTweets({
     query,
+    isMedia,
     isHighlight,
     community_id,
     user_active_id
   }: {
+    isMedia?: boolean
     community_id: string
     query: IQuery<ITweet>
     isHighlight?: boolean
@@ -2378,6 +2387,11 @@ class TweetsService {
           : [])
       ]
     } as Filter<TweetSchema>
+
+    //
+    if (isMedia) {
+      match_condition['medias.0'] = { $exists: true }
+    }
 
     //
     if (isHighlight) {

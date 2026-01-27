@@ -14,5 +14,6 @@ export interface IQuery<T> {
   user_id?: string
   community_id?: string
   ishl?: '1' | '0'
+  isMedia?: '1' | '0'
   ids?: string[]
 }

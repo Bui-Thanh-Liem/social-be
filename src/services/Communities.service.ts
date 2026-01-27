@@ -354,6 +354,27 @@ class CommunityService {
     return this.signedCloudfrontCoverUrls(communities)
   }
 
+  async getPinnedBare(user_id: string) {
+    const user_obj_id = new ObjectId(user_id)
+
+    // Lấy danh sách community_id mà user là mentor/member
+    const pined = await CommunityPinCollection.find(
+      { user_id: user_obj_id },
+      { skip: 0, limit: 10, projection: { community_id: 1 } }
+    ).toArray()
+
+    const joinedObjIds = [...pined].map((x) => x.community_id)
+
+    //
+    if (joinedObjIds.length === 0) return []
+
+    // Tạo query động
+    const query: any = { _id: { $in: joinedObjIds } }
+
+    // Trả về danh sách cộng đồng (chỉ cần name)
+    return await CommunityCollection.find(query, { projection: { name: 1, slug: 1 } }).toArray()
+  }
+
   async getMultiOwner({
     query,
     user_id
