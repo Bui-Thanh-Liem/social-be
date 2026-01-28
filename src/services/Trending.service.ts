@@ -22,6 +22,7 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { slug } from '~/utils/slug.util'
 import FollowsService from './Follows.service'
 import HashtagsService from './Hashtags.service'
+import TweetsService from './Tweets.service'
 
 class TrendingService {
   // Tạo khi đăng bài - khi tìm kiếm (>=5)
@@ -1001,7 +1002,7 @@ class TrendingService {
       }
     })
 
-    return tweets
+    return TweetsService.signedCloudfrontMediaUrls(tweets)
   }
 
   //
