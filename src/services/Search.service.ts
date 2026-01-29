@@ -5,7 +5,7 @@ import { TweetCollection, TweetSchema } from '~/models/schemas/Tweet.schema'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { ResSearchPending } from '~/shared/dtos/res/search.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
-import { ETweetType } from '~/shared/enums/type.enum'
+import { ETweetType, EVisibilityType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 import { ITrending } from '~/shared/interfaces/schemas/trending.interface'
@@ -240,7 +240,6 @@ class SearchService {
     const tweets = await TweetCollection.aggregate<TweetSchema>([
       {
         $match: {
-          community_id: { $eq: null },
           ...has_q.query,
           ...hasF.query,
           ...hasPf.query
@@ -249,6 +248,36 @@ class SearchService {
       ...hasTop.query,
       { $skip: skip },
       { $limit: limit },
+      {
+        $lookup: {
+          from: 'communities',
+          localField: 'community_id',
+          foreignField: '_id',
+          as: 'community_id',
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                visibility_type: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: {
+          path: '$community_id',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $match: {
+          $or: [
+            { community_id: null }, // tweet không thuộc community
+            { 'community_id.visibility_type': EVisibilityType.Public }
+          ]
+        }
+      },
       {
         $lookup: {
           from: 'users',
