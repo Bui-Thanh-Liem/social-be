@@ -81,7 +81,7 @@ class MessagesService {
         $match: { conversation: new ObjectId(conversation_id) }
       },
       {
-        $sort: { created_at: 1 }
+        $sort: { created_at: -1 }
       },
       {
         $skip: skip
