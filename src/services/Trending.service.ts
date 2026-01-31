@@ -372,7 +372,7 @@ class TrendingService {
     )
 
     console.log('Get in database - Today news')
-    return this.grouped(trending.items, tweets, 'Tin tức')
+    return this.grouped(trending.items, TweetsService.signedCloudfrontMediaUrls(tweets) as ITweet[], 'Tin tức')
   }
 
   // (cache, pessimistic lock) => sử dụng vòng lặp để dễ dàng quản lý số lần thử lại
