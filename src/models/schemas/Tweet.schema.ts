@@ -1,7 +1,7 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { ETweetType } from '~/shared/enums/type.enum'
-import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
+import { ICodesTweet, ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { BaseSchema } from './Base.schema'
 import { ETweetStatus } from '~/shared/enums/status.enum'
 import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
@@ -23,6 +23,7 @@ export class TweetSchema extends BaseSchema implements ITweet {
   comments_count: number
   textColor: string
   bgColor: string
+  codes: ICodesTweet[] | null
 
   constructor(tweet: Partial<ITweet>) {
     super()
@@ -38,6 +39,7 @@ export class TweetSchema extends BaseSchema implements ITweet {
     this.medias = tweet.medias || null
     this.textColor = tweet.textColor || '' // Fe set default màu chữ
     this.bgColor = tweet.bgColor || '' // Fe set default màu nền
+    this.codes = tweet.codes || null
     this.guest_view = tweet.guest_view || 0
     this.user_view = tweet.user_view || 0
     this.community_id = tweet.community_id || null

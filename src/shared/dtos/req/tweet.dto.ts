@@ -4,6 +4,13 @@ import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EFeedType, ETweetType } from '~/shared/enums/type.enum'
 import { MediaBareDtoSchema } from './common/media-bare.dto'
 
+// Codes DTO
+export const CodesDtoSchema = z.object({
+  _id: z.string().trim(),
+  langKey: z.string().trim(),
+  code: z.string().max(500, `Nội dung tối đa 500 kí tự`).trim()
+})
+
 export const CreateTweetDtoSchema = z.object({
   type: z.nativeEnum(ETweetType),
   audience: z.nativeEnum(ETweetAudience),
@@ -32,7 +39,8 @@ export const CreateTweetDtoSchema = z.object({
     .optional(),
   medias: z.array(MediaBareDtoSchema).optional(),
   textColor: z.string().trim().optional(),
-  bgColor: z.string().trim().optional()
+  bgColor: z.string().trim().optional(),
+  codes: z.array(CodesDtoSchema).optional()
 })
 
 export const GetOneTweetByIdDtoSchema = z.object({

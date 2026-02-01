@@ -50,7 +50,7 @@ class TweetsService {
   //
   async create(user_id: string, payload: CreateTweetDto) {
     let message = 'Đăng bài thành công'
-    const { audience, type, content, parent_id, community_id, mentions, medias } = payload
+    const { audience, type, content, parent_id, community_id, mentions, medias, bgColor, textColor, codes } = payload
 
     //
     let _medias: undefined | IMedia[] = undefined
@@ -118,8 +118,9 @@ class TweetsService {
         mentions: mentions ? mentions.map((id) => new ObjectId(id)) : [],
         medias: _medias?.length ? _medias : medias,
         status: status,
-        textColor: payload.textColor || '',
-        bgColor: payload.bgColor || ''
+        textColor: textColor || '',
+        bgColor: bgColor || '',
+        codes: codes || null
       })
     )
 

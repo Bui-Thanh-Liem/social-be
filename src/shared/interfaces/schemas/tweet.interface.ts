@@ -5,6 +5,11 @@ import { ETweetType } from '~/shared/enums/type.enum'
 import { IBase } from './base.interface'
 import { IMediaBare } from './media.interface'
 
+export interface ICodesTweet {
+  _id: string
+  code: string
+}
+
 export interface ITweet extends IBase {
   user_id: ObjectId
   type: ETweetType
@@ -21,6 +26,7 @@ export interface ITweet extends IBase {
   comments_count: number
   textColor: string // màu chữ
   bgColor: string // màu nền
+  codes: ICodesTweet[] | null // mã code nếu có
 
   //
   community_id: null | ObjectId
