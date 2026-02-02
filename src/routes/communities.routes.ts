@@ -1,12 +1,13 @@
 import { Router } from 'express'
 import CommunityController from '~/controllers/Community.controller'
-import { checkExistMembers } from '~/middlewares/check-exist-members.middleware'
+import { checkExistMembers } from '~/middlewares/community/check-exist-members.middleware'
 import { requestBodyValidate } from '~/middlewares/request-body-validate.middleware'
 import { requestParamsValidate } from '~/middlewares/request-params-validate.middleware'
 import { requestQueryValidate } from '~/middlewares/request-query-validate.middleware'
 import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
-import { verifyUserEmail } from '~/middlewares/verify-user-email.middleware'
+import { verifyUserEmail } from '~/middlewares/user/verify-user-email.middleware'
 import {
+  ChangeInfoDtoSchema,
   ChangeStatusTweetInCommunityDtoSchema,
   CreateCommunityDtoSchema,
   deleteInvitationDtoSchema,
@@ -35,6 +36,13 @@ communitiesRoute.post(
   requestBodyValidate(CreateCommunityDtoSchema),
   checkExistMembers,
   asyncHandler(CommunityController.create)
+)
+
+// Cập nhật thông tin cộng đồng
+communitiesRoute.patch(
+  '/change-info/:community_id',
+  requestBodyValidate(ChangeInfoDtoSchema),
+  asyncHandler(CommunityController.changeInfo)
 )
 
 // Lấy categories của từng community (trả về danh sách)

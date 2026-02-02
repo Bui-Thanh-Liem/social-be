@@ -3,6 +3,7 @@ import CommunityService from '~/services/Communities.service'
 import CommunityInvitationService from '~/services/Community-invitation.service'
 import { CreatedResponse, OkResponse } from '~/core/success.response'
 import {
+  ChangeInfoDto,
   ChangeStatusTweetInCommunityDto,
   CreateCommunityDto,
   deleteInvitationDto,
@@ -26,6 +27,14 @@ class CommunityController {
     const payload = req.body as CreateCommunityDto
     const result = await CommunityService.create(user_id, payload)
     res.json(new CreatedResponse('Tạo cộng đồng thành công.', result))
+  }
+
+  async changeInfo(req: Request, res: Response) {
+    const { community_id } = req.params as { community_id: string }
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const payload = req.body as ChangeInfoDto
+    const result = await CommunityService.changeInfo({ community_id, payload, user_id })
+    res.json(new CreatedResponse('Cập nhật thông tin cộng đồng thành công.', result))
   }
 
   async join(req: Request, res: Response) {

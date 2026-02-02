@@ -14,6 +14,7 @@ import {
 } from '~/models/schemas/Community.schema'
 import { CONSTANT_JOB } from '~/shared/constants'
 import {
+  ChangeInfoDto,
   CreateCommunityActivityDto,
   CreateCommunityDto,
   InvitationMembersDto,
@@ -73,6 +74,35 @@ class CommunityService {
       throw new BadRequestError('Không thể mời thành viên, vui lòng thử lại.')
     }
     return inserted.insertedId.toString()
+  }
+
+  async changeInfo({
+    user_id,
+    payload,
+    community_id
+  }: {
+    user_id: string
+    community_id: string
+    payload: ChangeInfoDto
+  }) {
+    //
+    const { is_admin } = await this.validateCommunityAndMembership({ community_id, user_id })
+
+    if (!is_admin) {
+      throw new ForbiddenError('Chỉ chủ sở hữu mới có thể thay đổi thông tin.')
+    }
+
+    // Cập nhật thông tin cộng đồng
+    const updated = await CommunityCollection.updateOne(
+      { _id: new ObjectId(community_id) },
+      {
+        $set: { ...payload },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+    return !!updated.modifiedCount
   }
 
   async update({ user_id, payload }: { payload: UpdateDto; user_id: string }) {

@@ -2389,7 +2389,8 @@ class TweetsService {
     user_active_id: string
   }): Promise<ResMultiType<ITweet>> {
     //
-    let { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
+    // eslint-disable-next-line prefer-const
+    let { skip, limit, sort, q } = getPaginationAndSafeQuery<ITweet>(query)
 
     // Lấy danh sách của người nào đang theo dõi user_id
     const following_user_ids = await FollowsService.getUserFollowing(user_active_id)
@@ -2405,6 +2406,11 @@ class TweetsService {
           : [])
       ]
     } as Filter<TweetSchema>
+
+    //
+    if (q) {
+      match_condition.$text = { $search: q }
+    }
 
     //
     if (isMedia) {

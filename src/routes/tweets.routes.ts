@@ -1,13 +1,13 @@
 import { Router } from 'express'
 import TweetsController from '~/controllers/Tweets.controller'
 import { checkAudience } from '~/middlewares/tweet/check-audience.middleware'
-import { checkTweetByIdParams } from '~/middlewares/check-tweet-params.middleware'
+import { checkTweetByIdParams } from '~/middlewares/tweet/check-tweet-params.middleware'
 import { optionLogin } from '~/middlewares/option-login.middleware'
 import { requestBodyValidate } from '~/middlewares/request-body-validate.middleware'
 import { requestParamsValidate } from '~/middlewares/request-params-validate.middleware'
 import { requestQueryValidate } from '~/middlewares/request-query-validate.middleware'
 import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
-import { verifyUserEmail } from '~/middlewares/verify-user-email.middleware'
+import { verifyUserEmail } from '~/middlewares/user/verify-user-email.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
 import {
   CreateTweetDtoSchema,
@@ -18,7 +18,7 @@ import {
   paramIdTweetDtoSchema
 } from '~/shared/dtos/req/tweet.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
-import { checkTweetExist } from '~/middlewares/check-tweet-exist.middleware'
+import { checkTweetExist } from '~/middlewares/tweet/check-tweet-exist.middleware'
 
 const tweetsRoute = Router()
 

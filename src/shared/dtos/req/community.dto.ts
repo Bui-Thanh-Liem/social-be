@@ -91,6 +91,10 @@ export const UpdateDtoSchema = z.object({
   visibility_type: z.nativeEnum(EVisibilityType).optional()
 })
 
+export const ChangeInfoDtoSchema = z.object({
+  bio: z.string().trim().max(200).optional()
+})
+
 export const ChangeStatusTweetInCommunityDtoSchema = z.object({
   community_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'ObjectId không hợp lệ'
@@ -114,6 +118,7 @@ export type GetMultiInvitationsDto = z.infer<typeof GetMultiInvitationsDtoSchema
 export type UpdateDto = z.infer<typeof UpdateDtoSchema>
 export type deleteInvitationDto = z.infer<typeof deleteInvitationDtoSchema>
 export type ChangeStatusTweetInCommunityDto = z.infer<typeof ChangeStatusTweetInCommunityDtoSchema>
+export type ChangeInfoDto = z.infer<typeof ChangeInfoDtoSchema>
 
 //
 export type CreateCommunityActivityDto = {
