@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express'
-import { startMockData } from '~/utils/mock-data.util'
+// import { startMockData } from '~/utils/mock-data.util'
 import authRoute from './auth.routes'
 import bookmarksRoute from './bookmarks.routes'
 import communitiesRoute from './communities.routes'
@@ -17,10 +17,13 @@ import tweetsRoute from './tweets.routes'
 import usersRoute from './users.routes'
 import uploadsRoute from './upload.route'
 import { OkResponse } from '~/core/success.response'
-import { startMockDataTweets } from '~/utils/mock-data-tweet.util'
+import adminRoute from './admin.routes'
+// import { startMockDataTweets } from '~/utils/mock-data-tweet.util'
 
 const rootRoute = Router()
 
+// Mount các route con
+rootRoute.use('/admin', adminRoute)
 rootRoute.use('/auth', authRoute)
 rootRoute.use('/users', usersRoute)
 rootRoute.use('/likes', likesRoute)
@@ -41,7 +44,7 @@ rootRoute.use('/search-history', searchHistoryRoute)
 // Route tạo dữ liệu giả lập (mock data) cho việc phát triển và thử nghiệm
 rootRoute.post('/mock-data', async (req: Request, res: Response) => {
   // await startMockData()
-  await startMockDataTweets()
+  // await startMockDataTweets()
   res.status(200).json(new OkResponse('✅ - Mock data created successfully'))
 })
 
