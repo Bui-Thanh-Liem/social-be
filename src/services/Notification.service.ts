@@ -85,18 +85,39 @@ class NotificationService {
       })
     }
 
+    if (type === ENotificationType.Other) {
+      pipeline.push({
+        $lookup: {
+          from: 'medias',
+          localField: 'ref_id',
+          foreignField: '_id',
+          as: 'media_ref',
+          pipeline: [{ $project: { s3_key: 1 } }]
+        }
+      })
+    }
+
     pipeline.push(
       { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$receiver', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$tweet_ref', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$user_ref', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$community_ref', preserveNullAndEmptyArrays: true } }
+      { $unwind: { path: '$community_ref', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$media_ref', preserveNullAndEmptyArrays: true } }
     )
 
-    const new_noti = await NotificationCollection.aggregate<NotificationSchema>(pipeline).next()
+    const new_noti = await NotificationCollection.aggregate<INotification>(pipeline).next()
 
     //
     console.log('publishNotification:::', new_noti)
+
+    // SignUrl nếu ref_id là media
+    if (new_noti?.media_ref) {
+      new_noti.media_ref = {
+        ...new_noti.media_ref,
+        ...signedCloudfrontUrl(new_noti.media_ref)
+      }
+    }
 
     if (receiver_id && new_noti) {
       await publishNotification({ new_noti, receiver_id })
@@ -179,18 +200,34 @@ class NotificationService {
       })
     }
 
+    if (type === ENotificationType.Other) {
+      pipeline.push({
+        $lookup: {
+          from: 'medias',
+          localField: 'ref_id',
+          foreignField: '_id',
+          as: 'media_ref',
+          pipeline: [{ $project: { s3_key: 1 } }]
+        }
+      })
+    }
+
     pipeline.push(
       { $unwind: { path: '$sender', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$receiver', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$tweet_ref', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$user_ref', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$community_ref', preserveNullAndEmptyArrays: true } }
+      { $unwind: { path: '$community_ref', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$media_ref', preserveNullAndEmptyArrays: true } }
     )
 
-    const notis = await NotificationCollection.aggregate<NotificationSchema>(pipeline).toArray()
+    //
+    const [notis, total] = await Promise.all([
+      NotificationCollection.aggregate<INotification>(pipeline).toArray(),
+      NotificationCollection.countDocuments(match)
+    ])
 
-    const total = await NotificationCollection.countDocuments(match)
-
+    //
     return {
       total,
       total_page: Math.ceil(total / limit),
@@ -290,6 +327,10 @@ class NotificationService {
                 ...signedCloudfrontUrl((noti.sender as IUser).avatar)
               }
             : null
+        },
+        media_ref: {
+          ...noti.media_ref,
+          ...signedCloudfrontUrl(noti.media_ref)
         }
       }
 
@@ -304,6 +345,10 @@ class NotificationService {
               ...signedCloudfrontUrl((n.sender as IUser).avatar)
             }
           : null
+      },
+      media_ref: {
+        ...n.media_ref,
+        ...signedCloudfrontUrl(n.media_ref)
       }
     }))
   }

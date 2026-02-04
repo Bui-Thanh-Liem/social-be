@@ -4,7 +4,7 @@ import { checkExistParticipants } from '~/middlewares/community/check-exist-part
 import { requestBodyValidate } from '~/middlewares/request-body-validate.middleware'
 import { requestParamsValidate } from '~/middlewares/request-params-validate.middleware'
 import { requestQueryValidate } from '~/middlewares/request-query-validate.middleware'
-import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
+import { verifyAccessToken } from '~/middlewares/user/verify-access-token.middleware'
 import { verifyUserEmail } from '~/middlewares/user/verify-user-email.middleware'
 import {
   ConversationIdDtoSchema,

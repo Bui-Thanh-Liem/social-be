@@ -1,4 +1,4 @@
-import { EUserVerifyStatus } from '~/shared/enums/status.enum'
+import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { IBase } from './base.interface'
 import { IMediaBare } from './media.interface'
 
@@ -13,7 +13,7 @@ export interface IUser extends IBase {
   day_of_birth: Date
   email_verify_token?: string
   forgot_password_token?: string
-  verify: EUserVerifyStatus
+  verify: EAuthVerifyStatus
 
   //
   bio?: string

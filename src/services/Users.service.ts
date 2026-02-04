@@ -7,7 +7,7 @@ import cacheService from '~/helpers/cache.helper'
 import { signedCloudfrontUrl } from '~/libs/cloudfront.lib'
 import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { CONSTANT_JOB } from '~/shared/constants'
-import { EUserVerifyStatus } from '~/shared/enums/status.enum'
+import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { ETokenType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
@@ -56,7 +56,7 @@ class UsersService {
       { _id: new ObjectId(user._id) },
       {
         $set: {
-          verify: EUserVerifyStatus.Verified,
+          verify: EAuthVerifyStatus.Verified,
           email_verify_token: ''
         },
         $currentDate: {
@@ -65,13 +65,13 @@ class UsersService {
       }
     )
 
-    return { email: user.email, verify: EUserVerifyStatus.Verified }
+    return { email: user.email, verify: EAuthVerifyStatus.Verified }
   }
 
   async resendVerifyEmail(id: string) {
     //
     const email_verify_token = await signToken({
-      payload: { user_id: '', type: ETokenType.VerifyToken },
+      payload: { user_id: id, type: ETokenType.VerifyToken, admin_id: '', role: 'USER' },
       privateKey: envs.JWT_SECRET_TEMP,
       options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
     })

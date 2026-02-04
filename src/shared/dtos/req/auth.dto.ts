@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
-import { EUserVerifyStatus } from '~/shared/enums/status.enum'
+import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { MediaBareDtoSchema } from './common/media-bare.dto'
 
 export const RegisterUserDtoSchema = z
@@ -21,14 +21,14 @@ export const RegisterUserDtoSchema = z
       return arg
     }, z.date()),
     avatar: MediaBareDtoSchema.optional(),
-    verify: z.nativeEnum(EUserVerifyStatus).optional()
+    verify: z.nativeEnum(EAuthVerifyStatus).optional()
   })
   .refine((data) => data.password === data.confirm_password, {
     path: ['confirm_password'],
     message: 'Mật khẩu không khớp'
   })
 
-export const LoginUserDtoSchema = z.object({
+export const LoginAuthDtoSchema = z.object({
   password: z.string().trim().min(1, 'Vui lòng nhập mật khẩu'),
   email: z.string().email('Email không hợp lệ')
 })
@@ -82,7 +82,7 @@ export const UpdateMeDtoSchema = z.object({
 })
 
 export type RegisterUserDto = z.infer<typeof RegisterUserDtoSchema>
-export type LoginUserDto = z.infer<typeof LoginUserDtoSchema>
+export type LoginAuthDto = z.infer<typeof LoginAuthDtoSchema>
 export type ForgotPasswordDto = z.infer<typeof ForgotPasswordDtoSchema>
 export type ResetPasswordDto = z.infer<typeof ResetPasswordDtoSchema>
 export type UpdateMeDto = z.infer<typeof UpdateMeDtoSchema>

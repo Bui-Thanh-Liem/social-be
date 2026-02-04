@@ -1,4 +1,4 @@
-export enum EUserVerifyStatus {
+export enum EAuthVerifyStatus {
   Unverified,
   Verified,
   Banned

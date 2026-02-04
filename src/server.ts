@@ -6,6 +6,7 @@ import { instanceMongodb } from './dbs/init.mongodb'
 import { allowedOrigins } from './middlewares/cors.middleware'
 import { initSubscriber } from './pubsub/subscriber'
 import { initializeSocket } from './socket'
+import AdminService from './services/Admin.service'
 
 //
 const port = envs.SERVER_PORT
@@ -44,6 +45,9 @@ async function bootstrap() {
     instanceMongodb.initialIndex().catch((err) => {
       console.error('❌ MongoDB Indexing failed:', err)
     })
+
+    //
+    await AdminService.initFirstAdmin()
 
     // Khởi tạo Redis (chạy ngầm)
     initSubscriber()

@@ -4,6 +4,7 @@ import { IBase } from './base.interface'
 import { ICommunity } from './community.interface'
 import { ITweet } from './tweet.interface'
 import { IUser } from './user.interface'
+import { IMedia } from './media.interface'
 
 export interface INotification extends IBase {
   content: string
@@ -16,4 +17,5 @@ export interface INotification extends IBase {
   tweet_ref?: ITweet
   user_ref?: IUser
   community_ref?: ICommunity
+  media_ref?: IMedia
 }

@@ -7,19 +7,23 @@ import { signToken } from './jwt.util'
 //
 export async function createTokenPair({
   payload,
-  exp_refresh
+  exp_refresh,
+  private_access_key,
+  private_refresh_key
 }: {
-  payload: Pick<IJwtPayload, 'user_id'>
+  payload: Pick<IJwtPayload, 'user_id' | 'admin_id' | 'role'>
   exp_refresh?: number
+  private_access_key: string
+  private_refresh_key: string
 }): Promise<[string, string]> {
   return (await Promise.all([
     signToken({
-      privateKey: envs.JWT_SECRET_ACCESS,
+      privateKey: private_access_key,
       payload: { ...payload, type: ETokenType.AccessToken },
       options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
     }),
     signToken({
-      privateKey: envs.JWT_SECRET_REFRESH,
+      privateKey: private_refresh_key,
       payload: { ...payload, type: ETokenType.RefreshToken, exp: exp_refresh },
       options: { expiresIn: envs.REFRESH_TOKEN_EXPIRES_IN as StringValue }
     })

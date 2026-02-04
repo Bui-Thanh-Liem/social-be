@@ -19,6 +19,7 @@ export const envs = {
   SERVER_HOST: process.env.SERVER_HOST || 'Error',
 
   CLIENT_DOMAIN: process.env.CLIENT_DOMAIN || 'Error',
+  CLIENT_DOMAIN_ADMIN: process.env.CLIENT_DOMAIN_ADMIN || 'Error',
   SERVER_DOMAIN: process.env.SERVER_DOMAIN || 'Error',
 
   PASSWORD_SALT: process.env.PASSWORD_SALT || 'Error',
@@ -28,6 +29,11 @@ export const envs = {
   JWT_SECRET_REFRESH: process.env.JWT_SECRET_REFRESH || 'Error',
   JWT_SECRET_TEMP: process.env.JWT_SECRET_TEMP || 'Error',
 
+  //
+  JWT_SECRET_ACCESS_ADMIN: process.env.JWT_SECRET_ACCESS_ADMIN || 'Error',
+  JWT_SECRET_REFRESH_ADMIN: process.env.JWT_SECRET_REFRESH_ADMIN || 'Error',
+  JWT_SECRET_TEMP_ADMIN: process.env.JWT_SECRET_TEMP_ADMIN || 'Error',
+
   TEMP_TOKEN_EXPIRES_IN: process.env.TEMP_TOKEN_EXPIRES_IN || '5m',
   ACCESS_TOKEN_EXPIRES_IN: process.env.ACCESS_TOKEN_EXPIRES_IN || '1d',
   REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d',
@@ -35,6 +41,10 @@ export const envs = {
   MAIL_SERVICE_USER: process.env.MAIL_SERVICE_USER || 'Error',
   MAIL_SERVICE_PASS: process.env.MAIL_SERVICE_PASS || 'Error',
   MAIL_SERVICE_ROOT: process.env.MAIL_SERVICE_ROOT || 'Error',
+
+  // Admin
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'Error',
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'Error',
 
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || 'Error',
   GOOGLE_REDIRECT_URIS: process.env.GOOGLE_REDIRECT_URIS || 'Error',

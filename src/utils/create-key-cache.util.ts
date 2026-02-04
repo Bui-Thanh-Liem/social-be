@@ -26,6 +26,10 @@ export function createKeyUserActive(user_id: string) {
   return `{user}:active:${user_id}`
 }
 
+export function createKeyAdminActive(admin_id: string) {
+  return `{admin}:active:${admin_id}`
+}
+
 export const createKeyUserOnline = (): string => '{user}:online'
 
 export const createKeyTweetLikeQueue = (): string => '{tweet}:like_queue' // list key

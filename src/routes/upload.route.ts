@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
+import { verifyAccessToken } from '~/middlewares/user/verify-access-token.middleware'
 import { verifyUserEmail } from '~/middlewares/user/verify-user-email.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 import UploadsControllers from '~/controllers/Upload.controller'

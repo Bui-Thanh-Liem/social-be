@@ -17,13 +17,12 @@ import tweetsRoute from './tweets.routes'
 import usersRoute from './users.routes'
 import uploadsRoute from './upload.route'
 import { OkResponse } from '~/core/success.response'
-import adminRoute from './admin.routes'
+import mediaRoute from './media.routes'
 // import { startMockDataTweets } from '~/utils/mock-data-tweet.util'
 
 const rootRoute = Router()
 
 // Mount các route con
-rootRoute.use('/admin', adminRoute)
 rootRoute.use('/auth', authRoute)
 rootRoute.use('/users', usersRoute)
 rootRoute.use('/likes', likesRoute)
@@ -40,6 +39,9 @@ rootRoute.use('/messages', messagesRoute)
 rootRoute.use('/conversations', conversationsRoute)
 rootRoute.use('/communities', communitiesRoute)
 rootRoute.use('/search-history', searchHistoryRoute)
+
+// Admin
+rootRoute.use('/media', mediaRoute)
 
 // Route tạo dữ liệu giả lập (mock data) cho việc phát triển và thử nghiệm
 rootRoute.post('/mock-data', async (req: Request, res: Response) => {

@@ -30,6 +30,7 @@ import { initUserCollection, UserCollection } from '~/models/schemas/User.schema
 import { initMediaCollection, MediaCollection } from '~/models/schemas/Media.schema'
 import { BadRequestError, InternalServerError } from '~/core/error.response'
 import { logger } from '~/utils/logger.util'
+import { AdminCollection, initAdminCollection } from '~/models/schemas/Admin.schema'
 
 const _MINPOOLSIZE = 5
 const _MAXPOOLSIZE = 50 // không bao giờ vượt, nếu hơn thì phải chờ
@@ -169,6 +170,7 @@ class Database {
       initCommunityInvitationCollection(this.db)
       initCommunityActivityCollection(this.db)
       initSearchHistoryCollection(this.db)
+      initAdminCollection(this.db)
     } catch (error) {
       logger.error('Collection initialization failed:', error)
       throw error
@@ -206,6 +208,12 @@ class Database {
       const indexCommunityActivity = await CommunityActivityCollection.indexExists(['community_id_1'])
       const indexSearchHistory = await SearchHistoryCollection.indexExists(['owner_1'])
       const indexMedia = await MediaCollection.indexExists(['s3_key_1'])
+      const indexAdmin = await AdminCollection.indexExists(['email_1'])
+
+      // Admin
+      if (!indexAdmin) {
+        AdminCollection.createIndex({ email: 1 }, { unique: true })
+      }
 
       // User
       if (!indexUser) {

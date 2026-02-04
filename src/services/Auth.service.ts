@@ -10,12 +10,12 @@ import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
 import { CONSTANT_JOB } from '~/shared/constants'
 import {
   ForgotPasswordDto,
-  LoginUserDto,
+  LoginAuthDto,
   RegisterUserDto,
   ResetPasswordDto,
   UpdateMeDto
 } from '~/shared/dtos/req/auth.dto'
-import { EUserVerifyStatus } from '~/shared/enums/status.enum'
+import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { ENotificationType, ETokenType } from '~/shared/enums/type.enum'
 import { ISendVerifyEmail } from '~/shared/interfaces/common/mail.interface'
 import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oauth-google.interface'
@@ -26,6 +26,7 @@ import { logger } from '~/utils/logger.util'
 import TokensService from './Tokens.service'
 import UsersService from './Users.service'
 import { createKeyUserActive } from '~/utils/create-key-cache.util'
+import AdminService from './Admin.service'
 
 class AuthService {
   async signup(payload: RegisterUserDto) {
@@ -49,7 +50,7 @@ class AuthService {
     let email_verify_token = ''
     if (!payload.verify) {
       email_verify_token = await signToken({
-        payload: { user_id: '', type: ETokenType.VerifyToken },
+        payload: { user_id: '', type: ETokenType.VerifyToken, role: 'USER', admin_id: '' },
         privateKey: envs.JWT_SECRET_TEMP,
         options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
       })
@@ -67,15 +68,19 @@ class AuthService {
         username: snake_case_name,
         password: password_hashed,
         day_of_birth: new Date(payload.day_of_birth),
-        verify: payload.verify || EUserVerifyStatus.Unverified
+        verify: payload.verify || EAuthVerifyStatus.Unverified
       })
     )
 
     // Tạo token/refresh
     const [access_token, refresh_token] = await createTokenPair({
       payload: {
-        user_id: newUser.insertedId.toString()
-      }
+        user_id: newUser.insertedId.toString(),
+        admin_id: '',
+        role: 'USER'
+      },
+      private_access_key: envs.JWT_SECRET_ACCESS,
+      private_refresh_key: envs.JWT_SECRET_REFRESH
     })
 
     //
@@ -88,7 +93,7 @@ class AuthService {
     await TokensService.create({ refresh_token, user_id: newUser.insertedId.toString(), iat, exp })
 
     // Gửi thông báo xác thực email
-    if (payload.verify !== EUserVerifyStatus.Verified) {
+    if (payload.verify !== EAuthVerifyStatus.Verified) {
       // Gửi email xác thực
       await emailQueue.add(CONSTANT_JOB.VERIFY_MAIL, {
         to_email: payload.email,
@@ -112,7 +117,8 @@ class AuthService {
     }
   }
 
-  async login(payload: LoginUserDto) {
+  //
+  async login(payload: LoginAuthDto) {
     // Kiểm tra tồn tại email
     const foundUser = await UsersService.findOneByEmail(payload?.email)
     if (!foundUser) {
@@ -127,7 +133,9 @@ class AuthService {
 
     // Tạo access/refresh token
     const [access_token, refresh_token] = await createTokenPair({
-      payload: { user_id: foundUser._id.toString() }
+      payload: { user_id: foundUser._id.toString(), role: 'USER', admin_id: '' },
+      private_access_key: envs.JWT_SECRET_ACCESS,
+      private_refresh_key: envs.JWT_SECRET_REFRESH
     })
 
     // Lưu refresh token vào database
@@ -140,6 +148,7 @@ class AuthService {
     }
   }
 
+  //
   async googleLogin(code: string) {
     const { id_token, access_token } = await this.getOauthGoogleToken(code)
     const user_info = await this.getOauthGoogleInfoUser(access_token, id_token)
@@ -155,7 +164,9 @@ class AuthService {
     // Nếu đã đăng nhập rồi thì tạo token gửi về client
     if (exist) {
       const [access_token, refresh_token] = await createTokenPair({
-        payload: { user_id: exist._id.toString() }
+        payload: { user_id: exist._id.toString(), role: 'USER', admin_id: '' },
+        private_access_key: envs.JWT_SECRET_ACCESS,
+        private_refresh_key: envs.JWT_SECRET_REFRESH
       })
 
       const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
@@ -180,7 +191,7 @@ class AuthService {
         s3_key: '',
         url: user_info.picture
       },
-      verify: EUserVerifyStatus.Verified
+      verify: EAuthVerifyStatus.Verified
     })
 
     return {
@@ -189,6 +200,7 @@ class AuthService {
     }
   }
 
+  //
   async facebookLogin(code: string) {
     const { access_token } = await this.getOauthFacebookToken(code)
     const user_info = await this.getOauthFacebookInfoUser(access_token)
@@ -204,7 +216,9 @@ class AuthService {
     // Nếu đã đăng nhập rồi thì tạo token gửi về client
     if (exist) {
       const [access_token, refresh_token] = await createTokenPair({
-        payload: { user_id: exist._id.toString() }
+        payload: { user_id: exist._id.toString(), role: 'USER', admin_id: '' },
+        private_access_key: envs.JWT_SECRET_ACCESS,
+        private_refresh_key: envs.JWT_SECRET_REFRESH
       })
 
       const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
@@ -226,7 +240,7 @@ class AuthService {
       day_of_birth: new Date(),
       confirm_password: newPass,
       avatar: user_info.picture,
-      verify: EUserVerifyStatus.Verified
+      verify: EAuthVerifyStatus.Verified
     })
 
     return {
@@ -322,6 +336,7 @@ class AuthService {
     return res.data
   }
 
+  //
   async logout({ user_id, refresh_token }: { user_id: string; refresh_token: string }) {
     // Xoá Người dùng đang active trong cache
     const key_cache = createKeyUserActive(user_id)
@@ -331,6 +346,7 @@ class AuthService {
     return await TokensService.deleteByToken({ refresh_token }) // Chỉ đăng xuất trên phiên hiện tại
   }
 
+  //
   async forgotPassword({ email }: ForgotPasswordDto) {
     //
     const user = await UserCollection.findOne({ email })
@@ -340,7 +356,7 @@ class AuthService {
 
     //
     const forgot_password_token = await signToken({
-      payload: { user_id: user._id.toString(), type: ETokenType.ForgotPasswordToken },
+      payload: { user_id: user._id.toString(), type: ETokenType.ForgotPasswordToken, role: 'USER', admin_id: '' },
       privateKey: envs.JWT_SECRET_TEMP,
       options: { expiresIn: envs.TEMP_TOKEN_EXPIRES_IN as StringValue }
     })
@@ -370,6 +386,7 @@ class AuthService {
     return true
   }
 
+  //
   async resetPassword(objectId: ObjectId, payload: ResetPasswordDto) {
     //
     const password_hashed = hashPassword(payload.password)
@@ -421,8 +438,10 @@ class AuthService {
 
     // Tạo access/refresh token mới
     const [access_token, new_refresh_token] = await createTokenPair({
-      payload: { user_id: decoded.user_id },
-      exp_refresh: decoded.exp
+      payload: { user_id: decoded.user_id, role: 'USER', admin_id: '' },
+      exp_refresh: decoded.exp,
+      private_access_key: envs.JWT_SECRET_ACCESS,
+      private_refresh_key: envs.JWT_SECRET_REFRESH
     })
 
     // Cập nhật lại token đang sử dụng và token đã được sử dụng.
@@ -432,6 +451,7 @@ class AuthService {
     return { access_token, refresh_token: new_refresh_token }
   }
 
+  //
   private async checkExistByName(name: string) {
     const snake_case_name = `@${_.snakeCase(name)}`.slice(0, 20)
     console.log('snake_case_name::', snake_case_name)
@@ -439,7 +459,8 @@ class AuthService {
     return (await UserCollection.countDocuments({ $or: [{ name }, { username: snake_case_name }] })) > 0
   }
 
-  async updateMe(user_id: string, payload: UpdateMeDto) {
+  //
+  async updateMeUser(user_id: string, payload: UpdateMeDto) {
     const user = await UserCollection.findOne({ username: payload.username, _id: { $ne: new ObjectId(user_id) } })
     if (user) {
       throw new ConflictError('Tên người dùng đã tồn tại.')
@@ -467,6 +488,38 @@ class AuthService {
       }
     )
   }
+
+  // ====== ONLY ADMIN =====
+  async loginAdmin(payload: LoginAuthDto) {
+    // Kiểm tra tồn tại email
+    const foundAdmin = await AdminService.findOneByEmail(payload?.email)
+    if (!foundAdmin) {
+      throw new UnauthorizedError('Email hoặc mật khẩu không đúng.')
+    }
+
+    // Kiểm tra mật khẩu đúng hay không
+    const verify_pass = verifyPassword(payload.password, foundAdmin.password)
+    if (!verify_pass) {
+      throw new UnauthorizedError('Email hoặc mật khẩu không đúng.')
+    }
+
+    // Tạo access/refresh token
+    const [access_token, refresh_token] = await createTokenPair({
+      payload: { user_id: '', admin_id: foundAdmin._id.toString(), role: 'ADMIN' },
+      private_access_key: envs.JWT_SECRET_ACCESS_ADMIN,
+      private_refresh_key: envs.JWT_SECRET_REFRESH_ADMIN
+    })
+
+    // Lưu refresh token vào database
+    const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
+    await TokensService.create({ refresh_token, user_id: foundAdmin._id.toString(), iat, exp })
+
+    return {
+      access_token,
+      refresh_token
+    }
+  }
+  // =======================
 }
 
 export default new AuthService()

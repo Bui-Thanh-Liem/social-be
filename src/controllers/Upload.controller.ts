@@ -20,6 +20,19 @@ class UploadsControllers {
     const result = await UploadsServices.delete(req.body)
     res.json(new OkResponse('Xoá ảnh/ video thành công', result))
   }
+
+  // ====== ADMIN ONLY ======
+  async getMulti(req: Request, res: Response) {
+    // const { admin_id } = req.admin_decoded_authorization as IJwtPayload
+    const result = await UploadsServices.getMulti({ admin_id: '', query: req.query })
+    res.json(new OkResponse('Lấy danh sách hình ảnh / video thành công', result))
+  }
+  async remind(req: Request, res: Response) {
+    const { admin_id } = req.decoded_authorization as IJwtPayload
+    const result = await UploadsServices.remind({ admin_id, media_id: req.params.media_id })
+    res.json(new OkResponse('Lấy danh sách hình ảnh / video thành công', result))
+  }
+  // ========================
 }
 
 export default new UploadsControllers()

@@ -2,12 +2,12 @@ import { Router } from 'express'
 import AuthController from '~/controllers/Auth.controller'
 import { loginRateLimit } from '~/middlewares/ratelimit.middleware'
 import { requestBodyValidate } from '~/middlewares/request-body-validate.middleware'
-import { verifyAccessToken } from '~/middlewares/verify-access-token.middleware'
-import { verifyRefreshToken } from '~/middlewares/verify-refresh-token.middleware'
-import { verifyTokenForgotPassword } from '~/middlewares/verify-token-forgot-password.middleware'
+import { verifyAccessToken } from '~/middlewares/user/verify-access-token.middleware'
+import { verifyRefreshToken } from '~/middlewares/user/verify-refresh-token.middleware'
+import { verifyTokenForgotPassword } from '~/middlewares/user/verify-token-forgot-password.middleware'
 import {
   ForgotPasswordDtoSchema,
-  LoginUserDtoSchema,
+  LoginAuthDtoSchema,
   RegisterUserDtoSchema,
   ResetPasswordDtoSchema,
   UpdateMeDtoSchema
@@ -16,12 +16,21 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const authRoute = Router()
 
+// ====== ONLY ADMIN =====
+authRoute.post(
+  '/login-admin',
+  asyncHandler(loginRateLimit),
+  requestBodyValidate(LoginAuthDtoSchema),
+  asyncHandler(AuthController.loginAdmin)
+)
+// =======================
+
 authRoute.post('/signup', requestBodyValidate(RegisterUserDtoSchema), asyncHandler(AuthController.signup))
 
 authRoute.post(
   '/login',
   asyncHandler(loginRateLimit),
-  requestBodyValidate(LoginUserDtoSchema),
+  requestBodyValidate(LoginAuthDtoSchema),
   asyncHandler(AuthController.login)
 )
 
@@ -48,7 +57,11 @@ authRoute.post('/logout', verifyAccessToken, verifyRefreshToken, asyncHandler(Au
 
 authRoute
   .route('/me')
-  .get(verifyAccessToken, asyncHandler(AuthController.getMe))
-  .patch(verifyAccessToken, requestBodyValidate(UpdateMeDtoSchema), asyncHandler(AuthController.updateMe))
+  .get(verifyAccessToken, asyncHandler(AuthController.getMeUser))
+  .patch(verifyAccessToken, requestBodyValidate(UpdateMeDtoSchema), asyncHandler(AuthController.updateMeUser))
+
+// ====== ONLY ADMIN =====
+
+// =======================
 
 export default authRoute

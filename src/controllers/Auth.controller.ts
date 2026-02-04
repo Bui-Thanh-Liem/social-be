@@ -53,15 +53,22 @@ class AuthController {
     res.json(new OkResponse('Thay đổi mật khẩu thành công', result))
   }
 
-  async getMe(req: Request, res: Response) {
+  async getMeUser(req: Request, res: Response) {
     res.json(new OkResponse('Lấy thông tin của chính mình thành công', req.user))
   }
 
-  async updateMe(req: Request, res: Response) {
+  async updateMeUser(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await AuthServices.updateMe(user_id, req.body)
+    const result = await AuthServices.updateMeUser(user_id, req.body)
     res.json(new OkResponse('Cập nhật thông tin thành công', result))
   }
+
+  // ====== ONLY ADMIN =====
+  async loginAdmin(req: Request, res: Response) {
+    const result = await AuthServices.loginAdmin(req.body)
+    res.json(new OkResponse('Đăng nhập thành công', result))
+  }
+  // =======================
 }
 
 export default new AuthController()
