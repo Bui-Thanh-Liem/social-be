@@ -3,6 +3,18 @@ import { CreateBadWordDto } from './bad-words.dto'
 import { BadWordsCollection } from './bad-words.schema'
 
 export class BadWordsService {
+  private LEET_MAP: Record<string, string> = {
+    '0': 'o',
+    '1': 'i',
+    '3': 'e',
+    '4': 'a',
+    '5': 's',
+    '7': 't',
+    '@': 'a',
+    $: 's',
+    '!': 'i'
+  }
+
   async create({ body }: { body: CreateBadWordDto }) {
     //
     const newBadWord = await BadWordsCollection.insertOne({
@@ -15,19 +27,42 @@ export class BadWordsService {
     return newBadWord
   }
 
-  async replaceBadWordsInText(text: string): Promise<string> {
-    removeVietnameseAccent('d')
-    //
-    const badWords = await BadWordsCollection.find({}).toArray()
+  replaceBadWordsInText(text: string): string {
+    const normalizedText = this.normalizeContent(text)
+    let result = text
 
-    let modifiedText = text
+    for (const bw of this.badWords) {
+      const pattern = bw.normalized.split(' ').join('\\s*')
 
-    for (const badWord of badWords) {
-      const regex = new RegExp(`\\b${badWord.words}\\b`, 'gi')
-      modifiedText = modifiedText.replace(regex, badWord.replace_with)
+      const regex = new RegExp(pattern, 'gi')
+
+      if (regex.test(normalizedText)) {
+        result = result.replace(new RegExp(bw.original, 'gi'), bw.replaceWith)
+      }
     }
 
-    return modifiedText
+    return result
+  }
+
+  private normalizeContent(input: string): string {
+    let text = input.toLowerCase()
+
+    // bỏ dấu tiếng Việt
+    text = removeVietnameseAccent(text)
+
+    // replace leetspeak
+    text = text.replace(/[013457@$!]/g, (char) => this.LEET_MAP[char] || char)
+
+    // bỏ emoji
+    text = text.replace(/[\u{1F300}-\u{1FAFF}]/gu, '')
+
+    // bỏ ký tự đặc biệt (giữ chữ + số + space)
+    text = text.replace(/[^a-z0-9\s]/g, ' ')
+
+    // gom nhiều space thành 1
+    text = text.replace(/\s+/g, ' ').trim()
+
+    return text
   }
 }
 
