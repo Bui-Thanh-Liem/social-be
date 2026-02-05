@@ -1,5 +1,5 @@
 import { Collection, Db } from 'mongodb'
-import { BaseSchema } from '../../schemas/Base.schema'
+import { BaseSchema } from '../../shared/schemas/base.schema'
 import { IAdmin } from '~/shared/interfaces/schemas/admin.interface'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'

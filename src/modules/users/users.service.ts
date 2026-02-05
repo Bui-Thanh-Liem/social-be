@@ -547,6 +547,56 @@ class UsersService {
   }
 
   //
+  async adminGetUsers({ admin_id, query }: { admin_id: string; query: IQuery<IUser> }): Promise<ResMultiType<IUser>> {
+    //
+    const { skip, limit, sort, q } = getPaginationAndSafeQuery<IUser>(query)
+
+    //
+    const has_q = {
+      query: {}
+    }
+
+    if (q) {
+      has_q.query = { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] }
+    }
+
+    //
+    const users = await UsersCollection.aggregate<UsersSchema>([
+      {
+        $match: {
+          _id: { $ne: new ObjectId(admin_id) },
+          ...has_q.query
+        }
+      },
+      {
+        $sort: sort
+      },
+      {
+        $skip: skip
+      },
+      { $limit: limit },
+      {
+        $project: {
+          password: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0
+        }
+      }
+    ]).toArray()
+
+    const total = await UsersCollection.countDocuments({
+      _id: { $ne: new ObjectId(admin_id) },
+      ...has_q.query
+    })
+
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: this.signedCloudfrontAvatarUrls(users) as IUser[]
+    }
+  }
+
+  //
   signedCloudfrontAvatarUrls = (users: IUser[] | IUser | null) => {
     //
     if (!users) return users

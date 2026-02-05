@@ -1,4 +1,4 @@
-import { instanceMongodb } from '~/database/init.mongodb'
+import { instanceMongodb } from '~/database/mongodb.db'
 import { logger } from '~/utils/logger.util'
 import { cleanupWorker, emailWorker, inviteWorker, notificationWorker, syncWorker } from './index'
 

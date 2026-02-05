@@ -2,7 +2,7 @@ import { Filter, ObjectId } from 'mongodb'
 import { notificationQueue } from '~/infra/queues'
 import { cleanupQueue } from '~/infra/queues/cleanup.queue'
 import { BadRequestError, NotFoundError } from '~/core/error.response'
-import { clientMongodb } from '~/database/init.mongodb'
+import { clientMongodb } from '~/database/mongodb.db'
 import cacheService from '~/helpers/cache.helper'
 import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
@@ -2711,7 +2711,7 @@ class TweetsService {
     }
   }
 
-  //
+  // Đếm số bài viết chờ duyệt trong cộng đồng
   async getCountTweetApprove({ community_id }: { community_id: string }) {
     return await TweetsCollection.countDocuments({
       community_id: new ObjectId(community_id),
@@ -2789,6 +2789,45 @@ class TweetsService {
       },
       {
         $project: { user_id: 1, content: 1, medias: 1 }
+      }
+    ]).toArray()
+
+    const total = await TweetsCollection.countDocuments(match_condition)
+
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: this.signedCloudfrontMediaUrls(tweets) as TweetsSchema[]
+    }
+  }
+
+  // ============================ ADMIN ============================
+  async adminGetTweets({
+    query
+  }: {
+    query: IQuery<TweetsSchema>
+    admin_id: string
+  }): Promise<ResMultiType<TweetsSchema>> {
+    const { skip, limit, sort, q } = getPaginationAndSafeQuery<TweetsSchema>(query)
+
+    const match_condition: any = {}
+
+    if (q) {
+      match_condition.$text = { $search: q }
+    }
+
+    const tweets = await TweetsCollection.aggregate<TweetsSchema>([
+      {
+        $match: match_condition
+      },
+      {
+        $sort: sort
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
       }
     ]).toArray()
 

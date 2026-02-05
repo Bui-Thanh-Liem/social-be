@@ -2,7 +2,6 @@ import { ObjectId } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { NotFoundError, UnauthorizedError } from '~/core/error.response'
 import cacheService from '~/helpers/cache.helper'
-import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { AdminCollection } from '~/modules/admin/admin.schema'
 import { LoginAuthDto } from '~/shared/dtos/req/auth.dto'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
@@ -12,12 +11,7 @@ import { createKeyAdminActive } from '~/utils/create-key-cache.util'
 import { hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { verifyToken } from '~/utils/jwt.util'
 import TokensService from '../tokens/tokens.service'
-import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { IUser } from '~/shared/interfaces/schemas/user.interface'
-import { ResMultiType } from '~/shared/types/response.type'
-import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
-import { UsersCollection, UsersSchema } from '../users/user.schema'
-import usersService from '../users/users.service'
+import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 
 class AdminService {
   //
@@ -104,80 +98,29 @@ class AdminService {
     return this.signedCloudfrontAvatarUrls(adminActive) as IAdmin
   }
 
-  //
-  async adminGetUsers({ admin_id, query }: { admin_id: string; query: IQuery<IUser> }): Promise<ResMultiType<IUser>> {
+  private signedCloudfrontAvatarUrls = (users: IAdmin[] | IAdmin | null) => {
     //
-    const { skip, limit, sort, q } = getPaginationAndSafeQuery<IUser>(query)
-
-    //
-    const has_q = {
-      query: {}
-    }
-
-    if (q) {
-      has_q.query = { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] }
-    }
+    if (!users) return users
 
     //
-    const users = await UsersCollection.aggregate<UsersSchema>([
-      {
-        $match: {
-          _id: { $ne: new ObjectId(admin_id) },
-          ...has_q.query
-        }
-      },
-      {
-        $sort: sort
-      },
-      {
-        $skip: skip
-      },
-      { $limit: limit },
-      {
-        $project: {
-          password: 0,
-          email_verify_token: 0,
-          forgot_password_token: 0
-        }
-      }
-    ]).toArray()
-
-    const total = await UsersCollection.countDocuments({
-      _id: { $ne: new ObjectId(admin_id) },
-      ...has_q.query
-    })
-
-    return {
-      total,
-      total_page: Math.ceil(total / limit),
-      items: usersService.signedCloudfrontAvatarUrls(users) as IUser[]
-    }
-  }
-
-  //
-  signedCloudfrontAvatarUrls = (admin: IAdmin[] | IAdmin | null) => {
-    //
-    if (!admin) return admin
-
-    //
-    if (!Array.isArray(admin))
+    if (!Array.isArray(users))
       return {
-        ...admin,
-        avatar: admin?.avatar
+        ...users,
+        avatar: users?.avatar
           ? {
-              s3_key: admin.avatar.s3_key,
-              ...signedCloudfrontUrl(admin.avatar)
+              s3_key: users.avatar.s3_key,
+              ...signedCloudfrontUrl(users.avatar)
             }
           : null
       }
 
     //
-    return admin.map((a) => ({
-      ...a,
-      avatar: a?.avatar
+    return users.map((user) => ({
+      ...user,
+      avatar: user?.avatar
         ? {
-            s3_key: a.avatar.s3_key,
-            ...signedCloudfrontUrl(a.avatar)
+            s3_key: user.avatar.s3_key,
+            ...signedCloudfrontUrl(user.avatar)
           }
         : null
     }))

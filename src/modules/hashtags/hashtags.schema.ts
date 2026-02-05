@@ -1,5 +1,5 @@
 import { Collection, Db } from 'mongodb'
-import { BaseSchema } from '~/schemas/Base.schema'
+import { BaseSchema } from '~/shared/schemas/base.schema'
 import { IHashtag } from '~/shared/interfaces/schemas/hashtag.interface'
 import { slug } from '~/utils/slug.util'
 

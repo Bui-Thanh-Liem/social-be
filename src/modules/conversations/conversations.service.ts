@@ -1,7 +1,7 @@
 import { InsertOneResult, ObjectId } from 'mongodb'
 import { cleanupQueue, notificationQueue } from '~/infra/queues'
 import { BadRequestError, NotFoundError } from '~/core/error.response'
-import { clientMongodb } from '~/database/init.mongodb'
+import { clientMongodb } from '~/database/mongodb.db'
 import cacheService from '~/helpers/cache.helper'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import MessagesService from '~/modules/messages/messages.service'

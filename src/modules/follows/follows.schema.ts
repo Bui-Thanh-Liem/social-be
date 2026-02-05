@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { BaseSchema } from '~/schemas/Base.schema'
+import { BaseSchema } from '~/shared/schemas/base.schema'
 import { IFollower } from '~/shared/interfaces/schemas/follower.interface'
 
 export class FollowersSchema extends BaseSchema implements IFollower {

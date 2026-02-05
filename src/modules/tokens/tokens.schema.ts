@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { BaseSchema } from '~/schemas/Base.schema'
+import { BaseSchema } from '~/shared/schemas/base.schema'
 import { IRefresh } from '~/shared/interfaces/schemas/refresh.interface'
 
 export class TokensSchema extends BaseSchema implements IRefresh {

@@ -13,7 +13,7 @@ import {
 } from '~/shared/interfaces/schemas/community.interface'
 import { slug } from '~/utils/slug.util'
 import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
-import { BaseSchema } from '~/schemas/Base.schema'
+import { BaseSchema } from '~/shared/schemas/base.schema'
 
 // Cộng đồngđồng
 export class CommunitiesSchema extends BaseSchema implements ICommunity {

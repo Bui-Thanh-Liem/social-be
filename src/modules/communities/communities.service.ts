@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
 import { notificationQueue } from '~/infra/queues'
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '~/core/error.response'
-import { clientMongodb } from '~/database/init.mongodb'
+import { clientMongodb } from '~/database/mongodb.db'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import TweetsService from '~/modules/tweets/tweets.service'
 import { CONSTANT_JOB } from '~/shared/constants'
@@ -1279,6 +1279,56 @@ class CommunityService {
       })
     )
     return !!res.insertedId
+  }
+
+  // ========== ADMIN ================
+  async adminGetCommunities({
+    query
+  }: {
+    admin_id: string
+    query: IQuery<ICommunity>
+  }): Promise<ResMultiType<ICommunity>> {
+    const { skip, limit, sort, q, qe } = getPaginationAndSafeQuery<ICommunity>(query)
+
+    //
+    const communities = await CommunitiesCollection.aggregate<CommunitiesSchema>([
+      { $sort: sort },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'admin',
+          foreignField: '_id',
+          as: 'admin',
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                name: 1,
+                avatar: 1,
+                username: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: {
+          path: '$admin',
+          preserveNullAndEmptyArrays: true
+        }
+      }
+    ]).toArray()
+
+    //
+    const total = await CommunitiesCollection.countDocuments({})
+
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: this.signedCloudfrontCoverUrls(communities) as ICommunity[]
+    }
   }
 
   //

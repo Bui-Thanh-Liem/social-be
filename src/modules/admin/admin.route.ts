@@ -20,10 +20,15 @@ adminRoute.use(verifyAccessTokenAdmin)
 
 //
 adminRoute.route('/me').get(asyncHandler(AdminController.geMe))
-// .patch(requestBodyValidate(UpdateMeDtoSchema), asyncHandler(AdminController.updateMeUser))
 
 //
 adminRoute.get('/users', asyncHandler(AdminController.adminGetUsers))
+
+//
+adminRoute.get('/tweets', asyncHandler(AdminController.adminGetTweets))
+
+//
+adminRoute.get('/communities', asyncHandler(AdminController.adminGetCommunities))
 
 //
 adminRoute.get('/media', asyncHandler(AdminController.adminGetMedia))

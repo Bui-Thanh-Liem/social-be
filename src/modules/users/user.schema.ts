@@ -2,7 +2,7 @@ import { Collection, Db } from 'mongodb'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
-import { BaseSchema } from '~/schemas/Base.schema'
+import { BaseSchema } from '~/shared/schemas/base.schema'
 
 const _COLLECTION_NAME = 'users'
 export class UsersSchema extends BaseSchema implements IUser {

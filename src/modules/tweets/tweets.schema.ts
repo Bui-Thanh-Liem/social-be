@@ -4,7 +4,7 @@ import { ETweetType } from '~/shared/enums/type.enum'
 import { ICodesTweet, ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { ETweetStatus } from '~/shared/enums/status.enum'
 import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
-import { BaseSchema } from '~/schemas/Base.schema'
+import { BaseSchema } from '~/shared/schemas/base.schema'
 
 export class TweetsSchema extends BaseSchema implements ITweet {
   user_id: ObjectId

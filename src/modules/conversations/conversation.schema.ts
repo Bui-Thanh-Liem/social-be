@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { BaseSchema } from '~/schemas/Base.schema'
+import { BaseSchema } from '~/shared/schemas/base.schema'
 import { EConversationType } from '~/shared/enums/type.enum'
 import { IConversation, IPinned } from '~/shared/interfaces/schemas/conversation.interface'
 import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'

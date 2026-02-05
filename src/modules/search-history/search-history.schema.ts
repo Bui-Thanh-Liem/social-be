@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { BaseSchema } from '~/schemas/Base.schema'
+import { BaseSchema } from '~/shared/schemas/base.schema'
 import { ISearchHistory } from '~/shared/interfaces/schemas/search-history.interface'
 
 export class SearchHistorySchema extends BaseSchema implements ISearchHistory {

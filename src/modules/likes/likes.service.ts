@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { notificationQueue } from '~/infra/queues'
-import { clientMongodb } from '~/database/init.mongodb'
+import { clientMongodb } from '~/database/mongodb.db'
 import cacheService from '~/helpers/cache.helper'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { ParamIdTweetDto } from '~/shared/dtos/req/tweet.dto'

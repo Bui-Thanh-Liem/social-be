@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { BaseSchema } from '~/schemas/Base.schema'
+import { BaseSchema } from '~/shared/schemas/base.schema'
 import { ENotificationType } from '~/shared/enums/type.enum'
 import { INotification } from '~/shared/interfaces/schemas/notification.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'

@@ -1,7 +1,7 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { IMedia } from '~/shared/interfaces/schemas/media.interface'
 import { EMediaStatus } from '~/shared/enums/status.enum'
-import { BaseSchema } from '~/schemas/Base.schema'
+import { BaseSchema } from '~/shared/schemas/base.schema'
 
 export class MediasSchema extends BaseSchema implements IMedia {
   file_size: number
