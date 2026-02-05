@@ -7,7 +7,7 @@ import { MAX_LENGTH_UPLOAD, MAX_SIZE_UPLOAD } from '~/shared/constants'
 import { BadRequestError } from '~/core/error.response'
 import { envs } from '~/configs/env.config'
 import { generateKey } from '~/utils/create-key-upload-media.util'
-import { PresignedUrlDto } from '~/shared/dtos/req/upload.dto'
+import { PresignedUrlDto } from '~/modules/uploads/uploads.dto'
 import { ResPresignedUrl } from '~/shared/dtos/res/upload.dto'
 
 //

@@ -7,8 +7,8 @@ import { requestQueryValidate } from '~/shared/middlewares/request-query-validat
 import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
 import { verifyUserActiveForChangePassword } from '~/shared/middlewares/user/verify-user-active-for-change-password.middleware'
 import { verifyUserEmail } from '~/shared/middlewares/user/verify-user-email.middleware'
-import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
-import { ChangePasswordDtoSchema, UserIdDtoSchema, VerifyEmailDtoSchema } from '~/shared/dtos/req/user.dto'
+import { QueryDtoSchema } from '~/shared/dtos/req/common/query.dto'
+import { ChangePasswordDtoSchema, UserIdDtoSchema, VerifyEmailDtoSchema } from '~/modules/users/users.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
 
 const usersRoute = Router()

@@ -4,8 +4,8 @@ import { requestParamsValidate } from '~/shared/middlewares/request-params-valid
 import { requestQueryValidate } from '~/shared/middlewares/request-query-validate.middleware'
 import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
 import { verifyUserEmail } from '~/shared/middlewares/user/verify-user-email.middleware'
-import { ParamIdNotiDtoSchema, GetMultiByTypeNotiDtoSchema } from '~/shared/dtos/req/notification.dto'
-import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
+import { ParamIdNotiDtoSchema, GetMultiByTypeNotiDtoSchema } from '~/modules/notifications/notifications.dto'
+import { QueryDtoSchema } from '~/shared/dtos/req/common/query.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
 
 const notificationRoute = Router()

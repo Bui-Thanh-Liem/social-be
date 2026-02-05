@@ -10,7 +10,7 @@ import { hashPassword } from './crypto.util'
 import { logger } from './logger.util'
 import { CreateCommunityDto } from '~/shared/dtos/req/community.dto'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
-import { UsersCollection, UsersSchema } from '~/modules/users/user.schema'
+import { UsersCollection, UsersSchema } from '~/modules/users/users.schema'
 import { FollowersCollection } from '~/modules/follows/follows.schema'
 import communitiesService from '~/modules/communities/communities.service'
 

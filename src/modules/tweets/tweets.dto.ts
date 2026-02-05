@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { CONSTANT_MAX_LENGTH_CONTENT, CONSTANT_REGEX } from '~/shared/constants'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { EFeedType, ETweetType } from '~/shared/enums/type.enum'
-import { MediaBareDtoSchema } from './common/media-bare.dto'
+import { MediaBareDtoSchema } from '../../shared/dtos/req/common/media-bare.dto'
 
 // Codes DTO
 export const CodesDtoSchema = z.object({

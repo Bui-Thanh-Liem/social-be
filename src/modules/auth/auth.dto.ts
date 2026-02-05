@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
+import { MediaBareDtoSchema } from '~/shared/dtos/req/common/media-bare.dto'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
-import { MediaBareDtoSchema } from './common/media-bare.dto'
 
 export const RegisterUserDtoSchema = z
   .object({

@@ -6,13 +6,9 @@ import { requestParamsValidate } from '~/shared/middlewares/request-params-valid
 import { requestQueryValidate } from '~/shared/middlewares/request-query-validate.middleware'
 import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
 import { verifyUserEmail } from '~/shared/middlewares/user/verify-user-email.middleware'
-import {
-  ConversationIdDtoSchema,
-  CreateConversationDtoSchema,
-  ParticipantsDtoSchema
-} from '~/shared/dtos/req/conversation.dto'
-import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
+import { QueryDtoSchema } from '~/shared/dtos/req/common/query.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
+import { ConversationIdDtoSchema, CreateConversationDtoSchema, ParticipantsDtoSchema } from './conversations.dto'
 
 const conversationsRoute = Router()
 

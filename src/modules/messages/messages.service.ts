@@ -1,7 +1,6 @@
 import { ObjectId } from 'mongodb'
 import pLimit from 'p-limit'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
-import { CreateMessageDto } from '~/shared/dtos/req/message.dto'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { IMedia } from '~/shared/interfaces/schemas/media.interface'
 import { IMessage } from '~/shared/interfaces/schemas/message.interface'
@@ -10,6 +9,7 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import UploadsServices from '../uploads/uploads.service'
 import ConversationsService from '../conversations/conversations.service'
 import { MessagesCollection, MessagesSchema } from './message.schema'
+import { CreateMessageDto } from './messages.dto'
 
 class MessagesService {
   async create(sender_id: string, payload: CreateMessageDto) {

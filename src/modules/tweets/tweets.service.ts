@@ -7,8 +7,8 @@ import cacheService from '~/helpers/cache.helper'
 import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { CONSTANT_CHUNK_SIZE, CONSTANT_JOB, CONSTANT_REGEX } from '~/shared/constants'
-import { CreateNotiCommentDto } from '~/shared/dtos/req/notification.dto'
-import { CreateTweetDto } from '~/shared/dtos/req/tweet.dto'
+import { CreateNotiCommentDto } from '~/modules/notifications/notifications.dto'
+import { CreateTweetDto } from '~/modules/tweets/tweets.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { ETweetStatus } from '~/shared/enums/status.enum'
 import {
@@ -44,7 +44,7 @@ import { BookmarksCollection } from '../bookmarks/bookmarks.schema'
 import { CommunitiesCollection, CommunitiesSchema } from '../communities/communities.schema'
 import { LikesCollection } from '../likes/likes.schema'
 import { TweetsCollection, TweetsSchema } from './tweets.schema'
-import { UsersCollection } from '../users/user.schema'
+import { UsersCollection } from '../users/users.schema'
 
 class TweetsService {
   //

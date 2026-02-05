@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
 import { NotFoundError } from '~/core/error.response'
-import { UsersCollection } from '~/modules/users/user.schema'
+import { UsersCollection } from '~/modules/users/users.schema'
 
 export async function checkUserParams(req: Request, res: Response, next: NextFunction) {
   try {

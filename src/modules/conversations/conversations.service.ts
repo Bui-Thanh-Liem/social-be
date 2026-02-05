@@ -16,8 +16,8 @@ import { getSocket } from '~/socket'
 import ConversationGateway from '~/socket/gateways/Conversation.gateway'
 import { createKeyAllConversationIds, createKeyConvIdsByUserId } from '~/utils/create-key-cache.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
-import { ConversationsCollection, ConversationsSchema } from './conversation.schema'
-import { UsersCollection } from '../users/user.schema'
+import { ConversationsCollection, ConversationsSchema } from './conversations.schema'
+import { UsersCollection } from '../users/users.schema'
 
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {

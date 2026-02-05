@@ -17,7 +17,7 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
 import followsService from '../follows/follows.service'
-import { UsersCollection, UsersSchema } from './user.schema'
+import { UsersCollection, UsersSchema } from './users.schema'
 
 class UsersService {
   async verifyEmail({

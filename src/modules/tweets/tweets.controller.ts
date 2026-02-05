@@ -6,7 +6,7 @@ import {
   getProfileTweetDto,
   getTweetChildrenDtoParams,
   ParamIdTweetDto
-} from '~/shared/dtos/req/tweet.dto'
+} from '~/modules/tweets/tweets.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'

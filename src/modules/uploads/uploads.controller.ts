@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { OkResponse } from '~/core/success.response'
 import UploadsServices from '~/modules/uploads/uploads.service'
-import { PresignedUrlDto, UploadConfirmDto } from '~/shared/dtos/req/upload.dto'
+import { PresignedUrlDto, UploadConfirmDto } from '~/modules/uploads/uploads.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class UploadsControllers {

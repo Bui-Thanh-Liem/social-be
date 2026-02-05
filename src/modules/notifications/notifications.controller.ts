@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
-import NotificationService from '~/modules/notifications/notification.service'
+import NotificationService from '~/modules/notifications/notifications.service'
 import { OkResponse } from '~/core/success.response'
-import { DelNotiDto, GetMultiByTypeNotiDto, ReadNotiDto } from '~/shared/dtos/req/notification.dto'
+import { DelNotiDto, GetMultiByTypeNotiDto, ReadNotiDto } from '~/modules/notifications/notifications.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class NotificationsController {

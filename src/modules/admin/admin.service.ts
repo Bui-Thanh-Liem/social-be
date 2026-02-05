@@ -3,7 +3,6 @@ import { envs } from '~/configs/env.config'
 import { NotFoundError, UnauthorizedError } from '~/core/error.response'
 import cacheService from '~/helpers/cache.helper'
 import { AdminCollection } from '~/modules/admin/admin.schema'
-import { LoginAuthDto } from '~/shared/dtos/req/auth.dto'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { IAdmin } from '~/shared/interfaces/schemas/admin.interface'
 import { createTokenPair } from '~/utils/auth.util'
@@ -12,6 +11,7 @@ import { hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { verifyToken } from '~/utils/jwt.util'
 import TokensService from '../tokens/tokens.service'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
+import { LoginAdminDto } from './admin.dto'
 
 class AdminService {
   //
@@ -35,7 +35,7 @@ class AdminService {
   }
 
   //
-  async login(payload: LoginAuthDto) {
+  async login(payload: LoginAdminDto) {
     // Kiểm tra tồn tại email
     const foundAdmin = await this.findOneByEmail(payload?.email)
     if (!foundAdmin) {

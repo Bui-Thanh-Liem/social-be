@@ -5,13 +5,6 @@ import { clientMongodb } from '~/database/mongodb.db'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import TweetsService from '~/modules/tweets/tweets.service'
 import { CONSTANT_JOB } from '~/shared/constants'
-import {
-  ChangeInfoDto,
-  CreateCommunityActivityDto,
-  CreateCommunityDto,
-  InvitationMembersDto,
-  UpdateDto
-} from '~/shared/dtos/req/community.dto'
 import { EInvitationStatus, ETweetStatus } from '~/shared/enums/status.enum'
 import { EActivityType, EMembershipType, ENotificationType } from '~/shared/enums/type.enum'
 import { ICommonPayload } from '~/shared/interfaces/common/community.interface'
@@ -34,6 +27,13 @@ import {
   CommunityMentorCollection,
   CommunityPinCollection
 } from './communities.schema'
+import {
+  ChangeInfoDto,
+  CreateCommunityActivityDto,
+  CreateCommunityDto,
+  InvitationMembersDto,
+  UpdateDto
+} from './communities.dto'
 
 interface IPromoteDemote {
   actor_id: string

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { CreatedResponse } from '~/core/success.response'
-import { ParamIdTweetDto } from '~/shared/dtos/req/tweet.dto'
+import { ParamIdTweetDto } from '~/modules/tweets/tweets.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import BookmarksService from './bookmarks.service'
 

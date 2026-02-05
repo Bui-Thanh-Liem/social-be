@@ -4,7 +4,7 @@ import { checkUserParams } from '~/shared/middlewares/user/check-user-params.mid
 import { requestParamsValidate } from '~/shared/middlewares/request-params-validate.middleware'
 import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
 import { verifyUserEmail } from '~/shared/middlewares/user/verify-user-email.middleware'
-import { UserIdDtoSchema } from '~/shared/dtos/req/user.dto'
+import { UserIdDtoSchema } from '~/modules/users/users.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
 
 const followsRoute = Router()

@@ -12,7 +12,7 @@ import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import CommunitiesService from '../communities/communities.service'
 import { CommunityInvitationCollection, CommunityInvitationSchema } from './communities.schema'
-import { UsersCollection } from '../users/user.schema'
+import { UsersCollection } from '../users/users.schema'
 
 const limit = pLimit(10)
 

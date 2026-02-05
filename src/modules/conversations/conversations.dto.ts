@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
+import { MediaBareDtoSchema } from '~/shared/dtos/req/common/media-bare.dto'
 import { EConversationType } from '~/shared/enums/type.enum'
-import { MediaBareDtoSchema } from './common/media-bare.dto'
 
 export const CreateConversationDtoSchema = z
   .object({

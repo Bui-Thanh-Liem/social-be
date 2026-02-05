@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
-import { MediaBareDtoSchema } from './common/media-bare.dto'
+import { MediaBareDtoSchema } from '~/shared/dtos/req/common/media-bare.dto'
 
 export const CreateMessageDtoSchema = z.object({
   content: z.string().trim().optional(),

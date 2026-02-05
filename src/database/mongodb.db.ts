@@ -21,17 +21,17 @@ import {
 import { initFollowersCollection } from '~/modules/follows/follows.schema'
 import { HashtagsCollection, initHashtagsCollection } from '~/modules/hashtags/hashtags.schema'
 import { initLikesCollection, LikesCollection } from '~/modules/likes/likes.schema'
-import { ConversationsCollection, initConversationsCollection } from '~/modules/conversations/conversation.schema'
+import { ConversationsCollection, initConversationsCollection } from '~/modules/conversations/conversations.schema'
 import { initMediasCollection, MediasCollection } from '~/modules/media/media.schema'
 import { initMessagesCollection, MessagesCollection } from '~/modules/messages/message.schema'
-import { initNotificationsCollection } from '~/modules/notifications/notification.schema'
+import { initNotificationsCollection } from '~/modules/notifications/notifications.schema'
 import { initReportTweetCollection, ReportTweetCollection } from '~/modules/report-tweet/report-tweet.schema'
 import { initSearchHistoryCollection, SearchHistoryCollection } from '~/modules/search-history/search-history.schema'
 import { initTokensCollection, TokensCollection } from '~/modules/tokens/tokens.schema'
 import { initTrendingCollection, TrendingCollection } from '~/modules/trending/trending.schema'
 import { initTweetsCollection, TweetsCollection } from '~/modules/tweets/tweets.schema'
-import { initUsersCollection, UsersCollection } from '~/modules/users/user.schema'
-import { BadWordsCollection, initBadWordsCollection } from '~/modules/bad-word/bad-word.schema'
+import { initUsersCollection, UsersCollection } from '~/modules/users/users.schema'
+import { BadWordsCollection, initBadWordsCollection } from '~/modules/bad-words/bad-words.schema'
 
 const _MINPOOLSIZE = 5
 const _MAXPOOLSIZE = 50 // không bao giờ vượt, nếu hơn thì phải chờ

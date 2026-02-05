@@ -1,8 +1,8 @@
 import { Router } from 'express'
-import UploadController from '~/modules/uploads/upload.controller'
+import UploadController from '~/modules/uploads/uploads.controller'
 import { verifyAccessTokenAdmin } from '~/shared/middlewares/admin/verify-access-token-admin.middleware'
 import { requestParamsValidate } from '~/shared/middlewares/request-params-validate.middleware'
-import { paramIdMediaDtoSchema } from '~/shared/dtos/req/media.dto'
+import { paramIdMediaDtoSchema } from '~/modules/media/media.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
 
 const mediaRoute = Router()

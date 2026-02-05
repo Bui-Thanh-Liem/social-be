@@ -26,7 +26,7 @@ import { createKeyUserActive } from '~/utils/create-key-cache.util'
 import AdminService from '../admin/admin.service'
 import UsersService from '../users/users.service'
 import TokensService from '../tokens/tokens.service'
-import { UsersCollection, UsersSchema } from '../users/user.schema'
+import { UsersCollection, UsersSchema } from '../users/users.schema'
 
 class AuthService {
   async signup(payload: RegisterUserDto) {

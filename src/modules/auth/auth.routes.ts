@@ -5,14 +5,14 @@ import { requestBodyValidate } from '~/shared/middlewares/request-body-validate.
 import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
 import { verifyRefreshToken } from '~/shared/middlewares/user/verify-refresh-token.middleware'
 import { verifyTokenForgotPassword } from '~/shared/middlewares/user/verify-token-forgot-password.middleware'
+import { asyncHandler } from '~/utils/async-handler.util'
 import {
   ForgotPasswordDtoSchema,
   LoginAuthDtoSchema,
   RegisterUserDtoSchema,
   ResetPasswordDtoSchema,
   UpdateMeDtoSchema
-} from '~/shared/dtos/req/auth.dto'
-import { asyncHandler } from '~/utils/async-handler.util'
+} from './auth.dto'
 
 const authRoute = Router()
 

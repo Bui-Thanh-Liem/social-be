@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { CreatedResponse, OkResponse } from '~/core/success.response'
 import { ParamIdDto } from '~/shared/dtos/req/common/param-id.dto'
-import { CreateSearchHistoryDto } from '~/shared/dtos/req/search-history.dto'
+import { CreateSearchHistoryDto } from '~/modules/search-history/search-history.dto'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import SearchHistoryService from './search-history.service'
 

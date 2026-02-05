@@ -18,7 +18,7 @@ import UsersService from '../users/users.service'
 import TrendingService from '../trending/trending.service'
 import { TrendingCollection, TrendingSchema } from '../trending/trending.schema'
 import { TweetsCollection, TweetsSchema } from '../tweets/tweets.schema'
-import { UsersCollection, UsersSchema } from '../users/user.schema'
+import { UsersCollection, UsersSchema } from '../users/users.schema'
 
 // Những hàm search sẽ ưu tiên sort sau limit
 class SearchService {

@@ -4,7 +4,7 @@ import { CONSTANT_JOB } from '~/shared/constants'
 import { ResToggleFollow } from '~/shared/dtos/res/follow.dto'
 import { ENotificationType } from '~/shared/enums/type.enum'
 import { FollowersCollection } from './follows.schema'
-import { UsersCollection } from '../users/user.schema'
+import { UsersCollection } from '../users/users.schema'
 
 class FollowsService {
   async toggleFollow(user_id: string, followed_user_id: string): Promise<ResToggleFollow> {

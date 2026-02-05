@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { ParamIdTweetDto } from '~/shared/dtos/req/tweet.dto'
+import { ParamIdTweetDto } from '~/modules/tweets/tweets.dto'
 import { ResToggleBookmark } from '~/shared/dtos/res/bookmark.dto'
 import { NotFoundError } from '~/core/error.response'
 import TweetsService from '~/modules/tweets/tweets.service'

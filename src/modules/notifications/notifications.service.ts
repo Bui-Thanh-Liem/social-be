@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { publishNotification } from '~/pubsub/publisher'
-import { CreateNotiDto } from '~/shared/dtos/req/notification.dto'
+import { CreateNotiDto } from '~/modules/notifications/notifications.dto'
 import { ENotificationType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { INotification } from '~/shared/interfaces/schemas/notification.interface'
@@ -9,7 +9,7 @@ import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import NotificationGateway from '~/socket/gateways/Notification.gateway'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
-import { NotificationsCollection, NotificationsSchema } from './notification.schema'
+import { NotificationsCollection, NotificationsSchema } from './notifications.schema'
 
 class NotificationService {
   async create(payload: CreateNotiDto) {

@@ -1,11 +1,11 @@
 import { Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
 import { OkResponse } from '~/core/success.response'
-import { ChangePasswordDto, UserIdDto, verifyEmailDto } from '~/shared/dtos/req/user.dto'
+import { ChangePasswordDto, UserIdDto, verifyEmailDto } from '~/modules/users/users.dto'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import UsersService from './users.service'
-import { UsersCollection } from './user.schema'
+import { UsersCollection } from './users.schema'
 
 class UsersController {
   async verifyEmail(req: Request, res: Response) {

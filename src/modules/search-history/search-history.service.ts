@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { CreateSearchHistoryDto } from '~/shared/dtos/req/search-history.dto'
+import { CreateSearchHistoryDto } from '~/modules/search-history/search-history.dto'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ISearchHistory } from '~/shared/interfaces/schemas/search-history.interface'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'

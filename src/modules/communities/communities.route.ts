@@ -6,6 +6,8 @@ import { requestParamsValidate } from '~/shared/middlewares/request-params-valid
 import { requestQueryValidate } from '~/shared/middlewares/request-query-validate.middleware'
 import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
 import { verifyUserEmail } from '~/shared/middlewares/user/verify-user-email.middleware'
+import { QueryDtoSchema } from '~/shared/dtos/req/common/query.dto'
+import { asyncHandler } from '~/utils/async-handler.util'
 import {
   ChangeInfoDtoSchema,
   ChangeStatusTweetInCommunityDtoSchema,
@@ -21,9 +23,7 @@ import {
   PinCommunityDtoSchema,
   PromoteMentorDtoSchema,
   UpdateDtoSchema
-} from '~/shared/dtos/req/community.dto'
-import { QueryDtoSchema } from '~/shared/dtos/req/query.dto'
-import { asyncHandler } from '~/utils/async-handler.util'
+} from './communities.dto'
 
 const communitiesRoute = Router()
 
