@@ -1,6 +1,6 @@
 import { Server } from 'socket.io'
 import cacheService from '~/helpers/cache.helper'
-import ConversationsService from '~/services/Conversations.service'
+import ConversationsService from '~/modules/conversations/conversations.service'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 
 //

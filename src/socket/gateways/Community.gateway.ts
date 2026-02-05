@@ -1,4 +1,4 @@
-import TweetsService from '~/services/Tweets.service'
+import TweetsService from '~/modules/tweets/tweets.service'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 import { getIO } from '..'
 

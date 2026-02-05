@@ -2,11 +2,11 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 import app from './app'
 import { envs } from './configs/env.config'
-import { instanceMongodb } from './dbs/init.mongodb'
-import { allowedOrigins } from './middlewares/cors.middleware'
+import { instanceMongodb } from './database/init.mongodb'
+import { allowedOrigins } from './shared/middlewares/cors.middleware'
 import { initSubscriber } from './pubsub/subscriber'
 import { initializeSocket } from './socket'
-import AdminService from './services/Admin.service'
+import AdminService from './modules/admin/admin.service'
 
 //
 const port = envs.SERVER_PORT

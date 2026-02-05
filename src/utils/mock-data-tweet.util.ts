@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { logger } from './logger.util'
-import TweetsService from '~/services/Tweets.service'
+import TweetsService from '~/modules/tweets/tweets.service'
 import { ETweetType } from '~/shared/enums/type.enum'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
@@ -924,106 +924,406 @@ import { IUser } from '~/shared/interfaces/schemas/user.interface'
 // ]
 
 const tweets = [
-  { "content": "🚨 [High Concurrency] Lỗi 'Write Skew' trong Postgres Snapshot Isolation. \n🛠️ Cách fix: Sử dụng mức cô lập SERIALIZABLE hoặc cơ chế SELECT FOR UPDATE để khóa các hàng dữ liệu phụ thuộc trước khi ghi. 📉" },
-  { "content": "🔍 [Microservices] Lỗi 'Saga Pivot Point' - Bước không thể rollback trong chuỗi giao dịch phân tán. \n🛠️ Cách fix: Đặt các bước có rủi ro cao lên trước, đảm bảo bước 'Pivot' là bước cuối cùng có thể thất bại để dễ dàng bù đắp (Compensate). 🔄" },
-  { "content": "🛠️ [System Design] Lỗi 'Hot Partition' trong NoSQL do dùng Timestamp làm Shard Key. \n🛠️ Cách fix: Kết hợp Shard Key với một giá trị băm (Hash) hoặc UUID để dữ liệu được phân tán đều trên các node vật lý. 🏗️" },
-  { "content": "💡 [Performance] Lỗi 'Memory Fragmentation' trong Node.js do cấp phát quá nhiều Buffer nhỏ liên tục. \n🛠️ Cách fix: Sử dụng Buffer Pool (Buffer.allocUnsafe kết hợp quản lý thủ công) hoặc nâng cấp lên phiên bản Node.js có engine V8 mới hơn. 🧠" },
-  { "content": "🚀 [Redis] Lỗi 'OOM' do Fork process để lưu file RDB khi RAM đã đầy 50%. \n🛠️ Cách fix: Cấu hình 'overcommit_memory = 1' trong Linux kernel để cho phép fork thành công mà không cần copy toàn bộ RAM. 🌀" },
-  { "content": "🛡️ [Security] Lỗi 'Timing Attack' khi so sánh chữ ký HMAC hoặc Password Hash. \n🛠️ Cách fix: Sử dụng crypto.timingSafeEqual() thay vì toán tử '===' để thời gian phản hồi luôn hằng định. 🔐" },
-  { "content": "⚡ [DevOps] Lỗi 'Zombie Pods' trong K8s do livenessProbe quá nhạy làm pod restart liên tục. \n🛠️ Cách fix: Tăng 'initialDelaySeconds' và 'failureThreshold' để ứng dụng có đủ thời gian khởi tạo (Warm-up). 🎡" },
-  { "content": "📦 [Kubernetes] Lỗi 'Kernel Panic' trên Node do Pod vượt quá giới hạn Inode của hệ thống. \n🛠️ Cách fix: Giới hạn số lượng file tạm và giám sát chỉ số 'node_filesystem_files_free' trong Prometheus. 🐧" },
-  { "content": "🔑 [Authentication] Lỗi 'JWT Refresh Token Rotation Race Condition'. \n🛠️ Cách fix: Cho phép một khoảng thời gian ngắn (Grace Period) mà Refresh Token cũ vẫn có hiệu lực sau khi đã đổi token mới. 🛡️" },
-  { "content": "💾 [PostgreSQL] Lỗi 'Dead Tuples' không được dọn dẹp do một Transaction chạy quá lâu (Long-running). \n🛠️ Cách fix: Giết các transaction chạy quá giới hạn thời gian (statement_timeout) để Autovacuum có thể làm việc. 🧹" },
-  { "content": "🏗️ [System Design] Lỗi 'Cache Stampede' khi một Key cực nóng hết hạn. \n🛠️ Cách fix: Sử dụng 'Locking with local cache' hoặc cơ chế 'Early Recomputation' (tự động cập nhật cache trước khi hết hạn). 📉" },
-  { "content": "🧬 [React Native] Lỗi 'Shadow Tree' bị treo do render quá nhiều component lồng nhau phức tạp. \n🛠️ Cách fix: Sử dụng 'React.memo' và 'FlatList' với 'windowSize' nhỏ để giảm áp lực lên Main Thread. 📱" },
-  { "content": "📉 [Distributed Systems] Lỗi 'Network Partition' làm mất tính nhất quán trong cụm Kafka. \n🛠️ Cách fix: Cấu hình 'min.insync.replicas' đủ lớn để đảm bảo dữ liệu không bị mất khi một số node bị tách rời mạng. 📡" },
-  { "content": "📞 [Microservices] Lỗi 'Service Mesh Sidecar Latency' làm tăng độ trễ API. \n🛠️ Cách fix: Tối ưu hóa cấu hình Envoy hoặc chuyển sang dùng 'Proxyless gRPC' để giao tiếp trực tiếp không qua sidecar. 🚀" },
-  { "content": "🔀 [Nginx] Lỗi 'Upstream hash' không đều khi scale up server. \n🛠️ Cách fix: Sử dụng phương pháp 'Consistent Hashing' để chỉ một lượng nhỏ request bị điều hướng lại khi thay đổi số lượng node. ⚙️" },
-  { "content": "📜 [NestJS] Lỗi 'Memory Leak' do lưu trữ metadata quá lớn trong Reflect API. \n🛠️ Cách fix: Hạn chế dùng các decorator động tạo ra quá nhiều metadata tại runtime, ưu tiên cấu hình tĩnh. 🧩" },
-  { "content": "🛠️ [CI/CD] Lỗi 'Insecure Artifact Storage' - Lộ Secret trong Docker Image layer. \n🛠️ Cách fix: Sử dụng '--mount=type=secret' trong Docker BuildKit để truyền secret mà không để lại dấu vết trong image. 🛡️" },
-  { "content": "📡 [RabbitMQ] Lỗi 'Consumer Prefetch' quá cao làm phân phối tải không đều. \n🛠️ Cách fix: Đặt 'prefetch count' dựa trên công suất xử lý thực tế của mỗi worker (thường bắt đầu từ 1-10). 🐰" },
-  { "content": "🧊 [Frontend] Lỗi 'Tearing UI' do cập nhật State quá nhanh không khớp với tần số quét màn hình. \n🛠️ Cách fix: Sử dụng 'useDeferredValue' hoặc 'useTransition' (React 18) để ưu tiên các cập nhật quan trọng. 🖼️" },
-  { "content": "🗄️ [ClickHouse] Lỗi 'MergeTree Data Part Bloat' do Insert quá nhiều lần với lượng dữ liệu nhỏ. \n🛠️ Cách fix: Sử dụng 'Buffer Engine' hoặc gom dữ liệu ở tầng ứng dụng trước khi ghi xuống ClickHouse. 🗄️" },
-  { "content": "🧪 [Testing] Lỗi 'Integration Test Flakiness' do phụ thuộc vào Database bên thứ ba. \n🛠️ Cách fix: Sử dụng 'TestContainers' để khởi tạo một instance database sạch và hoàn toàn biệt lập cho mỗi lần test. 🧪" },
-  { "content": "🔌 [gRPC] Lỗi 'Max Message Size Exceeded' khi truyền file lớn. \n🛠️ Cách fix: Sử dụng gRPC Streaming thay vì Unary calls để chia nhỏ file thành các chunk dữ liệu. 📡" },
-  { "content": "🛠️ [Docker] Lỗi 'Overlay2 Storage Driver' bị chậm trên hệ thống file XFS. \n🛠️ Cách fix: Đảm bảo format XFS với option 'ftype=1' để tương thích tốt nhất với Docker. 🧱" },
-  { "content": "🚀 [AWS] Lỗi 'EC2 CPU Credits' bị hết làm server chậm đột ngột (Instance t2/t3). \n🛠️ Cách fix: Chuyển sang 'Unlimited Mode' hoặc sử dụng dòng instance 'M' (General Purpose) để có CPU ổn định. ☁️" },
-  { "content": "🔥 [System Design] Lỗi 'Positive Feedback Loop' trong cơ chế Auto-scaling. \n🛠️ Cách fix: Cấu hình 'Cooldown Period' đủ lâu để hệ thống ổn định trước khi quyết định scale tiếp. 📈" },
-  { "content": "🔧 [Flutter] Lỗi 'Skia Shader Compilation' gây giật lag (jank) lần đầu mở app. \n🛠️ Cách fix: Sử dụng 'Impeller' engine (trên iOS) hoặc thực hiện 'Shader Warm-up' trước khi release. 📱" },
-  { "content": "🛑 [Microservices] Lỗi 'Cyclic Dependencies' làm cụm service không thể khởi động tuần tự. \n🛠️ Cách fix: Sử dụng Service Registry và cơ chế Lazy Initialization cho các phụ thuộc chéo. 🏗️" },
-  { "content": "🌐 [Web Security] Lỗi 'Content-Type Sniffing' dẫn đến thực thi mã độc từ file tải lên. \n🛠️ Cách fix: Cấu hình Header 'X-Content-Type-Options: nosniff' và validate MIME type thực tế của file. 🛡️" },
-  { "content": "🏗️ [Kubernetes] Lỗi 'Node OOM' do K8s không tính toán được RAM của các process chạy ngoài container. \n🛠️ Cách fix: Cấu hình 'system-reserved' và 'kube-reserved' để dành riêng RAM cho OS và Kubelet. 🎡" },
-  { "content": "🛡️ [Auth] Lỗi 'Session Fixation' - Không đổi Session ID sau khi đăng nhập. \n🛠️ Cách fix: Luôn gọi hàm regenerate session sau khi xác thực người dùng thành công. 🔑" },
-  { "content": "📊 [Monitoring] Lỗi 'High Cardinality' làm sập hệ thống lưu trữ Metrics (Prometheus). \n🛠️ Cách fix: Hạn chế dùng các label có giá trị biến thiên vô hạn (như user_id, email) trong metrics. 📊" },
-  { "content": "🧱 [Infrastructure] Lỗi 'VPC Peering Loop' hoặc sai lệch Route Table. \n🛠️ Cách fix: Thiết kế sơ đồ mạng Hub-and-Spoke bằng AWS Transit Gateway để quản lý kết nối tập trung. 🏗️" },
-  { "content": "⚙️ [Node.js] Lỗi 'ERR_STREAM_WRITE_AFTER_END'. \n🛠️ Cách fix: Kiểm tra sự kiện 'finish' của stream trước khi thực hiện thêm bất kỳ lệnh ghi nào. ⚙️" },
-  { "content": "🌀 [Redis] Lỗi 'Replication Lag' cực cao làm dữ liệu ở Slave bị cũ quá lâu. \n🛠️ Cách fix: Kiểm tra băng thông mạng và tối ưu hóa các lệnh ghi nặng (như mset với hàng nghìn key). 💾" },
-  { "content": "💉 [Database] Lỗi 'Index Corruption' làm query trả về kết quả sai hoặc thiếu. \n🛠️ Cách fix: Sử dụng lệnh 'REINDEX' hoặc 'VACUUM FULL' để xây dựng lại cây index từ dữ liệu gốc. 🗃️" },
-  { "content": "📦 [DevOps] Lỗi 'Image Pull Secret' hết hạn trong K8s. \n🛠️ Cách fix: Sử dụng các công cụ tự động cập nhật secret (như External Secrets Operator) từ Vault/AWS Secrets Manager. 🛡️" },
-  { "content": "🧩 [NestJS] Lỗi 'Request Scope Leak' - Dữ liệu của request này rò rỉ sang request khác. \n🛠️ Cách fix: Tuyệt đối không lưu dữ liệu request vào biến static hoặc singleton service; dùng CLS-Hooked nếu cần. 🧩" },
-  { "content": "🔐 [Crypto] Lỗi 'Predictable IV' làm lộ mẫu mã hóa trong AES-CBC. \n🛠️ Cách fix: Luôn tạo IV ngẫu nhiên (crypto.randomBytes) cho mỗi bản ghi và lưu IV cùng với bản mã. 🔐" },
-  { "content": "🚦 [API Design] Lỗi 'Breaking Change' khi đổi kiểu dữ liệu của một field mà không versioning. \n🛠️ Cách fix: Sử dụng 'Feature Flags' hoặc 'Semantic Versioning' (v1, v2) để duy trì tính tương thích ngược. 🚦" },
-  { "content": "🏗️ [TypeORM] Lỗi 'Memory Leak' do bật Logging toàn bộ query trong môi trường Production. \n🛠️ Cách fix: Chỉ bật log cho các query chậm (slow_query_log) hoặc lỗi, và giới hạn kích thước file log. 🏗️" },
-  { "content": "☁️ [AWS] Lỗi 'S3 Partial Upload Leak' - Các part upload dang dở vẫn bị tính phí lưu trữ. \n🛠️ Cách fix: Cấu hình 'Lifecycle Policy' để tự động xóa các 'Incomplete Multipart Uploads' sau 7 ngày. ☁️" },
-  { "content": "🛠️ [System Design] Lỗi 'Database Connection Storm' khi toàn bộ service đồng loạt khởi động lại. \n🛠️ Cách fix: Triển khai 'Connection Pooling' ở tầng Proxy (như PgBouncer) và giới hạn tốc độ kết nối mới. 🏗️" },
-  { "content": "📝 [Logging] Lỗi 'Log Blocking' làm giảm throughput của ứng dụng do ghi log đồng bộ. \n🛠️ Cách fix: Sử dụng Async Logging (ví dụ: pino với thread-stream) để không làm block Event Loop. 📝" },
-  { "content": "🧪 [Frontend] Lỗi 'Hydration Mismatch' trong Next.js do dùng dữ liệu ngẫu nhiên (Math.random) khi render. \n🛠️ Cách fix: Chỉ thực hiện các logic tạo dữ liệu ngẫu nhiên trong 'useEffect' sau khi component đã mount. 🧪" },
-  { "content": "🔧 [ESLint] Lỗi 'No-await-in-loop' làm code chạy chậm theo cấp số nhân. \n🛠️ Cách fix: Sử dụng 'Promise.all()' để thực hiện các task không phụ thuộc nhau một cách song song. ✅" },
-  { "content": "🗄️ [Mongoose] Lỗi 'VersionError' (__v mismatch) khi nhiều tiến trình update cùng một document. \n🛠️ Cách fix: Sử dụng 'atomic operators' ($set, $inc) thay vì .save() nếu không cần kiểm tra logic version. 💾" },
-  { "content": "🛡️ [Security] Lỗi 'Insecure Deserialization' từ dữ liệu đầu vào của người dùng. \n🛠️ Cách fix: Tránh dùng các hàm như 'eval()' hoặc deserialize object phức tạp; ưu tiên JSON.parse(). 🛡️" },
-  { "content": "🌐 [CDN] Lỗi 'Cache Poisoning' - Hacker gửi header lạ làm CDN cache response lỗi cho mọi người dùng. \n🛠️ Cách fix: Cấu hình CDN chỉ cache các header chuẩn và ignore các header lạ từ client. 🌐" },
-  { "content": "🚀 [Performance] Lỗi 'Invisible Re-renders' do Context Provider bọc quá nhiều component. \n🛠️ Cách fix: Chia nhỏ Context hoặc sử dụng các thư viện state management có cơ chế 'selector' như Zustand/Redux. 🖼️" },
-  { "content": "⚙️ [Node.js] Lỗi 'Unhandled Exception' trong Worker Threads làm sập thread mà không báo lỗi cho main. \n🛠️ Cách fix: Luôn lắng nghe sự kiện 'error' trên mỗi worker instance để thực hiện xử lý lỗi hoặc khởi động lại. ⚙️" },
-  { "content": "📦 [K8s] Lỗi 'Port Exhaustion' trên Node khi có hàng nghìn Service/Pod giao tiếp liên tục. \n🛠️ Cách fix: Tăng dải 'ip_local_port_range' và tối ưu hóa 'tcp_tw_reuse' trong sysctl của Node. 🎡" },
-  { "content": "🧩 [NestJS] Lỗi 'Global Interceptor' làm sai lệch kiểu dữ liệu của WebSocket response. \n🛠️ Cách fix: Kiểm tra context type trong interceptor và bỏ qua xử lý nếu là 'ws' (WebSocket). 🔌" },
-  { "content": "💾 [Redis] Lỗi 'Stale Read' từ Slave do Master chưa kịp đồng bộ khi Slave được thăng cấp. \n🛠️ Cách fix: Sử dụng lệnh 'WAIT' để đảm bảo dữ liệu đã được ghi xuống số lượng slave nhất định trước khi phản hồi. 💾" },
-  { "content": "🛡️ [Auth] Lỗi 'JWT Alg None' - Hacker đổi thuật toán sang 'none' để bypass verify. \n🛠️ Cách fix: Luôn chỉ định rõ thuật toán cho phép (ví dụ: ['HS256']) khi gọi hàm verify(). 🛡️" },
-  { "content": "🔀 [Git] Lỗi 'Binary Merge Conflict' - Không thể tự merge file hình ảnh hoặc file nén. \n🛠️ Cách fix: Cấu hình '.gitattributes' để Git nhận diện đúng file binary và xử lý theo cơ chế 'ours' hoặc 'theirs'. 🔀" },
-  { "content": "🧱 [Docker] Lỗi 'Zombie Process' làm cạn kiệt bảng Process ID (PID) của hệ thống. \n🛠️ Cách fix: Sử dụng '--init' flag hoặc dùng 'dumb-init' làm entrypoint để quản lý tín hiệu và thu hồi process con. 🧱" },
-  { "content": "📡 [Kafka] Lỗi 'Message Duplication' do Consumer không commit kịp trước khi bị rebalance. \n🛠️ Cách fix: Thiết kế logic xử lý dữ liệu có tính 'Idempotent' (xử lý nhiều lần vẫn ra một kết quả). 📡" },
-  { "content": "🧪 [Postman] Lỗi 'Environment Variable Leak' khi share collection công khai. \n🛠️ Cách fix: Luôn dùng 'Initial Value' là rỗng và chỉ điền secret vào 'Current Value' (không đồng bộ lên cloud). 🧪" },
-  { "content": "🔧 [TS] Lỗi 'Recursive Type' quá sâu làm treo VS Code. \n🛠️ Cách fix: Sử dụng Interface thay cho Type alias để tận dụng khả năng cache và merge của compiler. 🔧" },
-  { "content": "🏗️ [System Design] Lỗi 'Database Over-sharding' làm tăng độ phức tạp khi cần join dữ liệu. \n🛠️ Cách fix: Chỉ thực hiện sharding khi thực sự cần thiết, ưu tiên tối ưu hóa index và nâng cấp phần cứng (Vertical Scaling). 🏗️" },
-  { "content": "🗃️ [PostgreSQL] Lỗi 'Multixact Member Overflow' do có quá nhiều row-level locks. \n🛠️ Cách fix: Tránh các transaction giữ lock lâu trên nhiều hàng dữ liệu đồng thời. 🗃️" },
-  { "content": "🔌 [Websocket] Lỗi 'Connection Storm' khi app mobile đồng loạt kết nối lại sau khi mất mạng. \n🛠️ Cách fix: Sử dụng 'Exponential Backoff' cho logic reconnect ở phía Client. 🔌" },
-  { "content": "🛡️ [Security] Lỗi 'Host Header Injection' qua các link reset password. \n🛠️ Cách fix: Luôn lấy domain từ file config tĩnh thay vì tin tưởng vào header 'Host' từ request. 🛡️" },
-  { "content": "📂 [Linux] Lỗi 'Disk Latency' cao do Swap bị sử dụng quá mức (Thrashing). \n🛠️ Cách fix: Giảm 'swappiness' về 1-10 và ưu tiên tăng RAM thực cho server. 📂" },
-  { "content": "🚀 [Next.js] Lỗi 'Build Size' quá lớn do include cả node_modules của backend vào bundle frontend. \n🛠️ Cách fix: Sử dụng 'output: standalone' trong next.config.js để tách biệt môi trường chạy. 🚀" },
-  { "content": "⚙️ [Express] Lỗi 'Memory Leak' do lưu trữ user session trong bộ nhớ mặc định (MemoryStore). \n🛠️ Cách fix: Luôn sử dụng Redis hoặc Database để lưu session trong môi trường Production. ⚙️" },
-  { "content": "🧩 [NestJS] Lỗi 'Scope Mismatch' - Inject một REQUEST scope service vào một SINGLETON service. \n🛠️ Cách fix: Singleton service sẽ biến service được inject thành singleton theo, cần dùng 'ModuleRef' để lấy instance thủ công. 📉" },
-  { "content": "🛡️ [OAuth2] Lỗi 'Authorization Code Injection' do thiếu tham số 'code_challenge' (PKCE). \n🛠️ Cách fix: Luôn triển khai PKCE (Proof Key for Code Exchange) ngay cả cho các client phía server. 🛡️" },
-  { "content": "🧪 [Jest] Lỗi 'Open Handles' làm test không kết thúc được. \n🛠️ Cách fix: Đóng toàn bộ database connection, server, và dọn dẹp timers trong block 'afterAll'. 🧪" },
-  { "content": "🔧 [Frontend] Lỗi 'Flicker' khi chuyển trang do không giữ được scroll position. \n🛠️ Cách fix: Sử dụng các thư viện router hỗ trợ 'scroll restoration' hoặc lưu vị trí vào session storage. 🖼️" },
-  { "content": "📊 [Database] Lỗi 'Predicate Pushdown' bị hỏng làm DB phải quét toàn bộ bảng. \n🛠️ Cách fix: Đảm bảo các hàm xử lý dữ liệu không được bọc quanh cột trong câu lệnh WHERE (SARGable). 📊" },
-  { "content": "🧱 [Docker] Lỗi 'OverlayFS' hết dung lượng do không dọn dẹp các layer cũ (Dangling). \n🛠️ Cách fix: Định kỳ chạy 'docker system prune' để giải phóng không gian ổ đĩa. 🏗️" },
-  { "content": "⚙️ [Node.js] Lỗi 'Illegal Instruction' khi chạy app trên CPU quá cũ hoặc thiếu tập lệnh AVX. \n🛠️ Cách fix: Kiểm tra môi trường build và đảm bảo target đúng kiến trúc CPU của server đích. 🛑" },
-  { "content": "📡 [Kafka] Lỗi 'Log Retention' không xóa file cũ làm đầy đĩa. \n🛠️ Cách fix: Kiểm tra cấu hình 'retention.ms' và 'retention.bytes', đảm bảo 'segment.ms' không quá lớn. 📡" },
-  { "content": "🗄️ [MongoDB] Lỗi 'Working Set' lớn hơn RAM làm tăng Disk I/O. \n🛠️ Cách fix: Tối ưu index để chỉ các field cần thiết được nạp vào RAM, hoặc nâng cấp RAM của server. 💾" },
-  { "content": "🧪 [Testing] Lỗi 'Flaky UI Test' do tốc độ mạng thay đổi. \n🛠️ Cách fix: Sử dụng cơ chế 'Wait for element' thay vì dùng 'sleep/timeout' cứng trong code test. 🧪" },
-  { "content": "🏗️ [Microservices] Lỗi 'Distributed Tracing Gap' - Mất dấu request khi đi qua Message Queue. \n🛠️ Cách fix: Đóng gói trace ID vào 'metadata' hoặc 'header' của message để consumer có thể tiếp tục vết. 🏗️" },
-  { "content": "🛠️ [NestJS] Lỗi 'TypeORM entity' không được nhận diện khi dùng CLI migration. \n🛠️ Cách fix: Kiểm tra đường dẫn 'entities' trong DataSource config, đảm bảo bao quát đúng folder chứa file .ts/.js. 🛡️" },
-  { "content": "🌀 [Redis] Lỗi 'Key Eviction' nhầm các session quan trọng. \n🛠️ Cách fix: Tách riêng Redis cho Cache (LRU policy) và Redis cho Storage (NoEviction policy). 🌀" },
-  { "content": "🛡️ [Auth] Lỗi 'Password Reset' bị Brute-force do không giới hạn số lần nhập mã. \n🛠️ Cách fix: Áp dụng Rate Limit cho các endpoint nhạy cảm dựa trên IP và Account ID. 🔐" },
-  { "content": "📦 [NPM] Lỗi 'Peer Dependency Conflict' làm treo quá trình cài đặt. \n🛠️ Cách fix: Sử dụng '--legacy-peer-deps' hoặc chỉnh sửa thủ công để các library dùng chung một version của dependency. 📦" },
-  { "content": "⚙️ [Express] Lỗi 'Large Body' làm sập process do không giới hạn kích thước JSON. \n🛠️ Cách fix: Cấu hình 'express.json({ limit: \"1mb\" })' để chặn các request quá lớn từ client. ⚙️" },
-  { "content": "🔌 [Mongoose] Lỗi 'Missing index for unique' sau khi xóa database. \n🛠️ Cách fix: Gọi 'Model.createIndexes()' để đảm bảo các index duy nhất được khởi tạo đầy đủ tại runtime. 🔌" },
-  { "content": "🛡️ [CORS] Lỗi 'Preflight request' bị fail do thiếu header 'Access-Control-Allow-Private-Network'. \n🛠️ Cách fix: Cấu hình server để phản hồi header này nếu app được truy cập từ mạng nội bộ. 🛡️" },
-  { "content": "🚀 [Heroku] Lỗi 'H12 Request Timeout' do xử lý ảnh quá nặng trên web process. \n🛠️ Cách fix: Đẩy các task nặng sang 'Worker process' và dùng Message Queue để thông báo kết quả. 🚀" },
-  { "content": "📂 [Multer] Lỗi 'Filename collision' khi hai user upload file trùng tên cùng lúc. \n🛠️ Cách fix: Luôn đổi tên file sang UUID hoặc thêm timestamp vào tên file trước khi lưu trữ. 📂" },
-  { "content": "🧪 [Jest] Lỗi 'ReferenceError: TextEncoder is not defined' (Node 16+). \n🛠️ Cách fix: Import và gắn TextEncoder vào 'global' trong file jest.setup.js. 🧪" },
-  { "content": "🔧 [TypeScript] Lỗi 'Type narrowing' không hoạt động với các hàm callback. \n🛠️ Cách fix: Sử dụng biến tạm để lưu giá trị đã được check type trước khi đưa vào callback. 🔧" },
-  { "content": "🏗️ [NestJS] Lỗi 'Provider provided twice' do import cả module chứa provider và chính provider đó. \n🛠️ Cách fix: Chỉ import Module, không khai báo lại provider trong mảng 'providers' của module hiện tại. 🔄" },
-  { "content": "🗃️ [PostgreSQL] Lỗi 'Out of memory' khi dùng 'ORDER BY' trên bảng cực lớn mà không có index. \n🛠️ Cách fix: Tăng 'work_mem' cho transaction hoặc (tốt hơn) là tạo index phù hợp để tránh sort trên đĩa. 🗃️" },
-  { "content": "📡 [GraphQL] Lỗi 'Depth limit exceeded' do client gọi query lồng nhau quá nhiều cấp. \n🛠️ Cách fix: Sử dụng thư viện 'graphql-depth-limit' để chặn các query có nguy cơ làm sập server. 📡" },
-  { "content": "🛡️ [Argon2] Lỗi 'Memory cost' quá cao làm server hết RAM khi có nhiều request login đồng thời. \n🛠️ Cách fix: Cân đối giữa tính bảo mật và tài nguyên server, sử dụng thông số benchmark chính thức từ Argon2. 🧠" },
-  { "content": "⚙️ [Node.js] Lỗi 'ERR_HTTP2_SESSION_ERROR' khi kết nối HTTP/2 bị đứt đột ngột. \n🛠️ Cách fix: Triển khai cơ chế retry logic ở phía client và giám sát độ ổn định của kết nối mạng. ❌" },
-  { "content": "📦 [Docker] Lỗi 'Mount denied' khi dùng Docker Desktop trên Windows/Mac. \n🛠️ Cách fix: Kiểm tra quyền truy cập thư mục trong Settings của Docker Desktop (File Sharing). 🏗️" },
-  { "content": "🧪 [Mocha] Lỗi 'Uncaught error outside test' làm dừng toàn bộ quá trình chạy test. \n🛠️ Cách fix: Đảm bảo mọi code async đều nằm trong block 'it' hoặc 'before/after' và được bọc try-catch. 🧪" },
-  { "content": "🛠️ [NestJS] Lỗi 'ValidationPipe' bỏ qua các field không có decorator. \n🛠️ Cách fix: Bật option 'whitelist: true' và 'forbidNonWhitelisted: true' để bắt lỗi khi client gửi dữ liệu lạ. ✅" },
-  { "content": "🌐 [Axios] Lỗi 'Uncaught (in promise)' khi không có catch cho request lỗi. \n🛠️ Cách fix: Luôn bọc lời gọi axios trong try-catch hoặc sử dụng .catch() để xử lý các mã lỗi 4xx/5xx. 📡" },
-  { "content": "🗄️ [Sequelize] Lỗi 'N+1 queries' khi dùng vòng lặp để fetch dữ liệu quan hệ. \n🛠️ Cách fix: Sử dụng option 'include' (Eager Loading) để JOIN các bảng liên quan trong một câu query duy nhất. 🗃️" },
-  { "content": "🛡️ [XSS] Lỗi 'SVG upload' chứa script độc hại (<script> bên trong file .svg). \n🛠️ Cách fix: Sanitize file SVG bằng thư viện chuyên dụng hoặc cấu hình Header 'Content-Security-Policy' phù hợp. 🛡️" },
-  { "content": "⚙️ [Linux] Lỗi 'Interrupt latency' do card mạng quá tải. \n🛠️ Cách fix: Bật tính năng 'Receive Side Scaling' (RSS) và tối ưu hóa hàng đợi ngắt (Interrupt Request) trên CPU. 📁" }
+  {
+    content:
+      "🚨 [High Concurrency] Lỗi 'Write Skew' trong Postgres Snapshot Isolation. \n🛠️ Cách fix: Sử dụng mức cô lập SERIALIZABLE hoặc cơ chế SELECT FOR UPDATE để khóa các hàng dữ liệu phụ thuộc trước khi ghi. 📉"
+  },
+  {
+    content:
+      "🔍 [Microservices] Lỗi 'Saga Pivot Point' - Bước không thể rollback trong chuỗi giao dịch phân tán. \n🛠️ Cách fix: Đặt các bước có rủi ro cao lên trước, đảm bảo bước 'Pivot' là bước cuối cùng có thể thất bại để dễ dàng bù đắp (Compensate). 🔄"
+  },
+  {
+    content:
+      "🛠️ [System Design] Lỗi 'Hot Partition' trong NoSQL do dùng Timestamp làm Shard Key. \n🛠️ Cách fix: Kết hợp Shard Key với một giá trị băm (Hash) hoặc UUID để dữ liệu được phân tán đều trên các node vật lý. 🏗️"
+  },
+  {
+    content:
+      "💡 [Performance] Lỗi 'Memory Fragmentation' trong Node.js do cấp phát quá nhiều Buffer nhỏ liên tục. \n🛠️ Cách fix: Sử dụng Buffer Pool (Buffer.allocUnsafe kết hợp quản lý thủ công) hoặc nâng cấp lên phiên bản Node.js có engine V8 mới hơn. 🧠"
+  },
+  {
+    content:
+      "🚀 [Redis] Lỗi 'OOM' do Fork process để lưu file RDB khi RAM đã đầy 50%. \n🛠️ Cách fix: Cấu hình 'overcommit_memory = 1' trong Linux kernel để cho phép fork thành công mà không cần copy toàn bộ RAM. 🌀"
+  },
+  {
+    content:
+      "🛡️ [Security] Lỗi 'Timing Attack' khi so sánh chữ ký HMAC hoặc Password Hash. \n🛠️ Cách fix: Sử dụng crypto.timingSafeEqual() thay vì toán tử '===' để thời gian phản hồi luôn hằng định. 🔐"
+  },
+  {
+    content:
+      "⚡ [DevOps] Lỗi 'Zombie Pods' trong K8s do livenessProbe quá nhạy làm pod restart liên tục. \n🛠️ Cách fix: Tăng 'initialDelaySeconds' và 'failureThreshold' để ứng dụng có đủ thời gian khởi tạo (Warm-up). 🎡"
+  },
+  {
+    content:
+      "📦 [Kubernetes] Lỗi 'Kernel Panic' trên Node do Pod vượt quá giới hạn Inode của hệ thống. \n🛠️ Cách fix: Giới hạn số lượng file tạm và giám sát chỉ số 'node_filesystem_files_free' trong Prometheus. 🐧"
+  },
+  {
+    content:
+      "🔑 [Authentication] Lỗi 'JWT Refresh Token Rotation Race Condition'. \n🛠️ Cách fix: Cho phép một khoảng thời gian ngắn (Grace Period) mà Refresh Token cũ vẫn có hiệu lực sau khi đã đổi token mới. 🛡️"
+  },
+  {
+    content:
+      "💾 [PostgreSQL] Lỗi 'Dead Tuples' không được dọn dẹp do một Transaction chạy quá lâu (Long-running). \n🛠️ Cách fix: Giết các transaction chạy quá giới hạn thời gian (statement_timeout) để Autovacuum có thể làm việc. 🧹"
+  },
+  {
+    content:
+      "🏗️ [System Design] Lỗi 'Cache Stampede' khi một Key cực nóng hết hạn. \n🛠️ Cách fix: Sử dụng 'Locking with local cache' hoặc cơ chế 'Early Recomputation' (tự động cập nhật cache trước khi hết hạn). 📉"
+  },
+  {
+    content:
+      "🧬 [React Native] Lỗi 'Shadow Tree' bị treo do render quá nhiều component lồng nhau phức tạp. \n🛠️ Cách fix: Sử dụng 'React.memo' và 'FlatList' với 'windowSize' nhỏ để giảm áp lực lên Main Thread. 📱"
+  },
+  {
+    content:
+      "📉 [Distributed Systems] Lỗi 'Network Partition' làm mất tính nhất quán trong cụm Kafka. \n🛠️ Cách fix: Cấu hình 'min.insync.replicas' đủ lớn để đảm bảo dữ liệu không bị mất khi một số node bị tách rời mạng. 📡"
+  },
+  {
+    content:
+      "📞 [Microservices] Lỗi 'Service Mesh Sidecar Latency' làm tăng độ trễ API. \n🛠️ Cách fix: Tối ưu hóa cấu hình Envoy hoặc chuyển sang dùng 'Proxyless gRPC' để giao tiếp trực tiếp không qua sidecar. 🚀"
+  },
+  {
+    content:
+      "🔀 [Nginx] Lỗi 'Upstream hash' không đều khi scale up server. \n🛠️ Cách fix: Sử dụng phương pháp 'Consistent Hashing' để chỉ một lượng nhỏ request bị điều hướng lại khi thay đổi số lượng node. ⚙️"
+  },
+  {
+    content:
+      "📜 [NestJS] Lỗi 'Memory Leak' do lưu trữ metadata quá lớn trong Reflect API. \n🛠️ Cách fix: Hạn chế dùng các decorator động tạo ra quá nhiều metadata tại runtime, ưu tiên cấu hình tĩnh. 🧩"
+  },
+  {
+    content:
+      "🛠️ [CI/CD] Lỗi 'Insecure Artifact Storage' - Lộ Secret trong Docker Image layer. \n🛠️ Cách fix: Sử dụng '--mount=type=secret' trong Docker BuildKit để truyền secret mà không để lại dấu vết trong image. 🛡️"
+  },
+  {
+    content:
+      "📡 [RabbitMQ] Lỗi 'Consumer Prefetch' quá cao làm phân phối tải không đều. \n🛠️ Cách fix: Đặt 'prefetch count' dựa trên công suất xử lý thực tế của mỗi worker (thường bắt đầu từ 1-10). 🐰"
+  },
+  {
+    content:
+      "🧊 [Frontend] Lỗi 'Tearing UI' do cập nhật State quá nhanh không khớp với tần số quét màn hình. \n🛠️ Cách fix: Sử dụng 'useDeferredValue' hoặc 'useTransition' (React 18) để ưu tiên các cập nhật quan trọng. 🖼️"
+  },
+  {
+    content:
+      "🗄️ [ClickHouse] Lỗi 'MergeTree Data Part Bloat' do Insert quá nhiều lần với lượng dữ liệu nhỏ. \n🛠️ Cách fix: Sử dụng 'Buffer Engine' hoặc gom dữ liệu ở tầng ứng dụng trước khi ghi xuống ClickHouse. 🗄️"
+  },
+  {
+    content:
+      "🧪 [Testing] Lỗi 'Integration Test Flakiness' do phụ thuộc vào Database bên thứ ba. \n🛠️ Cách fix: Sử dụng 'TestContainers' để khởi tạo một instance database sạch và hoàn toàn biệt lập cho mỗi lần test. 🧪"
+  },
+  {
+    content:
+      "🔌 [gRPC] Lỗi 'Max Message Size Exceeded' khi truyền file lớn. \n🛠️ Cách fix: Sử dụng gRPC Streaming thay vì Unary calls để chia nhỏ file thành các chunk dữ liệu. 📡"
+  },
+  {
+    content:
+      "🛠️ [Docker] Lỗi 'Overlay2 Storage Driver' bị chậm trên hệ thống file XFS. \n🛠️ Cách fix: Đảm bảo format XFS với option 'ftype=1' để tương thích tốt nhất với Docker. 🧱"
+  },
+  {
+    content:
+      "🚀 [AWS] Lỗi 'EC2 CPU Credits' bị hết làm server chậm đột ngột (Instance t2/t3). \n🛠️ Cách fix: Chuyển sang 'Unlimited Mode' hoặc sử dụng dòng instance 'M' (General Purpose) để có CPU ổn định. ☁️"
+  },
+  {
+    content:
+      "🔥 [System Design] Lỗi 'Positive Feedback Loop' trong cơ chế Auto-scaling. \n🛠️ Cách fix: Cấu hình 'Cooldown Period' đủ lâu để hệ thống ổn định trước khi quyết định scale tiếp. 📈"
+  },
+  {
+    content:
+      "🔧 [Flutter] Lỗi 'Skia Shader Compilation' gây giật lag (jank) lần đầu mở app. \n🛠️ Cách fix: Sử dụng 'Impeller' engine (trên iOS) hoặc thực hiện 'Shader Warm-up' trước khi release. 📱"
+  },
+  {
+    content:
+      "🛑 [Microservices] Lỗi 'Cyclic Dependencies' làm cụm service không thể khởi động tuần tự. \n🛠️ Cách fix: Sử dụng Service Registry và cơ chế Lazy Initialization cho các phụ thuộc chéo. 🏗️"
+  },
+  {
+    content:
+      "🌐 [Web Security] Lỗi 'Content-Type Sniffing' dẫn đến thực thi mã độc từ file tải lên. \n🛠️ Cách fix: Cấu hình Header 'X-Content-Type-Options: nosniff' và validate MIME type thực tế của file. 🛡️"
+  },
+  {
+    content:
+      "🏗️ [Kubernetes] Lỗi 'Node OOM' do K8s không tính toán được RAM của các process chạy ngoài container. \n🛠️ Cách fix: Cấu hình 'system-reserved' và 'kube-reserved' để dành riêng RAM cho OS và Kubelet. 🎡"
+  },
+  {
+    content:
+      "🛡️ [Auth] Lỗi 'Session Fixation' - Không đổi Session ID sau khi đăng nhập. \n🛠️ Cách fix: Luôn gọi hàm regenerate session sau khi xác thực người dùng thành công. 🔑"
+  },
+  {
+    content:
+      "📊 [Monitoring] Lỗi 'High Cardinality' làm sập hệ thống lưu trữ Metrics (Prometheus). \n🛠️ Cách fix: Hạn chế dùng các label có giá trị biến thiên vô hạn (như user_id, email) trong metrics. 📊"
+  },
+  {
+    content:
+      "🧱 [Infrastructure] Lỗi 'VPC Peering Loop' hoặc sai lệch Route Table. \n🛠️ Cách fix: Thiết kế sơ đồ mạng Hub-and-Spoke bằng AWS Transit Gateway để quản lý kết nối tập trung. 🏗️"
+  },
+  {
+    content:
+      "⚙️ [Node.js] Lỗi 'ERR_STREAM_WRITE_AFTER_END'. \n🛠️ Cách fix: Kiểm tra sự kiện 'finish' của stream trước khi thực hiện thêm bất kỳ lệnh ghi nào. ⚙️"
+  },
+  {
+    content:
+      "🌀 [Redis] Lỗi 'Replication Lag' cực cao làm dữ liệu ở Slave bị cũ quá lâu. \n🛠️ Cách fix: Kiểm tra băng thông mạng và tối ưu hóa các lệnh ghi nặng (như mset với hàng nghìn key). 💾"
+  },
+  {
+    content:
+      "💉 [Database] Lỗi 'Index Corruption' làm query trả về kết quả sai hoặc thiếu. \n🛠️ Cách fix: Sử dụng lệnh 'REINDEX' hoặc 'VACUUM FULL' để xây dựng lại cây index từ dữ liệu gốc. 🗃️"
+  },
+  {
+    content:
+      "📦 [DevOps] Lỗi 'Image Pull Secret' hết hạn trong K8s. \n🛠️ Cách fix: Sử dụng các công cụ tự động cập nhật secret (như External Secrets Operator) từ Vault/AWS Secrets Manager. 🛡️"
+  },
+  {
+    content:
+      "🧩 [NestJS] Lỗi 'Request Scope Leak' - Dữ liệu của request này rò rỉ sang request khác. \n🛠️ Cách fix: Tuyệt đối không lưu dữ liệu request vào biến static hoặc singleton service; dùng CLS-Hooked nếu cần. 🧩"
+  },
+  {
+    content:
+      "🔐 [Crypto] Lỗi 'Predictable IV' làm lộ mẫu mã hóa trong AES-CBC. \n🛠️ Cách fix: Luôn tạo IV ngẫu nhiên (crypto.randomBytes) cho mỗi bản ghi và lưu IV cùng với bản mã. 🔐"
+  },
+  {
+    content:
+      "🚦 [API Design] Lỗi 'Breaking Change' khi đổi kiểu dữ liệu của một field mà không versioning. \n🛠️ Cách fix: Sử dụng 'Feature Flags' hoặc 'Semantic Versioning' (v1, v2) để duy trì tính tương thích ngược. 🚦"
+  },
+  {
+    content:
+      "🏗️ [TypeORM] Lỗi 'Memory Leak' do bật Logging toàn bộ query trong môi trường Production. \n🛠️ Cách fix: Chỉ bật log cho các query chậm (slow_query_log) hoặc lỗi, và giới hạn kích thước file log. 🏗️"
+  },
+  {
+    content:
+      "☁️ [AWS] Lỗi 'S3 Partial Upload Leak' - Các part upload dang dở vẫn bị tính phí lưu trữ. \n🛠️ Cách fix: Cấu hình 'Lifecycle Policy' để tự động xóa các 'Incomplete Multipart Uploads' sau 7 ngày. ☁️"
+  },
+  {
+    content:
+      "🛠️ [System Design] Lỗi 'Database Connection Storm' khi toàn bộ service đồng loạt khởi động lại. \n🛠️ Cách fix: Triển khai 'Connection Pooling' ở tầng Proxy (như PgBouncer) và giới hạn tốc độ kết nối mới. 🏗️"
+  },
+  {
+    content:
+      "📝 [Logging] Lỗi 'Log Blocking' làm giảm throughput của ứng dụng do ghi log đồng bộ. \n🛠️ Cách fix: Sử dụng Async Logging (ví dụ: pino với thread-stream) để không làm block Event Loop. 📝"
+  },
+  {
+    content:
+      "🧪 [Frontend] Lỗi 'Hydration Mismatch' trong Next.js do dùng dữ liệu ngẫu nhiên (Math.random) khi render. \n🛠️ Cách fix: Chỉ thực hiện các logic tạo dữ liệu ngẫu nhiên trong 'useEffect' sau khi component đã mount. 🧪"
+  },
+  {
+    content:
+      "🔧 [ESLint] Lỗi 'No-await-in-loop' làm code chạy chậm theo cấp số nhân. \n🛠️ Cách fix: Sử dụng 'Promise.all()' để thực hiện các task không phụ thuộc nhau một cách song song. ✅"
+  },
+  {
+    content:
+      "🗄️ [Mongoose] Lỗi 'VersionError' (__v mismatch) khi nhiều tiến trình update cùng một document. \n🛠️ Cách fix: Sử dụng 'atomic operators' ($set, $inc) thay vì .save() nếu không cần kiểm tra logic version. 💾"
+  },
+  {
+    content:
+      "🛡️ [Security] Lỗi 'Insecure Deserialization' từ dữ liệu đầu vào của người dùng. \n🛠️ Cách fix: Tránh dùng các hàm như 'eval()' hoặc deserialize object phức tạp; ưu tiên JSON.parse(). 🛡️"
+  },
+  {
+    content:
+      "🌐 [CDN] Lỗi 'Cache Poisoning' - Hacker gửi header lạ làm CDN cache response lỗi cho mọi người dùng. \n🛠️ Cách fix: Cấu hình CDN chỉ cache các header chuẩn và ignore các header lạ từ client. 🌐"
+  },
+  {
+    content:
+      "🚀 [Performance] Lỗi 'Invisible Re-renders' do Context Provider bọc quá nhiều component. \n🛠️ Cách fix: Chia nhỏ Context hoặc sử dụng các thư viện state management có cơ chế 'selector' như Zustand/Redux. 🖼️"
+  },
+  {
+    content:
+      "⚙️ [Node.js] Lỗi 'Unhandled Exception' trong Worker Threads làm sập thread mà không báo lỗi cho main. \n🛠️ Cách fix: Luôn lắng nghe sự kiện 'error' trên mỗi worker instance để thực hiện xử lý lỗi hoặc khởi động lại. ⚙️"
+  },
+  {
+    content:
+      "📦 [K8s] Lỗi 'Port Exhaustion' trên Node khi có hàng nghìn Service/Pod giao tiếp liên tục. \n🛠️ Cách fix: Tăng dải 'ip_local_port_range' và tối ưu hóa 'tcp_tw_reuse' trong sysctl của Node. 🎡"
+  },
+  {
+    content:
+      "🧩 [NestJS] Lỗi 'Global Interceptor' làm sai lệch kiểu dữ liệu của WebSocket response. \n🛠️ Cách fix: Kiểm tra context type trong interceptor và bỏ qua xử lý nếu là 'ws' (WebSocket). 🔌"
+  },
+  {
+    content:
+      "💾 [Redis] Lỗi 'Stale Read' từ Slave do Master chưa kịp đồng bộ khi Slave được thăng cấp. \n🛠️ Cách fix: Sử dụng lệnh 'WAIT' để đảm bảo dữ liệu đã được ghi xuống số lượng slave nhất định trước khi phản hồi. 💾"
+  },
+  {
+    content:
+      "🛡️ [Auth] Lỗi 'JWT Alg None' - Hacker đổi thuật toán sang 'none' để bypass verify. \n🛠️ Cách fix: Luôn chỉ định rõ thuật toán cho phép (ví dụ: ['HS256']) khi gọi hàm verify(). 🛡️"
+  },
+  {
+    content:
+      "🔀 [Git] Lỗi 'Binary Merge Conflict' - Không thể tự merge file hình ảnh hoặc file nén. \n🛠️ Cách fix: Cấu hình '.gitattributes' để Git nhận diện đúng file binary và xử lý theo cơ chế 'ours' hoặc 'theirs'. 🔀"
+  },
+  {
+    content:
+      "🧱 [Docker] Lỗi 'Zombie Process' làm cạn kiệt bảng Process ID (PID) của hệ thống. \n🛠️ Cách fix: Sử dụng '--init' flag hoặc dùng 'dumb-init' làm entrypoint để quản lý tín hiệu và thu hồi process con. 🧱"
+  },
+  {
+    content:
+      "📡 [Kafka] Lỗi 'Message Duplication' do Consumer không commit kịp trước khi bị rebalance. \n🛠️ Cách fix: Thiết kế logic xử lý dữ liệu có tính 'Idempotent' (xử lý nhiều lần vẫn ra một kết quả). 📡"
+  },
+  {
+    content:
+      "🧪 [Postman] Lỗi 'Environment Variable Leak' khi share collection công khai. \n🛠️ Cách fix: Luôn dùng 'Initial Value' là rỗng và chỉ điền secret vào 'Current Value' (không đồng bộ lên cloud). 🧪"
+  },
+  {
+    content:
+      "🔧 [TS] Lỗi 'Recursive Type' quá sâu làm treo VS Code. \n🛠️ Cách fix: Sử dụng Interface thay cho Type alias để tận dụng khả năng cache và merge của compiler. 🔧"
+  },
+  {
+    content:
+      "🏗️ [System Design] Lỗi 'Database Over-sharding' làm tăng độ phức tạp khi cần join dữ liệu. \n🛠️ Cách fix: Chỉ thực hiện sharding khi thực sự cần thiết, ưu tiên tối ưu hóa index và nâng cấp phần cứng (Vertical Scaling). 🏗️"
+  },
+  {
+    content:
+      "🗃️ [PostgreSQL] Lỗi 'Multixact Member Overflow' do có quá nhiều row-level locks. \n🛠️ Cách fix: Tránh các transaction giữ lock lâu trên nhiều hàng dữ liệu đồng thời. 🗃️"
+  },
+  {
+    content:
+      "🔌 [Websocket] Lỗi 'Connection Storm' khi app mobile đồng loạt kết nối lại sau khi mất mạng. \n🛠️ Cách fix: Sử dụng 'Exponential Backoff' cho logic reconnect ở phía Client. 🔌"
+  },
+  {
+    content:
+      "🛡️ [Security] Lỗi 'Host Header Injection' qua các link reset password. \n🛠️ Cách fix: Luôn lấy domain từ file config tĩnh thay vì tin tưởng vào header 'Host' từ request. 🛡️"
+  },
+  {
+    content:
+      "📂 [Linux] Lỗi 'Disk Latency' cao do Swap bị sử dụng quá mức (Thrashing). \n🛠️ Cách fix: Giảm 'swappiness' về 1-10 và ưu tiên tăng RAM thực cho server. 📂"
+  },
+  {
+    content:
+      "🚀 [Next.js] Lỗi 'Build Size' quá lớn do include cả node_modules của backend vào bundle frontend. \n🛠️ Cách fix: Sử dụng 'output: standalone' trong next.config.js để tách biệt môi trường chạy. 🚀"
+  },
+  {
+    content:
+      "⚙️ [Express] Lỗi 'Memory Leak' do lưu trữ user session trong bộ nhớ mặc định (MemoryStore). \n🛠️ Cách fix: Luôn sử dụng Redis hoặc Database để lưu session trong môi trường Production. ⚙️"
+  },
+  {
+    content:
+      "🧩 [NestJS] Lỗi 'Scope Mismatch' - Inject một REQUEST scope service vào một SINGLETON service. \n🛠️ Cách fix: Singleton service sẽ biến service được inject thành singleton theo, cần dùng 'ModuleRef' để lấy instance thủ công. 📉"
+  },
+  {
+    content:
+      "🛡️ [OAuth2] Lỗi 'Authorization Code Injection' do thiếu tham số 'code_challenge' (PKCE). \n🛠️ Cách fix: Luôn triển khai PKCE (Proof Key for Code Exchange) ngay cả cho các client phía server. 🛡️"
+  },
+  {
+    content:
+      "🧪 [Jest] Lỗi 'Open Handles' làm test không kết thúc được. \n🛠️ Cách fix: Đóng toàn bộ database connection, server, và dọn dẹp timers trong block 'afterAll'. 🧪"
+  },
+  {
+    content:
+      "🔧 [Frontend] Lỗi 'Flicker' khi chuyển trang do không giữ được scroll position. \n🛠️ Cách fix: Sử dụng các thư viện router hỗ trợ 'scroll restoration' hoặc lưu vị trí vào session storage. 🖼️"
+  },
+  {
+    content:
+      "📊 [Database] Lỗi 'Predicate Pushdown' bị hỏng làm DB phải quét toàn bộ bảng. \n🛠️ Cách fix: Đảm bảo các hàm xử lý dữ liệu không được bọc quanh cột trong câu lệnh WHERE (SARGable). 📊"
+  },
+  {
+    content:
+      "🧱 [Docker] Lỗi 'OverlayFS' hết dung lượng do không dọn dẹp các layer cũ (Dangling). \n🛠️ Cách fix: Định kỳ chạy 'docker system prune' để giải phóng không gian ổ đĩa. 🏗️"
+  },
+  {
+    content:
+      "⚙️ [Node.js] Lỗi 'Illegal Instruction' khi chạy app trên CPU quá cũ hoặc thiếu tập lệnh AVX. \n🛠️ Cách fix: Kiểm tra môi trường build và đảm bảo target đúng kiến trúc CPU của server đích. 🛑"
+  },
+  {
+    content:
+      "📡 [Kafka] Lỗi 'Log Retention' không xóa file cũ làm đầy đĩa. \n🛠️ Cách fix: Kiểm tra cấu hình 'retention.ms' và 'retention.bytes', đảm bảo 'segment.ms' không quá lớn. 📡"
+  },
+  {
+    content:
+      "🗄️ [MongoDB] Lỗi 'Working Set' lớn hơn RAM làm tăng Disk I/O. \n🛠️ Cách fix: Tối ưu index để chỉ các field cần thiết được nạp vào RAM, hoặc nâng cấp RAM của server. 💾"
+  },
+  {
+    content:
+      "🧪 [Testing] Lỗi 'Flaky UI Test' do tốc độ mạng thay đổi. \n🛠️ Cách fix: Sử dụng cơ chế 'Wait for element' thay vì dùng 'sleep/timeout' cứng trong code test. 🧪"
+  },
+  {
+    content:
+      "🏗️ [Microservices] Lỗi 'Distributed Tracing Gap' - Mất dấu request khi đi qua Message Queue. \n🛠️ Cách fix: Đóng gói trace ID vào 'metadata' hoặc 'header' của message để consumer có thể tiếp tục vết. 🏗️"
+  },
+  {
+    content:
+      "🛠️ [NestJS] Lỗi 'TypeORM entity' không được nhận diện khi dùng CLI migration. \n🛠️ Cách fix: Kiểm tra đường dẫn 'entities' trong DataSource config, đảm bảo bao quát đúng folder chứa file .ts/.js. 🛡️"
+  },
+  {
+    content:
+      "🌀 [Redis] Lỗi 'Key Eviction' nhầm các session quan trọng. \n🛠️ Cách fix: Tách riêng Redis cho Cache (LRU policy) và Redis cho Storage (NoEviction policy). 🌀"
+  },
+  {
+    content:
+      "🛡️ [Auth] Lỗi 'Password Reset' bị Brute-force do không giới hạn số lần nhập mã. \n🛠️ Cách fix: Áp dụng Rate Limit cho các endpoint nhạy cảm dựa trên IP và Account ID. 🔐"
+  },
+  {
+    content:
+      "📦 [NPM] Lỗi 'Peer Dependency Conflict' làm treo quá trình cài đặt. \n🛠️ Cách fix: Sử dụng '--legacy-peer-deps' hoặc chỉnh sửa thủ công để các library dùng chung một version của dependency. 📦"
+  },
+  {
+    content:
+      "⚙️ [Express] Lỗi 'Large Body' làm sập process do không giới hạn kích thước JSON. \n🛠️ Cách fix: Cấu hình 'express.json({ limit: \"1mb\" })' để chặn các request quá lớn từ client. ⚙️"
+  },
+  {
+    content:
+      "🔌 [Mongoose] Lỗi 'Missing index for unique' sau khi xóa database. \n🛠️ Cách fix: Gọi 'Model.createIndexes()' để đảm bảo các index duy nhất được khởi tạo đầy đủ tại runtime. 🔌"
+  },
+  {
+    content:
+      "🛡️ [CORS] Lỗi 'Preflight request' bị fail do thiếu header 'Access-Control-Allow-Private-Network'. \n🛠️ Cách fix: Cấu hình server để phản hồi header này nếu app được truy cập từ mạng nội bộ. 🛡️"
+  },
+  {
+    content:
+      "🚀 [Heroku] Lỗi 'H12 Request Timeout' do xử lý ảnh quá nặng trên web process. \n🛠️ Cách fix: Đẩy các task nặng sang 'Worker process' và dùng Message Queue để thông báo kết quả. 🚀"
+  },
+  {
+    content:
+      "📂 [Multer] Lỗi 'Filename collision' khi hai user upload file trùng tên cùng lúc. \n🛠️ Cách fix: Luôn đổi tên file sang UUID hoặc thêm timestamp vào tên file trước khi lưu trữ. 📂"
+  },
+  {
+    content:
+      "🧪 [Jest] Lỗi 'ReferenceError: TextEncoder is not defined' (Node 16+). \n🛠️ Cách fix: Import và gắn TextEncoder vào 'global' trong file jest.setup.js. 🧪"
+  },
+  {
+    content:
+      "🔧 [TypeScript] Lỗi 'Type narrowing' không hoạt động với các hàm callback. \n🛠️ Cách fix: Sử dụng biến tạm để lưu giá trị đã được check type trước khi đưa vào callback. 🔧"
+  },
+  {
+    content:
+      "🏗️ [NestJS] Lỗi 'Provider provided twice' do import cả module chứa provider và chính provider đó. \n🛠️ Cách fix: Chỉ import Module, không khai báo lại provider trong mảng 'providers' của module hiện tại. 🔄"
+  },
+  {
+    content:
+      "🗃️ [PostgreSQL] Lỗi 'Out of memory' khi dùng 'ORDER BY' trên bảng cực lớn mà không có index. \n🛠️ Cách fix: Tăng 'work_mem' cho transaction hoặc (tốt hơn) là tạo index phù hợp để tránh sort trên đĩa. 🗃️"
+  },
+  {
+    content:
+      "📡 [GraphQL] Lỗi 'Depth limit exceeded' do client gọi query lồng nhau quá nhiều cấp. \n🛠️ Cách fix: Sử dụng thư viện 'graphql-depth-limit' để chặn các query có nguy cơ làm sập server. 📡"
+  },
+  {
+    content:
+      "🛡️ [Argon2] Lỗi 'Memory cost' quá cao làm server hết RAM khi có nhiều request login đồng thời. \n🛠️ Cách fix: Cân đối giữa tính bảo mật và tài nguyên server, sử dụng thông số benchmark chính thức từ Argon2. 🧠"
+  },
+  {
+    content:
+      "⚙️ [Node.js] Lỗi 'ERR_HTTP2_SESSION_ERROR' khi kết nối HTTP/2 bị đứt đột ngột. \n🛠️ Cách fix: Triển khai cơ chế retry logic ở phía client và giám sát độ ổn định của kết nối mạng. ❌"
+  },
+  {
+    content:
+      "📦 [Docker] Lỗi 'Mount denied' khi dùng Docker Desktop trên Windows/Mac. \n🛠️ Cách fix: Kiểm tra quyền truy cập thư mục trong Settings của Docker Desktop (File Sharing). 🏗️"
+  },
+  {
+    content:
+      "🧪 [Mocha] Lỗi 'Uncaught error outside test' làm dừng toàn bộ quá trình chạy test. \n🛠️ Cách fix: Đảm bảo mọi code async đều nằm trong block 'it' hoặc 'before/after' và được bọc try-catch. 🧪"
+  },
+  {
+    content:
+      "🛠️ [NestJS] Lỗi 'ValidationPipe' bỏ qua các field không có decorator. \n🛠️ Cách fix: Bật option 'whitelist: true' và 'forbidNonWhitelisted: true' để bắt lỗi khi client gửi dữ liệu lạ. ✅"
+  },
+  {
+    content:
+      "🌐 [Axios] Lỗi 'Uncaught (in promise)' khi không có catch cho request lỗi. \n🛠️ Cách fix: Luôn bọc lời gọi axios trong try-catch hoặc sử dụng .catch() để xử lý các mã lỗi 4xx/5xx. 📡"
+  },
+  {
+    content:
+      "🗄️ [Sequelize] Lỗi 'N+1 queries' khi dùng vòng lặp để fetch dữ liệu quan hệ. \n🛠️ Cách fix: Sử dụng option 'include' (Eager Loading) để JOIN các bảng liên quan trong một câu query duy nhất. 🗃️"
+  },
+  {
+    content:
+      "🛡️ [XSS] Lỗi 'SVG upload' chứa script độc hại (<script> bên trong file .svg). \n🛠️ Cách fix: Sanitize file SVG bằng thư viện chuyên dụng hoặc cấu hình Header 'Content-Security-Policy' phù hợp. 🛡️"
+  },
+  {
+    content:
+      "⚙️ [Linux] Lỗi 'Interrupt latency' do card mạng quá tải. \n🛠️ Cách fix: Bật tính năng 'Receive Side Scaling' (RSS) và tối ưu hóa hàng đợi ngắt (Interrupt Request) trên CPU. 📁"
+  }
 ]
 
 const MY_ID = new ObjectId('69708f6ab776baa192a24a3f')

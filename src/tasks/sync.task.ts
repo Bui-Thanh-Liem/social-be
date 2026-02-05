@@ -1,5 +1,5 @@
 import cron from 'node-cron'
-import { syncQueue } from '~/bull/queues'
+import { syncQueue } from '~/infra/queues'
 import { CONSTANT_JOB } from '~/shared/constants'
 
 /**

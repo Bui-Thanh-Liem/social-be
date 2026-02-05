@@ -2,17 +2,17 @@
 import { faker } from '@faker-js/faker'
 import _ from 'lodash'
 import { ObjectId } from 'mongodb'
-import { FollowerCollection } from '~/models/schemas/Follower.schema'
-import { UserCollection, UserSchema } from '~/models/schemas/User.schema'
-import TweetsService from '~/services/Tweets.service'
+import TweetsService from '~/modules/tweets/tweets.service'
 import { ETweetAudience } from '~/shared/enums/common.enum'
-import { EUserVerifyStatus } from '~/shared/enums/status.enum'
+import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { EMembershipType, ETweetType, EVisibilityType } from '~/shared/enums/type.enum'
 import { hashPassword } from './crypto.util'
 import { logger } from './logger.util'
-import CommunityService from '~/services/Communities.service'
 import { CreateCommunityDto } from '~/shared/dtos/req/community.dto'
 import { IUser } from '~/shared/interfaces/schemas/user.interface'
+import { UsersCollection, UsersSchema } from '~/modules/users/user.schema'
+import { FollowersCollection } from '~/modules/follows/follows.schema'
+import communitiesService from '~/modules/communities/communities.service'
 
 const MY_ID = new ObjectId('69708f6ab776baa192a24a3f')
 const MY_USERNAME = '@liem_buithanh'
@@ -377,7 +377,7 @@ async function createRandomUsers() {
       password: hashPassword(PASS),
       day_of_birth: faker.date.birthdate(),
       avatar: faker.image.avatar(),
-      verify: EUserVerifyStatus.Verified,
+      verify: EAuthVerifyStatus.Verified,
       cover_photo: faker.image.avatar(),
       bio: generateRandomBio(),
       location: generateLocation()
@@ -394,8 +394,8 @@ async function createRandomUsers() {
   //
   return await Promise.all(
     data.map(async (d) => {
-      const res = await UserCollection.insertOne(
-        new UserSchema({
+      const res = await UsersCollection.insertOne(
+        new UsersSchema({
           ...d,
           email_verify_token: '',
           avatar: { url: d.avatar, s3_key: '' },
@@ -517,7 +517,7 @@ async function follow(user_id: ObjectId, followed_user_ids: ObjectId[]) {
   }
 
   // Thêm 1 lần duy nhất
-  await FollowerCollection.insertMany(docs)
+  await FollowersCollection.insertMany(docs)
 
   logger.info('Finish follow')
 }
@@ -544,7 +544,9 @@ async function createRandomCommunities(admin: { username: string; _id: ObjectId 
     count: 30
   })
 
-  const community_ids = await Promise.all(data.map((payload) => CommunityService.create(admin._id.toString(), payload)))
+  const community_ids = await Promise.all(
+    data.map((payload) => communitiesService.create(admin._id.toString(), payload))
+  )
 
   await Promise.all(
     community_ids.map(async (res) => {

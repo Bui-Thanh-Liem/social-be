@@ -1,5 +1,5 @@
 import * as os from 'os'
-import { Database } from '~/dbs/init.mongodb'
+import { Database } from '~/database/init.mongodb'
 
 const _SECONDS = 15000
 export function checkOverload() {

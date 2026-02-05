@@ -1,4 +1,4 @@
-import NotificationService from '~/services/Notification.service'
+import NotificationService from '~/modules/notifications/notification.service'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 import { INotification } from '~/shared/interfaces/schemas/notification.interface'
 import { getIO } from '..'

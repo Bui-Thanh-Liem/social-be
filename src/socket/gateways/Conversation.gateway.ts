@@ -1,7 +1,7 @@
-import ConversationsService from '~/services/Conversations.service'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 import { IConversation } from '~/shared/interfaces/schemas/conversation.interface'
 import { getIO } from '..'
+import ConversationsService from '~/modules/conversations/conversations.service'
 
 class ConversationGateway {
   async sendNewConversation(conversation: IConversation, receiverId: string) {

@@ -1,7 +1,7 @@
 import cron from 'node-cron'
-import MessagesService from '~/services/Messages.service'
-import NotificationService from '~/services/Notification.service'
-import TrendingService from '~/services/Trending.service'
+import MessagesService from '~/modules/messages/messages.service'
+import NotificationService from '~/modules/notifications/notification.service'
+import TrendingService from '~/modules/trending/trending.service'
 
 // Sẽ làm trong worker sau ()
 
