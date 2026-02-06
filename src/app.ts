@@ -2,12 +2,10 @@ import compression from 'compression'
 import express, { Response } from 'express'
 import helmet from 'helmet'
 import hpp from 'hpp'
-import swaggerUi from 'swagger-ui-express'
 
 //
 import morgan from 'morgan'
 import { envs } from './configs/env.config'
-import { swaggerSpec } from './configs/swagger.config'
 // import StreamVideoController from './controllers/StreamVideo.controller'
 import { corsMiddleware } from './shared/middlewares/cors.middleware'
 import { errorHandler } from './shared/middlewares/errorhandler.middleware'
@@ -90,9 +88,6 @@ const staticOptions = {
 //   express.static(UPLOAD_VIDEO_FOLDER_PATH, staticOptions)
 // ])
 
-// API documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
-
 // Streaming
 // Streaming
 // app.get('/videos-streaming/:filename', StreamVideoController.streamVideo)
@@ -104,7 +99,10 @@ app.use('/api', rootRoute)
 
 // 404 handler
 app.use((req, res, next) => {
-  res.status(404).json(new NotFoundError(`🔍 - Not Found - ${req.originalUrl}`))
+  res.status(404).json({
+    statusCode: 404,
+    message: `🔍 - Not Found - ${req.originalUrl}`
+  })
 })
 
 // Error handler

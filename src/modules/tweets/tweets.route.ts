@@ -10,9 +10,9 @@ import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token
 import { verifyUserEmail } from '~/shared/middlewares/user/verify-user-email.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/req/common/query.dto'
 import {
-  CreateTweetDtoSchema,
+  createTweetDtoSchema,
   getNewFeedTypeDtoSchema,
-  GetOneTweetByIdDtoSchema,
+  getOneTweetByIdDtoSchema,
   getProfileTweetDtoSchema,
   getTweetChildrenDtoSchemaParams,
   paramIdTweetDtoSchema
@@ -26,7 +26,7 @@ tweetsRoute.post(
   '/',
   verifyAccessToken,
   verifyUserEmail,
-  requestBodyValidate(CreateTweetDtoSchema),
+  requestBodyValidate(createTweetDtoSchema),
   asyncHandler(TweetsController.create)
 )
 
@@ -117,7 +117,7 @@ tweetsRoute.get(
   '/:tweet_id',
   optionLogin(verifyAccessToken),
   optionLogin(verifyUserEmail),
-  requestParamsValidate(GetOneTweetByIdDtoSchema),
+  requestParamsValidate(getOneTweetByIdDtoSchema),
   checkTweetByIdParams,
   checkAudience,
   asyncHandler(TweetsController.getOneById)

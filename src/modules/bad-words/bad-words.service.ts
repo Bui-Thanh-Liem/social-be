@@ -1,8 +1,11 @@
 import { removeVietnameseAccent } from '~/utils/remove-vietnamese-accent.util'
-import { CreateBadWordDto } from './bad-words.dto'
-import { BadWordsCollection } from './bad-words.schema'
+import { ActionBadWordDto } from './bad-words.dto'
+import { BadWordSchema, BadWordsCollection } from './bad-words.schema'
 import { createKeyBadWords } from '~/utils/create-key-cache.util'
 import CacheService from '~/helpers/cache.helper'
+import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
+import { IBadWord } from './bad-words.interface'
+import { ObjectId } from 'mongodb'
 
 interface IBadWordsCached {
   original: string
@@ -23,13 +26,15 @@ export class BadWordsService {
     '!': 'i'
   }
 
-  async create({ body }: { body: CreateBadWordDto }) {
+  async create({ body }: { body: ActionBadWordDto }) {
     //
-    const newBadWord = await BadWordsCollection.insertOne({
-      words: body.words,
-      priority: body.priority,
-      replace_with: body.replace_with
-    })
+    const newBadWord = await BadWordsCollection.insertOne(
+      new BadWordSchema({
+        words: body.words,
+        priority: body.priority,
+        replace_with: body.replace_with
+      })
+    )
 
     // xóa cache
     await CacheService.del(createKeyBadWords())
@@ -39,6 +44,86 @@ export class BadWordsService {
     return newBadWord
   }
 
+  async update({ bad_word_id, body }: { bad_word_id: string; body: ActionBadWordDto }) {
+    //
+    const updatedBadWord = await BadWordsCollection.findOneAndUpdate(
+      { _id: new ObjectId(bad_word_id) },
+      {
+        $set: {
+          words: body.words,
+          priority: body.priority,
+          replace_with: body.replace_with
+        }
+      },
+      { returnDocument: 'after' }
+    )
+
+    // xóa cache
+    await CacheService.del(createKeyBadWords())
+    console.log('♻️ Cache cleared due to updated bad word')
+
+    //
+    return updatedBadWord
+  }
+
+  async getMulti({ query }: { query: any }) {
+    //
+    const { skip, limit, sort, q } = getPaginationAndSafeQuery<IBadWord>(query)
+
+    //
+    const has_q = {
+      query: {}
+    }
+
+    if (q) {
+      has_q.query = { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] }
+    }
+
+    //
+    const badWords = await BadWordsCollection.aggregate<BadWordSchema>([
+      {
+        $match: {
+          ...has_q.query
+        }
+      },
+      {
+        $sort: sort
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      }
+    ]).toArray()
+
+    //
+    const total = await BadWordsCollection.countDocuments({})
+
+    //
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: badWords
+    }
+  }
+
+  //
+  async delete({ bad_word_id }: { bad_word_id: string }) {
+    //
+    const deletedBadWord = await BadWordsCollection.findOneAndDelete({
+      _id: new ObjectId(bad_word_id)
+    })
+
+    // xóa cache
+    await CacheService.del(createKeyBadWords())
+    console.log('♻️ Cache cleared due to deleted bad word')
+
+    //
+    return deletedBadWord
+  }
+
+  // Lấy nhiều từ cấm với phân trang
   async replaceBadWordsInText(text: string): Promise<string> {
     const badWords = await this.loadBadWordsFromDB()
     let result = text
@@ -59,6 +144,7 @@ export class BadWordsService {
     return result
   }
 
+  // Load bad words từ cache hoặc database
   private async loadBadWordsFromDB() {
     const keyCache = createKeyBadWords()
     const cached = await CacheService.get<IBadWordsCached[]>(keyCache)

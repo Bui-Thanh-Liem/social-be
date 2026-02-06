@@ -2,9 +2,9 @@ import { Request, Response } from 'express'
 import TweetsService from '~/modules/tweets/tweets.service'
 import { CreatedResponse, OkResponse } from '~/core/success.response'
 import {
-  getNewFeedTypeDto,
-  getProfileTweetDto,
-  getTweetChildrenDtoParams,
+  GetNewFeedTypeDto,
+  GetProfileTweetDto,
+  GetTweetChildrenDtoParams,
   ParamIdTweetDto
 } from '~/modules/tweets/tweets.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
@@ -32,7 +32,7 @@ class TweetsController {
   }
 
   async getTweetChildren(req: Request, res: Response) {
-    const { tweet_id, tweet_type } = req.params as unknown as getTweetChildrenDtoParams
+    const { tweet_id, tweet_type } = req.params as unknown as GetTweetChildrenDtoParams
     const user = req?.decoded_authorization as IJwtPayload
 
     const tweets = await TweetsService.getTweetChildren({
@@ -47,7 +47,7 @@ class TweetsController {
 
   async getNewFeeds(req: Request, res: Response) {
     const user = req?.decoded_authorization as IJwtPayload
-    const { feed_type } = req.params as getNewFeedTypeDto
+    const { feed_type } = req.params as GetNewFeedTypeDto
 
     const result = await TweetsService.getNewFeeds({
       feed_type,
@@ -59,7 +59,7 @@ class TweetsController {
 
   async getProfileTweets(req: Request, res: Response) {
     const user = req?.decoded_authorization as IJwtPayload
-    const { tweet_type } = req.params as unknown as getProfileTweetDto
+    const { tweet_type } = req.params as unknown as GetProfileTweetDto
     const queries = req.query as IQuery<ITweet>
 
     const result = await TweetsService.getProfileTweets({

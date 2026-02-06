@@ -5,13 +5,13 @@ import { EFeedType, ETweetType } from '~/shared/enums/type.enum'
 import { MediaBareDtoSchema } from '../../shared/dtos/req/common/media-bare.dto'
 
 // Codes DTO
-export const CodesDtoSchema = z.object({
+export const codesDtoSchema = z.object({
   _id: z.string().trim(),
   langKey: z.string().trim(),
   code: z.string().max(500, `Nội dung tối đa 500 kí tự`).trim()
 })
 
-export const CreateTweetDtoSchema = z.object({
+export const createTweetDtoSchema = z.object({
   type: z.nativeEnum(ETweetType),
   audience: z.nativeEnum(ETweetAudience),
   parent_id: z
@@ -40,10 +40,10 @@ export const CreateTweetDtoSchema = z.object({
   medias: z.array(MediaBareDtoSchema).optional(),
   textColor: z.string().trim().optional(),
   bgColor: z.string().trim().optional(),
-  codes: z.array(CodesDtoSchema).optional()
+  codes: z.array(codesDtoSchema).optional()
 })
 
-export const GetOneTweetByIdDtoSchema = z.object({
+export const getOneTweetByIdDtoSchema = z.object({
   tweet_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'ObjectId không hợp lệ'
   })
@@ -83,8 +83,8 @@ export const paramIdTweetDtoSchema = z.object({
 })
 
 export type ParamIdTweetDto = z.infer<typeof paramIdTweetDtoSchema>
-export type GetOneTweetByIdDto = z.infer<typeof GetOneTweetByIdDtoSchema>
-export type CreateTweetDto = z.infer<typeof CreateTweetDtoSchema>
-export type getTweetChildrenDtoParams = z.infer<typeof getTweetChildrenDtoSchemaParams>
-export type getNewFeedTypeDto = z.infer<typeof getNewFeedTypeDtoSchema>
-export type getProfileTweetDto = z.infer<typeof getProfileTweetDtoSchema>
+export type GetOneTweetByIdDto = z.infer<typeof getOneTweetByIdDtoSchema>
+export type CreateTweetDto = z.infer<typeof createTweetDtoSchema>
+export type GetTweetChildrenDtoParams = z.infer<typeof getTweetChildrenDtoSchemaParams>
+export type GetNewFeedTypeDto = z.infer<typeof getNewFeedTypeDtoSchema>
+export type GetProfileTweetDto = z.infer<typeof getProfileTweetDtoSchema>
