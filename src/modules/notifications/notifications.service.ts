@@ -4,12 +4,12 @@ import { publishNotification } from '~/pubsub/publisher'
 import { CreateNotiDto } from '~/modules/notifications/notifications.dto'
 import { ENotificationType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { INotification } from '~/shared/interfaces/schemas/notification.interface'
-import { IUser } from '~/shared/interfaces/schemas/user.interface'
+import { INotification } from '~/modules/notifications/notifications.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import NotificationGateway from '~/socket/gateways/Notification.gateway'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { NotificationsCollection, NotificationsSchema } from './notifications.schema'
+import { IUser } from '../users/users.interface'
 
 class NotificationService {
   async create(payload: CreateNotiDto) {

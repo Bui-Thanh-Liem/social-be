@@ -1,7 +1,7 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { BaseSchema } from '~/shared/schemas/base.schema'
-import { ITrending } from '~/shared/interfaces/schemas/trending.interface'
 import { slug } from '~/utils/slug.util'
+import { ITrending } from './trending.interface'
 
 export class TrendingSchema extends BaseSchema implements ITrending {
   topic?: string | undefined

@@ -5,11 +5,11 @@
   "scripts": {
     "start:dev": "concurrently --names \"SERVER,WORKER\" \"npm run start:server\" \"npm run start:worker\"",
     "start:server": "cross-env NODE_ENV=development nodemon",
-    "start:worker": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/bull/workers/worker.ts",
+    "start:worker": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/infra/workers/worker.ts",
     "build": "rimraf ./dist && tsc && tsc-alias && copyfiles -u 1 src/**/*.handlebars dist",
     "start:prod": "concurrently \"npm run start:server:prod\" \"npm run start:worker:prod\"",
     "start:server:prod": "node dist/server.js",
-    "start:worker:prod": "node dist/bull/workers/worker.js",
+    "start:worker:prod": "node dist/infra/workers/worker.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prettier": "prettier --check .",

@@ -1,10 +1,10 @@
 import { ObjectId } from 'mongodb'
 import { ENotificationType } from '~/shared/enums/type.enum'
-import { IBase } from './base.interface'
-import { ICommunity } from './community.interface'
-import { ITweet } from './tweet.interface'
-import { IUser } from './user.interface'
-import { IMedia } from './media.interface'
+import { IBase } from '../../shared/interfaces/schemas/base.interface'
+import { IMedia } from '../media/media.interface'
+import { IUser } from '../users/users.interface'
+import { ICommunity } from '../communities/communities.interface'
+import { ITweet } from '../tweets/tweets.interface'
 
 export interface INotification extends IBase {
   content: string

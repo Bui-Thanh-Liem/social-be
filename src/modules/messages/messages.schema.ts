@@ -1,8 +1,8 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { IConversation } from '~/shared/interfaces/schemas/conversation.interface'
-import { IMessage } from '~/shared/interfaces/schemas/message.interface'
-import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
+import { IMessage } from '~/modules/messages/messages.interface'
+import { IMediaBare } from '~/modules/media/media.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
+import { IConversation } from '../conversations/conversations.interface'
 
 export class MessagesSchema extends BaseSchema implements IMessage {
   sender: ObjectId

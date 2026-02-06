@@ -6,9 +6,6 @@ import { IResTodayNewsOrOutstanding } from '~/shared/dtos/res/trending.dto'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { ETweetType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { ITrending } from '~/shared/interfaces/schemas/trending.interface'
-import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
-import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import {
   createKeyOutStandingThisWeek,
@@ -23,6 +20,9 @@ import TweetsService from '~/modules/tweets/tweets.service'
 import followsService from '../follows/follows.service'
 import { TrendingCollection, TrendingSchema } from './trending.schema'
 import { TweetsCollection, TweetsSchema } from '../tweets/tweets.schema'
+import { ITrending } from './trending.interface'
+import { ITweet } from '../tweets/tweets.interface'
+import { IUser } from '../users/users.interface'
 
 class TrendingService {
   // Tạo khi đăng bài - khi tìm kiếm (>=5)
@@ -640,24 +640,27 @@ class TrendingService {
       // Danh sách người dùng highlight (unique theo user_id)
       const highlight = Array.from(
         new Map(
-          highlight_tweet.map((tw) => [
-            (tw.user_id as any)._id?.toString(),
-            {
-              content: tw.content,
-              created_at: tw.created_at,
-              _id: (tw.user_id as unknown as IUser)._id,
-              name: (tw.user_id as unknown as IUser).name,
-              avatar: (tw.user_id as unknown as IUser).avatar,
-              verify: (tw.user_id as unknown as IUser).verify,
-              username: (tw.user_id as unknown as IUser).username,
-              cover_photo: (tw.user_id as unknown as IUser).cover_photo,
-              day_of_birth: (tw.user_id as unknown as IUser).day_of_birth,
-              location: (tw.user_id as unknown as IUser).location,
-              website: (tw.user_id as unknown as IUser).website,
-              bio: (tw.user_id as unknown as IUser).bio,
-              isFollow: (tw.user_id as unknown as IUser).isFollow
-            }
-          ])
+          highlight_tweet.map((tw) => {
+            const u = tw.user_id as unknown as IUser
+            return [
+              (tw.user_id as any)._id?.toString(),
+              {
+                content: tw.content,
+                created_at: tw.created_at,
+                _id: u._id,
+                name: u.name,
+                avatar: u.avatar,
+                verify: u.verify,
+                username: u.username,
+                cover_photo: u.cover_photo,
+                day_of_birth: u.day_of_birth,
+                location: u.location,
+                website: u.website,
+                bio: u.bio,
+                isFollow: u.isFollow
+              }
+            ]
+          })
         ).values()
       )
 

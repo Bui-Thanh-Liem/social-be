@@ -3,7 +3,7 @@ import { CONSTANT_REGEX } from '~/shared/constants'
 import { MediaBareDtoSchema } from '~/shared/dtos/req/common/media-bare.dto'
 import { ETweetStatus } from '~/shared/enums/status.enum'
 import { EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
-import { IActionActivity, ICommunity } from '~/shared/interfaces/schemas/community.interface'
+import { IActionActivity, ICommunity } from './communities.interface'
 
 export const CreateCommunityDtoSchema = z.object({
   name: z.string().trim().max(32),
@@ -116,7 +116,7 @@ export type GetMultiActivityDto = z.infer<typeof GetMMByIdDtoSchema>
 export type PinCommunityDto = z.infer<typeof PinCommunityDtoSchema>
 export type GetMultiInvitationsDto = z.infer<typeof GetMultiInvitationsDtoSchema>
 export type UpdateDto = z.infer<typeof UpdateDtoSchema>
-export type deleteInvitationDto = z.infer<typeof deleteInvitationDtoSchema>
+export type DeleteInvitationDto = z.infer<typeof deleteInvitationDtoSchema>
 export type ChangeStatusTweetInCommunityDto = z.infer<typeof ChangeStatusTweetInCommunityDtoSchema>
 export type ChangeInfoDto = z.infer<typeof ChangeInfoDtoSchema>
 

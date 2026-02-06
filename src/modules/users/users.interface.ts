@@ -1,6 +1,6 @@
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
-import { IBase } from './base.interface'
-import { IMediaBare } from './media.interface'
+import { IBase } from '~/shared/interfaces/schemas/base.interface'
+import { IMediaBare } from '../media/media.interface'
 
 // interface IUserSettings {
 //   dark_mode: boolean

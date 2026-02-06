@@ -23,7 +23,7 @@ import { HashtagsCollection, initHashtagsCollection } from '~/modules/hashtags/h
 import { initLikesCollection, LikesCollection } from '~/modules/likes/likes.schema'
 import { ConversationsCollection, initConversationsCollection } from '~/modules/conversations/conversations.schema'
 import { initMediasCollection, MediasCollection } from '~/modules/media/media.schema'
-import { initMessagesCollection, MessagesCollection } from '~/modules/messages/message.schema'
+import { initMessagesCollection, MessagesCollection } from '~/modules/messages/messages.schema'
 import { initNotificationsCollection } from '~/modules/notifications/notifications.schema'
 import { initReportTweetCollection, ReportTweetCollection } from '~/modules/report-tweet/report-tweet.schema'
 import { initSearchHistoryCollection, SearchHistoryCollection } from '~/modules/search-history/search-history.schema'

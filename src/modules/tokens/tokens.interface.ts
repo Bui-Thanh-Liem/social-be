@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
-import { IBase } from './base.interface'
+import { IBase } from '~/shared/interfaces/schemas/base.interface'
 
-export interface IRefresh extends IBase {
+export interface IToken extends IBase {
   user_id: ObjectId
   refresh_token: string
   refresh_token_used: string[]

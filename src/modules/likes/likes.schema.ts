@@ -1,6 +1,6 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { BaseSchema } from '~/shared/schemas/base.schema'
-import { ILike } from '~/shared/interfaces/schemas/like.interface'
+import { ILike } from '~/modules/likes/likes.interface'
 
 export class LikesSchema extends BaseSchema implements ILike {
   user_id: ObjectId

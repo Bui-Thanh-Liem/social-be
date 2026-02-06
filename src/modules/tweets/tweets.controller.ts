@@ -9,7 +9,7 @@ import {
 } from '~/modules/tweets/tweets.dto'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
+import { ITweet } from './tweets.interface'
 
 class TweetsController {
   async create(req: Request, res: Response) {

@@ -1,9 +1,9 @@
-import { ObjectId } from 'mongodb'
+import { ClientSession, ObjectId } from 'mongodb'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
 import type { EActivityType, EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
-import { type IBase } from './base.interface'
-import { IUser } from './user.interface'
-import { IMediaBare } from './media.interface'
+import { IBase } from '~/shared/interfaces/schemas/base.interface'
+import { IMediaBare } from '~/modules/media/media.interface'
+import { IUser } from '../users/users.interface'
 
 export interface ICommunity extends IBase {
   name: string
@@ -62,4 +62,11 @@ export interface ICommunityActivity extends IBase {
   community_id: ObjectId // cộng đồng bị tác động
   action: IActionActivity // ví dụ: "join", "leave", "post_created", ...
   target_id?: ObjectId // nếu có đối tượng cụ thể (bài viết, bình luận, v.v.)
+}
+
+export interface ICommunityPayload {
+  user?: IUser
+  user_id: string
+  community_id: string
+  session?: ClientSession
 }

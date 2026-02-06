@@ -1,8 +1,8 @@
 import { Worker } from 'bullmq'
 import { redisCluster } from '~/configs/redis.config'
+import { CreateCommunityInvitationDto } from '~/modules/communities/communities.dto'
 import CommunityInvitationService from '~/modules/communities/community-invitation.service'
 import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants'
-import { CreateCommunityInvitationDto } from '~/shared/dtos/req/community.dto'
 import { logger } from '~/utils/logger.util'
 
 export const inviteWorker = new Worker(

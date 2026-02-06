@@ -1,10 +1,10 @@
 import { ObjectId } from 'mongodb'
 import { CreateSearchHistoryDto } from '~/modules/search-history/search-history.dto'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { ISearchHistory } from '~/shared/interfaces/schemas/search-history.interface'
-import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { SearchHistoryCollection, SearchHistorySchema } from './search-history.schema'
+import { ISearchHistory } from './search-history.interface'
+import { IUser } from '../users/users.interface'
 
 class SearchHistoryService {
   async create({ payload, user_active }: { payload: CreateSearchHistoryDto; user_active: IUser }) {

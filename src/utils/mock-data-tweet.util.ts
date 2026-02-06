@@ -3,7 +3,7 @@ import { logger } from './logger.util'
 import TweetsService from '~/modules/tweets/tweets.service'
 import { ETweetType } from '~/shared/enums/type.enum'
 import { ETweetAudience } from '~/shared/enums/common.enum'
-import { IUser } from '~/shared/interfaces/schemas/user.interface'
+import { IUser } from '~/modules/users/users.interface'
 
 // const tweets = [
 //   {

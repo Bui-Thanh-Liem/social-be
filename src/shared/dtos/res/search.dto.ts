@@ -1,6 +1,6 @@
-import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
-import { ITrending } from '~/shared/interfaces/schemas/trending.interface'
-import { IUser } from '~/shared/interfaces/schemas/user.interface'
+import { ICommunity } from '~/modules/communities/communities.interface'
+import { ITrending } from '~/modules/trending/trending.interface'
+import { IUser } from '~/modules/users/users.interface'
 
 export interface ResSearchPending {
   trending: ITrending[]

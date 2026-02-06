@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { IMedia } from '~/shared/interfaces/schemas/media.interface'
+import { IMedia } from '~/modules/media/media.interface'
 import { EMediaStatus } from '~/shared/enums/status.enum'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 

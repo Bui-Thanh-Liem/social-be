@@ -1,6 +1,6 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { BaseSchema } from '~/shared/schemas/base.schema'
-import { IFollower } from '~/shared/interfaces/schemas/follower.interface'
+import { IFollower } from './follows.interface'
 
 export class FollowersSchema extends BaseSchema implements IFollower {
   user_id: ObjectId

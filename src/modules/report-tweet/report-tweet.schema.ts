@@ -1,6 +1,6 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { BaseSchema } from '~/shared/schemas/base.schema'
-import { IReportTweet } from '~/shared/interfaces/schemas/report-tweet.interface'
+import { IReportTweet } from './report-tweet.interface'
 
 export class ReportTweetSchema extends BaseSchema implements IReportTweet {
   reason: string

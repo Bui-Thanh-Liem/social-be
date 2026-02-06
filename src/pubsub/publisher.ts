@@ -1,5 +1,5 @@
 import pubSubServiceInstance from '~/helpers/pub_sub.helper'
-import { INotification } from '~/shared/interfaces/schemas/notification.interface'
+import { INotification } from '~/modules/notifications/notifications.interface'
 
 export const PUBLISH_CONVERT_VIDEO = 'publish-convert-video'
 export async function publishCompression(video_id: string) {

@@ -1,6 +1,6 @@
 import NotificationService from '~/modules/notifications/notifications.service'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
-import { INotification } from '~/shared/interfaces/schemas/notification.interface'
+import { INotification } from '~/modules/notifications/notifications.interface'
 import { getIO } from '..'
 
 class NotificationGateway {

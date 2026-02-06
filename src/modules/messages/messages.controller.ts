@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import MessagesService from '~/modules/messages/messages.service'
 import { OkResponse } from '~/core/success.response'
-import { GetMultiMessageByConversationDto } from '~/shared/dtos/req/message.dto'
+import { GetMultiMessageByConversationDto } from './messages.dto'
 
 class MessagesController {
   async getMultiByConversation(req: Request, res: Response) {

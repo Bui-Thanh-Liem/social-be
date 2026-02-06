@@ -1,5 +1,7 @@
 import { Request, Response } from 'express'
 import { OkResponse } from '~/core/success.response'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import ConversationsService from './conversations.service'
 import {
   AddParticipantsBodyDto,
   AddParticipantsParamDto,
@@ -10,9 +12,7 @@ import {
   ReadConversationDto,
   RemoveParticipantsBodyDto,
   RemoveParticipantsParamDto
-} from '~/shared/dtos/req/conversation.dto'
-import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
-import ConversationsService from './conversations.service'
+} from './conversations.dto'
 
 class ConversationsController {
   async create(req: Request, res: Response) {

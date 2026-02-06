@@ -7,13 +7,6 @@ import { envs } from '~/configs/env.config'
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from '~/core/error.response'
 import cacheService from '~/helpers/cache.helper'
 import { CONSTANT_JOB } from '~/shared/constants'
-import {
-  ForgotPasswordDto,
-  LoginAuthDto,
-  RegisterUserDto,
-  ResetPasswordDto,
-  UpdateMeDto
-} from '~/shared/dtos/req/auth.dto'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { ENotificationType, ETokenType } from '~/shared/enums/type.enum'
 import { ISendVerifyEmail } from '~/shared/interfaces/common/mail.interface'
@@ -23,10 +16,10 @@ import { generatePassword, hashPassword, verifyPassword } from '~/utils/crypto.u
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
 import { createKeyUserActive } from '~/utils/create-key-cache.util'
-import AdminService from '../admin/admin.service'
 import UsersService from '../users/users.service'
 import TokensService from '../tokens/tokens.service'
 import { UsersCollection, UsersSchema } from '../users/users.schema'
+import { ForgotPasswordDto, LoginAuthDto, RegisterUserDto, ResetPasswordDto, UpdateMeDto } from './auth.dto'
 
 class AuthService {
   async signup(payload: RegisterUserDto) {

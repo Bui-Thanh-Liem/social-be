@@ -3,16 +3,15 @@ import pLimit from 'p-limit'
 import { inviteQueue, notificationQueue } from '~/infra/queues'
 import { ForbiddenError, NotFoundError } from '~/core/error.response'
 import { CONSTANT_JOB } from '~/shared/constants'
-import { CreateCommunityInvitationDto, deleteInvitationDto } from '~/shared/dtos/req/community.dto'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
 import { ENotificationType } from '~/shared/enums/type.enum'
-import { ICommonPayload } from '~/shared/interfaces/common/community.interface'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import CommunitiesService from '../communities/communities.service'
 import { CommunityInvitationCollection, CommunityInvitationSchema } from './communities.schema'
 import { UsersCollection } from '../users/users.schema'
+import { CreateCommunityInvitationDto, DeleteInvitationDto } from './communities.dto'
+import { ICommunity, ICommunityPayload } from './communities.interface'
 
 const limit = pLimit(10)
 
@@ -150,14 +149,14 @@ class CommunityInvitationService {
     }
   }
 
-  async getOneByUserIdAndCommunityId({ user_id, community_id }: ICommonPayload) {
+  async getOneByUserIdAndCommunityId({ user_id, community_id }: ICommunityPayload) {
     return await CommunityInvitationCollection.findOne({
       user_id: new ObjectId(user_id),
       community_id: new ObjectId(community_id)
     })
   }
 
-  async delete({ user_id, payload }: { user_id: string; payload: deleteInvitationDto }) {
+  async delete({ user_id, payload }: { user_id: string; payload: DeleteInvitationDto }) {
     const { is_admin, is_joined, is_mentor } = await CommunitiesService.validateCommunityAndMembership({
       user_id,
       community_id: payload.community_id

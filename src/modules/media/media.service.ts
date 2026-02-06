@@ -1,10 +1,10 @@
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { IMedia } from '~/shared/interfaces/schemas/media.interface'
-import { IUser } from '~/shared/interfaces/schemas/user.interface'
+import { IMedia } from '~/modules/media/media.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { MediasCollection } from './media.schema'
+import { IUser } from '../users/users.interface'
 
 class MediaService {
   //

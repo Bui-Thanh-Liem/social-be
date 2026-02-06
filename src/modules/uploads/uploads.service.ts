@@ -8,7 +8,7 @@ import { DeleteMediaDto, PresignedUrlDto, UploadConfirmDto } from '~/modules/upl
 import { ResPresignedUrl } from '~/shared/dtos/res/upload.dto'
 import { EMediaStatus } from '~/shared/enums/status.enum'
 import { ENotificationType } from '~/shared/enums/type.enum'
-import { IMedia } from '~/shared/interfaces/schemas/media.interface'
+import { IMedia } from '~/modules/media/media.interface'
 import { MediasCollection } from '../media/media.schema'
 
 class UploadsServices {

@@ -1,8 +1,8 @@
 import { Collection, Db } from 'mongodb'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
-import { IUser } from '~/shared/interfaces/schemas/user.interface'
-import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
+import { IMediaBare } from '~/modules/media/media.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
+import { IUser } from './users.interface'
 
 const _COLLECTION_NAME = 'users'
 export class UsersSchema extends BaseSchema implements IUser {

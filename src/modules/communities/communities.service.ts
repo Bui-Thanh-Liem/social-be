@@ -7,10 +7,7 @@ import TweetsService from '~/modules/tweets/tweets.service'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { EInvitationStatus, ETweetStatus } from '~/shared/enums/status.enum'
 import { EActivityType, EMembershipType, ENotificationType } from '~/shared/enums/type.enum'
-import { ICommonPayload } from '~/shared/interfaces/common/community.interface'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { ICommunity, ICommunityActivity } from '~/shared/interfaces/schemas/community.interface'
-import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { logger } from '~/utils/logger.util'
@@ -34,6 +31,8 @@ import {
   InvitationMembersDto,
   UpdateDto
 } from './communities.dto'
+import { ICommunity, ICommunityActivity, ICommunityPayload } from './communities.interface'
+import { IUser } from '../users/users.interface'
 
 interface IPromoteDemote {
   actor_id: string
@@ -161,7 +160,7 @@ class CommunityService {
     })
   }
 
-  async join({ user_id, community_id, user }: ICommonPayload) {
+  async join({ user_id, community_id, user }: ICommunityPayload) {
     const { community, is_joined } = await this.validateCommunityAndMembership({ user_id, community_id })
 
     if (is_joined) {
@@ -193,7 +192,7 @@ class CommunityService {
     return await CommunityMemberService.create({ user_id, community_id })
   }
 
-  async leave({ user_id, community_id, user }: ICommonPayload) {
+  async leave({ user_id, community_id, user }: ICommunityPayload) {
     const { is_joined, community } = await this.validateCommunityAndMembership({ user_id, community_id })
 
     if (!is_joined) {
@@ -1117,7 +1116,7 @@ class CommunityService {
     return this.signedCloudfrontCoverUrls(community) as ICommunity
   }
 
-  async togglePin({ user_id, community_id }: ICommonPayload) {
+  async togglePin({ user_id, community_id }: ICommunityPayload) {
     const user_object_id = new ObjectId(user_id)
     const community_object_id = new ObjectId(community_id)
 
@@ -1177,7 +1176,7 @@ class CommunityService {
     }
   }
 
-  async validateCommunityAndMembership({ user_id, community_id }: ICommonPayload) {
+  async validateCommunityAndMembership({ user_id, community_id }: ICommunityPayload) {
     const community_obj_id = new ObjectId(community_id)
 
     const [community, mentorIds] = await Promise.all([

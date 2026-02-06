@@ -1,10 +1,10 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { ETweetAudience } from '~/shared/enums/common.enum'
 import { ETweetType } from '~/shared/enums/type.enum'
-import { ICodesTweet, ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 import { ETweetStatus } from '~/shared/enums/status.enum'
-import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
+import { IMediaBare } from '~/modules/media/media.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
+import { ICodesTweet, ITweet } from './tweets.interface'
 
 export class TweetsSchema extends BaseSchema implements ITweet {
   user_id: ObjectId

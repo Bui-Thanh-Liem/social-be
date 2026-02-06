@@ -9,7 +9,6 @@ import { CONSTANT_JOB } from '~/shared/constants'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { ETokenType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { createKeyUserActive } from '~/utils/create-key-cache.util'
 import { hashPassword } from '~/utils/crypto.util'
@@ -18,6 +17,7 @@ import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
 import followsService from '../follows/follows.service'
 import { UsersCollection, UsersSchema } from './users.schema'
+import { IUser } from './users.interface'
 
 class UsersService {
   async verifyEmail({

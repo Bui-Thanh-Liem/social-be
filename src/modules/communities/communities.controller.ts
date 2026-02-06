@@ -1,10 +1,15 @@
 import { Request, Response } from 'express'
 import { CreatedResponse, OkResponse } from '~/core/success.response'
+
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { IQuery } from '~/shared/interfaces/common/query.interface'
+import CommunityInvitationService from './community-invitation.service'
+import communitiesService from './communities.service'
 import {
   ChangeInfoDto,
   ChangeStatusTweetInCommunityDto,
   CreateCommunityDto,
-  deleteInvitationDto,
+  DeleteInvitationDto,
   DemoteMentorDto,
   GetMMByIdDto,
   GetMultiActivityDto,
@@ -14,12 +19,8 @@ import {
   PinCommunityDto,
   PromoteMentorDto,
   UpdateDto
-} from '~/shared/dtos/req/community.dto'
-import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
-import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
-import CommunityInvitationService from './community-invitation.service'
-import communitiesService from './communities.service'
+} from './communities.dto'
+import { ICommunity } from './communities.interface'
 
 class CommunityController {
   async create(req: Request, res: Response) {
@@ -142,7 +143,7 @@ class CommunityController {
   }
 
   async deleteInvitation(req: Request, res: Response) {
-    const payload = req.params as deleteInvitationDto
+    const payload = req.params as DeleteInvitationDto
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await CommunityInvitationService.delete({ user_id, payload })
     res.json(new OkResponse(`Xoá lời mời thành công.`, result))

@@ -1,15 +1,15 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { BaseSchema } from '~/shared/schemas/base.schema'
-import { IRefresh } from '~/shared/interfaces/schemas/refresh.interface'
+import { IToken } from './tokens.interface'
 
-export class TokensSchema extends BaseSchema implements IRefresh {
+export class TokensSchema extends BaseSchema implements IToken {
   user_id: ObjectId
   refresh_token: string
   iat: Date | undefined
   exp: Date | undefined
   refresh_token_used: string[]
 
-  constructor(token: Pick<IRefresh, 'user_id' | 'refresh_token' | 'iat' | 'exp'>) {
+  constructor(token: Pick<IToken, 'user_id' | 'refresh_token' | 'iat' | 'exp'>) {
     super()
     this.refresh_token_used = [] // Mới tạo thì chưa có token nào đã sử dụng.
     this.user_id = token.user_id

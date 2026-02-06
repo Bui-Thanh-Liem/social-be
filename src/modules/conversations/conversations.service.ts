@@ -6,11 +6,9 @@ import cacheService from '~/helpers/cache.helper'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import MessagesService from '~/modules/messages/messages.service'
 import { CONSTANT_JOB } from '~/shared/constants'
-import { CreateConversationDto } from '~/shared/dtos/req/conversation.dto'
 import { EConversationType, ENotificationType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { IConversation } from '~/shared/interfaces/schemas/conversation.interface'
-import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
+import { IMediaBare } from '~/modules/media/media.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getSocket } from '~/socket'
 import ConversationGateway from '~/socket/gateways/Conversation.gateway'
@@ -18,6 +16,8 @@ import { createKeyAllConversationIds, createKeyConvIdsByUserId } from '~/utils/c
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { ConversationsCollection, ConversationsSchema } from './conversations.schema'
 import { UsersCollection } from '../users/users.schema'
+import { CreateConversationDto } from './conversations.dto'
+import { IConversation } from './conversations.interface'
 
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {

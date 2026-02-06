@@ -1,6 +1,6 @@
 import { Collection, Db } from 'mongodb'
 import { EPriorityBadWord } from '~/shared/enums/common.enum'
-import { IBadWord } from '~/shared/interfaces/schemas/bad-word.interface'
+import { IBadWord } from '~/modules/bad-words/bad-words.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 
 export class BadWordSchema extends BaseSchema implements IBadWord {

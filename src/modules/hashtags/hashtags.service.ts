@@ -1,11 +1,11 @@
 import { ObjectId } from 'mongodb'
 import { BadRequestError } from '~/core/error.response'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { IHashtag } from '~/shared/interfaces/schemas/hashtag.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { slug } from '~/utils/slug.util'
 import { HashtagsSchema, HashtagsCollection } from './hashtags.schema'
+import { IHashtag } from './hashtags.interface'
 
 class HashtagsService {
   //

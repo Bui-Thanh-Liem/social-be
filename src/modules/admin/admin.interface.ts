@@ -1,6 +1,6 @@
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { IBase } from '~/shared/interfaces/schemas/base.interface'
-import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
+import { IMediaBare } from '~/modules/media/media.interface'
 
 export interface IAdmin extends IBase {
   name: string

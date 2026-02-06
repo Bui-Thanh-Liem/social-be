@@ -1,6 +1,6 @@
+import { ICommunity } from '~/modules/communities/communities.interface'
+import { ITweet } from '~/modules/tweets/tweets.interface'
 import { EFeedTypeItem } from '~/shared/enums/type.enum'
-import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
-import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
 
 export type ResCreateTweet = ITweet
 

@@ -1,7 +1,7 @@
 import { Collection, Db } from 'mongodb'
-import { IAdmin } from '~/shared/interfaces/schemas/admin.interface'
+import { IAdmin } from '~/modules/admin/admin.interface'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
-import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
+import { IMediaBare } from '~/modules/media/media.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 
 export class AdminSchema extends BaseSchema implements IAdmin {

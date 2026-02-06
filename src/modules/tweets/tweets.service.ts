@@ -20,9 +20,7 @@ import {
   EVisibilityType
 } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
-import { ICommunity } from '~/shared/interfaces/schemas/community.interface'
-import { IMedia } from '~/shared/interfaces/schemas/media.interface'
-import { ITweet } from '~/shared/interfaces/schemas/tweet.interface'
+import { IMedia } from '~/modules/media/media.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import CommentGateway from '~/socket/gateways/Comment.gateway'
 import CommunityGateway from '~/socket/gateways/Community.gateway'
@@ -35,7 +33,6 @@ import HashtagsService from '../hashtags/hashtags.service'
 import UploadsServices from '../uploads/uploads.service'
 import { normalizeWeekData } from '~/utils/normalize-week-data.util'
 import { ResCountViewLinkBookmarkInWeek } from '~/shared/dtos/res/tweet.dto'
-import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import TrendingService from '../trending/trending.service'
 import bookmarksService from '../bookmarks/bookmarks.service'
 import CommunitiesService from '../communities/communities.service'
@@ -45,6 +42,9 @@ import { CommunitiesCollection, CommunitiesSchema } from '../communities/communi
 import { LikesCollection } from '../likes/likes.schema'
 import { TweetsCollection, TweetsSchema } from './tweets.schema'
 import { UsersCollection } from '../users/users.schema'
+import { ICommunity } from '../communities/communities.interface'
+import { ITweet } from './tweets.interface'
+import { IUser } from '../users/users.interface'
 
 class TweetsService {
   //

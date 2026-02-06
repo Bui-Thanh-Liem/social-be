@@ -2,6 +2,9 @@ import { Collection, Db, ObjectId } from 'mongodb'
 import { CONSTANT_INVITE_EXPIRES } from '~/shared/constants'
 import { EInvitationStatus } from '~/shared/enums/status.enum'
 import { EActivityType, EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
+import { slug } from '~/utils/slug.util'
+import { IMediaBare } from '~/modules/media/media.interface'
+import { BaseSchema } from '~/shared/schemas/base.schema'
 import {
   IActionActivity,
   ICommunity,
@@ -10,10 +13,7 @@ import {
   ICommunityMember,
   ICommunityMentor,
   ICommunityPin
-} from '~/shared/interfaces/schemas/community.interface'
-import { slug } from '~/utils/slug.util'
-import { IMediaBare } from '~/shared/interfaces/schemas/media.interface'
-import { BaseSchema } from '~/shared/schemas/base.schema'
+} from './communities.interface'
 
 // Cộng đồngđồng
 export class CommunitiesSchema extends BaseSchema implements ICommunity {

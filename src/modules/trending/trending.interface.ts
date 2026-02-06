@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { IBase } from './base.interface'
+import { IBase } from '~/shared/interfaces/schemas/base.interface'
 
 export interface ITrending extends IBase {
   topic?: string

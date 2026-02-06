@@ -1,6 +1,6 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { BaseSchema } from '~/shared/schemas/base.schema'
-import { ISearchHistory } from '~/shared/interfaces/schemas/search-history.interface'
+import { ISearchHistory } from './search-history.interface'
 
 export class SearchHistorySchema extends BaseSchema implements ISearchHistory {
   user: ObjectId | undefined

@@ -1,4 +1,4 @@
-import { IBase } from './base.interface'
+import { IBase } from '~/shared/interfaces/schemas/base.interface'
 
 export interface IHashtag extends IBase {
   name: string

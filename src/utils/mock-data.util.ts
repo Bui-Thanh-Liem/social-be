@@ -8,11 +8,11 @@ import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { EMembershipType, ETweetType, EVisibilityType } from '~/shared/enums/type.enum'
 import { hashPassword } from './crypto.util'
 import { logger } from './logger.util'
-import { CreateCommunityDto } from '~/shared/dtos/req/community.dto'
-import { IUser } from '~/shared/interfaces/schemas/user.interface'
 import { UsersCollection, UsersSchema } from '~/modules/users/users.schema'
 import { FollowersCollection } from '~/modules/follows/follows.schema'
 import communitiesService from '~/modules/communities/communities.service'
+import { IUser } from '~/modules/users/users.interface'
+import { CreateCommunityDto } from '~/modules/communities/communities.dto'
 
 const MY_ID = new ObjectId('69708f6ab776baa192a24a3f')
 const MY_USERNAME = '@liem_buithanh'

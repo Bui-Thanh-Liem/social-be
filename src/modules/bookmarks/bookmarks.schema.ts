@@ -1,6 +1,6 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { BaseSchema } from '~/shared/schemas/base.schema'
-import { IBookmark } from '~/shared/interfaces/schemas/bookmark.interface'
+import { IBookmark } from './bookmarks.interface'
 
 export class BookmarkSchema extends BaseSchema implements IBookmark {
   user_id: ObjectId

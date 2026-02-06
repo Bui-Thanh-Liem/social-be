@@ -1,7 +1,7 @@
 import { Collection, Db } from 'mongodb'
 import { BaseSchema } from '~/shared/schemas/base.schema'
-import { IHashtag } from '~/shared/interfaces/schemas/hashtag.interface'
 import { slug } from '~/utils/slug.util'
+import { IHashtag } from './hashtags.interface'
 
 export class HashtagsSchema extends BaseSchema implements IHashtag {
   name: string
