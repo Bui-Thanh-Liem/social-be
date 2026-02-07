@@ -1,12 +1,15 @@
-import { removeVietnameseAccent } from '~/utils/remove-vietnamese-accent.util'
-import { ActionBadWordDto } from './bad-words.dto'
-import { BadWordSchema, BadWordsCollection } from './bad-words.schema'
-import { createKeyBadWord, createKeyBadWords } from '~/utils/create-key-cache.util'
-import CacheService from '~/helpers/cache.helper'
-import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
-import { IBadWord } from './bad-words.interface'
 import { ObjectId } from 'mongodb'
 import { ConflictError } from '~/core/error.response'
+import CacheService from '~/helpers/cache.helper'
+import { notificationQueue } from '~/infra/queues'
+import { CONSTANT_JOB } from '~/shared/constants'
+import { ENotificationType } from '~/shared/enums/type.enum'
+import { createKeyBadWord, createKeyBadWords } from '~/utils/create-key-cache.util'
+import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
+import { removeVietnameseAccent } from '~/utils/remove-vietnamese-accent.util'
+import { ActionBadWordDto } from './bad-words.dto'
+import { IBadWord } from './bad-words.interface'
+import { BadWordSchema, BadWordsCollection } from './bad-words.schema'
 
 interface IBadWordsCached {
   original: string
@@ -37,6 +40,7 @@ export class BadWordsService {
     const newBadWord = await BadWordsCollection.insertOne(
       new BadWordSchema({
         words: body.words,
+        action: body.action,
         priority: body.priority,
         replace_with: body.replace_with
       })
@@ -57,6 +61,7 @@ export class BadWordsService {
       {
         $set: {
           words: body.words,
+          action: body.action,
           priority: body.priority,
           replace_with: body.replace_with
         }
@@ -147,16 +152,23 @@ export class BadWordsService {
   }
 
   //
-  async incrementUsageCount(words: string) {
-    await BadWordsCollection.updateOne({ words }, { $inc: { usage_count: 1 } })
+  async incrementUsageCount(words: string, user_id: string) {
+    notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+      content: 'Bạn đã sử dụng một số từ ngữ không phù hợp, vui lòng chú ý hơn.',
+      type: ENotificationType.Other,
+      receiver: user_id,
+      sender: user_id
+    })
+    return await BadWordsCollection.updateOne({ words }, { $inc: { usage_count: 1 } })
   }
 
   // Lấy nhiều từ cấm với phân trang
-  async replaceBadWordsInText(text: string, user_active_id: string): Promise<string> {
+  async detectInText({ text, user_id }: { text: string; user_id: string }) {
     const badWords = await this.loadBadWordsFromDB()
     let result = text
     let violated = false
-    const matchedWords: string[] = []
+    const matched_words: string[] = []
+    const bad_words_ids: string[] = []
 
     // Sắp xếp từ dài nhất lên trước để tránh replace "từ con" trước "từ cha"
     // Ví dụ: "đồ chó đẻ" nên bị bắt trước từ "chó"
@@ -172,20 +184,29 @@ export class BadWordsService {
       //
       if (regex.test(result)) {
         violated = true
-        matchedWords.push(bw.original) // hoặc bw.normalized
+        matched_words.push(bw.original) // hoặc bw.normalized
       }
 
       //
       result = result.replace(regex, bw.replaceWith)
     }
 
-    //
+    // Tăng usage_count cho các từ bị vi phạm
     if (violated) {
-      console.log('⚠️ Vi phạm từ cấm:', matchedWords)
-      await Promise.all(matchedWords.map((word) => this.incrementUsageCount(word)))
+      console.log('⚠️ Vi phạm từ cấm:', matched_words)
+      const updated = await Promise.all(matched_words.map((word) => this.incrementUsageCount(word, user_id)))
+
+      if (updated.length > 0) {
+        // Lấy _id của các từ cấm vi phạm
+        bad_words_ids.push(...updated.map((u) => u.upsertedId!.toString()))
+      }
     }
 
-    return result
+    return {
+      matched_words,
+      text: result,
+      bad_words_ids
+    }
   }
 
   // Load bad words từ cache hoặc database

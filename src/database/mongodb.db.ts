@@ -32,6 +32,10 @@ import { initTrendingCollection, TrendingCollection } from '~/modules/trending/t
 import { initTweetsCollection, TweetsCollection } from '~/modules/tweets/tweets.schema'
 import { initUsersCollection, UsersCollection } from '~/modules/users/users.schema'
 import { BadWordsCollection, initBadWordsCollection } from '~/modules/bad-words/bad-words.schema'
+import {
+  initUserViolationsCollection,
+  UserViolationsCollection
+} from '~/modules/user-violations/user-violations.schema'
 
 const _MINPOOLSIZE = 5
 const _MAXPOOLSIZE = 50 // không bao giờ vượt, nếu hơn thì phải chờ
@@ -173,6 +177,7 @@ class Database {
       initSearchHistoryCollection(this.db)
       initAdminCollection(this.db)
       initBadWordsCollection(this.db)
+      initUserViolationsCollection(this.db)
     } catch (error) {
       logger.error('Collection initialization failed:', error)
       throw error
@@ -212,6 +217,7 @@ class Database {
       const indexMedia = await MediasCollection.indexExists(['s3_key_1'])
       const indexAdmin = await AdminCollection.indexExists(['email_1'])
       const indexBadWord = await BadWordsCollection.indexExists(['words_text'])
+      const indexUserViolation = await UserViolationsCollection.indexExists(['user_id_1'])
 
       // Admin
       if (!indexAdmin) {
@@ -325,6 +331,11 @@ class Database {
       // BadWord
       if (!indexBadWord) {
         BadWordsCollection.createIndex({ words: 'text' }, { default_language: 'none' })
+      }
+
+      // UserViolation
+      if (!indexUserViolation) {
+        UserViolationsCollection.createIndex({ user_id: 1 })
       }
 
       logger.info('All indexes are ensured successfully')

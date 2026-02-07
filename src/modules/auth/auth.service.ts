@@ -2,25 +2,27 @@ import axios from 'axios'
 import _ from 'lodash'
 import { ObjectId } from 'mongodb'
 import { StringValue } from 'ms'
-import { emailQueue, notificationQueue } from '~/infra/queues'
 import { envs } from '~/configs/env.config'
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from '~/core/error.response'
 import cacheService from '~/helpers/cache.helper'
+import { emailQueue, notificationQueue } from '~/infra/queues'
 import { CONSTANT_JOB } from '~/shared/constants'
+import { ESourceViolation } from '~/shared/enums/common.enum'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { ENotificationType, ETokenType } from '~/shared/enums/type.enum'
 import { ISendVerifyEmail } from '~/shared/interfaces/common/mail.interface'
 import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oauth-google.interface'
 import { createTokenPair } from '~/utils/auth.util'
+import { createKeyUserActive } from '~/utils/create-key-cache.util'
 import { generatePassword, hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
-import { createKeyUserActive } from '~/utils/create-key-cache.util'
-import UsersService from '../users/users.service'
-import TokensService from '../tokens/tokens.service'
-import { UsersCollection, UsersSchema } from '../users/users.schema'
-import { ForgotPasswordDto, LoginAuthDto, RegisterUserDto, ResetPasswordDto, UpdateMeDto } from './auth.dto'
 import BadWordsService from '../bad-words/bad-words.service'
+import TokensService from '../tokens/tokens.service'
+import UserViolationsService from '../user-violations/user-violations.service'
+import { UsersCollection, UsersSchema } from '../users/users.schema'
+import UsersService from '../users/users.service'
+import { ForgotPasswordDto, LoginAuthDto, RegisterUserDto, ResetPasswordDto, UpdateMeDto } from './auth.dto'
 
 class AuthService {
   async signup(payload: RegisterUserDto) {
@@ -464,9 +466,21 @@ class AuthService {
     await UsersService.resetUserActive(user_id)
 
     // Lọc từ cấm trong bio, name, username
-    const _bio = await BadWordsService.replaceBadWordsInText(payload.bio || '', user_id)
-    const _name = await BadWordsService.replaceBadWordsInText(payload.name || '', user_id)
-    const _username = await BadWordsService.replaceBadWordsInText(payload.username || '', user_id)
+    const [_bio, _name, _username] = await Promise.all([
+      BadWordsService.detectInText({ text: payload.bio || '', user_id }),
+      BadWordsService.detectInText({ text: payload.name || '', user_id }),
+      BadWordsService.detectInText({ text: payload.username || '', user_id })
+    ])
+
+    // Lưu vi phạm từ cấm nếu có
+    await UserViolationsService.create({
+      user_id: user_id,
+      source_id: user_id,
+      source: ESourceViolation.Auth,
+      final_content:
+        (_bio.matched_words.join() || '') + (_name.matched_words.join() || '') + (_username.matched_words.join() || ''),
+      bad_word_ids: [_bio.bad_words_ids, _name.bad_words_ids, _username.bad_words_ids].flat()
+    })
 
     //
     return await UsersCollection.findOneAndUpdate(
@@ -474,9 +488,9 @@ class AuthService {
       {
         $set: {
           ...payload,
-          bio: _bio,
-          name: _name,
-          username: _username
+          bio: _bio.text,
+          name: _name.text,
+          username: _username.text
         },
         $currentDate: {
           updated_at: true
