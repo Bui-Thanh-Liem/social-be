@@ -6,6 +6,7 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { slug } from '~/utils/slug.util'
 import { HashtagsSchema, HashtagsCollection } from './hashtags.schema'
 import { IHashtag } from './hashtags.interface'
+import BadWordsService from '../bad-words/bad-words.service'
 
 class HashtagsService {
   //
@@ -43,14 +44,15 @@ class HashtagsService {
   }
 
   //
-  async checkHashtags(names: string[] | undefined) {
+  async checkHashtags(names: string[] | undefined, user_id: string): Promise<ObjectId[]> {
     if (!names || names.length === 0) return []
     const results = await Promise.all(
-      names.map((name) => {
+      names.map(async (name) => {
         const _slug = slug(name)
+        const _name = await BadWordsService.replaceBadWordsInText(name || '', user_id)
         return HashtagsCollection.findOneAndUpdate(
           { slug: _slug },
-          { $setOnInsert: new HashtagsSchema({ name }) },
+          { $setOnInsert: new HashtagsSchema({ name: _name }) },
           { upsert: true, returnDocument: 'after' }
         )
       })

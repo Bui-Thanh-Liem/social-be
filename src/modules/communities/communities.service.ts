@@ -33,6 +33,7 @@ import {
 } from './communities.dto'
 import { ICommunity, ICommunityActivity, ICommunityPayload } from './communities.interface'
 import { IUser } from '../users/users.interface'
+import BadWordsService from '../bad-words/bad-words.service'
 
 interface IPromoteDemote {
   actor_id: string
@@ -43,13 +44,17 @@ interface IPromoteDemote {
 class CommunityService {
   async create(user_id: string, payload: CreateCommunityDto): Promise<string> {
     const exists = await CommunitiesCollection.countDocuments({ slug: slug(payload.name) })
-
     if (exists) {
       throw new ConflictError('Tên cộng đồng này đã được sử dụng.')
     }
 
+    // Lọc từ cấm trong tên và mô tả
+    const _name = await BadWordsService.replaceBadWordsInText(payload.name || '', user_id)
+    const _bio = await BadWordsService.replaceBadWordsInText(payload.bio || '', user_id)
+
+    // Tạo cộng đồng
     const inserted = await CommunitiesCollection.insertOne(
-      new CommunitiesSchema({ ...payload, admin: new ObjectId(user_id) })
+      new CommunitiesSchema({ ...payload, name: _name, bio: _bio, admin: new ObjectId(user_id) })
     )
 
     if (!inserted.insertedId) {

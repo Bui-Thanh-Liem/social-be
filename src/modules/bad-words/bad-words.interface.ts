@@ -5,5 +5,5 @@ export interface IBadWord extends IBase {
   words: string
   priority: EPriorityBadWord
   replace_with: string
-  count: number
+  usage_count: number
 }

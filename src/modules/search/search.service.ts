@@ -521,7 +521,7 @@ class SearchService {
     ])
 
     // Cập nhật lại trending
-    await TrendingService.createTrending(q)
+    await TrendingService.createTrending(q, user_id)
 
     //
     return {

@@ -20,6 +20,7 @@ import UsersService from '../users/users.service'
 import TokensService from '../tokens/tokens.service'
 import { UsersCollection, UsersSchema } from '../users/users.schema'
 import { ForgotPasswordDto, LoginAuthDto, RegisterUserDto, ResetPasswordDto, UpdateMeDto } from './auth.dto'
+import BadWordsService from '../bad-words/bad-words.service'
 
 class AuthService {
   async signup(payload: RegisterUserDto) {
@@ -459,13 +460,23 @@ class AuthService {
       throw new ConflictError('Tên người dùng đã tồn tại.')
     }
 
+    //
     await UsersService.resetUserActive(user_id)
 
+    // Lọc từ cấm trong bio, name, username
+    const _bio = await BadWordsService.replaceBadWordsInText(payload.bio || '', user_id)
+    const _name = await BadWordsService.replaceBadWordsInText(payload.name || '', user_id)
+    const _username = await BadWordsService.replaceBadWordsInText(payload.username || '', user_id)
+
+    //
     return await UsersCollection.findOneAndUpdate(
       { _id: new ObjectId(user_id) },
       {
         $set: {
-          ...payload
+          ...payload,
+          bio: _bio,
+          name: _name,
+          username: _username
         },
         $currentDate: {
           updated_at: true

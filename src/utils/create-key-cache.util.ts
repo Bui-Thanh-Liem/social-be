@@ -47,3 +47,4 @@ export const createKeyUserLastSeen = (): string => '{user}:last_seen'
 export const createKeyOutStandingThisWeek = (): string => '{tweet}:outstanding_this_week'
 export const createKeyTodayTweet = (): string => '{tweet}:today_tweet'
 export const createKeyBadWords = (): string => '{bad_words}:list'
+export const createKeyBadWord = (words: string): string => `{bad_words}:${words}`

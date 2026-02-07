@@ -45,12 +45,16 @@ import { UsersCollection } from '../users/users.schema'
 import { ICommunity } from '../communities/communities.interface'
 import { ITweet } from './tweets.interface'
 import { IUser } from '../users/users.interface'
+import BadWordsService from '../bad-words/bad-words.service'
 
 class TweetsService {
   //
   async create(user_id: string, payload: CreateTweetDto) {
     let message = 'Đăng bài thành công'
     const { audience, type, content, parent_id, community_id, mentions, medias, bgColor, textColor, codes } = payload
+
+    // Lọc từ cấm trong content
+    const _content = await BadWordsService.replaceBadWordsInText(content || '', user_id)
 
     //
     let _medias: undefined | IMedia[] = undefined
@@ -67,17 +71,19 @@ class TweetsService {
     }
 
     // Tạo hashtags chop tweet
-    const hashtags = await HashtagsService.checkHashtags(payload.hashtags)
+    const hashtags = await HashtagsService.checkHashtags(payload.hashtags, user_id)
 
     // Thêm hashtag vào trending
     if (payload?.hashtags?.length && type !== ETweetType.Comment) {
-      await Promise.all(payload.hashtags.map((hashtagName) => TrendingService.createTrending(`#${hashtagName}`)))
+      await Promise.all(
+        payload.hashtags.map((hashtagName) => TrendingService.createTrending(`#${hashtagName}`, user_id))
+      )
     }
 
     // Thêm từ khóa vào trending (những từ trong content, nhưng được viết in hoa)
-    if (content && type !== ETweetType.Comment) {
-      const keyWords = content.match(CONSTANT_REGEX.FIND_KEYWORD) || []
-      await Promise.all(keyWords.map((w) => TrendingService.createTrending(w)))
+    if (_content && type !== ETweetType.Comment) {
+      const keyWords = _content.match(CONSTANT_REGEX.FIND_KEYWORD) || []
+      await Promise.all(keyWords.map((w) => TrendingService.createTrending(w, user_id)))
     }
 
     // Kiểm tra nếu đăng trong cộng đồng
@@ -112,7 +118,7 @@ class TweetsService {
         user_id: new ObjectId(user_id),
         audience: audience,
         hashtags: hashtags,
-        content: content,
+        content: _content,
         parent_id: parent_id ? new ObjectId(parent_id) : null,
         community_id: community_id ? new ObjectId(community_id) : null,
         mentions: mentions ? mentions.map((id) => new ObjectId(id)) : [],
@@ -2114,7 +2120,7 @@ class TweetsService {
         }
 
         // Xóa medias khỏi S3
-        if (tweet.medias) {
+        if (tweet.medias?.length) {
           await UploadsServices.delete({ s3_keys: tweet.medias.map((m) => m.s3_key) })
         }
 

@@ -1,11 +1,12 @@
 import { removeVietnameseAccent } from '~/utils/remove-vietnamese-accent.util'
 import { ActionBadWordDto } from './bad-words.dto'
 import { BadWordSchema, BadWordsCollection } from './bad-words.schema'
-import { createKeyBadWords } from '~/utils/create-key-cache.util'
+import { createKeyBadWord, createKeyBadWords } from '~/utils/create-key-cache.util'
 import CacheService from '~/helpers/cache.helper'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { IBadWord } from './bad-words.interface'
 import { ObjectId } from 'mongodb'
+import { ConflictError } from '~/core/error.response'
 
 interface IBadWordsCached {
   original: string
@@ -27,6 +28,11 @@ export class BadWordsService {
   }
 
   async create({ body }: { body: ActionBadWordDto }) {
+    const exists = await BadWordsCollection.findOne({ words: body.words })
+    if (exists) {
+      throw new ConflictError('Từ cấm đã tồn tại')
+    }
+
     //
     const newBadWord = await BadWordsCollection.insertOne(
       new BadWordSchema({
@@ -66,6 +72,21 @@ export class BadWordsService {
     return updatedBadWord
   }
 
+  async getOneByWords({ words }: { words: string }) {
+    const keyCache = createKeyBadWord(words)
+    const cached = await CacheService.get<IBadWord>(keyCache)
+    if (cached) {
+      console.log('✅ load bad word từ cache:', words)
+      return cached
+    }
+
+    //
+    console.log('❌ cache hết hạn lấy bad word trong database 🤦‍♂️:', words)
+    const badWord = await BadWordsCollection.findOne({ words })
+    await CacheService.set(keyCache, badWord, 3600)
+    return badWord
+  }
+
   async getMulti({ query }: { query: any }) {
     //
     const { skip, limit, sort, q } = getPaginationAndSafeQuery<IBadWord>(query)
@@ -76,7 +97,7 @@ export class BadWordsService {
     }
 
     if (q) {
-      has_q.query = { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] }
+      has_q.query = { words: { $regex: q, $options: 'i' } }
     }
 
     //
@@ -98,7 +119,9 @@ export class BadWordsService {
     ]).toArray()
 
     //
-    const total = await BadWordsCollection.countDocuments({})
+    const total = await BadWordsCollection.countDocuments({
+      ...has_q.query
+    })
 
     //
     return {
@@ -123,22 +146,43 @@ export class BadWordsService {
     return deletedBadWord
   }
 
+  //
+  async incrementUsageCount(words: string) {
+    await BadWordsCollection.updateOne({ words }, { $inc: { usage_count: 1 } })
+  }
+
   // Lấy nhiều từ cấm với phân trang
-  async replaceBadWordsInText(text: string): Promise<string> {
+  async replaceBadWordsInText(text: string, user_active_id: string): Promise<string> {
     const badWords = await this.loadBadWordsFromDB()
     let result = text
+    let violated = false
+    const matchedWords: string[] = []
 
     // Sắp xếp từ dài nhất lên trước để tránh replace "từ con" trước "từ cha"
     // Ví dụ: "đồ chó đẻ" nên bị bắt trước từ "chó"
     const sortedBadWords = badWords.sort((a, b) => b.normalized.length - a.normalized.length)
 
+    //
     for (const bw of sortedBadWords) {
       // Tạo pattern linh hoạt: cho phép có ký tự đặc biệt hoặc space giữa các chữ cái
       // Ví dụ: "d m" sẽ khớp với "d.m", "d-m", "d...m"
       const flexiblePattern = bw.normalized.split('').join('[^a-z0-9]*')
       const regex = new RegExp(flexiblePattern, 'gi')
 
+      //
+      if (regex.test(result)) {
+        violated = true
+        matchedWords.push(bw.original) // hoặc bw.normalized
+      }
+
+      //
       result = result.replace(regex, bw.replaceWith)
+    }
+
+    //
+    if (violated) {
+      console.log('⚠️ Vi phạm từ cấm:', matchedWords)
+      await Promise.all(matchedWords.map((word) => this.incrementUsageCount(word)))
     }
 
     return result

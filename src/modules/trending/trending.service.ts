@@ -26,10 +26,10 @@ import { IUser } from '../users/users.interface'
 
 class TrendingService {
   // Tạo khi đăng bài - khi tìm kiếm (>=5)
-  async createTrending(topic: string) {
+  async createTrending(topic: string, user_id: string) {
     let _hashtag = undefined
     if (topic.includes('#')) {
-      const [_id] = await hashtagsService.checkHashtags([topic.replace('#', '').trim()])
+      const [_id] = await hashtagsService.checkHashtags([topic.replace('#', '').trim()], user_id)
       _hashtag = _id
     }
 

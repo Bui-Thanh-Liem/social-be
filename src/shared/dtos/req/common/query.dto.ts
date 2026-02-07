@@ -19,7 +19,7 @@ export const QueryDtoSchema = z.object({
   //     message: 'Limit must be a number between 2 and 100'
   //   }),
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(2).max(100).default(10),
+  limit: z.coerce.number().int().min(2).max(200).default(10),
   q: z.string().trim().optional(),
   f: z.string().trim().optional(),
   pf: z

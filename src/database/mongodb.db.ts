@@ -211,7 +211,7 @@ class Database {
       const indexSearchHistory = await SearchHistoryCollection.indexExists(['owner_1'])
       const indexMedia = await MediasCollection.indexExists(['s3_key_1'])
       const indexAdmin = await AdminCollection.indexExists(['email_1'])
-      const indexBadWord = await BadWordsCollection.indexExists(['words_1'])
+      const indexBadWord = await BadWordsCollection.indexExists(['words_text'])
 
       // Admin
       if (!indexAdmin) {
@@ -324,7 +324,7 @@ class Database {
 
       // BadWord
       if (!indexBadWord) {
-        BadWordsCollection.createIndex({ words: 1 }, { unique: true })
+        BadWordsCollection.createIndex({ words: 'text' }, { default_language: 'none' })
       }
 
       logger.info('All indexes are ensured successfully')

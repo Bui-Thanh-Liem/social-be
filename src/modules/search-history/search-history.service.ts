@@ -5,12 +5,14 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { SearchHistoryCollection, SearchHistorySchema } from './search-history.schema'
 import { ISearchHistory } from './search-history.interface'
 import { IUser } from '../users/users.interface'
+import BadWordsService from '../bad-words/bad-words.service'
 
 class SearchHistoryService {
   async create({ payload, user_active }: { payload: CreateSearchHistoryDto; user_active: IUser }) {
-    console.log('SearchHistoryService - create :::', payload)
-
     const { user, trending, community, text } = payload
+
+    //
+    const _text = await BadWordsService.replaceBadWordsInText(text || '', user_active._id!.toString())
 
     const query: any = {
       owner: user_active._id
@@ -31,7 +33,7 @@ class SearchHistoryService {
     const created = await SearchHistoryCollection.insertOne(
       new SearchHistorySchema({
         owner: user_active._id,
-        text: text || undefined,
+        text: _text || undefined,
         user: user ? new ObjectId(user) : undefined,
         trending: trending ? new ObjectId(trending) : undefined,
         community: community ? new ObjectId(community) : undefined
