@@ -27,6 +27,11 @@ export class BadWordsController {
     const badWords = await BadWordsService.getMulti({ query: req.query })
     res.json(new OkResponse('Lấy danh sách từ ngữ cấm thành công', badWords))
   }
+
+  async getMultiMostUsed(req: Request, res: Response) {
+    const badWords = await BadWordsService.getMultiMostUsed({ query: req.query })
+    res.json(new OkResponse('Lấy danh sách từ ngữ cấm sử dụng gần đây thành công', badWords))
+  }
 }
 
 export default new BadWordsController()

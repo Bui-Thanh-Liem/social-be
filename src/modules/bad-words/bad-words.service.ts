@@ -131,6 +131,23 @@ export class BadWordsService {
     }
   }
 
+  async getMultiMostUsed({ query }: { query: any }) {
+    //
+    const { limit, skip } = getPaginationAndSafeQuery<IBadWord>(query)
+
+    //
+    const badWords = await BadWordsCollection.find({}).sort({ usage_count: -1 }).limit(limit).skip(skip).toArray()
+
+    const total = await BadWordsCollection.countDocuments({})
+
+    //
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: badWords
+    }
+  }
+
   //
   async delete({ bad_word_id }: { bad_word_id: string }) {
     //

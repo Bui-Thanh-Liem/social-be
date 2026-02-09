@@ -17,6 +17,8 @@ badWordsRoute
   .get(requestQueryValidate(QueryDtoSchema), asyncHandler(BadWordController.getMulti))
   .post(requestBodyValidate(ActionBadWordDtoSchema), asyncHandler(BadWordController.create))
 
+badWordsRoute.get('/most-used', requestQueryValidate(QueryDtoSchema), asyncHandler(BadWordController.getMultiMostUsed))
+
 badWordsRoute.patch(
   '/:bad_word_id',
   requestParamsValidate(paramIdBadWordsDtoSchema),
