@@ -1,12 +1,14 @@
 import { ObjectId } from 'mongodb'
 import { BadRequestError } from '~/core/error.response'
+import { ESourceViolation } from '~/shared/enums/common.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { slug } from '~/utils/slug.util'
-import { HashtagsSchema, HashtagsCollection } from './hashtags.schema'
-import { IHashtag } from './hashtags.interface'
 import BadWordsService from '../bad-words/bad-words.service'
+import UserViolationsService from '../user-violations/user-violations.service'
+import { IHashtag } from './hashtags.interface'
+import { HashtagsCollection, HashtagsSchema } from './hashtags.schema'
 
 class HashtagsService {
   //
@@ -49,12 +51,32 @@ class HashtagsService {
     const results = await Promise.all(
       names.map(async (name) => {
         const _slug = slug(name)
-        const _name = await BadWordsService.replaceBadWordsInText(name || '', user_id)
-        return HashtagsCollection.findOneAndUpdate(
+
+        // Lọc từ cấm trong tên hashtag
+        const _name = await BadWordsService.detectInText({
+          text: name,
+          user_id: user_id
+        })
+
+        //
+        const newHashtag = await HashtagsCollection.findOneAndUpdate(
           { slug: _slug },
-          { $setOnInsert: new HashtagsSchema({ name: _name }) },
+          { $setOnInsert: new HashtagsSchema({ name: _name.text }) },
           { upsert: true, returnDocument: 'after' }
         )
+
+        // Lưu vi phạm từ cấm nếu có
+        if (_name.bad_words_ids.length > 0) {
+          await UserViolationsService.create({
+            user_id: user_id,
+            source_id: user_id,
+            source: ESourceViolation.Hashtag,
+            final_content: _name.matched_words.join() || '',
+            bad_word_ids: _name.bad_words_ids
+          })
+        }
+
+        return newHashtag
       })
     )
 

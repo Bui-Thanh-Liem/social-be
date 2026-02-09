@@ -9,3 +9,17 @@ export enum EPriorityBadWord {
   Medium = 'Trung bình',
   Low = 'Thấp'
 }
+
+export enum EActionBadWord {
+  Warn = 'Cảnh báo',
+  Block = 'Chặn'
+}
+
+export enum ESourceViolation {
+  Tweet,
+  Auth,
+  Community,
+  Hashtag,
+  SearchHistory,
+  Message
+}

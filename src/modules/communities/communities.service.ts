@@ -34,6 +34,8 @@ import {
 import { ICommunity, ICommunityActivity, ICommunityPayload } from './communities.interface'
 import { IUser } from '../users/users.interface'
 import BadWordsService from '../bad-words/bad-words.service'
+import UserViolationsService from '../user-violations/user-violations.service'
+import { ESourceViolation } from '~/shared/enums/common.enum'
 
 interface IPromoteDemote {
   actor_id: string
@@ -48,14 +50,27 @@ class CommunityService {
       throw new ConflictError('Tên cộng đồng này đã được sử dụng.')
     }
 
-    // Lọc từ cấm trong tên và mô tả
-    const _name = await BadWordsService.replaceBadWordsInText(payload.name || '', user_id)
-    const _bio = await BadWordsService.replaceBadWordsInText(payload.bio || '', user_id)
+    // Lọc từ cấm trong name và bio
+    const [_name, _bio] = await Promise.all([
+      BadWordsService.detectInText({ text: payload.name || '', user_id }),
+      BadWordsService.detectInText({ text: payload.bio || '', user_id })
+    ])
 
     // Tạo cộng đồng
     const inserted = await CommunitiesCollection.insertOne(
-      new CommunitiesSchema({ ...payload, name: _name, bio: _bio, admin: new ObjectId(user_id) })
+      new CommunitiesSchema({ ...payload, name: _name.text, bio: _bio.text, admin: new ObjectId(user_id) })
     )
+
+    // Lưu vi phạm từ cấm nếu có
+    if (_name.bad_words_ids.length > 0 || _bio.bad_words_ids.length > 0) {
+      await UserViolationsService.create({
+        user_id: user_id,
+        source: ESourceViolation.Community,
+        source_id: inserted.insertedId.toString(),
+        final_content: (_name.matched_words.join() || '') + (_bio.matched_words.join() || '') + (payload.name || ''),
+        bad_word_ids: [_name.bad_words_ids, _bio.bad_words_ids].flat()
+      })
+    }
 
     if (!inserted.insertedId) {
       throw new BadRequestError('Không thể tạo cộng đồng, vui lòng thử lại.')

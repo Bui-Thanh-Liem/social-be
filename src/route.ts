@@ -21,6 +21,7 @@ import mediaRoute from './modules/media/media.route'
 import adminRoute from './modules/admin/admin.route'
 import { envs } from './configs/env.config'
 import badWordsRoute from './modules/bad-words/bad-words.route'
+import userViolationsRoute from './modules/user-violations/user-violations.route'
 // import { startMockDataTweets } from '~/utils/mock-data-tweet.util'
 
 const rootRoute = Router()
@@ -45,6 +46,7 @@ rootRoute.use('/tweets', tweetsRoute)
 rootRoute.use('/uploads', uploadsRoute)
 rootRoute.use('/users', usersRoute)
 rootRoute.use('/bad-words', badWordsRoute)
+rootRoute.use('/user-violations', userViolationsRoute)
 
 // Route tạo dữ liệu giả lập (mock data) cho việc phát triển và thử nghiệm
 rootRoute.post('/mock-data', async (req: Request, res: Response) => {

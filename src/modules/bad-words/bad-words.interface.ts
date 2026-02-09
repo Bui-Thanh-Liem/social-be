@@ -1,4 +1,4 @@
-import { EPriorityBadWord } from '~/shared/enums/common.enum'
+import { EActionBadWord, EPriorityBadWord } from '~/shared/enums/common.enum'
 import { IBase } from '../../shared/interfaces/schemas/base.interface'
 
 export interface IBadWord extends IBase {
@@ -6,4 +6,5 @@ export interface IBadWord extends IBase {
   priority: EPriorityBadWord
   replace_with: string
   usage_count: number
+  action: EActionBadWord
 }

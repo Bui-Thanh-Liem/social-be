@@ -9,7 +9,7 @@ import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { CONSTANT_CHUNK_SIZE, CONSTANT_JOB, CONSTANT_REGEX } from '~/shared/constants'
 import { CreateNotiCommentDto } from '~/modules/notifications/notifications.dto'
 import { CreateTweetDto } from '~/modules/tweets/tweets.dto'
-import { ETweetAudience } from '~/shared/enums/common.enum'
+import { ESourceViolation, ETweetAudience } from '~/shared/enums/common.enum'
 import { ETweetStatus } from '~/shared/enums/status.enum'
 import {
   EFeedType,
@@ -46,6 +46,7 @@ import { ICommunity } from '../communities/communities.interface'
 import { ITweet } from './tweets.interface'
 import { IUser } from '../users/users.interface'
 import BadWordsService from '../bad-words/bad-words.service'
+import UserViolationsService from '../user-violations/user-violations.service'
 
 class TweetsService {
   //
@@ -54,7 +55,10 @@ class TweetsService {
     const { audience, type, content, parent_id, community_id, mentions, medias, bgColor, textColor, codes } = payload
 
     // Lọc từ cấm trong content
-    const _content = await BadWordsService.replaceBadWordsInText(content || '', user_id)
+    const _content = await BadWordsService.detectInText({
+      text: content || '',
+      user_id
+    })
 
     //
     let _medias: undefined | IMedia[] = undefined
@@ -82,7 +86,7 @@ class TweetsService {
 
     // Thêm từ khóa vào trending (những từ trong content, nhưng được viết in hoa)
     if (_content && type !== ETweetType.Comment) {
-      const keyWords = _content.match(CONSTANT_REGEX.FIND_KEYWORD) || []
+      const keyWords = _content.text.match(CONSTANT_REGEX.FIND_KEYWORD) || []
       await Promise.all(keyWords.map((w) => TrendingService.createTrending(w, user_id)))
     }
 
@@ -118,7 +122,7 @@ class TweetsService {
         user_id: new ObjectId(user_id),
         audience: audience,
         hashtags: hashtags,
-        content: _content,
+        content: _content.text,
         parent_id: parent_id ? new ObjectId(parent_id) : null,
         community_id: community_id ? new ObjectId(community_id) : null,
         mentions: mentions ? mentions.map((id) => new ObjectId(id)) : [],
@@ -129,6 +133,17 @@ class TweetsService {
         codes: codes || null
       })
     )
+
+    // Lưu vi phạm từ cấm nếu có
+    if (_content.bad_words_ids.length > 0) {
+      await UserViolationsService.create({
+        user_id: user_id,
+        source: ESourceViolation.Tweet,
+        bad_word_ids: _content.bad_words_ids,
+        source_id: newTweet.insertedId.toString(),
+        final_content: _content.matched_words.join() || ''
+      })
+    }
 
     // Mentions
     const sender = await UsersCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { name: 1 } })
