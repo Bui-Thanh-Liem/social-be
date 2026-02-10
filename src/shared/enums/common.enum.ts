@@ -16,10 +16,10 @@ export enum EActionBadWord {
 }
 
 export enum ESourceViolation {
-  Tweet,
-  Auth,
-  Community,
-  Hashtag,
-  SearchHistory,
-  Message
+  Tweet = 'Nội dung bài viết',
+  Auth = 'Thông tin cá nhân',
+  Community = 'Thông tin cộng đồng',
+  Hashtag = 'Hashtag',
+  SearchHistory = 'Lịch sử tìm kiếm',
+  Message = 'Tin nhắn'
 }

@@ -3,9 +3,14 @@ export interface IQuery<T> {
   page?: string
   sort?: Partial<Record<keyof T, 1 | -1>>
   q?: string
-  qe?: string // p extra
+  qe?: string // q extra
+  qf?: {
+    f: keyof T // field
+    v: string // value
+    o?: 'eq' | 'ne' | 'gt' | 'lt' | 'gte' | 'lte' | 'in' | 'nin'
+  }
   t?: 'top'
-  f?: 'media' // trả về những tweet có medias
+  f?: 'media' // trả về những tweet có media
   pf?: string // people follow
   sd?: Date
   ed?: Date
@@ -16,4 +21,6 @@ export interface IQuery<T> {
   ishl?: '1' | '0'
   isMedia?: '1' | '0'
   ids?: string[]
+
+  top?: string
 }
