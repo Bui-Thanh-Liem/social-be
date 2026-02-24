@@ -10,6 +10,7 @@ import { removeVietnameseAccent } from '~/utils/remove-vietnamese-accent.util'
 import { ActionBadWordDto } from './bad-words.dto'
 import { IBadWord } from './bad-words.interface'
 import { BadWordSchema, BadWordsCollection } from './bad-words.schema'
+import { getFilterQuery } from '~/utils/get-filter-query'
 
 interface IBadWordsCached {
   _id: string
@@ -94,8 +95,13 @@ export class BadWordsService {
   }
 
   async getMulti({ query }: { query: any }) {
-    const { skip, limit, sort, q } = getPaginationAndSafeQuery<IBadWord>(query)
-    const filter = q ? { words: { $regex: q, $options: 'i' } } : {}
+    const { skip, limit, sort, q, qf } = getPaginationAndSafeQuery<IBadWord>(query)
+    let filter: Partial<Record<keyof IBadWord, any>> = q ? { words: { $regex: q, $options: 'i' } } : {}
+
+    //
+    filter = getFilterQuery(qf, filter)
+
+    //
     const badWords = await BadWordsCollection.aggregate<BadWordSchema>([
       { $match: filter },
       { $sort: sort },
@@ -103,6 +109,8 @@ export class BadWordsService {
       { $limit: limit }
     ]).toArray()
     const total = await BadWordsCollection.countDocuments(filter)
+
+    //
     return { total, total_page: Math.ceil(total / limit), items: badWords }
   }
 
@@ -119,13 +127,19 @@ export class BadWordsService {
     return deletedBadWord
   }
 
-  async incrementUsageCount(words: string, user_id: string) {
+  //
+  private async incrementUsageCount(words: string, user_id: string) {
+    // Warn
     notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
       content: 'Bạn đã sử dụng một số từ ngữ không phù hợp, vui lòng chú ý hơn.',
       type: ENotificationType.Other,
       receiver: user_id,
       sender: user_id
     })
+
+    // Block
+
+    //
     return await BadWordsCollection.findOneAndUpdate(
       { words },
       { $inc: { usage_count: 1 } },

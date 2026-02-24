@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express'
 // import { startMockData } from '~/utils/mock-data.util'
-import authRoute from './modules/auth/auth.routes'
+import authRoute from './modules/auth-user/auth.routes'
 import bookmarksRoute from './modules/bookmarks/bookmarks.route'
 import communitiesRoute from './modules/communities/communities.route'
 import conversationsRoute from './modules/conversations/conversations.route'

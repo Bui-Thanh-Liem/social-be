@@ -4,6 +4,7 @@ import { IJwtPayload } from './shared/interfaces/common/jwt.interface'
 import { ITweet } from './shared/interfaces/schemas/tweet.interface'
 import { IUser } from './shared/interfaces/schemas/user.interface'
 import { IAdmin } from './modules/admin/admin.interface'
+import { IQuery } from './shared/interfaces/common/query.interface'
 
 declare module 'express' {
   interface Request {
@@ -13,6 +14,7 @@ declare module 'express' {
     tweet?: ITweet
     decoded_authorization?: IJwtPayload
     decoded_refresh_token?: IJwtPayload
+    queryParsed?: IQuery
   }
 }
 

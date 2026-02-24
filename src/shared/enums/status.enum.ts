@@ -20,3 +20,8 @@ export enum EInvitationStatus {
   Pending,
   Accepted
 }
+
+export enum EUserStatus {
+  Block = 'Đã khoá',
+  Active = 'Đang sử dụng'
+}

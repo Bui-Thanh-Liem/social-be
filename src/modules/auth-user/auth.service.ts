@@ -8,7 +8,7 @@ import cacheService from '~/helpers/cache.helper'
 import { emailQueue, notificationQueue } from '~/infra/queues'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { ESourceViolation } from '~/shared/enums/common.enum'
-import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
+import { EAuthVerifyStatus, EUserStatus } from '~/shared/enums/status.enum'
 import { ENotificationType, ETokenType } from '~/shared/enums/type.enum'
 import { ISendVerifyEmail } from '~/shared/interfaces/common/mail.interface'
 import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oauth-google.interface'
@@ -121,6 +121,10 @@ class AuthService {
       throw new UnauthorizedError('Email hoặc mật khẩu không đúng.')
     }
 
+    if (foundUser.status.status !== EUserStatus.Active) {
+      throw new UnauthorizedError('Tài khoản của bạn đã bị khoá, vui lòng liên hệ quản trị viên')
+    }
+
     // Kiểm tra mật khẩu đúng hay không
     const verify_pass = verifyPassword(payload.password, foundUser.password)
     if (!verify_pass) {
@@ -159,6 +163,10 @@ class AuthService {
 
     // Nếu đã đăng nhập rồi thì tạo token gửi về client
     if (exist) {
+      if (exist.status.status !== EUserStatus.Active) {
+        throw new UnauthorizedError('Tài khoản của bạn đã bị khoá, vui lòng liên hệ quản trị viên')
+      }
+
       const [access_token, refresh_token] = await createTokenPair({
         payload: { user_id: exist._id.toString(), role: 'USER', admin_id: '' },
         private_access_key: envs.JWT_SECRET_ACCESS,

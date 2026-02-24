@@ -6,7 +6,7 @@ import { NotFoundError, UnauthorizedError } from '~/core/error.response'
 import cacheService from '~/helpers/cache.helper'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { CONSTANT_JOB } from '~/shared/constants'
-import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
+import { EAuthVerifyStatus, EUserStatus } from '~/shared/enums/status.enum'
 import { ETokenType } from '~/shared/enums/type.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
@@ -18,6 +18,7 @@ import { logger } from '~/utils/logger.util'
 import followsService from '../follows/follows.service'
 import { UsersCollection, UsersSchema } from './users.schema'
 import { IUser } from './users.interface'
+import { getFilterQuery } from '~/utils/get-filter-query'
 
 class UsersService {
   async verifyEmail({
@@ -526,7 +527,8 @@ class UsersService {
       {
         projection: {
           email: 1,
-          password: 1
+          password: 1,
+          status: 1
         }
       }
     )
@@ -549,24 +551,24 @@ class UsersService {
   //
   async adminGetUsers({ admin_id, query }: { admin_id: string; query: IQuery<IUser> }): Promise<ResMultiType<IUser>> {
     //
-    const { skip, limit, sort, q } = getPaginationAndSafeQuery<IUser>(query)
+    const { skip, limit, sort, q, qf } = getPaginationAndSafeQuery<IUser>(query)
+    let filter: any = q
+      ? { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] }
+      : {}
 
     //
-    const has_q = {
-      query: {}
-    }
+    filter = getFilterQuery(qf, filter as any)
 
-    if (q) {
-      has_q.query = { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] }
+    // Trường hợp đặt biệt , status lồng trong 2 cấp
+    if (filter?.status) {
+      filter['status.status'] = filter.status
+      delete filter.status
     }
 
     //
     const users = await UsersCollection.aggregate<UsersSchema>([
       {
-        $match: {
-          _id: { $ne: new ObjectId(admin_id) },
-          ...has_q.query
-        }
+        $match: filter
       },
       {
         $sort: sort
@@ -584,10 +586,7 @@ class UsersService {
       }
     ]).toArray()
 
-    const total = await UsersCollection.countDocuments({
-      _id: { $ne: new ObjectId(admin_id) },
-      ...has_q.query
-    })
+    const total = await UsersCollection.countDocuments(filter)
 
     return {
       total,
@@ -623,6 +622,11 @@ class UsersService {
           }
         : null
     }))
+  }
+
+  //
+  async updateUser() {
+    await UsersCollection.updateMany({}, { $set: { status: { status: EUserStatus.Active, reason: '' } } })
   }
 }
 

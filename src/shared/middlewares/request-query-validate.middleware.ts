@@ -9,8 +9,10 @@ export const requestQueryValidate = (schema: z.ZodSchema<any>) => (req: Request,
     }
 
     //
-    schema.parse(req.query)
+    const parsed = schema.parse(req.query)
+    req.queryParsed = parsed
 
+    //
     next()
   } catch (error) {
     next(error)

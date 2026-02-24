@@ -24,7 +24,7 @@ class AdminController {
     const { admin_id } = req.decoded_authorization as IJwtPayload
     const result = await UsersService.adminGetUsers({
       admin_id,
-      query: req.query
+      query: req.queryParsed
     })
     res.json(new OkResponse('Lấy danh sách người dùng thành công', result))
   }

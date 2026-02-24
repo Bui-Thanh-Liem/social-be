@@ -1,6 +1,14 @@
 import z from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
 
+export const MongoOperatorSchema = z.enum(['$eq', '$ne', '$gt', '$lt', '$gte', '$lte', '$in', '$nin'])
+
+const qfDtoSchema = z.object({
+  f: z.string().trim(),
+  v: z.string().trim(),
+  o: MongoOperatorSchema
+})
+
 export const QueryDtoSchema = z.object({
   // page: z
   //   .string()
@@ -27,6 +35,16 @@ export const QueryDtoSchema = z.object({
     .trim()
     .optional()
     .refine((val) => !val || val === 'on', { message: 'Người theo dõi không hợp lệ (on)' }),
+  qf: z.preprocess((val) => {
+    if (typeof val === 'string') {
+      try {
+        return JSON.parse(val)
+      } catch {
+        return undefined
+      }
+    }
+    return val
+  }, z.array(qfDtoSchema).optional().default([])),
   user_id: z
     .string()
     .trim()

@@ -1,8 +1,8 @@
 import { Collection, Db } from 'mongodb'
-import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
+import { EAuthVerifyStatus, EUserStatus } from '~/shared/enums/status.enum'
 import { IMediaBare } from '~/modules/media/media.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
-import { IUser } from './users.interface'
+import { IUser, IUserStatus } from './users.interface'
 
 const _COLLECTION_NAME = 'users'
 export class UsersSchema extends BaseSchema implements IUser {
@@ -19,6 +19,7 @@ export class UsersSchema extends BaseSchema implements IUser {
   username?: string
   avatar?: IMediaBare
   cover_photo?: IMediaBare
+  status: IUserStatus
 
   constructor(user: Partial<IUser>) {
     super()
@@ -30,6 +31,7 @@ export class UsersSchema extends BaseSchema implements IUser {
     this.forgot_password_token = user.forgot_password_token || ''
     this.verify = user.verify || EAuthVerifyStatus.Unverified
     this.bio = user.bio || ''
+    this.status = user.status || { status: EUserStatus.Active, reason: '' }
     this.location = user.location || ''
     this.website = user.website || ''
     this.username = user.username || ''

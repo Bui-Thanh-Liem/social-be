@@ -24,7 +24,7 @@ export class BadWordsController {
   }
 
   async getMulti(req: Request, res: Response) {
-    const badWords = await BadWordsService.getMulti({ query: req.query })
+    const badWords = await BadWordsService.getMulti({ query: req.queryParsed })
     res.json(new OkResponse('Lấy danh sách từ ngữ cấm thành công', badWords))
   }
 

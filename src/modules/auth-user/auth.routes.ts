@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import AuthController from '~/modules/auth/auth.controller'
+import AuthController from '~/modules/auth-user/auth.controller'
 import { loginRateLimit } from '~/shared/middlewares/ratelimit.middleware'
 import { requestBodyValidate } from '~/shared/middlewares/request-body-validate.middleware'
 import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
