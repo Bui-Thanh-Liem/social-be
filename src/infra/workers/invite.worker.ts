@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq'
-import { redisCluster } from '~/configs/redis.config'
+import { bullRedisOptions } from '~/configs/redis.config'
 import { CreateCommunityInvitationDto } from '~/modules/communities/communities.dto'
 import CommunityInvitationService from '~/modules/communities/community-invitation.service'
 import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants'
@@ -20,7 +20,7 @@ export const inviteWorker = new Worker(
   },
   {
     concurrency: 5,
-    connection: redisCluster
+    connection: bullRedisOptions
   }
 )
 

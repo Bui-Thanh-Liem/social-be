@@ -1,17 +1,17 @@
 import { JobProgress, Queue, QueueEvents } from 'bullmq'
-import { redisCluster } from '~/configs/redis.config'
+import { bullRedisOptions } from '~/configs/redis.config'
 import { CONSTANT_QUEUE } from '~/shared/constants'
 import { configDefaultJobOptions } from './config-job'
 
 export const emailQueue = new Queue(CONSTANT_QUEUE.MAIL, {
-  connection: redisCluster,
+  connection: bullRedisOptions,
   defaultJobOptions: {
     ...configDefaultJobOptions
   }
 })
 
 const queueEvents = new QueueEvents(CONSTANT_QUEUE.MAIL, {
-  connection: redisCluster
+  connection: bullRedisOptions
 })
 
 queueEvents.on('completed', (jobId, result) => {

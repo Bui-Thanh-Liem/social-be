@@ -1,9 +1,9 @@
-import { redisCluster } from '~/configs/redis.config'
+import { redis } from '~/configs/redis.config'
 import { createKeyUserLastSeen, createKeyUserOnline } from '~/utils/create-key-cache.util'
 import { logger } from '~/utils/logger.util'
 
 export class CacheService {
-  private client = redisCluster
+  private client = redis
   private defaultTTL: number = 600 // 10 minutes in seconds
 
   constructor() {

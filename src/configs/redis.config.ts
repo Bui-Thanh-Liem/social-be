@@ -1,59 +1,37 @@
-import Redis, { ClusterOptions } from 'ioredis'
+import Redis from 'ioredis'
 import { envs } from './env.config'
 
-const redisClusterOptionsProd: ClusterOptions = {
-  // KHÔNG dùng natMap ở đây nữa
-  dnsLookup: (address, callback) => callback(null, address),
-  redisOptions: {
-    // tls: {}, // Bắt buộc phải có nếu ElastiCache bật Encryption in-transit
-    // username: process.env.REDIS_USERNAME, // Nếu có đặt username
-    // password: process.env.REDIS_PASSWORD, // Nếu có đặt password
-    connectTimeout: 10000,
-    showFriendlyErrorStack: true
-  },
+const redisOptions = {
+  host: envs.REDIS_HOST,
+  port: Number(envs.REDIS_PORT),
 
-  // Giúp ioredis tự tìm lại các node nếu bạn khởi động lại container Redis
-  slotsRefreshTimeout: 5000,
-  // Rất quan trọng: cho phép kết nối lại khi cluster có biến động
-  clusterRetryStrategy: (times) => Math.min(times * 100, 2000)
+  connectTimeout: 10000,
+  showFriendlyErrorStack: true
+
+  // Nếu có auth
+  // username: envs.REDIS_USERNAME,
+  // password: envs.REDIS_PASSWORD,
+
+  // Nếu dùng TLS (ElastiCache / Redis Cloud)
+  // tls: {}
 }
 
-const redisClusterOptionsDev: ClusterOptions = {
-  redisOptions: {
-    showFriendlyErrorStack: true,
-    enableReadyCheck: true,
-    connectTimeout: 10000
-  },
-  enableOfflineQueue: false, // Không xếp hàng lệnh khi node lỗi -> tránh treo app
-  // ioredis sẽ tự động gọi natMap khi nhận được phản hồi MOVED từ Redis Cluster
-  natMap: (address: string) => {
-    const [ip, port] = address.split(':')
-    const match = ip.match(/172\.\d+\.0\.(\d+)/) // Match cả 172.18, 172.19, v.v.
+const bullRedisOptions = {
+  host: envs.REDIS_HOST,
+  port: Number(envs.REDIS_PORT),
 
-    if (match) {
-      const lastOctet = parseInt(match[1])
-
-      // Công thức ánh xạ dựa trên Compose của bạn:
-      // .2 (redis-1) => 6371
-      // .5 (redis-4) => 6374
-      const mappedPort = Number(envs.REDIS_PORT) + (lastOctet - 2)
-
-      console.log(`[REDIS-CLUSTER] Map nội bộ ${address} thành localhost:${mappedPort}`)
-
-      return { host: '127.0.0.1', port: mappedPort }
-    }
-    return null
-  }
+  maxRetriesPerRequest: null, // 🔥 BẮT BUỘC
+  enableReadyCheck: false // khuyến nghị cho BullMQ
 }
 
-const redisCluster = new Redis.Cluster(
-  [
-    { host: envs.REDIS_HOST, port: Number(envs.REDIS_PORT) }, // 6379
-    { host: envs.REDIS_HOST, port: Number(envs.REDIS_PORT) + 1 } // 6380
-  ],
-  {
-    ...(envs.NODE_ENV === 'production' ? redisClusterOptionsProd : redisClusterOptionsDev)
-  }
-)
+const redis = new Redis(redisOptions)
 
-export { redisCluster }
+redis.on('connect', () => {
+  console.log('✅ Redis connected')
+})
+
+redis.on('error', (err) => {
+  console.error('❌ Redis error:', err)
+})
+
+export { redis, bullRedisOptions }

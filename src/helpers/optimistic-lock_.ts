@@ -1,4 +1,4 @@
-import { redisCluster } from '~/configs/redis.config'
+import { redis } from '~/configs/redis.config'
 import { logger } from '~/utils/logger.util'
 
 interface OptimisticValue<T> {
@@ -7,7 +7,7 @@ interface OptimisticValue<T> {
 }
 
 class OptimisticLockService {
-  private client = redisCluster
+  private client = redis
 
   constructor() {
     // ioredis tự quản lý kết nối, ta chỉ cần lắng nghe sự kiện

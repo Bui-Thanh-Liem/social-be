@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq'
-import { redisCluster } from '~/configs/redis.config'
+import { bullRedisOptions } from '~/configs/redis.config'
 import MessagesService from '~/modules/messages/messages.service'
 import TweetsService from '~/modules/tweets/tweets.service'
 import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants'
@@ -28,7 +28,7 @@ export const cleanupWorker = new Worker(
   },
   {
     concurrency: 5,
-    connection: redisCluster,
+    connection: bullRedisOptions,
     stalledInterval: 30000, // 30 seconds
     lockDuration: 30000 // 30 seconds
   }

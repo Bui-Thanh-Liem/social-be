@@ -2849,8 +2849,51 @@ class TweetsService {
       },
       {
         $limit: limit
+      },
+      {
+        $lookup: {
+          from: 'communities',
+          localField: 'community_id',
+          foreignField: '_id',
+          as: 'community_id',
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                slug: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: { path: '$community_id', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user_id',
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                username: 1,
+                email: 1,
+                avatar: 1,
+                verify: 1,
+                cover_photo: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: { path: '$user_id', preserveNullAndEmptyArrays: true }
       }
     ]).toArray()
+    console.log('tweets :::', tweets)
 
     const total = await TweetsCollection.countDocuments(match_condition)
 

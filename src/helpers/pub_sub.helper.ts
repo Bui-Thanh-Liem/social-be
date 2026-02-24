@@ -1,14 +1,14 @@
-import { redisCluster } from '~/configs/redis.config'
+import { Redis } from 'ioredis'
+import { redis } from '~/configs/redis.config'
 import { logger } from '~/utils/logger.util'
-import { Cluster } from 'ioredis'
 
 class PubSubService {
-  private publisher: Cluster
-  private subscriber: Cluster
+  private publisher: Redis
+  private subscriber: Redis
 
   constructor() {
     // Trong ioredis, chúng ta sử dụng lại cấu hình của publisher
-    this.publisher = redisCluster
+    this.publisher = redis
 
     // Subscriber cần một connection riêng biệt hoàn toàn
     // duplicate() sẽ sao chép toàn bộ cấu hình (bao gồm cả natMap)
@@ -18,7 +18,7 @@ class PubSubService {
     this.setupLogging(this.subscriber, 'Subscriber')
   }
 
-  private setupLogging(client: Cluster, label: string) {
+  private setupLogging(client: Redis, label: string) {
     client.on('ready', () => logger.info(`Redis ${label} - Ready`))
     client.on('error', (err) => logger.error(`Redis ${label} Error:`, err))
     client.on('end', () => logger.info(`Redis ${label} Disconnected`))

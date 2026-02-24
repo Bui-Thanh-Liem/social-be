@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq'
-import { redisCluster } from '~/configs/redis.config'
+import { bullRedisOptions } from '~/configs/redis.config'
 import likesService from '~/modules/likes/likes.service'
 import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants'
 import { logger } from '~/utils/logger.util'
@@ -17,7 +17,7 @@ export const syncWorker = new Worker(
   },
   {
     concurrency: 5,
-    connection: redisCluster
+    connection: bullRedisOptions
   }
 )
 

@@ -1,8 +1,8 @@
-import { redisCluster } from '~/configs/redis.config'
+import { redis } from '~/configs/redis.config'
 import { logger } from '~/utils/logger.util'
 
 class PessimisticLockService {
-  private client = redisCluster
+  private client = redis
 
   constructor() {
     this.client.on('ready', () => logger.info('Redis Cluster - PessimisticLock is Ready'))

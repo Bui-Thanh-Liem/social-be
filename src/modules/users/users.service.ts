@@ -623,11 +623,6 @@ class UsersService {
         : null
     }))
   }
-
-  //
-  async updateUser() {
-    await UsersCollection.updateMany({}, { $set: { status: { status: EUserStatus.Active, reason: '' } } })
-  }
 }
 
 export default new UsersService()
