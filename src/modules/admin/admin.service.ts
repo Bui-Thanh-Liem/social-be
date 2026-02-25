@@ -1,16 +1,18 @@
 import { ObjectId } from 'mongodb'
+import { generateSecret, generateURI, verify } from 'otplib'
+import { toDataURL } from 'qrcode'
+import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { envs } from '~/configs/env.config'
-import { NotFoundError, UnauthorizedError } from '~/core/error.response'
+import { BadRequestError, NotFoundError, UnauthorizedError } from '~/core/error.response'
 import cacheService from '~/helpers/cache.helper'
+import { IAdmin } from '~/modules/admin/admin.interface'
 import { AdminCollection } from '~/modules/admin/admin.schema'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
-import { IAdmin } from '~/modules/admin/admin.interface'
 import { createTokenPair } from '~/utils/auth.util'
 import { createKeyAdminActive } from '~/utils/create-key-cache.util'
 import { hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { verifyToken } from '~/utils/jwt.util'
 import TokensService from '../tokens/tokens.service'
-import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { LoginAdminDto } from './admin.dto'
 
 class AdminService {
@@ -66,6 +68,78 @@ class AdminService {
   }
 
   //
+  async setupTwoFactorAuth({ admin_id, email }: { admin_id: string; email: string }) {
+    // 1. Tạo secret
+    const secret = generateSecret()
+
+    // 2. Luu secret vào database của admin hiện tại
+    await AdminCollection.updateOne({ _id: new ObjectId(admin_id), email }, { $set: { twoFactorSecret: secret } })
+
+    // 3. Tạo URI
+    const otpAuth = generateURI({
+      secret,
+      period: 30, // thời gian hiệu lực của mã OTP (mặc định là 30 giây)
+      label: email,
+      issuer: 'admin.devandbug.info.vn'
+    })
+
+    // 4. Chuyển URI thành QR code để admin có thể quét
+    const qrCodeUrl = await toDataURL(otpAuth)
+
+    // Trả về secret để admin có thể cấu hình trên app 2FA của họ
+    return { secret, qrCodeUrl }
+  }
+
+  //
+  async activeTwoFactorAuth({ admin_id, token }: { admin_id: string; token: string }) {
+    // 1. Lấy secret từ database
+    const admin = await AdminCollection.findOne({ _id: new ObjectId(admin_id) }, { projection: { twoFactorSecret: 1 } })
+    if (!admin || !admin.twoFactorSecret) {
+      throw new NotFoundError('Admin không tồn tại hoặc chưa thiết lập 2FA.')
+    }
+
+    // 2. Xác thực token OTP mà admin nhập vào với secret đã lưu
+    const isValid = await verify({
+      token,
+      secret: admin?.twoFactorSecret || ''
+    })
+
+    // 3. Nếu xác thực thành công, kích hoạt 2FA cho admin
+    if (!isValid.valid) {
+      throw new BadRequestError('Mã không hợp lệ.')
+    }
+
+    // Kích hoạt 2FA cho admin
+    await AdminCollection.updateOne({ _id: new ObjectId(admin_id) }, { $set: { twoFactorEnabled: true } })
+    return true
+  }
+
+  //
+  async loginWithTwoFactorAuth(admin_id: string, token: string) {
+    // 1. Nếu 2FA không được kích hoạt thì không cần xác thực nữa
+    const admin = await AdminCollection.findOne(
+      { _id: new ObjectId(admin_id) },
+      { projection: { twoFactorSecret: 1, twoFactorEnabled: 1 } }
+    )
+    if (!admin || !admin.twoFactorEnabled) {
+      throw new NotFoundError('Admin không tồn tại hoặc chưa thiết lập 2FA.')
+    }
+
+    // 2. Xác thực token OTP mà admin nhập vào với secret đã lưu
+    const isValid = await verify({
+      token,
+      secret: admin?.twoFactorSecret || ''
+    })
+
+    // Nếu xác thực không thành công, trả về lỗi
+    if (!isValid.valid) {
+      throw new BadRequestError('Mã không hợp lệ.')
+    }
+
+    return true
+  }
+
+  //
   async findOneByEmail(email: string) {
     return await AdminCollection.findOne(
       { email },
@@ -86,7 +160,7 @@ class AdminService {
       console.log('❌ cache hết hạn lấy admin hiện tại trong database 🤦‍♂️')
       adminActive = await AdminCollection.findOne(
         { _id: new ObjectId(admin_id) },
-        { projection: { email_verify_token: 0, forgot_password_token: 0, password: 0 } }
+        { projection: { email_verify_token: 0, forgot_password_token: 0, password: 0, twoFactorSecret: 0 } }
       )
       await cacheService.set(keyCache, adminActive, 300)
     }

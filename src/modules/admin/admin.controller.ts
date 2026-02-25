@@ -6,12 +6,32 @@ import MediaService from '../media/media.service'
 import UsersService from '../users/users.service'
 import TweetsService from '../tweets/tweets.service'
 import communitiesService from '../communities/communities.service'
+import { IAdmin } from './admin.interface'
 
 class AdminController {
   //
   async login(req: Request, res: Response) {
     const result = await AdminService.login(req.body)
     res.json(new OkResponse('Đăng nhập thành công', result))
+  }
+
+  //
+  async setupTwoFactorAuth(req: Request, res: Response) {
+    const { admin_id } = req.decoded_authorization as IJwtPayload
+    const { email } = req.admin as IAdmin
+    const result = await AdminService.setupTwoFactorAuth({
+      admin_id,
+      email
+    })
+    res.json(new OkResponse('Cài đặt xác thực hai yếu tố thành công', result))
+  }
+
+  //
+  async activeTwoFactorAuth(req: Request, res: Response) {
+    const { admin_id } = req.decoded_authorization as IJwtPayload
+    const { token } = req.body
+    await AdminService.activeTwoFactorAuth({ admin_id, token })
+    res.json(new OkResponse('Kích hoạt xác thực hai yếu tố thành công'))
   }
 
   //
