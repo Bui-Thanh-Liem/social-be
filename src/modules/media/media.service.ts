@@ -5,14 +5,17 @@ import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { MediasCollection } from './media.schema'
 import { IUser } from '../users/users.interface'
+import { getFilterQuery } from '~/utils/get-filter-query'
 
 class MediaService {
   //
   async adminGetMedia({ admin_id, query }: { admin_id: string; query: IQuery<IMedia> }): Promise<ResMultiType<IMedia>> {
-    const { skip, limit, sort } = getPaginationAndSafeQuery<IMedia>(query)
+    const { skip, limit, sort, qf } = getPaginationAndSafeQuery<IMedia>(query)
+    const filter = getFilterQuery(qf, {})
 
     const [items, total] = await Promise.all([
       MediasCollection.aggregate<IMedia>([
+        { $match: filter },
         { $sort: sort },
         { $skip: skip },
         { $limit: limit },

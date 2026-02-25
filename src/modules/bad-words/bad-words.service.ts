@@ -102,13 +102,15 @@ export class BadWordsService {
     filter = getFilterQuery(qf, filter)
 
     //
-    const badWords = await BadWordsCollection.aggregate<BadWordSchema>([
-      { $match: filter },
-      { $sort: sort },
-      { $skip: skip },
-      { $limit: limit }
-    ]).toArray()
-    const total = await BadWordsCollection.countDocuments(filter)
+    const [badWords, total] = await Promise.all([
+      BadWordsCollection.aggregate<BadWordSchema>([
+        { $match: filter },
+        { $sort: sort },
+        { $skip: skip },
+        { $limit: limit }
+      ]).toArray(),
+      BadWordsCollection.countDocuments(filter)
+    ])
 
     //
     return { total, total_page: Math.ceil(total / limit), items: badWords }

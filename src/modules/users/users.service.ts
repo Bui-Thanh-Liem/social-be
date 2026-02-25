@@ -566,27 +566,22 @@ class UsersService {
     }
 
     //
-    const users = await UsersCollection.aggregate<UsersSchema>([
-      {
-        $match: filter
-      },
-      {
-        $sort: sort
-      },
-      {
-        $skip: skip
-      },
-      { $limit: limit },
-      {
-        $project: {
-          password: 0,
-          email_verify_token: 0,
-          forgot_password_token: 0
+    const [users, total] = await Promise.all([
+      UsersCollection.aggregate<UsersSchema>([
+        { $match: filter },
+        { $sort: sort },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $project: {
+            password: 0,
+            email_verify_token: 0,
+            forgot_password_token: 0
+          }
         }
-      }
-    ]).toArray()
-
-    const total = await UsersCollection.countDocuments(filter)
+      ]).toArray(),
+      UsersCollection.countDocuments(filter)
+    ])
 
     return {
       total,

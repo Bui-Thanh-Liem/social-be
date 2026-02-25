@@ -32,14 +32,14 @@ class AdminController {
   //
   async adminGetMedia(req: Request, res: Response) {
     // const { admin_id } = req.admin_decoded_authorization as IJwtPayload
-    const result = await MediaService.adminGetMedia({ admin_id: '', query: req.query })
+    const result = await MediaService.adminGetMedia({ admin_id: '', query: req.queryParsed })
     res.json(new OkResponse('Lấy danh sách hình ảnh / video thành công', result))
   }
 
   //
   async adminGetTweets(req: Request, res: Response) {
     // const { admin_id } = req.admin_decoded_authorization as IJwtPayload
-    const result = await TweetsService.adminGetTweets({ admin_id: '', query: req.query })
+    const result = await TweetsService.adminGetTweets({ admin_id: '', query: req.queryParsed })
     res.json(new OkResponse('Lấy danh sách bài viết thành công', result))
   }
 

@@ -1261,7 +1261,7 @@ class CommunityService {
     }
   }
 
-  // ------------------------ ACTIVITY ------------------------------
+  // ================ ACTIVITY ============
   async getMultiActivity({
     community_id,
     queries
@@ -1300,7 +1300,7 @@ class CommunityService {
     return !!res.insertedId
   }
 
-  // ========== ADMIN ================
+  // ================ ADMIN ===============
   async adminGetCommunities({
     query
   }: {
@@ -1308,41 +1308,81 @@ class CommunityService {
     query: IQuery<ICommunity>
   }): Promise<ResMultiType<ICommunity>> {
     const { skip, limit, sort, q, qe } = getPaginationAndSafeQuery<ICommunity>(query)
+    const filter: any = q
+      ? { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] }
+      : {}
 
     //
-    const communities = await CommunitiesCollection.aggregate<CommunitiesSchema>([
-      { $sort: sort },
-      { $skip: skip },
-      { $limit: limit },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'admin',
-          foreignField: '_id',
-          as: 'admin',
-          pipeline: [
-            {
-              $project: {
-                _id: 1,
-                name: 1,
-                avatar: 1,
-                username: 1
+    const [communities, total] = await Promise.all([
+      CommunitiesCollection.aggregate<CommunitiesSchema>([
+        { $match: filter },
+        { $sort: sort },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'admin',
+            foreignField: '_id',
+            as: 'admin',
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  verify: 1,
+                  avatar: 1,
+                  username: 1
+                }
               }
-            }
-          ]
+            ]
+          }
+        },
+        // count members
+        {
+          $lookup: {
+            from: 'community-members',
+            localField: '_id',
+            foreignField: 'community_id',
+            as: 'members'
+          }
+        },
+
+        // count mentors
+        {
+          $lookup: {
+            from: 'community-mentors',
+            localField: '_id',
+            foreignField: 'community_id',
+            as: 'mentors'
+          }
+        },
+
+        {
+          $addFields: {
+            member_count: { $size: '$members' },
+            mentor_count: { $size: '$mentors' }
+          }
+        },
+
+        {
+          $unwind: {
+            path: '$admin',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+
+        {
+          $project: {
+            members: 0,
+            mentors: 0
+          }
         }
-      },
-      {
-        $unwind: {
-          path: '$admin',
-          preserveNullAndEmptyArrays: true
-        }
-      }
-    ]).toArray()
+      ]).toArray(),
+      CommunitiesCollection.countDocuments({})
+    ])
 
     //
-    const total = await CommunitiesCollection.countDocuments({})
-
     return {
       total,
       total_page: Math.ceil(total / limit),

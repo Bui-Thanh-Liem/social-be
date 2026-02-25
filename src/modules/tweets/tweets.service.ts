@@ -47,6 +47,7 @@ import { ITweet } from './tweets.interface'
 import { IUser } from '../users/users.interface'
 import BadWordsService from '../bad-words/bad-words.service'
 import UserViolationsService from '../user-violations/user-violations.service'
+import { getFilterQuery } from '~/utils/get-filter-query'
 
 class TweetsService {
   //
@@ -2829,17 +2830,16 @@ class TweetsService {
     query: IQuery<TweetsSchema>
     admin_id: string
   }): Promise<ResMultiType<TweetsSchema>> {
-    const { skip, limit, sort, q } = getPaginationAndSafeQuery<TweetsSchema>(query)
+    const { skip, limit, sort, q, qf } = getPaginationAndSafeQuery<TweetsSchema>(query)
+    let filter: any = q ? { $text: { $search: q } } : {}
 
-    const match_condition: any = {}
+    //
+    filter = getFilterQuery(qf, filter as any)
 
-    if (q) {
-      match_condition.$text = { $search: q }
-    }
-
+    //
     const tweets = await TweetsCollection.aggregate<TweetsSchema>([
       {
-        $match: match_condition
+        $match: filter
       },
       {
         $sort: sort
@@ -2859,6 +2859,7 @@ class TweetsService {
           pipeline: [
             {
               $project: {
+                cover: 1,
                 name: 1,
                 slug: 1
               }
@@ -2893,9 +2894,8 @@ class TweetsService {
         $unwind: { path: '$user_id', preserveNullAndEmptyArrays: true }
       }
     ]).toArray()
-    console.log('tweets :::', tweets)
 
-    const total = await TweetsCollection.countDocuments(match_condition)
+    const total = await TweetsCollection.countDocuments(filter)
 
     return {
       total,
