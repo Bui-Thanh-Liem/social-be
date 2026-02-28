@@ -1,12 +1,12 @@
+import { generateSecret, verify, generateURI } from 'otplib'
 import { ObjectId } from 'mongodb'
-import { generateSecret, generateURI, verify } from 'otplib'
 import { toDataURL } from 'qrcode'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { envs } from '~/configs/env.config'
 import { BadRequestError, NotFoundError, UnauthorizedError } from '~/core/error.response'
 import cacheService from '~/helpers/cache.helper'
-import { IAdmin } from '~/modules/admin/admin.interface'
-import { AdminCollection } from '~/modules/admin/admin.schema'
+import { IAdmin, ITwoFactorBackup } from '~/modules/admin/admin.interface'
+import { AdminCollection, AdminSchema } from '~/modules/admin/admin.schema'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { createTokenPair } from '~/utils/auth.util'
 import { createKeyAdminActive } from '~/utils/create-key-cache.util'
@@ -21,15 +21,17 @@ class AdminService {
     // Implementation for initializing the first admin user
     const existAdmin = await AdminCollection.findOne({ email: envs.ADMIN_EMAIL })
     if (!existAdmin) {
-      await AdminCollection.insertOne({
-        name: 'Super Admin',
-        email: envs.ADMIN_EMAIL || '',
-        password: hashPassword(envs.ADMIN_PASSWORD || ''),
-        verify: EAuthVerifyStatus.Verified,
-        twoFactorEnabled: false,
-        twoFactorSecret: null,
-        created_at: new Date()
-      })
+      await AdminCollection.insertOne(
+        new AdminSchema({
+          name: 'Super Admin',
+          email: envs.ADMIN_EMAIL || '',
+          password: hashPassword(envs.ADMIN_PASSWORD || ''),
+          verify: EAuthVerifyStatus.Verified,
+          two_factor_enabled: false,
+          two_factor_secret: null,
+          created_at: new Date()
+        })
+      )
       console.log('First admin user created.')
     } else {
       console.log('Admin user already exists.')
@@ -50,6 +52,11 @@ class AdminService {
       throw new UnauthorizedError('Email hoặc mật khẩu không đúng.')
     }
 
+    //
+    if (!foundAdmin.two_factor_session_enabled) {
+      return { admin_id: foundAdmin._id, two_factor_session_enabled: foundAdmin.two_factor_session_enabled }
+    }
+
     // Tạo access/refresh token
     const [access_token, refresh_token] = await createTokenPair({
       payload: { user_id: '', admin_id: foundAdmin._id.toString(), role: 'ADMIN' },
@@ -63,17 +70,30 @@ class AdminService {
 
     return {
       access_token,
-      refresh_token
+      refresh_token,
+      admin_id: foundAdmin._id,
+      two_factor_session_enabled: foundAdmin.two_factor_session_enabled
     }
   }
 
   //
   async setupTwoFactorAuth({ admin_id, email }: { admin_id: string; email: string }) {
+    const admin = await AdminCollection.findOne(
+      { _id: new ObjectId(admin_id) },
+      { projection: { two_factor_enabled: 1 } }
+    )
+    if (admin?.two_factor_enabled) {
+      throw new BadRequestError('Bạn đã bật 2fa rồi, vui lòng liên hệ quản trị viên.')
+    }
+
     // 1. Tạo secret
     const secret = generateSecret()
 
     // 2. Luu secret vào database của admin hiện tại
-    await AdminCollection.updateOne({ _id: new ObjectId(admin_id), email }, { $set: { twoFactorSecret: secret } })
+    await AdminCollection.updateOne(
+      { _id: new ObjectId(admin_id), email },
+      { $set: { two_factor_secret: secret, two_factor_enabled: false } }
+    )
 
     // 3. Tạo URI
     const otpAuth = generateURI({
@@ -93,48 +113,69 @@ class AdminService {
   //
   async activeTwoFactorAuth({ admin_id, token }: { admin_id: string; token: string }) {
     // 1. Lấy secret từ database
-    const admin = await AdminCollection.findOne({ _id: new ObjectId(admin_id) }, { projection: { twoFactorSecret: 1 } })
-    if (!admin || !admin.twoFactorSecret) {
+    const admin = await AdminCollection.findOne(
+      { _id: new ObjectId(admin_id) },
+      { projection: { two_factor_secret: 1 } }
+    )
+    if (!admin || !admin.two_factor_secret) {
       throw new NotFoundError('Admin không tồn tại hoặc chưa thiết lập 2FA.')
     }
 
-    // 2. Xác thực token OTP mà admin nhập vào với secret đã lưu
-    const isValid = await verify({
+    // 2. Xác thực token OTP mà admin nhập vào với secret đã lưus
+    const { valid } = await verify({
       token,
-      secret: admin?.twoFactorSecret || ''
+      secret: admin?.two_factor_secret || ''
     })
 
     // 3. Nếu xác thực thành công, kích hoạt 2FA cho admin
-    if (!isValid.valid) {
+    if (!valid) {
       throw new BadRequestError('Mã không hợp lệ.')
     }
 
     // Kích hoạt 2FA cho admin
-    await AdminCollection.updateOne({ _id: new ObjectId(admin_id) }, { $set: { twoFactorEnabled: true } })
+    const backupSecret: ITwoFactorBackup[] = Array.from({ length: 5 }).map((_) => ({
+      secret: generateSecret(),
+      used: false,
+      used_at: new Date()
+    }))
+    await AdminCollection.updateOne(
+      { _id: new ObjectId(admin_id) },
+      { $set: { two_factor_enabled: true, two_factor_backups: backupSecret, two_factor_session_enabled: true } }
+    )
     return true
   }
 
   //
-  async loginWithTwoFactorAuth(admin_id: string, token: string) {
+  async loginWithTwoFactorAuth({ token, admin_id }: { admin_id: string; token: string }) {
     // 1. Nếu 2FA không được kích hoạt thì không cần xác thực nữa
     const admin = await AdminCollection.findOne(
       { _id: new ObjectId(admin_id) },
-      { projection: { twoFactorSecret: 1, twoFactorEnabled: 1 } }
+      { projection: { two_factor_secret: 1, two_factor_enabled: 1 } }
     )
-    if (!admin || !admin.twoFactorEnabled) {
+    if (!admin || !admin.two_factor_enabled || !admin.two_factor_secret) {
       throw new NotFoundError('Admin không tồn tại hoặc chưa thiết lập 2FA.')
     }
 
     // 2. Xác thực token OTP mà admin nhập vào với secret đã lưu
-    const isValid = await verify({
+    const { valid } = await verify({
       token,
-      secret: admin?.twoFactorSecret || ''
+      secret: admin?.two_factor_secret || ''
     })
 
     // Nếu xác thực không thành công, trả về lỗi
-    if (!isValid.valid) {
+    if (!valid) {
       throw new BadRequestError('Mã không hợp lệ.')
     }
+
+    //
+    await AdminCollection.updateOne(
+      { _id: new ObjectId(admin_id) },
+      {
+        $set: {
+          two_factor_session_enabled: true
+        }
+      }
+    )
 
     return true
   }
@@ -146,7 +187,9 @@ class AdminService {
       {
         projection: {
           email: 1,
-          password: 1
+          password: 1,
+          two_factor_enabled: 1,
+          two_factor_session_enabled: 1
         }
       }
     )
@@ -198,6 +241,22 @@ class AdminService {
           }
         : null
     }))
+  }
+
+  async logout({ admin_id }: { admin_id: string }) {
+    const updated = await AdminCollection.updateOne(
+      { _id: new ObjectId(admin_id) },
+      {
+        $set: {
+          two_factor_session_enabled: false
+        }
+      }
+    )
+
+    if (updated.modifiedCount) {
+      const keyCache = createKeyAdminActive(admin_id)
+      await cacheService.del(keyCache)
+    }
   }
 }
 

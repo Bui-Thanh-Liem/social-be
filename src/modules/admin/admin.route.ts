@@ -17,9 +17,6 @@ adminRoute.post(
   asyncHandler(AdminController.login)
 )
 
-//
-adminRoute.use(verifyAccessTokenAdmin)
-
 /**
  * BƯỚC 1: KÍCH HOẠT 2FA
  * API tạo Secret Key và trả về mã QR
@@ -36,7 +33,13 @@ adminRoute.route('/2fa/active').post(asyncHandler(AdminController.activeTwoFacto
  * BƯỚC 3: KIỂM TRA ĐĂNG NHẬP
  * Sử dụng mỗi khi người dùng đăng nhập sau này
  */
+adminRoute.route('/2fa/verify').post(asyncHandler(AdminController.loginWithTwoFactorAuth))
 
+//
+adminRoute.use(verifyAccessTokenAdmin)
+
+//
+adminRoute.post('/logout', asyncHandler(AdminController.logout))
 
 //
 adminRoute.route('/me').get(asyncHandler(AdminController.geMe))

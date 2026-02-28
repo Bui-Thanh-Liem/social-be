@@ -16,6 +16,13 @@ class AdminController {
   }
 
   //
+  async logout(req: Request, res: Response) {
+    const { admin_id } = req.decoded_authorization as IJwtPayload
+    const result = await AdminService.logout({ admin_id })
+    res.json(new OkResponse('Đăng xuất thành công', result))
+  }
+
+  //
   async setupTwoFactorAuth(req: Request, res: Response) {
     const { admin_id } = req.decoded_authorization as IJwtPayload
     const { email } = req.admin as IAdmin
@@ -32,6 +39,14 @@ class AdminController {
     const { token } = req.body
     await AdminService.activeTwoFactorAuth({ admin_id, token })
     res.json(new OkResponse('Kích hoạt xác thực hai yếu tố thành công'))
+  }
+
+  //
+  async loginWithTwoFactorAuth(req: Request, res: Response) {
+    const { admin_id } = req.decoded_authorization as IJwtPayload
+    const { token } = req.body
+    await AdminService.loginWithTwoFactorAuth({ admin_id, token })
+    res.json(new OkResponse('Xác thực hai yếu tố thành công'))
   }
 
   //
