@@ -13,3 +13,4 @@ export interface IAdmin extends IBase {
   twoFactorEnabled: boolean
   twoFactorSecret: string | null
 }
+  
