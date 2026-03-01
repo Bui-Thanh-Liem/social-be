@@ -1,5 +1,5 @@
-import { generateSecret, verify, generateURI } from 'otplib'
 import { ObjectId } from 'mongodb'
+import { generateSecret, generateURI, verify } from 'otplib'
 import { toDataURL } from 'qrcode'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { envs } from '~/configs/env.config'
@@ -7,9 +7,10 @@ import { BadRequestError, NotFoundError, UnauthorizedError } from '~/core/error.
 import cacheService from '~/helpers/cache.helper'
 import { IAdmin, ITwoFactorBackup } from '~/modules/admin/admin.interface'
 import { AdminCollection, AdminSchema } from '~/modules/admin/admin.schema'
+import { ResLoginAdmin, ResVerify2Fa } from '~/shared/dtos/res/admin.dto'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { createTokenPair } from '~/utils/auth.util'
-import { createKeyAdminActive } from '~/utils/create-key-cache.util'
+import { createKeyAdminActive, createKeySessionLogin } from '~/utils/create-key-cache.util'
 import { hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { verifyToken } from '~/utils/jwt.util'
 import TokensService from '../tokens/tokens.service'
@@ -32,14 +33,14 @@ class AdminService {
           created_at: new Date()
         })
       )
-      console.log('First admin user created.')
+      console.log('✅ First admin user created successfully.')
     } else {
-      console.log('Admin user already exists.')
+      console.log('✅ First admin user already exists. No action needed.')
     }
   }
 
-  //
-  async login(payload: LoginAdminDto) {
+  // Đăng nhập admin trả về thông tin cần setup hay verify
+  async login(payload: LoginAdminDto): Promise<{ message: string; data?: ResLoginAdmin }> {
     // Kiểm tra tồn tại email
     const foundAdmin = await this.findOneByEmail(payload?.email)
     if (!foundAdmin) {
@@ -52,35 +53,39 @@ class AdminService {
       throw new UnauthorizedError('Email hoặc mật khẩu không đúng.')
     }
 
-    //
-    if (!foundAdmin.two_factor_session_enabled) {
-      return { admin_id: foundAdmin._id, two_factor_session_enabled: foundAdmin.two_factor_session_enabled }
-    }
+    // Kiểm tra 2FA
+    const message = foundAdmin.two_factor_enabled
+      ? foundAdmin.two_factor_session_enabled
+        ? 'Đăng nhập thành công'
+        : 'Vui lòng nhập mã 2FA để tiếp tục'
+      : 'Vui lòng thiết lập 2FA để tiếp tục'
 
-    // Tạo access/refresh token
-    const [access_token, refresh_token] = await createTokenPair({
-      payload: { user_id: '', admin_id: foundAdmin._id.toString(), role: 'ADMIN' },
-      private_access_key: envs.JWT_SECRET_ACCESS_ADMIN,
-      private_refresh_key: envs.JWT_SECRET_REFRESH_ADMIN
-    })
-
-    // Lưu refresh token vào database
-    const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH_ADMIN })
-    await TokensService.create({ refresh_token, user_id: foundAdmin._id.toString(), iat, exp })
+    // Sẽ tạo một session làm việc 5p để admin có thể thiết lập hoặc xác thực 2FA, sau 5p sẽ tự động vô hiệu hóa session này và bắt buộc phải đăng nhập lại
+    const keySessionLogin = createKeySessionLogin(foundAdmin._id.toString())
+    await cacheService.set(keySessionLogin, true, 300)
 
     return {
-      access_token,
-      refresh_token,
-      admin_id: foundAdmin._id,
-      two_factor_session_enabled: foundAdmin.two_factor_session_enabled
+      message,
+      data: {
+        admin_id: foundAdmin._id.toString(),
+        two_factor_enabled: foundAdmin.two_factor_enabled,
+        two_factor_session_enabled: foundAdmin.two_factor_session_enabled
+      }
     }
   }
 
   //
-  async setupTwoFactorAuth({ admin_id, email }: { admin_id: string; email: string }) {
+  async setupTwoFactorAuth({ admin_id }: { admin_id: string }) {
+    // Kiểm tra session login còn hiệu lực hay không
+    const keySessionLogin = createKeySessionLogin(admin_id)
+    const session = await cacheService.get(keySessionLogin)
+    if (!session) {
+      throw new BadRequestError('Phiên làm việc đã hết, vui lòng đăng nhập lại để thiết lập 2FA.')
+    }
+
     const admin = await AdminCollection.findOne(
       { _id: new ObjectId(admin_id) },
-      { projection: { two_factor_enabled: 1 } }
+      { projection: { two_factor_enabled: 1, email: 1 } }
     )
     if (admin?.two_factor_enabled) {
       throw new BadRequestError('Bạn đã bật 2fa rồi, vui lòng liên hệ quản trị viên.')
@@ -91,7 +96,7 @@ class AdminService {
 
     // 2. Luu secret vào database của admin hiện tại
     await AdminCollection.updateOne(
-      { _id: new ObjectId(admin_id), email },
+      { _id: new ObjectId(admin_id) },
       { $set: { two_factor_secret: secret, two_factor_enabled: false } }
     )
 
@@ -99,7 +104,7 @@ class AdminService {
     const otpAuth = generateURI({
       secret,
       period: 30, // thời gian hiệu lực của mã OTP (mặc định là 30 giây)
-      label: email,
+      label: admin?.email || 'Admin',
       issuer: 'admin.devandbug.info.vn'
     })
 
@@ -112,6 +117,13 @@ class AdminService {
 
   //
   async activeTwoFactorAuth({ admin_id, token }: { admin_id: string; token: string }) {
+    // Kiểm tra session login còn hiệu lực hay không
+    const keySessionLogin = createKeySessionLogin(admin_id)
+    const session = await cacheService.get(keySessionLogin)
+    if (!session) {
+      throw new BadRequestError('Phiên làm việc đã hết, vui lòng đăng nhập lại để thiết lập 2FA.')
+    }
+
     // 1. Lấy secret từ database
     const admin = await AdminCollection.findOne(
       { _id: new ObjectId(admin_id) },
@@ -134,19 +146,30 @@ class AdminService {
 
     // Kích hoạt 2FA cho admin
     const backupSecret: ITwoFactorBackup[] = Array.from({ length: 5 }).map((_) => ({
-      secret: generateSecret(),
       used: false,
-      used_at: new Date()
+      used_at: new Date(),
+      secret: generateSecret()
     }))
     await AdminCollection.updateOne(
       { _id: new ObjectId(admin_id) },
-      { $set: { two_factor_enabled: true, two_factor_backups: backupSecret, two_factor_session_enabled: true } }
+      { $set: { two_factor_enabled: true, two_factor_backups: backupSecret } }
     )
+
+    // Xóa session login sau khi kích hoạt thành công
+    await cacheService.del(keySessionLogin)
+
     return true
   }
 
   //
-  async loginWithTwoFactorAuth({ token, admin_id }: { admin_id: string; token: string }) {
+  async verifyTwoFactorAuth({ token, admin_id }: { admin_id: string; token: string }): Promise<ResVerify2Fa> {
+    // Kiểm tra session login còn hiệu lực hay không
+    const keySessionLogin = createKeySessionLogin(admin_id)
+    const session = await cacheService.get(keySessionLogin)
+    if (!session) {
+      throw new BadRequestError('Phiên làm việc đã hết, vui lòng đăng nhập lại.')
+    }
+
     // 1. Nếu 2FA không được kích hoạt thì không cần xác thực nữa
     const admin = await AdminCollection.findOne(
       { _id: new ObjectId(admin_id) },
@@ -168,7 +191,7 @@ class AdminService {
     }
 
     //
-    await AdminCollection.updateOne(
+    const updated = await AdminCollection.updateOne(
       { _id: new ObjectId(admin_id) },
       {
         $set: {
@@ -177,7 +200,25 @@ class AdminService {
       }
     )
 
-    return true
+    // Tạo access/refresh token
+    const [access_token, refresh_token] = await createTokenPair({
+      payload: { user_id: '', admin_id: admin._id.toString(), role: 'ADMIN' },
+      private_access_key: envs.JWT_SECRET_ACCESS_ADMIN,
+      private_refresh_key: envs.JWT_SECRET_REFRESH_ADMIN
+    })
+
+    // Lưu refresh token vào database
+    const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH_ADMIN })
+    await TokensService.create({ refresh_token, user_id: admin._id.toString(), iat, exp })
+
+    // Xóa session login sau khi kích hoạt thành công
+    await cacheService.del(keySessionLogin)
+
+    return {
+      access_token,
+      refresh_token,
+      two_factor_session_enabled: updated.modifiedCount > 0
+    }
   }
 
   //
@@ -203,7 +244,15 @@ class AdminService {
       console.log('❌ cache hết hạn lấy admin hiện tại trong database 🤦‍♂️')
       adminActive = await AdminCollection.findOne(
         { _id: new ObjectId(admin_id) },
-        { projection: { email_verify_token: 0, forgot_password_token: 0, password: 0, twoFactorSecret: 0 } }
+        {
+          projection: {
+            password: 0,
+            two_factor_secret: 0,
+            two_factor_backups: 0,
+            email_verify_token: 0,
+            forgot_password_token: 0
+          }
+        }
       )
       await cacheService.set(keyCache, adminActive, 300)
     }

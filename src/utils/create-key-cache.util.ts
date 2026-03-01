@@ -30,6 +30,10 @@ export function createKeyAdminActive(admin_id: string) {
   return `{admin}:active:${admin_id}`
 }
 
+export function createKeySessionLogin(admin_id: string) {
+  return `{admin}:session:${admin_id}`
+}
+
 export const createKeyUserOnline = (): string => '{user}:online'
 
 export const createKeyTweetLikeQueue = (): string => '{tweet}:like_queue' // list key

@@ -1,18 +1,17 @@
 import { Request, Response } from 'express'
-import AdminService from './admin.service'
 import { OkResponse } from '~/core/success.response'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
-import MediaService from '../media/media.service'
-import UsersService from '../users/users.service'
-import TweetsService from '../tweets/tweets.service'
 import communitiesService from '../communities/communities.service'
-import { IAdmin } from './admin.interface'
+import MediaService from '../media/media.service'
+import TweetsService from '../tweets/tweets.service'
+import UsersService from '../users/users.service'
+import AdminService from './admin.service'
 
 class AdminController {
   //
   async login(req: Request, res: Response) {
-    const result = await AdminService.login(req.body)
-    res.json(new OkResponse('Đăng nhập thành công', result))
+    const { data, message } = await AdminService.login(req.body)
+    res.json(new OkResponse(message, data))
   }
 
   //
@@ -24,29 +23,22 @@ class AdminController {
 
   //
   async setupTwoFactorAuth(req: Request, res: Response) {
-    const { admin_id } = req.decoded_authorization as IJwtPayload
-    const { email } = req.admin as IAdmin
     const result = await AdminService.setupTwoFactorAuth({
-      admin_id,
-      email
+      admin_id: req.params.admin_id
     })
     res.json(new OkResponse('Cài đặt xác thực hai yếu tố thành công', result))
   }
 
   //
   async activeTwoFactorAuth(req: Request, res: Response) {
-    const { admin_id } = req.decoded_authorization as IJwtPayload
-    const { token } = req.body
-    await AdminService.activeTwoFactorAuth({ admin_id, token })
+    await AdminService.activeTwoFactorAuth({ token: req.body.token, admin_id: req.params.admin_id })
     res.json(new OkResponse('Kích hoạt xác thực hai yếu tố thành công'))
   }
 
   //
-  async loginWithTwoFactorAuth(req: Request, res: Response) {
-    const { admin_id } = req.decoded_authorization as IJwtPayload
-    const { token } = req.body
-    await AdminService.loginWithTwoFactorAuth({ admin_id, token })
-    res.json(new OkResponse('Xác thực hai yếu tố thành công'))
+  async verifyTwoFactorAuth(req: Request, res: Response) {
+    const result = await AdminService.verifyTwoFactorAuth({ token: req.body.token, admin_id: req.params.admin_id })
+    res.json(new OkResponse('Xác thực hai yếu tố thành công', result))
   }
 
   //
