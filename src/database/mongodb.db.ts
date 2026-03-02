@@ -1,8 +1,9 @@
 import { Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { BadRequestError, InternalServerError } from '~/core/error.response'
-import { logger } from '~/utils/logger.util'
+import { AdminTokensCollection, initAdminTokensCollection } from '~/modules/admin-tokens/admin-tokens.schema'
 import { AdminCollection, initAdminCollection } from '~/modules/admin/admin.schema'
+import { BadWordsCollection, initBadWordsCollection } from '~/modules/bad-words/bad-words.schema'
 import { initBookmarksCollection } from '~/modules/bookmarks/bookmarks.schema'
 import {
   CommunitiesCollection,
@@ -18,10 +19,10 @@ import {
   initCommunityMentorCollection,
   initCommunityPinCollection
 } from '~/modules/communities/communities.schema'
+import { ConversationsCollection, initConversationsCollection } from '~/modules/conversations/conversations.schema'
 import { initFollowersCollection } from '~/modules/follows/follows.schema'
 import { HashtagsCollection, initHashtagsCollection } from '~/modules/hashtags/hashtags.schema'
 import { initLikesCollection, LikesCollection } from '~/modules/likes/likes.schema'
-import { ConversationsCollection, initConversationsCollection } from '~/modules/conversations/conversations.schema'
 import { initMediasCollection, MediasCollection } from '~/modules/media/media.schema'
 import { initMessagesCollection, MessagesCollection } from '~/modules/messages/messages.schema'
 import { initNotificationsCollection } from '~/modules/notifications/notifications.schema'
@@ -30,12 +31,12 @@ import { initSearchHistoryCollection, SearchHistoryCollection } from '~/modules/
 import { initTokensCollection, TokensCollection } from '~/modules/tokens/tokens.schema'
 import { initTrendingCollection, TrendingCollection } from '~/modules/trending/trending.schema'
 import { initTweetsCollection, TweetsCollection } from '~/modules/tweets/tweets.schema'
-import { initUsersCollection, UsersCollection } from '~/modules/users/users.schema'
-import { BadWordsCollection, initBadWordsCollection } from '~/modules/bad-words/bad-words.schema'
 import {
   initUserViolationsCollection,
   UserViolationsCollection
 } from '~/modules/user-violations/user-violations.schema'
+import { initUsersCollection, UsersCollection } from '~/modules/users/users.schema'
+import { logger } from '~/utils/logger.util'
 
 const _MINPOOLSIZE = 5
 const _MAXPOOLSIZE = 50 // không bao giờ vượt, nếu hơn thì phải chờ
@@ -178,6 +179,7 @@ class Database {
       initAdminCollection(this.db)
       initBadWordsCollection(this.db)
       initUserViolationsCollection(this.db)
+      initAdminTokensCollection(this.db)
     } catch (error) {
       logger.error('Collection initialization failed:', error)
       throw error
@@ -190,7 +192,7 @@ class Database {
       const indexUser = await UsersCollection.indexExists(['email_1', 'username_1', 'bio_text'])
       const indexLike = await LikesCollection.indexExists(['user_id_1_tweet_id_1'])
       const indexReportTweet = await ReportTweetCollection.indexExists(['tweet_id_1'])
-      const indexToken = await TokensCollection.indexExists(['exp_1'])
+      const indexToken = await TokensCollection.indexExists(['exp_1', 'user_id_1', 'access_token_1'])
       const indexTweet = await TweetsCollection.indexExists(['content_text'])
       const indexTrending = await TrendingCollection.indexExists(['slug_1', 'created_at_-1'])
       const indexHashtag = await HashtagsCollection.indexExists(['slug_1'])
@@ -218,7 +220,7 @@ class Database {
       const indexAdmin = await AdminCollection.indexExists(['email_1'])
       const indexBadWord = await BadWordsCollection.indexExists(['words_text'])
       const indexUserViolation = await UserViolationsCollection.indexExists(['user_id_1'])
-
+      const indexAdminToken = await AdminTokensCollection.indexExists(['admin_id_1', 'exp_1', 'access_token_1'])
       // Admin
       if (!indexAdmin) {
         AdminCollection.createIndex({ email: 1 }, { unique: true })
@@ -236,9 +238,11 @@ class Database {
         ReportTweetCollection.createIndex({ tweet_id: 1 }, { unique: true })
       }
 
-      // Refresh
+      // Token
       if (!indexToken) {
+        TokensCollection.createIndex({ user_id: 1 })
         TokensCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
+        TokensCollection.createIndex({ access_token: 1 }, { unique: true })
       }
 
       // Tweet - default_language: 'none' -> cho phép sử dụng stop words
@@ -338,6 +342,13 @@ class Database {
         UserViolationsCollection.createIndex({ user_id: 1 })
       }
 
+      // AdminToken
+      if (!indexAdminToken) {
+        AdminTokensCollection.createIndex({ admin_id: 1 })
+        AdminTokensCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
+        AdminTokensCollection.createIndex({ access_token: 1 }, { unique: true })
+      }
+
       logger.info('All indexes are ensured successfully')
     } catch (error) {
       logger.error('Index initialization failed:', error)
@@ -350,3 +361,4 @@ class Database {
 const instanceMongodb = Database.getInstance()
 const clientMongodb = Database.getClient()
 export { clientMongodb, Database, instanceMongodb }
+

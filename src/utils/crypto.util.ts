@@ -1,4 +1,4 @@
-import { pbkdf2Sync } from 'node:crypto'
+import { createHash, pbkdf2Sync } from 'node:crypto'
 import { envs } from '~/configs/env.config'
 
 const _ITERATIONS = 10
@@ -22,4 +22,11 @@ export function generatePassword(length: number = 12): string {
     password += chars[randomIndex]
   }
   return password
+}
+
+export function shortKeyFromToken(token: string) {
+  return createHash('sha256')
+    .update(token)
+    .digest('base64url') // ngắn hơn hex
+    .slice(0, 32) // cắt theo độ dài bạn muốn
 }

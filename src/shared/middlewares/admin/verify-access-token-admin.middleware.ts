@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { envs } from '~/configs/env.config'
 import { UnauthorizedError } from '~/core/error.response'
+import AdminTokensService from '~/modules/admin-tokens/admin-tokens.service'
 import AdminService from '~/modules/admin/admin.service'
 import { verifyToken } from '~/utils/jwt.util'
 
@@ -16,10 +17,13 @@ export async function verifyAccessTokenAdmin(req: Request, res: Response, next: 
 
     //
     if (decoded.admin_id) {
-      const admin = await AdminService.getAdminActive(decoded.admin_id)
+      const [admin, token] = await Promise.all([
+        AdminService.getAdminActive(decoded.admin_id),
+        AdminTokensService.findByAccessToken({ access_token })
+      ])
 
-      if (!admin) {
-        throw new UnauthorizedError('Admin không tồn tại.')
+      if (!admin || !token) {
+        throw new UnauthorizedError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
       }
 
       req.admin = admin

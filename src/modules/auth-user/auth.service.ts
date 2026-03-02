@@ -86,7 +86,7 @@ class AuthService {
 
     // Khi đăng kí thành công thì cho người dùng đăng nhập vào ứng dụng ngay.
     const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-    await TokensService.create({ refresh_token, user_id: newUser.insertedId.toString(), iat, exp })
+    await TokensService.create({ access_token, refresh_token, user_id: newUser.insertedId.toString(), iat, exp })
 
     // Gửi thông báo xác thực email
     if (payload.verify !== EAuthVerifyStatus.Verified) {
@@ -140,7 +140,7 @@ class AuthService {
 
     // Lưu refresh token vào database
     const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-    await TokensService.create({ refresh_token, user_id: foundUser._id.toString(), iat, exp })
+    await TokensService.create({ access_token, refresh_token, user_id: foundUser._id.toString(), iat, exp })
 
     return {
       access_token,
@@ -174,7 +174,7 @@ class AuthService {
       })
 
       const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-      await TokensService.create({ refresh_token, user_id: exist._id.toString(), exp, iat })
+      await TokensService.create({ access_token, refresh_token, user_id: exist._id.toString(), exp, iat })
 
       return {
         access_token,
@@ -226,7 +226,7 @@ class AuthService {
       })
 
       const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-      await TokensService.create({ refresh_token, user_id: exist._id.toString(), exp, iat })
+      await TokensService.create({ access_token, refresh_token, user_id: exist._id.toString(), exp, iat })
 
       return {
         access_token,

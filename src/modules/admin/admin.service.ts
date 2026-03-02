@@ -11,9 +11,9 @@ import { ResActive2Fa, ResLoginAdmin, ResVerify2Fa } from '~/shared/dtos/res/adm
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { createTokenPair } from '~/utils/auth.util'
 import { createKeyAdminActive, createKeySessionLogin } from '~/utils/create-key-cache.util'
-import { hashPassword, verifyPassword } from '~/utils/crypto.util'
+import { hashPassword, shortKeyFromToken, verifyPassword } from '~/utils/crypto.util'
 import { verifyToken } from '~/utils/jwt.util'
-import TokensService from '../tokens/tokens.service'
+import AdminTokensService from '../admin-tokens/admin-tokens.service'
 import { LoginAdminDto } from './admin.dto'
 
 class AdminService {
@@ -56,7 +56,7 @@ class AdminService {
     // Kiểm tra 2FA
     const message = foundAdmin.two_factor_enabled
       ? foundAdmin.two_factor_session_enabled
-        ? 'Đăng nhập thành công'
+        ? 'Đăng nhập thành công, tài khoản của bạn đang được sử dụng ở nơi khác.'
         : 'Vui lòng nhập mã 2FA để tiếp tục'
       : 'Vui lòng thiết lập 2FA để tiếp tục'
 
@@ -194,7 +194,7 @@ class AdminService {
     }
 
     //
-    const updated = await AdminCollection.updateOne(
+    await AdminCollection.updateOne(
       { _id: new ObjectId(admin_id) },
       {
         $set: {
@@ -212,15 +212,27 @@ class AdminService {
 
     // Lưu refresh token vào database
     const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH_ADMIN })
-    await TokensService.create({ refresh_token, user_id: admin._id.toString(), iat, exp })
+    console.log('access_token refresh_token', { access_token, refresh_token })
+    const adminToken = await AdminTokensService.create({
+      iat,
+      exp,
+      access_token,
+      refresh_token,
+      admin_id: admin._id.toString()
+    })
+    if (!adminToken) {
+      throw new BadRequestError('Đã có lỗi xảy ra, vui lòng thử lại.')
+    }
 
     // Xóa session login sau khi kích hoạt thành công
     await cacheService.del(keySessionLogin)
+    const keyCacheAdminToken = `{admin}:token_access:${shortKeyFromToken(adminToken.access_token)}`
+    await cacheService.del(keyCacheAdminToken)
 
     return {
       access_token,
       refresh_token,
-      two_factor_session_enabled: updated.modifiedCount > 0
+      two_factor_session_enabled: true
     }
   }
 
