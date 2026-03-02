@@ -7,7 +7,7 @@ import { BadRequestError, NotFoundError, UnauthorizedError } from '~/core/error.
 import cacheService from '~/helpers/cache.helper'
 import { IAdmin, ITwoFactorBackup } from '~/modules/admin/admin.interface'
 import { AdminCollection, AdminSchema } from '~/modules/admin/admin.schema'
-import { ResLoginAdmin, ResVerify2Fa } from '~/shared/dtos/res/admin.dto'
+import { ResActive2Fa, ResLoginAdmin, ResVerify2Fa } from '~/shared/dtos/res/admin.dto'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { createTokenPair } from '~/utils/auth.util'
 import { createKeyAdminActive, createKeySessionLogin } from '~/utils/create-key-cache.util'
@@ -116,7 +116,7 @@ class AdminService {
   }
 
   //
-  async activeTwoFactorAuth({ admin_id, token }: { admin_id: string; token: string }) {
+  async activeTwoFactorAuth({ admin_id, token }: { admin_id: string; token: string }): Promise<ResActive2Fa> {
     // Kiểm tra session login còn hiệu lực hay không
     const keySessionLogin = createKeySessionLogin(admin_id)
     const session = await cacheService.get(keySessionLogin)
@@ -150,7 +150,7 @@ class AdminService {
       used_at: new Date(),
       secret: generateSecret()
     }))
-    await AdminCollection.updateOne(
+    const updated = await AdminCollection.updateOne(
       { _id: new ObjectId(admin_id) },
       { $set: { two_factor_enabled: true, two_factor_backups: backupSecret } }
     )
@@ -158,7 +158,10 @@ class AdminService {
     // Xóa session login sau khi kích hoạt thành công
     await cacheService.del(keySessionLogin)
 
-    return true
+    return {
+      backupSecret,
+      two_factor_enabled: updated.modifiedCount > 0
+    }
   }
 
   //

@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { QueryDtoSchema } from '~/shared/dtos/req/common/query.dto'
 import { verifyAccessTokenAdmin } from '~/shared/middlewares/admin/verify-access-token-admin.middleware'
-import { loginRateLimit } from '~/shared/middlewares/ratelimit.middleware'
+import { loginRateLimit, setupF2aRateLimit, verifyF2aRateLimit } from '~/shared/middlewares/ratelimit.middleware'
 import { requestBodyValidate } from '~/shared/middlewares/request-body-validate.middleware'
 import { requestQueryValidate } from '~/shared/middlewares/request-query-validate.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
@@ -21,19 +21,25 @@ adminRoute.post(
  * BƯỚC 1: KÍCH HOẠT 2FA
  * API tạo Secret Key và trả về mã QR
  */
-adminRoute.route('/2fa/setup/:admin_id').post(asyncHandler(AdminController.setupTwoFactorAuth))
+adminRoute
+  .route('/2fa/setup/:admin_id')
+  .post(asyncHandler(setupF2aRateLimit), asyncHandler(AdminController.setupTwoFactorAuth))
 
 /**
  * BƯỚC 2: XÁC THỰC LẦN ĐẦU (Kích hoạt chính thức)
  * ADmin quét QR xong phải nhập thử mã để xác nhận thiết lập thành công
  */
-adminRoute.route('/2fa/active/:admin_id').post(asyncHandler(AdminController.activeTwoFactorAuth))
+adminRoute
+  .route('/2fa/active/:admin_id')
+  .post(asyncHandler(verifyF2aRateLimit), asyncHandler(AdminController.activeTwoFactorAuth))
 
 /**
  * BƯỚC 3: KIỂM TRA ĐĂNG NHẬP
  * Sử dụng mỗi khi người dùng đăng nhập sau này
  */
-adminRoute.route('/2fa/verify/:admin_id').post(asyncHandler(AdminController.verifyTwoFactorAuth))
+adminRoute
+  .route('/2fa/verify/:admin_id')
+  .post(asyncHandler(verifyF2aRateLimit), asyncHandler(AdminController.verifyTwoFactorAuth))
 
 //
 adminRoute.use(verifyAccessTokenAdmin)

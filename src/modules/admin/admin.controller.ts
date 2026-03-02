@@ -31,8 +31,8 @@ class AdminController {
 
   //
   async activeTwoFactorAuth(req: Request, res: Response) {
-    await AdminService.activeTwoFactorAuth({ token: req.body.token, admin_id: req.params.admin_id })
-    res.json(new OkResponse('Kích hoạt xác thực hai yếu tố thành công'))
+    const result = await AdminService.activeTwoFactorAuth({ token: req.body.token, admin_id: req.params.admin_id })
+    res.json(new OkResponse('Kích hoạt xác thực hai yếu tố thành công', result))
   }
 
   //
