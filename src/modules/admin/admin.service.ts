@@ -264,6 +264,7 @@ class AdminService {
     return this.signedCloudfrontAvatarUrls(adminActive) as IAdmin
   }
 
+  //
   private signedCloudfrontAvatarUrls = (users: IAdmin[] | IAdmin | null) => {
     //
     if (!users) return users
@@ -292,6 +293,7 @@ class AdminService {
     }))
   }
 
+  //
   async logout({ admin_id }: { admin_id: string }) {
     const updated = await AdminCollection.updateOne(
       { _id: new ObjectId(admin_id) },
