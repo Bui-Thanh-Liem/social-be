@@ -1,1 +1,0 @@
-export const CONSTANT_INVITE_EXPIRES = 3

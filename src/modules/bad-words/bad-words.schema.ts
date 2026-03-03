@@ -1,7 +1,7 @@
 import { Collection, Db } from 'mongodb'
 import { IBadWord } from '~/modules/bad-words/bad-words.interface'
-import { EActionBadWord, EPriorityBadWord } from '~/shared/enums/common.enum'
 import { BaseSchema } from '~/shared/schemas/base.schema'
+import { EActionBadWord, EPriorityBadWord } from './bad-words.enum'
 
 export class BadWordSchema extends BaseSchema implements IBadWord {
   words: string

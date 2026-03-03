@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { OkResponse } from '~/core/success.response'
 import { ReportTrendingDto } from '~/modules/trending/trending.dto'
-import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
 import TrendingService from './trending.service'
 
 class TrendingController {

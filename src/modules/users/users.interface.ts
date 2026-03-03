@@ -1,6 +1,6 @@
-import { EAuthVerifyStatus, EUserStatus } from '~/shared/enums/status.enum'
-import { IBase } from '~/shared/interfaces/schemas/base.interface'
-import { IMediaBare } from '../media/media.interface'
+import { IMediaBare } from '~/shared/interfaces/media-bare.interface'
+import { IBase } from '~/shared/interfaces/base.interface'
+import { EUserVerifyStatus, EUserStatus } from './users.enum'
 
 // interface IUserSettings {
 //   dark_mode: boolean
@@ -19,7 +19,7 @@ export interface IUser extends IBase {
   day_of_birth: Date
   email_verify_token?: string
   forgot_password_token?: string
-  verify: EAuthVerifyStatus
+  verify: EUserVerifyStatus
   status: IUserStatus
 
   //

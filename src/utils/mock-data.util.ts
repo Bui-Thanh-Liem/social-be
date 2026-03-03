@@ -2,17 +2,17 @@
 import { faker } from '@faker-js/faker'
 import _ from 'lodash'
 import { ObjectId } from 'mongodb'
+import { CreateCommunityDto } from '~/modules/communities/communities.dto'
+import { EMembershipType, EVisibilityType } from '~/modules/communities/communities.enum'
+import communitiesService from '~/modules/communities/communities.service'
+import { FollowersCollection } from '~/modules/follows/follows.schema'
+import { ETweetAudience, ETweetType } from '~/modules/tweets/tweets.enum'
 import TweetsService from '~/modules/tweets/tweets.service'
-import { ETweetAudience } from '~/shared/enums/common.enum'
-import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
-import { EMembershipType, ETweetType, EVisibilityType } from '~/shared/enums/type.enum'
+import { EUserVerifyStatus } from '~/modules/users/users.enum'
+import { IUser } from '~/modules/users/users.interface'
+import { UsersCollection, UsersSchema } from '~/modules/users/users.schema'
 import { hashPassword } from './crypto.util'
 import { logger } from './logger.util'
-import { UsersCollection, UsersSchema } from '~/modules/users/users.schema'
-import { FollowersCollection } from '~/modules/follows/follows.schema'
-import communitiesService from '~/modules/communities/communities.service'
-import { IUser } from '~/modules/users/users.interface'
-import { CreateCommunityDto } from '~/modules/communities/communities.dto'
 
 const MY_ID = new ObjectId('69708f6ab776baa192a24a3f')
 const MY_USERNAME = '@liem_buithanh'
@@ -377,7 +377,7 @@ async function createRandomUsers() {
       password: hashPassword(PASS),
       day_of_birth: faker.date.birthdate(),
       avatar: faker.image.avatar(),
-      verify: EAuthVerifyStatus.Verified,
+      verify: EUserVerifyStatus.Verified,
       cover_photo: faker.image.avatar(),
       bio: generateRandomBio(),
       location: generateLocation()

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { CreatedResponse } from '~/core/success.response'
 import { ParamIdTweetDto } from '~/modules/tweets/tweets.dto'
-import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
 import ReportTweetService from './report-tweet.service'
 
 class ReportTweetController {

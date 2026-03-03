@@ -2,10 +2,10 @@ import { Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
 import { OkResponse } from '~/core/success.response'
 import { ChangePasswordDto, UserIdDto, verifyEmailDto } from '~/modules/users/users.dto'
-import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
-import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
 import UsersService from './users.service'
 import { UsersCollection } from './users.schema'
+import { EUserVerifyStatus } from './users.enum'
 
 class UsersController {
   async verifyEmail(req: Request, res: Response) {
@@ -19,7 +19,7 @@ class UsersController {
     const { user_id } = req.decoded_authorization as IJwtPayload
 
     const user = await UsersCollection.findOne({ _id: new ObjectId(user_id) })
-    if (user?.verify === EAuthVerifyStatus.Verified) {
+    if (user?.verify === EUserVerifyStatus.Verified) {
       res.json(new OkResponse('Email của bạn đã xác được xác thực.', true))
       return
     }

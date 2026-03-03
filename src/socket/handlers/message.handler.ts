@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io'
 import MessagesService from '~/modules/messages/messages.service'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
-import { sendMessageDtoSchema } from '~/shared/dtos/req/socket/message.dto'
+import { sendMessageDtoSchema } from '~/shared/dtos/socket/message.dto'
 import { withValidationDataFromClient } from '../middlewares/validation.socket'
 
 // Xử lý send/new message

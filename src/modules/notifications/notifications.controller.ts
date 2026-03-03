@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import NotificationService from '~/modules/notifications/notifications.service'
 import { OkResponse } from '~/core/success.response'
 import { DelNotiDto, GetMultiByTypeNotiDto, ReadNotiDto } from '~/modules/notifications/notifications.dto'
-import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
 
 class NotificationsController {
   async getMultiByType(req: Request, res: Response) {

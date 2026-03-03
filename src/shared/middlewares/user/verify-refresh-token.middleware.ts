@@ -4,7 +4,7 @@ import { UnauthorizedError } from '~/core/error.response'
 import RefreshTokenService from '~/modules/tokens/tokens.service'
 import { verifyToken } from '~/utils/jwt.util'
 
-export async function verifyRefreshToken(req: Request, res: Response, next: NextFunction) {
+export async function verifyRefreshTokenMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
     const refresh_token = req.body?.refresh_token || undefined
 

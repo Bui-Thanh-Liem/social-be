@@ -1,15 +1,14 @@
 import { ObjectId } from 'mongodb'
-import { notificationQueue } from '~/infra/queues'
-import { BadRequestError, NotFoundError } from '~/core/error.response'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { deleteFromS3, presignedURL } from '~/cloud/aws/s3.aws'
-import { CONSTANT_JOB } from '~/shared/constants'
-import { DeleteMediaDto, PresignedUrlDto, UploadConfirmDto } from '~/modules/uploads/uploads.dto'
-import { ResPresignedUrl } from '~/shared/dtos/res/upload.dto'
-import { EMediaStatus } from '~/shared/enums/status.enum'
-import { ENotificationType } from '~/shared/enums/type.enum'
+import { BadRequestError, NotFoundError } from '~/core/error.response'
+import { notificationQueue } from '~/infra/queues'
 import { IMedia } from '~/modules/media/media.interface'
+import { DeleteMediaDto, PresignedUrlDto, ResPresignedUrl, UploadConfirmDto } from '~/modules/uploads/uploads.dto'
+import { CONSTANT_JOB } from '~/shared/constants'
+import { EMediaStatus } from '../media/media.enum'
 import { MediasCollection } from '../media/media.schema'
+import { ENotificationType } from '../notifications/notifications.enum'
 
 class UploadsServices {
   //

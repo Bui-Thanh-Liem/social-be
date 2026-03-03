@@ -1,53 +1,44 @@
 import { Filter, ObjectId } from 'mongodb'
-import { notificationQueue } from '~/infra/queues'
-import { cleanupQueue } from '~/infra/queues/cleanup.queue'
+import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { BadRequestError, NotFoundError } from '~/core/error.response'
 import { clientMongodb } from '~/database/mongodb.db'
 import cacheService from '~/helpers/cache.helper'
 import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
-import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
-import { CONSTANT_CHUNK_SIZE, CONSTANT_JOB, CONSTANT_REGEX } from '~/shared/constants'
-import { CreateNotiCommentDto } from '~/modules/notifications/notifications.dto'
-import { CreateTweetDto } from '~/modules/tweets/tweets.dto'
-import { ESourceViolation, ETweetAudience } from '~/shared/enums/common.enum'
-import { ETweetStatus } from '~/shared/enums/status.enum'
-import {
-  EFeedType,
-  EFeedTypeItem,
-  EMembershipType,
-  ENotificationType,
-  ETweetType,
-  EVisibilityType
-} from '~/shared/enums/type.enum'
-import { IQuery } from '~/shared/interfaces/common/query.interface'
+import { notificationQueue } from '~/infra/queues'
+import { cleanupQueue } from '~/infra/queues/cleanup.queue'
 import { IMedia } from '~/modules/media/media.interface'
+import { CreateNotiCommentDto } from '~/modules/notifications/notifications.dto'
+import { CreateTweetDto, ResCountViewLinkBookmarkInWeek } from '~/modules/tweets/tweets.dto'
+import { CONSTANT_JOB, CONSTANT_REGEX } from '~/shared/constants'
+import { IQuery } from '~/shared/interfaces/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import CommentGateway from '~/socket/gateways/Comment.gateway'
 import CommunityGateway from '~/socket/gateways/Community.gateway'
 import { chunkArray } from '~/utils/chunk-array'
 import { convertObjectId } from '~/utils/convert-object-id'
 import { createKeyTweetDetails, createKeyTweetDetailsLock } from '~/utils/create-key-cache.util'
+import { getFilterQuery } from '~/utils/get-filter-query'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
+import { normalizeWeekData } from '~/utils/normalize-week-data.util'
+import BadWordsService from '../bad-words/bad-words.service'
+import { BookmarksCollection } from '../bookmarks/bookmarks.schema'
+import bookmarksService from '../bookmarks/bookmarks.service'
+import { EMembershipType, EVisibilityType } from '../communities/communities.enum'
+import { ICommunity } from '../communities/communities.interface'
+import { CommunitiesCollection, CommunitiesSchema } from '../communities/communities.schema'
+import CommunitiesService from '../communities/communities.service'
 import FollowsService from '../follows/follows.service'
 import HashtagsService from '../hashtags/hashtags.service'
-import UploadsServices from '../uploads/uploads.service'
-import { normalizeWeekData } from '~/utils/normalize-week-data.util'
-import { ResCountViewLinkBookmarkInWeek } from '~/shared/dtos/res/tweet.dto'
-import TrendingService from '../trending/trending.service'
-import bookmarksService from '../bookmarks/bookmarks.service'
-import CommunitiesService from '../communities/communities.service'
-import LikesService from '../likes/likes.service'
-import { BookmarksCollection } from '../bookmarks/bookmarks.schema'
-import { CommunitiesCollection, CommunitiesSchema } from '../communities/communities.schema'
 import { LikesCollection } from '../likes/likes.schema'
-import { TweetsCollection, TweetsSchema } from './tweets.schema'
-import { UsersCollection } from '../users/users.schema'
-import { ICommunity } from '../communities/communities.interface'
-import { ITweet } from './tweets.interface'
+import LikesService from '../likes/likes.service'
+import { ENotificationType } from '../notifications/notifications.enum'
+import TrendingService from '../trending/trending.service'
+import UploadsServices from '../uploads/uploads.service'
 import { IUser } from '../users/users.interface'
-import BadWordsService from '../bad-words/bad-words.service'
-import UserViolationsService from '../user-violations/user-violations.service'
-import { getFilterQuery } from '~/utils/get-filter-query'
+import { UsersCollection } from '../users/users.schema'
+import { EFeedType, EFeedTypeItem, ETweetAudience, ETweetStatus, ETweetType } from './tweets.enum'
+import { ITweet } from './tweets.interface'
+import { TweetsCollection, TweetsSchema } from './tweets.schema'
 
 class TweetsService {
   //
@@ -135,15 +126,15 @@ class TweetsService {
       })
     )
 
-    // Lưu vi phạm từ cấm nếu có
+    // Lưu vi phạm từ cấm nếu có (rabbitmq)
     if (_content.bad_words_ids.length > 0) {
-      await UserViolationsService.create({
-        user_id: user_id,
-        source: ESourceViolation.Tweet,
-        bad_word_ids: _content.bad_words_ids,
-        source_id: newTweet.insertedId.toString(),
-        final_content: _content.matched_words.join() || ''
-      })
+      // await UserViolationsService.create({
+      //   user_id: user_id,
+      //   source: ESourceViolation.Tweet,
+      //   bad_word_ids: _content.bad_words_ids,
+      //   source_id: newTweet.insertedId.toString(),
+      //   final_content: _content.matched_words.join() || ''
+      // })
     }
 
     // Mentions
@@ -152,7 +143,7 @@ class TweetsService {
     // Gửi thông báo cho ai mà người comment/tweet nhắc đến
     if (mentions?.length) {
       // Nếu nhiều hơn 50 thành viên → tách nhỏ thành nhiều chunk để tránh lỗi payload quá lớn
-      const chunks = chunkArray(mentions, CONSTANT_CHUNK_SIZE)
+      const chunks = chunkArray(mentions, 50)
       for (const chunk of chunks) {
         //
         const jobs = chunk.map((receiverId) => ({
@@ -195,7 +186,7 @@ class TweetsService {
     // Gửi thông báo cho điều hành viên của cộng đồng
     if (community_id && community && operatorIds.length > 0) {
       // Nếu nhiều hơn 50 thành viên → tách nhỏ thành nhiều chunk để tránh lỗi payload quá lớn
-      const chunks = chunkArray(operatorIds, CONSTANT_CHUNK_SIZE)
+      const chunks = chunkArray(operatorIds, 50)
       for (const chunk of chunks) {
         // tạo jobs
         const jobs = chunk.map((id) => ({
@@ -2174,7 +2165,7 @@ class TweetsService {
 
       // Chia nhỏ để tránh nghẽn — ví dụ mỗi chunk CONSTANT_CHUNK_SIZE tweet
       const ids = children_ids.map((tw) => tw._id.toString())
-      const chunks = chunkArray(ids, CONSTANT_CHUNK_SIZE)
+      const chunks = chunkArray(ids, 50) // Chia thành các chunk nhỏ hơn, ví dụ 500 ids mỗi chunk
 
       // Xoá từng chunk một
       for (const [index, batch] of chunks.entries()) {

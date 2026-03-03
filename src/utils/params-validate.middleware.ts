@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express'
 import { z } from 'zod'
 import { BadRequestError } from '~/core/error.response'
 
-export function requestParamsValidate(schema: z.ZodSchema<any>) {
+export function paramsValidate(schema: z.ZodSchema<any>) {
   return (req: Request, res: Response, next: NextFunction) => {
     console.log('params::', req.params)
 

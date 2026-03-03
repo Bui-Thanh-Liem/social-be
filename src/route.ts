@@ -1,5 +1,8 @@
 import { Request, Response, Router } from 'express'
-import authRoute from './modules/auth-user/auth.routes'
+import { OkResponse } from '~/core/success.response'
+import { envs } from './configs/env.config'
+import authRoute from './modules/auth/auth.routes'
+import badWordsRoute from './modules/bad-words/bad-words.route'
 import bookmarksRoute from './modules/bookmarks/bookmarks.route'
 import communitiesRoute from './modules/communities/communities.route'
 import conversationsRoute from './modules/conversations/conversations.route'
@@ -13,19 +16,12 @@ import searchHistoryRoute from './modules/search-history/search-history.route'
 import searchRoute from './modules/search/search.route'
 import trendingRoute from './modules/trending/trending.route'
 import tweetsRoute from './modules/tweets/tweets.route'
-import usersRoute from './modules/users/users.route'
 import uploadsRoute from './modules/uploads/uploads.route'
-import { OkResponse } from '~/core/success.response'
-import mediaRoute from './modules/media/media.route'
-import adminRoute from './modules/admin/admin.route'
-import { envs } from './configs/env.config'
-import badWordsRoute from './modules/bad-words/bad-words.route'
-import userViolationsRoute from './modules/user-violations/user-violations.route'
+import usersRoute from './modules/users/users.route'
 
 const rootRoute = Router()
 
 // Mount các route con
-rootRoute.use('/admin', adminRoute)
 rootRoute.use('/auth', authRoute)
 rootRoute.use('/bookmarks', bookmarksRoute)
 rootRoute.use('/communities', communitiesRoute)
@@ -33,7 +29,6 @@ rootRoute.use('/conversations', conversationsRoute)
 rootRoute.use('/follows', followsRoute)
 rootRoute.use('/hashtags', hashtagsRoute)
 rootRoute.use('/likes', likesRoute)
-rootRoute.use('/media', mediaRoute)
 rootRoute.use('/messages', messagesRoute)
 rootRoute.use('/notifications', notificationRoute)
 rootRoute.use('/report-tweet', reportTweetRoute)
@@ -44,7 +39,6 @@ rootRoute.use('/tweets', tweetsRoute)
 rootRoute.use('/uploads', uploadsRoute)
 rootRoute.use('/users', usersRoute)
 rootRoute.use('/bad-words', badWordsRoute)
-rootRoute.use('/user-violations', userViolationsRoute)
 
 // Route tạo dữ liệu giả lập (mock data) cho việc phát triển và thử nghiệm
 rootRoute.post('/mock-data', async (req: Request, res: Response) => {

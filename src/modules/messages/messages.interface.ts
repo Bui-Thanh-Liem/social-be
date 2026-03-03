@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
-import { IBase } from '../../shared/interfaces/schemas/base.interface'
-import { IMediaBare } from '../media/media.interface'
+import { IBase } from '../../shared/interfaces/base.interface'
 import { IConversation } from '../conversations/conversations.interface'
+import { IMediaBare } from '~/shared/interfaces/media-bare.interface'
 
 export interface IMessage extends IBase {
   sender: ObjectId

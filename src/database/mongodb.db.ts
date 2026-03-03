@@ -1,8 +1,6 @@
 import { Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { BadRequestError, InternalServerError } from '~/core/error.response'
-import { AdminTokensCollection, initAdminTokensCollection } from '~/modules/admin-tokens/admin-tokens.schema'
-import { AdminCollection, initAdminCollection } from '~/modules/admin/admin.schema'
 import { BadWordsCollection, initBadWordsCollection } from '~/modules/bad-words/bad-words.schema'
 import { initBookmarksCollection } from '~/modules/bookmarks/bookmarks.schema'
 import {
@@ -31,10 +29,6 @@ import { initSearchHistoryCollection, SearchHistoryCollection } from '~/modules/
 import { initTokensCollection, TokensCollection } from '~/modules/tokens/tokens.schema'
 import { initTrendingCollection, TrendingCollection } from '~/modules/trending/trending.schema'
 import { initTweetsCollection, TweetsCollection } from '~/modules/tweets/tweets.schema'
-import {
-  initUserViolationsCollection,
-  UserViolationsCollection
-} from '~/modules/user-violations/user-violations.schema'
 import { initUsersCollection, UsersCollection } from '~/modules/users/users.schema'
 import { logger } from '~/utils/logger.util'
 
@@ -176,10 +170,7 @@ class Database {
       initCommunityInvitationCollection(this.db)
       initCommunityActivityCollection(this.db)
       initSearchHistoryCollection(this.db)
-      initAdminCollection(this.db)
       initBadWordsCollection(this.db)
-      initUserViolationsCollection(this.db)
-      initAdminTokensCollection(this.db)
     } catch (error) {
       logger.error('Collection initialization failed:', error)
       throw error
@@ -217,14 +208,7 @@ class Database {
       const indexCommunityActivity = await CommunityActivityCollection.indexExists(['community_id_1'])
       const indexSearchHistory = await SearchHistoryCollection.indexExists(['owner_1'])
       const indexMedia = await MediasCollection.indexExists(['s3_key_1'])
-      const indexAdmin = await AdminCollection.indexExists(['email_1'])
       const indexBadWord = await BadWordsCollection.indexExists(['words_text'])
-      const indexUserViolation = await UserViolationsCollection.indexExists(['user_id_1'])
-      const indexAdminToken = await AdminTokensCollection.indexExists(['admin_id_1', 'exp_1', 'access_token_1'])
-      // Admin
-      if (!indexAdmin) {
-        AdminCollection.createIndex({ email: 1 }, { unique: true })
-      }
 
       // User
       if (!indexUser) {
@@ -335,18 +319,6 @@ class Database {
       // BadWord
       if (!indexBadWord) {
         BadWordsCollection.createIndex({ words: 'text' }, { default_language: 'none' })
-      }
-
-      // UserViolation
-      if (!indexUserViolation) {
-        UserViolationsCollection.createIndex({ user_id: 1 })
-      }
-
-      // AdminToken
-      if (!indexAdminToken) {
-        AdminTokensCollection.createIndex({ admin_id: 1 })
-        AdminTokensCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
-        AdminTokensCollection.createIndex({ access_token: 1 }, { unique: true })
       }
 
       logger.info('All indexes are ensured successfully')

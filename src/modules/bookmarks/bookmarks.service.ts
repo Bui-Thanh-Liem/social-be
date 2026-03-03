@@ -1,8 +1,8 @@
 import { ObjectId } from 'mongodb'
-import { ParamIdTweetDto } from '~/modules/tweets/tweets.dto'
-import { ResToggleBookmark } from '~/shared/dtos/res/bookmark.dto'
 import { NotFoundError } from '~/core/error.response'
+import { ParamIdTweetDto } from '~/modules/tweets/tweets.dto'
 import TweetsService from '~/modules/tweets/tweets.service'
+import { ResToggleBookmark } from './bookmarks.dto'
 import { BookmarksCollection } from './bookmarks.schema'
 
 class BookmarksService {

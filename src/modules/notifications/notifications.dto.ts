@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
-import { ENotificationType } from '~/shared/enums/type.enum'
+import { ENotificationType } from './notifications.enum'
 
 export const CreateNotiDtoSchema = z.object({
   content: z.string().trim(),
@@ -42,3 +42,4 @@ export type CreateNotiLikeDto = {
 }
 
 export type CreateNotiCommentDto = CreateNotiLikeDto
+

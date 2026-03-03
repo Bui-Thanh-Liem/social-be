@@ -7,8 +7,8 @@ import {
   GetTweetChildrenDtoParams,
   ParamIdTweetDto
 } from '~/modules/tweets/tweets.dto'
-import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
-import { IQuery } from '~/shared/interfaces/common/query.interface'
+import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { IQuery } from '~/shared/interfaces/query.interface'
 import { ITweet } from './tweets.interface'
 
 class TweetsController {

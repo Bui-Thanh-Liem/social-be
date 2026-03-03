@@ -3,14 +3,14 @@ import { ConflictError } from '~/core/error.response'
 import CacheService from '~/helpers/cache.helper'
 import { notificationQueue } from '~/infra/queues'
 import { CONSTANT_JOB } from '~/shared/constants'
-import { ENotificationType } from '~/shared/enums/type.enum'
 import { createKeyBadWord, createKeyBadWords } from '~/utils/create-key-cache.util'
+import { getFilterQuery } from '~/utils/get-filter-query'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { removeVietnameseAccent } from '~/utils/remove-vietnamese-accent.util'
+import { ENotificationType } from '../notifications/notifications.enum'
 import { ActionBadWordDto } from './bad-words.dto'
 import { IBadWord } from './bad-words.interface'
 import { BadWordSchema, BadWordsCollection } from './bad-words.schema'
-import { getFilterQuery } from '~/utils/get-filter-query'
 
 interface IBadWordsCached {
   _id: string

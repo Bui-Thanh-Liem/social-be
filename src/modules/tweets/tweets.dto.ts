@@ -1,8 +1,10 @@
 import { z } from 'zod'
-import { CONSTANT_MAX_LENGTH_CONTENT, CONSTANT_REGEX } from '~/shared/constants'
-import { ETweetAudience } from '~/shared/enums/common.enum'
-import { EFeedType, ETweetType } from '~/shared/enums/type.enum'
-import { MediaBareDtoSchema } from '../../shared/dtos/req/common/media-bare.dto'
+import { CONSTANT_REGEX } from '~/shared/constants'
+import { MediaBareDtoSchema } from '../../shared/dtos/common/media-bare.dto'
+import { ICommunity } from '../communities/communities.interface'
+import { CONSTANT_MAX_LENGTH_CONTENT } from './tweet.constant'
+import { EFeedType, EFeedTypeItem, ETweetAudience, ETweetType } from './tweets.enum'
+import { ITweet } from './tweets.interface'
 
 // Codes DTO
 export const codesDtoSchema = z.object({
@@ -88,3 +90,34 @@ export type CreateTweetDto = z.infer<typeof createTweetDtoSchema>
 export type GetTweetChildrenDtoParams = z.infer<typeof getTweetChildrenDtoSchemaParams>
 export type GetNewFeedTypeDto = z.infer<typeof getNewFeedTypeDtoSchema>
 export type GetProfileTweetDto = z.infer<typeof getProfileTweetDtoSchema>
+
+export type ResCreateTweet = ITweet
+
+export type ResNewFeeds = { type: EFeedTypeItem; items: ITweet[] | ICommunity[] }
+
+export interface ResCountViewLinkBookmarkInWeek {
+  tweet_views_count: {
+    data: {
+      name: string // T2, T3, ...
+      tt: number // Tuần trước
+      tn: number // Tuần này
+    }[]
+    total_views: number
+  }
+  tweet_likes_count: {
+    data: {
+      name: string // T2, T3, ...
+      tt: number // Tuần trước
+      tn: number // Tuần này
+    }[]
+    total_views: number
+  }
+  tweet_bookmarks_count: {
+    data: {
+      name: string // T2, T3, ...
+      tt: number // Tuần trước
+      tn: number // Tuần này
+    }[]
+    total_views: number
+  }
+}

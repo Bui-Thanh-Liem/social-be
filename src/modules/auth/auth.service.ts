@@ -7,19 +7,18 @@ import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, Unauthor
 import cacheService from '~/helpers/cache.helper'
 import { emailQueue, notificationQueue } from '~/infra/queues'
 import { CONSTANT_JOB } from '~/shared/constants'
-import { ESourceViolation } from '~/shared/enums/common.enum'
-import { EAuthVerifyStatus, EUserStatus } from '~/shared/enums/status.enum'
-import { ENotificationType, ETokenType } from '~/shared/enums/type.enum'
-import { ISendVerifyEmail } from '~/shared/interfaces/common/mail.interface'
-import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oauth-google.interface'
+import { ISendVerifyEmail } from '~/shared/interfaces/mail.interface'
+import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/oauth-google.interface'
 import { createTokenPair } from '~/utils/auth.util'
 import { createKeyUserActive } from '~/utils/create-key-cache.util'
 import { generatePassword, hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
 import BadWordsService from '../bad-words/bad-words.service'
+import { ENotificationType } from '../notifications/notifications.enum'
+import { ETokenType } from '../tokens/tokens.enum'
 import TokensService from '../tokens/tokens.service'
-import UserViolationsService from '../user-violations/user-violations.service'
+import { EUserStatus, EUserVerifyStatus } from '../users/users.enum'
 import { UsersCollection, UsersSchema } from '../users/users.schema'
 import UsersService from '../users/users.service'
 import { ForgotPasswordDto, LoginAuthDto, RegisterUserDto, ResetPasswordDto, UpdateMeDto } from './auth.dto'
@@ -64,7 +63,7 @@ class AuthService {
         username: snake_case_name,
         password: password_hashed,
         day_of_birth: new Date(payload.day_of_birth),
-        verify: payload.verify || EAuthVerifyStatus.Unverified
+        verify: payload.verify || EUserVerifyStatus.Unverified
       })
     )
 
@@ -86,10 +85,10 @@ class AuthService {
 
     // Khi đăng kí thành công thì cho người dùng đăng nhập vào ứng dụng ngay.
     const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-    await TokensService.create({ access_token, refresh_token, user_id: newUser.insertedId.toString(), iat, exp })
+    await TokensService.create({ refresh_token, user_id: newUser.insertedId.toString(), iat, exp })
 
     // Gửi thông báo xác thực email
-    if (payload.verify !== EAuthVerifyStatus.Verified) {
+    if (payload.verify !== EUserVerifyStatus.Verified) {
       // Gửi email xác thực
       await emailQueue.add(CONSTANT_JOB.VERIFY_MAIL, {
         to_email: payload.email,
@@ -140,7 +139,7 @@ class AuthService {
 
     // Lưu refresh token vào database
     const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-    await TokensService.create({ access_token, refresh_token, user_id: foundUser._id.toString(), iat, exp })
+    await TokensService.create({ refresh_token, user_id: foundUser._id.toString(), iat, exp })
 
     return {
       access_token,
@@ -174,7 +173,7 @@ class AuthService {
       })
 
       const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-      await TokensService.create({ access_token, refresh_token, user_id: exist._id.toString(), exp, iat })
+      await TokensService.create({ refresh_token, user_id: exist._id.toString(), exp, iat })
 
       return {
         access_token,
@@ -195,7 +194,7 @@ class AuthService {
         s3_key: '',
         url: user_info.picture
       },
-      verify: EAuthVerifyStatus.Verified
+      verify: EUserVerifyStatus.Verified
     })
 
     return {
@@ -226,7 +225,7 @@ class AuthService {
       })
 
       const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
-      await TokensService.create({ access_token, refresh_token, user_id: exist._id.toString(), exp, iat })
+      await TokensService.create({ refresh_token, user_id: exist._id.toString(), exp, iat })
 
       return {
         access_token,
@@ -244,7 +243,7 @@ class AuthService {
       day_of_birth: new Date(),
       confirm_password: newPass,
       avatar: user_info.picture,
-      verify: EAuthVerifyStatus.Verified
+      verify: EUserVerifyStatus.Verified
     })
 
     return {
@@ -480,15 +479,15 @@ class AuthService {
       BadWordsService.detectInText({ text: payload.username || '', user_id })
     ])
 
-    // Lưu vi phạm từ cấm nếu có
-    await UserViolationsService.create({
-      user_id: user_id,
-      source_id: user_id,
-      source: ESourceViolation.Auth,
-      final_content:
-        (_bio.matched_words.join() || '') + (_name.matched_words.join() || '') + (_username.matched_words.join() || ''),
-      bad_word_ids: [_bio.bad_words_ids, _name.bad_words_ids, _username.bad_words_ids].flat()
-    })
+    // Lưu vi phạm từ cấm nếu có (rabbitmq)
+    // await UserViolationsService.create({
+    //   user_id: user_id,
+    //   source_id: user_id,
+    //   source: ESourceViolation.Auth,
+    //   final_content:
+    //     (_bio.matched_words.join() || '') + (_name.matched_words.join() || '') + (_username.matched_words.join() || ''),
+    //   bad_word_ids: [_bio.bad_words_ids, _name.bad_words_ids, _username.bad_words_ids].flat()
+    // })
 
     //
     return await UsersCollection.findOneAndUpdate(

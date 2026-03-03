@@ -1,8 +1,8 @@
 import { ObjectId } from 'mongodb'
 import { BadRequestError } from '~/core/error.response'
-import { CONSTANT_MAX_LENGTH_MENTOR } from '~/shared/constants'
 import { CommunityMentorCollection, CommunityMentorSchema } from './communities.schema'
 import { ICommunityPayload } from './communities.interface'
+import { CONSTANT_MAX_LENGTH_MENTOR } from './communities.constant'
 
 class CommunityMentorService {
   async create({ user_id, community_id, session }: ICommunityPayload) {

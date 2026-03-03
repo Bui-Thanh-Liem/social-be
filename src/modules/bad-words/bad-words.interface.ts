@@ -1,5 +1,5 @@
-import { EActionBadWord, EPriorityBadWord } from '~/shared/enums/common.enum'
-import { IBase } from '../../shared/interfaces/schemas/base.interface'
+import { IBase } from '../../shared/interfaces/base.interface'
+import { EActionBadWord, EPriorityBadWord } from './bad-words.enum'
 
 export interface IBadWord extends IBase {
   words: string

@@ -1,7 +1,7 @@
 import { Collection, Db } from 'mongodb'
-import { EAuthVerifyStatus, EUserStatus } from '~/shared/enums/status.enum'
-import { IMediaBare } from '~/modules/media/media.interface'
+import { IMediaBare } from '~/shared/interfaces/media-bare.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
+import { EUserStatus, EUserVerifyStatus } from './users.enum'
 import { IUser, IUserStatus } from './users.interface'
 
 const _COLLECTION_NAME = 'users'
@@ -12,7 +12,7 @@ export class UsersSchema extends BaseSchema implements IUser {
   day_of_birth: Date
   email_verify_token?: string
   forgot_password_token?: string
-  verify: EAuthVerifyStatus
+  verify: EUserVerifyStatus
   bio?: string
   location?: string
   website?: string
@@ -29,7 +29,7 @@ export class UsersSchema extends BaseSchema implements IUser {
     this.day_of_birth = user.day_of_birth || new Date()
     this.email_verify_token = user.email_verify_token || ''
     this.forgot_password_token = user.forgot_password_token || ''
-    this.verify = user.verify || EAuthVerifyStatus.Unverified
+    this.verify = user.verify || EUserVerifyStatus.Unverified
     this.bio = user.bio || ''
     this.status = user.status || { status: EUserStatus.Active, reason: '' }
     this.location = user.location || ''

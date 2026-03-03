@@ -2,15 +2,15 @@ import { NextFunction, Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
 import { BadRequestError, UnauthorizedError } from '~/core/error.response'
 import { FollowersCollection } from '~/modules/follows/follows.schema'
+import { ETweetAudience } from '~/modules/tweets/tweets.enum'
 import { ITweet } from '~/modules/tweets/tweets.interface'
+import { EUserVerifyStatus } from '~/modules/users/users.enum'
 import { IUser } from '~/modules/users/users.interface'
 import { UsersCollection } from '~/modules/users/users.schema'
-import { ETweetAudience } from '~/shared/enums/common.enum'
-import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
-import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
 import { convertObjectId } from '~/utils/convert-object-id'
 
-export async function checkAudience(req: Request, res: Response, next: NextFunction) {
+export async function checkAudienceMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
     const { user_id: author, audience } = req.tweet as ITweet
     const { _id: authorId } = author as unknown as IUser
@@ -21,7 +21,7 @@ export async function checkAudience(req: Request, res: Response, next: NextFunct
       { projection: { _id: 1, verify: 1 } }
     )
 
-    if (!user || user.verify === EAuthVerifyStatus.Banned) {
+    if (!user || user.verify === EUserVerifyStatus.Banned) {
       throw new UnauthorizedError('Tác giả không tồn tại hoặc đã bị khóa tài khoản')
     }
 

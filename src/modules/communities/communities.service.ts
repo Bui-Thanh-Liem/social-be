@@ -1,20 +1,28 @@
 import { ObjectId } from 'mongodb'
-import { notificationQueue } from '~/infra/queues'
+import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '~/core/error.response'
 import { clientMongodb } from '~/database/mongodb.db'
-import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
+import { notificationQueue } from '~/infra/queues'
 import TweetsService from '~/modules/tweets/tweets.service'
 import { CONSTANT_JOB } from '~/shared/constants'
-import { EInvitationStatus, ETweetStatus } from '~/shared/enums/status.enum'
-import { EActivityType, EMembershipType, ENotificationType } from '~/shared/enums/type.enum'
-import { IQuery } from '~/shared/interfaces/common/query.interface'
+import { IQuery } from '~/shared/interfaces/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { logger } from '~/utils/logger.util'
 import { slug } from '~/utils/slug.util'
-import CommunityMemberService from './community-member.service'
-import CommunityMentorService from './community-mentor.service'
-import CommunityInvitationService from './community-invitation.service'
+import BadWordsService from '../bad-words/bad-words.service'
+import { ENotificationType } from '../notifications/notifications.enum'
+import { ETweetStatus } from '../tweets/tweets.enum'
+import { IUser } from '../users/users.interface'
+import {
+  ChangeInfoDto,
+  CreateCommunityActivityDto,
+  CreateCommunityDto,
+  InvitationMembersDto,
+  UpdateDto
+} from './communities.dto'
+import { EActivityType, EInvitationStatus, EMembershipType } from './communities.enum'
+import { ICommunity, ICommunityActivity, ICommunityPayload } from './communities.interface'
 import {
   CommunitiesCollection,
   CommunitiesSchema,
@@ -24,18 +32,9 @@ import {
   CommunityMentorCollection,
   CommunityPinCollection
 } from './communities.schema'
-import {
-  ChangeInfoDto,
-  CreateCommunityActivityDto,
-  CreateCommunityDto,
-  InvitationMembersDto,
-  UpdateDto
-} from './communities.dto'
-import { ICommunity, ICommunityActivity, ICommunityPayload } from './communities.interface'
-import { IUser } from '../users/users.interface'
-import BadWordsService from '../bad-words/bad-words.service'
-import UserViolationsService from '../user-violations/user-violations.service'
-import { ESourceViolation } from '~/shared/enums/common.enum'
+import CommunityInvitationService from './community-invitation.service'
+import CommunityMemberService from './community-member.service'
+import CommunityMentorService from './community-mentor.service'
 
 interface IPromoteDemote {
   actor_id: string
@@ -61,15 +60,15 @@ class CommunityService {
       new CommunitiesSchema({ ...payload, name: _name.text, bio: _bio.text, admin: new ObjectId(user_id) })
     )
 
-    // Lưu vi phạm từ cấm nếu có
+    // Lưu vi phạm từ cấm nếu có (rabbitmq)
     if (_name.bad_words_ids.length > 0 || _bio.bad_words_ids.length > 0) {
-      await UserViolationsService.create({
-        user_id: user_id,
-        source: ESourceViolation.Community,
-        source_id: inserted.insertedId.toString(),
-        final_content: (_name.matched_words.join() || '') + (_bio.matched_words.join() || '') + (payload.name || ''),
-        bad_word_ids: [_name.bad_words_ids, _bio.bad_words_ids].flat()
-      })
+      // await UserViolationsService.create({
+      //   user_id: user_id,
+      //   source: ESourceViolation.Community,
+      //   source_id: inserted.insertedId.toString(),
+      //   final_content: (_name.matched_words.join() || '') + (_bio.matched_words.join() || '') + (payload.name || ''),
+      //   bad_word_ids: [_name.bad_words_ids, _bio.bad_words_ids].flat()
+      // })
     }
 
     if (!inserted.insertedId) {

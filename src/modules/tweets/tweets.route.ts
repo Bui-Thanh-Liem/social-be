@@ -1,14 +1,5 @@
 import { Router } from 'express'
 import TweetsController from '~/modules/tweets/tweets.controller'
-import { checkAudience } from '~/shared/middlewares/tweet/check-audience.middleware'
-import { checkTweetByIdParams } from '~/shared/middlewares/tweet/check-tweet-params.middleware'
-import { optionLogin } from '~/shared/middlewares/option-login.middleware'
-import { requestBodyValidate } from '~/shared/middlewares/request-body-validate.middleware'
-import { requestParamsValidate } from '~/shared/middlewares/request-params-validate.middleware'
-import { requestQueryValidate } from '~/shared/middlewares/request-query-validate.middleware'
-import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
-import { verifyUserEmail } from '~/shared/middlewares/user/verify-user-email.middleware'
-import { QueryDtoSchema } from '~/shared/dtos/req/common/query.dto'
 import {
   createTweetDtoSchema,
   getNewFeedTypeDtoSchema,
@@ -17,24 +8,34 @@ import {
   getTweetChildrenDtoSchemaParams,
   paramIdTweetDtoSchema
 } from '~/modules/tweets/tweets.dto'
+import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
+import { bodyValidate } from '~/utils/body-validate.middleware'
+import { optionLogin } from '~/utils/option-login.middleware'
+import { paramsValidate } from '~/utils/params-validate.middleware'
+import { queryValidate } from '~/utils/query-validate.middleware'
+import { checkAudienceMiddleware } from '~/shared/middlewares/tweet/check-audience.middleware'
+import { checkTweetExistMiddleware } from '~/shared/middlewares/tweet/check-tweet-exist.middleware'
+import { authenticationMiddleware } from '~/shared/middlewares/user/authentication.middleware'
+import { verifyUserEmailMiddleware } from '~/shared/middlewares/user/verify-user-email.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
-import { checkTweetExist } from '~/shared/middlewares/tweet/check-tweet-exist.middleware'
 
 const tweetsRoute = Router()
 
+tweetsRoute.use(authenticationMiddleware, verifyUserEmailMiddleware)
+
 tweetsRoute.post(
   '/',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestBodyValidate(createTweetDtoSchema),
+  authenticationMiddleware,
+  verifyUserEmailMiddleware,
+  bodyValidate(createTweetDtoSchema),
   asyncHandler(TweetsController.create)
 )
 
 tweetsRoute.delete(
   '/:tweet_id',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestParamsValidate(paramIdTweetDtoSchema),
+  authenticationMiddleware,
+  verifyUserEmailMiddleware,
+  paramsValidate(paramIdTweetDtoSchema),
   asyncHandler(TweetsController.delete)
 )
 
@@ -45,81 +46,76 @@ Following = 'following' // Chỉ người mình follow
  */
 tweetsRoute.get(
   '/feeds/:feed_type',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestParamsValidate(getNewFeedTypeDtoSchema),
-  requestQueryValidate(QueryDtoSchema),
+  authenticationMiddleware,
+  verifyUserEmailMiddleware,
+  paramsValidate(getNewFeedTypeDtoSchema),
+  queryValidate(QueryDtoSchema),
   asyncHandler(TweetsController.getNewFeeds)
 )
 
 // Lấy bài viết đang chờ duyệt trong cộng đồng
 tweetsRoute.get(
   '/community/pending',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestQueryValidate(QueryDtoSchema),
+  authenticationMiddleware,
+  verifyUserEmailMiddleware,
+  queryValidate(QueryDtoSchema),
   asyncHandler(TweetsController.getTweetsPendingByCommunityId)
 )
 
 // Lấy bài viết trong cộng đồng (feeds)
 tweetsRoute.get(
   '/community',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestQueryValidate(QueryDtoSchema),
+  authenticationMiddleware,
+  verifyUserEmailMiddleware,
+  queryValidate(QueryDtoSchema),
   asyncHandler(TweetsController.getCommunityTweets)
 )
 
 tweetsRoute.get(
   '/profile/:tweet_type',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestParamsValidate(getProfileTweetDtoSchema),
-  requestQueryValidate(QueryDtoSchema),
+  authenticationMiddleware,
+  verifyUserEmailMiddleware,
+  paramsValidate(getProfileTweetDtoSchema),
+  queryValidate(QueryDtoSchema),
   asyncHandler(TweetsController.getProfileTweets)
 )
 
 tweetsRoute.get(
   '/liked',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestQueryValidate(QueryDtoSchema),
+  authenticationMiddleware,
+  verifyUserEmailMiddleware,
+  queryValidate(QueryDtoSchema),
   asyncHandler(TweetsController.getTweetLiked)
 )
 
 tweetsRoute.get(
   '/bookmarked',
-  verifyAccessToken,
-  verifyUserEmail,
-  requestQueryValidate(QueryDtoSchema),
+  authenticationMiddleware,
+  verifyUserEmailMiddleware,
+  queryValidate(QueryDtoSchema),
   asyncHandler(TweetsController.getTweetBookmarked)
 )
 
 tweetsRoute.get(
   '/:tweet_id/:tweet_type/children',
-  optionLogin(verifyAccessToken),
-  optionLogin(verifyUserEmail),
-  requestParamsValidate(getTweetChildrenDtoSchemaParams),
-  requestQueryValidate(QueryDtoSchema),
-  checkTweetExist, // chỉ  kiểm tra tồn tại và lấy audience cho checkAudience
-  checkAudience,
+  optionLogin(authenticationMiddleware),
+  optionLogin(verifyUserEmailMiddleware),
+  paramsValidate(getTweetChildrenDtoSchemaParams),
+  queryValidate(QueryDtoSchema),
+  checkTweetExistMiddleware, // chỉ  kiểm tra tồn tại và lấy audience cho checkAudience
+  checkAudienceMiddleware,
   asyncHandler(TweetsController.getTweetChildren)
 )
 
-tweetsRoute.get(
-  '/view-like-bookmark',
-  verifyAccessToken,
-  verifyUserEmail,
-  asyncHandler(TweetsController.countViewLinkBookmarkInWeek)
-)
+tweetsRoute.get('/view-like-bookmark', asyncHandler(TweetsController.countViewLinkBookmarkInWeek))
 
 tweetsRoute.get(
   '/:tweet_id',
-  optionLogin(verifyAccessToken),
-  optionLogin(verifyUserEmail),
-  requestParamsValidate(getOneTweetByIdDtoSchema),
-  checkTweetByIdParams,
-  checkAudience,
+  optionLogin(authenticationMiddleware),
+  optionLogin(verifyUserEmailMiddleware),
+  paramsValidate(getOneTweetByIdDtoSchema),
+  checkTweetExistMiddleware,
+  checkAudienceMiddleware,
   asyncHandler(TweetsController.getOneById)
 )
 

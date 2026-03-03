@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { EMediaStatus } from '~/shared/enums/status.enum'
+import { EMediaStatus } from './media.enum'
 
 export interface IMedia {
   file_type: string
@@ -12,5 +12,3 @@ export interface IMedia {
   user_id?: ObjectId
   status: EMediaStatus
 }
-
-export type IMediaBare = Pick<IMedia, 's3_key' | 'url'>

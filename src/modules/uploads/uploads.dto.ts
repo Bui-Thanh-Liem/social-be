@@ -15,3 +15,8 @@ export const uploadConfirmDtoSchema = deleteMediaDtoSchema
 export type PresignedUrlDto = z.infer<typeof presignedUrlDtoSchema>
 export type DeleteMediaDto = z.infer<typeof deleteMediaDtoSchema>
 export type UploadConfirmDto = z.infer<typeof uploadConfirmDtoSchema>
+
+export interface ResPresignedUrl {
+  key: string
+  presigned_url: string
+}

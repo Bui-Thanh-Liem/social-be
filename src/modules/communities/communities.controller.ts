@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
 import { CreatedResponse, OkResponse } from '~/core/success.response'
 
-import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
-import { IQuery } from '~/shared/interfaces/common/query.interface'
+import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { IQuery } from '~/shared/interfaces/query.interface'
 import CommunityInvitationService from './community-invitation.service'
 import communitiesService from './communities.service'
 import {

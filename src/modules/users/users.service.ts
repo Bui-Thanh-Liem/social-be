@@ -1,24 +1,24 @@
 import { ObjectId } from 'mongodb'
 import { StringValue } from 'ms'
-import { emailQueue } from '~/infra/queues'
+import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { envs } from '~/configs/env.config'
 import { NotFoundError, UnauthorizedError } from '~/core/error.response'
 import cacheService from '~/helpers/cache.helper'
-import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
+import { emailQueue } from '~/infra/queues'
 import { CONSTANT_JOB } from '~/shared/constants'
-import { EAuthVerifyStatus, EUserStatus } from '~/shared/enums/status.enum'
-import { ETokenType } from '~/shared/enums/type.enum'
-import { IQuery } from '~/shared/interfaces/common/query.interface'
+import { IQuery } from '~/shared/interfaces/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { createKeyUserActive } from '~/utils/create-key-cache.util'
 import { hashPassword } from '~/utils/crypto.util'
+import { getFilterQuery } from '~/utils/get-filter-query'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
 import followsService from '../follows/follows.service'
-import { UsersCollection, UsersSchema } from './users.schema'
+import { ETokenType } from '../tokens/tokens.enum'
+import { EUserVerifyStatus } from './users.enum'
 import { IUser } from './users.interface'
-import { getFilterQuery } from '~/utils/get-filter-query'
+import { UsersCollection, UsersSchema } from './users.schema'
 
 class UsersService {
   async verifyEmail({
@@ -57,7 +57,7 @@ class UsersService {
       { _id: new ObjectId(user._id) },
       {
         $set: {
-          verify: EAuthVerifyStatus.Verified,
+          verify: EUserVerifyStatus.Verified,
           email_verify_token: ''
         },
         $currentDate: {
@@ -66,7 +66,7 @@ class UsersService {
       }
     )
 
-    return { email: user.email, verify: EAuthVerifyStatus.Verified }
+    return { email: user.email, verify: EUserVerifyStatus.Verified }
   }
 
   async resendVerifyEmail(id: string) {

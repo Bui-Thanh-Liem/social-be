@@ -1,14 +1,14 @@
 import { Router } from 'express'
 import HashtagsController from '~/modules/hashtags/hashtags.controller'
-import { requestQueryValidate } from '~/shared/middlewares/request-query-validate.middleware'
-import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
-import { QueryDtoSchema } from '~/shared/dtos/req/common/query.dto'
+import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
+import { queryValidate } from '~/utils/query-validate.middleware'
+import { authenticationMiddleware } from '~/shared/middlewares/user/authentication.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 
 const hashtagsRoute = Router()
 
-hashtagsRoute.use(verifyAccessToken)
+hashtagsRoute.use(authenticationMiddleware)
 
-hashtagsRoute.get('/', requestQueryValidate(QueryDtoSchema), asyncHandler(HashtagsController.getMulti))
+hashtagsRoute.get('/', queryValidate(QueryDtoSchema), asyncHandler(HashtagsController.getMulti))
 
 export default hashtagsRoute

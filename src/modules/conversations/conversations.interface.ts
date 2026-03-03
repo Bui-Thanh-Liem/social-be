@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
-import { EConversationType } from '~/shared/enums/type.enum'
-import { IBase } from '~/shared/interfaces/schemas/base.interface'
-import { IMediaBare } from '../media/media.interface'
+import { IBase } from '~/shared/interfaces/base.interface'
+import { EConversationType } from './conversations.enum'
+import { IMediaBare } from '~/shared/interfaces/media-bare.interface'
 
 export interface IConversation extends IBase {
   name: string | null // group - có tên, private - lấy tên của participants (không phải mình)

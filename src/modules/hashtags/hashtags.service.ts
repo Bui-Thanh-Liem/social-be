@@ -1,12 +1,10 @@
 import { ObjectId } from 'mongodb'
 import { BadRequestError } from '~/core/error.response'
-import { ESourceViolation } from '~/shared/enums/common.enum'
-import { IQuery } from '~/shared/interfaces/common/query.interface'
+import { IQuery } from '~/shared/interfaces/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { slug } from '~/utils/slug.util'
 import BadWordsService from '../bad-words/bad-words.service'
-import UserViolationsService from '../user-violations/user-violations.service'
 import { IHashtag } from './hashtags.interface'
 import { HashtagsCollection, HashtagsSchema } from './hashtags.schema'
 
@@ -65,15 +63,15 @@ class HashtagsService {
           { upsert: true, returnDocument: 'after' }
         )
 
-        // Lưu vi phạm từ cấm nếu có
+        // Lưu vi phạm từ cấm nếu có (rabbitmq)
         if (_name.bad_words_ids.length > 0) {
-          await UserViolationsService.create({
-            user_id: user_id,
-            source_id: user_id,
-            source: ESourceViolation.Hashtag,
-            final_content: _name.matched_words.join() || '',
-            bad_word_ids: _name.bad_words_ids
-          })
+          // await UserViolationsService.create({
+          //   user_id: user_id,
+          //   source_id: user_id,
+          //   source: ESourceViolation.Hashtag,
+          //   final_content: _name.matched_words.join() || '',
+          //   bad_word_ids: _name.bad_words_ids
+          // })
         }
 
         return newHashtag

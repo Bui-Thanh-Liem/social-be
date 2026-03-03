@@ -1,9 +1,9 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
-import { MediaBareDtoSchema } from '~/shared/dtos/req/common/media-bare.dto'
-import { ETweetStatus } from '~/shared/enums/status.enum'
-import { EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
+import { MediaBareDtoSchema } from '~/shared/dtos/common/media-bare.dto'
 import { IActionActivity, ICommunity } from './communities.interface'
+import { EMembershipType, EVisibilityType } from './communities.enum'
+import { ETweetStatus } from '../tweets/tweets.enum'
 
 export const CreateCommunityDtoSchema = z.object({
   name: z.string().trim().max(32),

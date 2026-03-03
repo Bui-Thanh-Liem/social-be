@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express'
 import TweetsService from '~/modules/tweets/tweets.service'
 import { NotFoundError } from '~/core/error.response'
-import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
 
-export async function checkTweetByIdParams(req: Request, res: Response, next: NextFunction) {
+export async function checkTweetByIdParamsMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
     const auth = req?.decoded_authorization as IJwtPayload
     const { tweet_id } = req.params as { tweet_id: string }

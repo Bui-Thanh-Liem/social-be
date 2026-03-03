@@ -1,21 +1,22 @@
 import { Router } from 'express'
-import { requestParamsValidate } from '~/shared/middlewares/request-params-validate.middleware'
-import { requestQueryValidate } from '~/shared/middlewares/request-query-validate.middleware'
-import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
-import { verifyUserEmail } from '~/shared/middlewares/user/verify-user-email.middleware'
-import { QueryDtoSchema } from '~/shared/dtos/req/common/query.dto'
+
+import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
+import { paramsValidate } from '~/utils/params-validate.middleware'
+import { queryValidate } from '~/utils/query-validate.middleware'
+import { authenticationMiddleware } from '~/shared/middlewares/user/authentication.middleware'
+import { verifyUserEmailMiddleware } from '~/shared/middlewares/user/verify-user-email.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 import MessagesController from './messages.controller'
 import { GetMultiMessageByConversationDtoSchema } from './messages.dto'
 
 const messagesRoute = Router()
 
-messagesRoute.use(verifyAccessToken, verifyUserEmail)
+messagesRoute.use(authenticationMiddleware, verifyUserEmailMiddleware)
 
 messagesRoute.get(
   '/:conversation_id',
-  requestParamsValidate(GetMultiMessageByConversationDtoSchema),
-  requestQueryValidate(QueryDtoSchema),
+  paramsValidate(GetMultiMessageByConversationDtoSchema),
+  queryValidate(QueryDtoSchema),
   asyncHandler(MessagesController.getMultiByConversation)
 )
 

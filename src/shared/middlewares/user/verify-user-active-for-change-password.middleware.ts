@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from 'express'
 import { BadRequestError, UnauthorizedError } from '~/core/error.response'
 import { ChangePasswordDto } from '~/modules/users/users.dto'
-import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
+import { EUserVerifyStatus } from '~/modules/users/users.enum'
 import { verifyPassword } from '~/utils/crypto.util'
 
-export async function verifyUserActiveForChangePassword(req: Request, res: Response, next: NextFunction) {
+export async function verifyUserActiveForChangePasswordMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
     const { user } = req
     const { old_password, new_password } = req.body as ChangePasswordDto
@@ -15,7 +15,7 @@ export async function verifyUserActiveForChangePassword(req: Request, res: Respo
     }
 
     //
-    if (user?.verify === EAuthVerifyStatus.Unverified) {
+    if (user?.verify === EUserVerifyStatus.Unverified) {
       throw new UnauthorizedError('Tài khoản của bạn chưa được xác thực.')
     }
 

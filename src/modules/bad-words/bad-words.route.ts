@@ -1,35 +1,31 @@
 import { Router } from 'express'
-import { verifyAccessTokenAdmin } from '~/shared/middlewares/admin/verify-access-token-admin.middleware'
-import { requestBodyValidate } from '~/shared/middlewares/request-body-validate.middleware'
-import { ActionBadWordDtoSchema, paramIdBadWordsDtoSchema } from './bad-words.dto'
+import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
+import { bodyValidate } from '~/utils/body-validate.middleware'
+import { paramsValidate } from '~/utils/params-validate.middleware'
+import { queryValidate } from '~/utils/query-validate.middleware'
+import { authenticationMiddleware } from '~/shared/middlewares/user/authentication.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 import BadWordController from './bad-words.controller'
-import { QueryDtoSchema } from '~/shared/dtos/req/common/query.dto'
-import { requestQueryValidate } from '~/shared/middlewares/request-query-validate.middleware'
-import { requestParamsValidate } from '~/shared/middlewares/request-params-validate.middleware'
+import { ActionBadWordDtoSchema, paramIdBadWordsDtoSchema } from './bad-words.dto'
 
 const badWordsRoute = Router()
 
-badWordsRoute.use(verifyAccessTokenAdmin)
+badWordsRoute.use(authenticationMiddleware)
 
 badWordsRoute
   .route('/')
-  .get(requestQueryValidate(QueryDtoSchema), asyncHandler(BadWordController.getMulti))
-  .post(requestBodyValidate(ActionBadWordDtoSchema), asyncHandler(BadWordController.create))
+  .get(queryValidate(QueryDtoSchema), asyncHandler(BadWordController.getMulti))
+  .post(bodyValidate(ActionBadWordDtoSchema), asyncHandler(BadWordController.create))
 
-badWordsRoute.get('/most-used', requestQueryValidate(QueryDtoSchema), asyncHandler(BadWordController.getMultiMostUsed))
+badWordsRoute.get('/most-used', queryValidate(QueryDtoSchema), asyncHandler(BadWordController.getMultiMostUsed))
 
 badWordsRoute.patch(
   '/:bad_word_id',
-  requestParamsValidate(paramIdBadWordsDtoSchema),
-  requestBodyValidate(ActionBadWordDtoSchema),
+  paramsValidate(paramIdBadWordsDtoSchema),
+  bodyValidate(ActionBadWordDtoSchema),
   asyncHandler(BadWordController.update)
 )
 
-badWordsRoute.delete(
-  '/:bad_word_id',
-  requestParamsValidate(paramIdBadWordsDtoSchema),
-  asyncHandler(BadWordController.delete)
-)
+badWordsRoute.delete('/:bad_word_id', paramsValidate(paramIdBadWordsDtoSchema), asyncHandler(BadWordController.delete))
 
 export default badWordsRoute

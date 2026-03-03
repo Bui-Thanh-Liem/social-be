@@ -1,17 +1,17 @@
 import { ObjectId } from 'mongodb'
 import pLimit from 'p-limit'
-import { inviteQueue, notificationQueue } from '~/infra/queues'
 import { ForbiddenError, NotFoundError } from '~/core/error.response'
+import { inviteQueue, notificationQueue } from '~/infra/queues'
 import { CONSTANT_JOB } from '~/shared/constants'
-import { EInvitationStatus } from '~/shared/enums/status.enum'
-import { ENotificationType } from '~/shared/enums/type.enum'
-import { IQuery } from '~/shared/interfaces/common/query.interface'
+import { IQuery } from '~/shared/interfaces/query.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import CommunitiesService from '../communities/communities.service'
-import { CommunityInvitationCollection, CommunityInvitationSchema } from './communities.schema'
+import { ENotificationType } from '../notifications/notifications.enum'
 import { UsersCollection } from '../users/users.schema'
 import { CreateCommunityInvitationDto, DeleteInvitationDto } from './communities.dto'
+import { EInvitationStatus } from './communities.enum'
 import { ICommunity, ICommunityPayload } from './communities.interface'
+import { CommunityInvitationCollection, CommunityInvitationSchema } from './communities.schema'
 
 const limit = pLimit(10)
 

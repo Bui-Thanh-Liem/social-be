@@ -1,7 +1,7 @@
 import { getSignedUrl } from '@aws-sdk/cloudfront-signer'
 import { envs } from '~/configs/env.config'
 import { BadRequestError } from '~/core/error.response'
-import { IMediaBare } from '~/modules/media/media.interface'
+import { IMediaBare } from '~/shared/interfaces/media-bare.interface'
 
 export const signedCloudfrontUrl = (bareMedia: IMediaBare | IMediaBare[] | undefined) => {
   try {

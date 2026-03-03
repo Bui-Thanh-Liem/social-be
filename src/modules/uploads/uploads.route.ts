@@ -1,30 +1,22 @@
 import { Router } from 'express'
-import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
-import { verifyUserEmail } from '~/shared/middlewares/user/verify-user-email.middleware'
-import { asyncHandler } from '~/utils/async-handler.util'
 import UploadsControllers from '~/modules/uploads/uploads.controller'
-import { requestBodyValidate } from '~/shared/middlewares/request-body-validate.middleware'
 import { deleteMediaDtoSchema, presignedUrlDtoSchema, uploadConfirmDtoSchema } from '~/modules/uploads/uploads.dto'
+import { bodyValidate } from '~/utils/body-validate.middleware'
+import { authenticationMiddleware } from '~/shared/middlewares/user/authentication.middleware'
+import { verifyUserEmailMiddleware } from '~/shared/middlewares/user/verify-user-email.middleware'
+import { asyncHandler } from '~/utils/async-handler.util'
 
 const uploadsRoute = Router()
 
-uploadsRoute.use(verifyAccessToken, verifyUserEmail)
+uploadsRoute.use(authenticationMiddleware, verifyUserEmailMiddleware)
 
 //
-uploadsRoute.post(
-  '/presigned-url',
-  requestBodyValidate(presignedUrlDtoSchema),
-  asyncHandler(UploadsControllers.presignedURL)
-)
+uploadsRoute.post('/presigned-url', bodyValidate(presignedUrlDtoSchema), asyncHandler(UploadsControllers.presignedURL))
 
 //
-uploadsRoute.post(
-  '/confirm',
-  requestBodyValidate(uploadConfirmDtoSchema),
-  asyncHandler(UploadsControllers.confirmUpload)
-)
+uploadsRoute.post('/confirm', bodyValidate(uploadConfirmDtoSchema), asyncHandler(UploadsControllers.confirmUpload))
 
 //
-uploadsRoute.delete('/', requestBodyValidate(deleteMediaDtoSchema), asyncHandler(UploadsControllers.delete))
+uploadsRoute.delete('/', bodyValidate(deleteMediaDtoSchema), asyncHandler(UploadsControllers.delete))
 
 export default uploadsRoute

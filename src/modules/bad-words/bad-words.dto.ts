@@ -1,6 +1,6 @@
 import z from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
-import { EActionBadWord, EPriorityBadWord } from '~/shared/enums/common.enum'
+import { EActionBadWord, EPriorityBadWord } from './bad-words.enum'
 
 export const ActionBadWordDtoSchema = z.object({
   words: z.string().min(1, 'Vui lòng nhập từ').max(50, 'Tối đa 50 kí tự').trim(),

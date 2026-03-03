@@ -1,9 +1,8 @@
 import { ClientSession, ObjectId } from 'mongodb'
-import { EInvitationStatus } from '~/shared/enums/status.enum'
-import type { EActivityType, EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
-import { IBase } from '~/shared/interfaces/schemas/base.interface'
-import { IMediaBare } from '~/modules/media/media.interface'
+import { IBase } from '~/shared/interfaces/base.interface'
 import { IUser } from '../users/users.interface'
+import { EActivityType, EInvitationStatus, EMembershipType, EVisibilityType } from './communities.enum'
+import { IMediaBare } from '~/shared/interfaces/media-bare.interface'
 
 export interface ICommunity extends IBase {
   name: string

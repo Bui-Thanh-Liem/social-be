@@ -1,1 +1,2 @@
 export const CONSTANT_MAX_LENGTH_MENTOR = 20
+export const CONSTANT_INVITE_EXPIRES = 3

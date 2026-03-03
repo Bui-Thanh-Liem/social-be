@@ -1,8 +1,8 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { BaseSchema } from '~/shared/schemas/base.schema'
-import { ENotificationType } from '~/shared/enums/type.enum'
 import { INotification } from '~/modules/notifications/notifications.interface'
+import { BaseSchema } from '~/shared/schemas/base.schema'
 import { IUser } from '../users/users.interface'
+import { ENotificationType } from './notifications.enum'
 
 export class NotificationsSchema extends BaseSchema implements INotification {
   content: string

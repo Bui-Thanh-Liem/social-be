@@ -1,10 +1,9 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { CONSTANT_INVITE_EXPIRES } from '~/shared/constants'
-import { EInvitationStatus } from '~/shared/enums/status.enum'
-import { EActivityType, EMembershipType, EVisibilityType } from '~/shared/enums/type.enum'
-import { slug } from '~/utils/slug.util'
-import { IMediaBare } from '~/modules/media/media.interface'
+import { IMediaBare } from '~/shared/interfaces/media-bare.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
+import { slug } from '~/utils/slug.util'
+import { CONSTANT_INVITE_EXPIRES } from './communities.constant'
+import { EActivityType, EInvitationStatus, EMembershipType, EVisibilityType } from './communities.enum'
 import {
   IActionActivity,
   ICommunity,

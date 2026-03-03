@@ -2,11 +2,11 @@ import { Worker } from 'bullmq'
 import { ObjectId } from 'mongodb'
 import { bullRedisOptions } from '~/configs/redis.config'
 import { CreateNotiCommentDto, CreateNotiDto, CreateNotiLikeDto } from '~/modules/notifications/notifications.dto'
+import { ENotificationType } from '~/modules/notifications/notifications.enum'
 import NotificationService from '~/modules/notifications/notifications.service'
 import { TweetsCollection } from '~/modules/tweets/tweets.schema'
 import { UsersCollection } from '~/modules/users/users.schema'
 import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants'
-import { ENotificationType } from '~/shared/enums/type.enum'
 import { logger } from '~/utils/logger.util'
 
 export const notificationWorker = new Worker(

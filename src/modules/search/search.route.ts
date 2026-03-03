@@ -1,19 +1,19 @@
 import { Router } from 'express'
-import { requestQueryValidate } from '~/shared/middlewares/request-query-validate.middleware'
-import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
-import { verifyUserEmail } from '~/shared/middlewares/user/verify-user-email.middleware'
-import { QueryDtoSchema } from '~/shared/dtos/req/common/query.dto'
+import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
+import { queryValidate } from '~/utils/query-validate.middleware'
+import { authenticationMiddleware } from '~/shared/middlewares/user/authentication.middleware'
+import { verifyUserEmailMiddleware } from '~/shared/middlewares/user/verify-user-email.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 import SearchController from './search.controller'
 
 const searchRoute = Router()
 
-searchRoute.use(verifyAccessToken, verifyUserEmail)
+searchRoute.use(authenticationMiddleware, verifyUserEmailMiddleware)
 
-searchRoute.get('/pending', requestQueryValidate(QueryDtoSchema), asyncHandler(SearchController.searchPending))
+searchRoute.get('/pending', queryValidate(QueryDtoSchema), asyncHandler(SearchController.searchPending))
 
-searchRoute.get('/tweets', requestQueryValidate(QueryDtoSchema), asyncHandler(SearchController.searchTweet))
+searchRoute.get('/tweets', queryValidate(QueryDtoSchema), asyncHandler(SearchController.searchTweet))
 
-searchRoute.get('/users', requestQueryValidate(QueryDtoSchema), asyncHandler(SearchController.searchUser))
+searchRoute.get('/users', queryValidate(QueryDtoSchema), asyncHandler(SearchController.searchUser))
 
 export default searchRoute

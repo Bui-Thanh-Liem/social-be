@@ -42,40 +42,6 @@ export const loginRateLimit = rateLimit({
     throw error
   }
 })
-export const verifyF2aRateLimit = rateLimit({
-  windowMs: 5 * 60 * 1000,
-  max: 5,
-  // message: {
-  //   status: 429,
-  //   error: 'Có quá nhiều yêu cầu từ thiết bị của bạn, vui lòng thử lại sau 5 phút nữa.'
-  // },
-  standardHeaders: true,
-
-  // Dùng handler để ném error vào error middleware
-  handler: () => {
-    const error: any = new Error('Có quá nhiều yêu cầu từ thiết bị của bạn, vui lòng thử lại sau 5 phút nữa.')
-    error.statusCode = 429
-    error.type = 'RATE_LIMIT_EXCEEDED'
-    throw error
-  }
-})
-export const setupF2aRateLimit = rateLimit({
-  windowMs: 5 * 60 * 1000,
-  max: 5,
-  // message: {
-  //   status: 429,
-  //   error: 'Có quá nhiều yêu cầu từ thiết bị của bạn, vui lòng thử lại sau 5 phút nữa.'
-  // },
-  standardHeaders: true,
-
-  // Dùng handler để ném error vào error middleware
-  handler: () => {
-    const error: any = new Error('Có quá nhiều yêu cầu từ thiết bị của bạn, vui lòng thử lại sau 5 phút nữa.')
-    error.statusCode = 429
-    error.type = 'RATE_LIMIT_EXCEEDED'
-    throw error
-  }
-})
 
 // Rate limit nghiêm ngặt cho resend email: 5 req/5p/IP (chống spam mail)
 export const resendRateLimit = rateLimit({

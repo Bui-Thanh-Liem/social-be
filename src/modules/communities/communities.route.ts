@@ -1,13 +1,13 @@
 import { Router } from 'express'
 import CommunityController from '~/modules/communities/communities.controller'
-import { checkExistMembers } from '~/shared/middlewares/community/check-exist-members.middleware'
-import { requestBodyValidate } from '~/shared/middlewares/request-body-validate.middleware'
-import { requestParamsValidate } from '~/shared/middlewares/request-params-validate.middleware'
-import { requestQueryValidate } from '~/shared/middlewares/request-query-validate.middleware'
-import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
-import { verifyUserEmail } from '~/shared/middlewares/user/verify-user-email.middleware'
-import { QueryDtoSchema } from '~/shared/dtos/req/common/query.dto'
+import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
+import { checkExistMembersMiddleware } from '~/shared/middlewares/community/check-exist-members.middleware'
+import { authenticationMiddleware } from '~/shared/middlewares/user/authentication.middleware'
+import { verifyUserEmailMiddleware } from '~/shared/middlewares/user/verify-user-email.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
+import { bodyValidate } from '~/utils/body-validate.middleware'
+import { paramsValidate } from '~/utils/params-validate.middleware'
+import { queryValidate } from '~/utils/query-validate.middleware'
 import {
   ChangeInfoDtoSchema,
   ChangeStatusTweetInCommunityDtoSchema,
@@ -28,20 +28,20 @@ import {
 const communitiesRoute = Router()
 
 // Thêm middleware xác thực
-communitiesRoute.use(verifyAccessToken, verifyUserEmail)
+communitiesRoute.use(authenticationMiddleware, verifyUserEmailMiddleware)
 
 // Tạo cộng đồng mới
 communitiesRoute.post(
   '/',
-  requestBodyValidate(CreateCommunityDtoSchema),
-  checkExistMembers,
+  bodyValidate(CreateCommunityDtoSchema),
+  checkExistMembersMiddleware,
   asyncHandler(CommunityController.create)
 )
 
 // Cập nhật thông tin cộng đồng
 communitiesRoute.patch(
   '/change-info/:community_id',
-  requestBodyValidate(ChangeInfoDtoSchema),
+  bodyValidate(ChangeInfoDtoSchema),
   asyncHandler(CommunityController.changeInfo)
 )
 
@@ -57,7 +57,7 @@ communitiesRoute.get('/pinned-bare', asyncHandler(CommunityController.getPinnedB
 // Ghim cộng đồng lên đầu trang1
 communitiesRoute.patch(
   '/toggle-pin/:community_id',
-  requestParamsValidate(PinCommunityDtoSchema),
+  paramsValidate(PinCommunityDtoSchema),
   asyncHandler(CommunityController.togglePin)
 )
 
@@ -65,98 +65,86 @@ communitiesRoute.patch(
 // Trường hợp cộng đồng là "chỉ được mời" thì bắt buộc phải có
 communitiesRoute.post(
   '/invite-members',
-  requestBodyValidate(InvitationMembersDtoSchema),
-  checkExistMembers,
+  bodyValidate(InvitationMembersDtoSchema),
+  checkExistMembersMiddleware,
   asyncHandler(CommunityController.inviteMembers)
 )
 
 //
 communitiesRoute.post(
   '/join/:community_id',
-  requestParamsValidate(JoinLeaveCommunityDtoSchema),
+  paramsValidate(JoinLeaveCommunityDtoSchema),
   asyncHandler(CommunityController.join)
 )
 
 //
 communitiesRoute.post(
   '/leave/:community_id',
-  requestParamsValidate(JoinLeaveCommunityDtoSchema),
+  paramsValidate(JoinLeaveCommunityDtoSchema),
   asyncHandler(CommunityController.leave)
 )
 
 //
-communitiesRoute.post(
-  '/promote',
-  requestBodyValidate(PromoteMentorDtoSchema),
-  asyncHandler(CommunityController.promoteMentor)
-)
+communitiesRoute.post('/promote', bodyValidate(PromoteMentorDtoSchema), asyncHandler(CommunityController.promoteMentor))
 
 //
-communitiesRoute.post(
-  '/demote',
-  requestBodyValidate(DemoteMentorDtoSchema),
-  asyncHandler(CommunityController.demoteMentor)
-)
+communitiesRoute.post('/demote', bodyValidate(DemoteMentorDtoSchema), asyncHandler(CommunityController.demoteMentor))
 
 //
 communitiesRoute.post(
   '/change-status',
-  requestBodyValidate(ChangeStatusTweetInCommunityDtoSchema),
+  bodyValidate(ChangeStatusTweetInCommunityDtoSchema),
   asyncHandler(CommunityController.changeStatusTweet)
 )
 
 //
-communitiesRoute.patch('/update', requestBodyValidate(UpdateDtoSchema), asyncHandler(CommunityController.update))
+communitiesRoute.patch('/update', bodyValidate(UpdateDtoSchema), asyncHandler(CommunityController.update))
 
 // Lấy thông tin tổng quát một community theo slug
 communitiesRoute.get(
   '/slug/:slug',
-  requestParamsValidate(GetOneBySlugDtoSchema),
+  paramsValidate(GetOneBySlugDtoSchema),
   asyncHandler(CommunityController.getOneBareInfoBySlug)
 )
 
 // Lấy thông tin chi tiết members mentors một community theo id
 communitiesRoute.get(
   '/mm/:community_id',
-  requestQueryValidate(QueryDtoSchema),
-  requestParamsValidate(GetMMByIdDtoSchema),
+  queryValidate(QueryDtoSchema),
+  paramsValidate(GetMMByIdDtoSchema),
   asyncHandler(CommunityController.getMultiMMById)
 )
 
 // Lấy những lời mời đã mời
 communitiesRoute.get(
   '/invite/:community_id',
-  requestParamsValidate(GetMultiInvitationsDtoSchema),
-  requestQueryValidate(QueryDtoSchema),
+  paramsValidate(GetMultiInvitationsDtoSchema),
+  queryValidate(QueryDtoSchema),
   asyncHandler(CommunityController.getMultiInvitations)
 )
 
 // Lấy những lời mời đã mời
 communitiesRoute.get(
   '/activity/:community_id',
-  requestQueryValidate(QueryDtoSchema),
-  requestParamsValidate(GetMultiActivityDtoSchema),
+  queryValidate(QueryDtoSchema),
+  paramsValidate(GetMultiActivityDtoSchema),
   asyncHandler(CommunityController.getMultiActivity)
 )
 
 // Xoá lời mời (ở cộng đồng "Chỉ được mời" sẽ không vào được)
 communitiesRoute.delete(
   '/invite/:invitation_id/:community_id',
-  requestParamsValidate(deleteInvitationDtoSchema),
+  paramsValidate(deleteInvitationDtoSchema),
   asyncHandler(CommunityController.deleteInvitation)
 )
 
 // Lấy những cộng đồng đã tạo
-communitiesRoute.get('/owner', requestQueryValidate(QueryDtoSchema), asyncHandler(CommunityController.getMultiOwner))
+communitiesRoute.get('/owner', queryValidate(QueryDtoSchema), asyncHandler(CommunityController.getMultiOwner))
 
 // Lấy những cộng đồng đã tham gia
-communitiesRoute.get('/joined', requestQueryValidate(QueryDtoSchema), asyncHandler(CommunityController.getMultiJoined))
+communitiesRoute.get('/joined', queryValidate(QueryDtoSchema), asyncHandler(CommunityController.getMultiJoined))
 
 // Lấy những cộng đồng
-communitiesRoute.get(
-  '/explore',
-  requestQueryValidate(QueryDtoSchema),
-  asyncHandler(CommunityController.getMultiExplore)
-)
+communitiesRoute.get('/explore', queryValidate(QueryDtoSchema), asyncHandler(CommunityController.getMultiExplore))
 
 export default communitiesRoute

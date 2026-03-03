@@ -2,10 +2,8 @@ import { ObjectId } from 'mongodb'
 import { BadRequestError } from '~/core/error.response'
 import cacheService from '~/helpers/cache.helper'
 import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
-import { IResTodayNewsOrOutstanding } from '~/shared/dtos/res/trending.dto'
-import { ETweetAudience } from '~/shared/enums/common.enum'
-import { ETweetType } from '~/shared/enums/type.enum'
-import { IQuery } from '~/shared/interfaces/common/query.interface'
+import TweetsService from '~/modules/tweets/tweets.service'
+import { IQuery } from '~/shared/interfaces/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import {
   createKeyOutStandingThisWeek,
@@ -15,14 +13,15 @@ import {
 } from '~/utils/create-key-cache.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { slug } from '~/utils/slug.util'
-import hashtagsService from '../hashtags/hashtags.service'
-import TweetsService from '~/modules/tweets/tweets.service'
 import followsService from '../follows/follows.service'
-import { TrendingCollection, TrendingSchema } from './trending.schema'
-import { TweetsCollection, TweetsSchema } from '../tweets/tweets.schema'
-import { ITrending } from './trending.interface'
+import hashtagsService from '../hashtags/hashtags.service'
+import { ETweetAudience, ETweetType } from '../tweets/tweets.enum'
 import { ITweet } from '../tweets/tweets.interface'
+import { TweetsCollection, TweetsSchema } from '../tweets/tweets.schema'
 import { IUser } from '../users/users.interface'
+import { IResTodayNewsOrOutstanding } from './trending.dto'
+import { ITrending } from './trending.interface'
+import { TrendingCollection, TrendingSchema } from './trending.schema'
 
 class TrendingService {
   // Tạo khi đăng bài - khi tìm kiếm (>=5)

@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import FollowsService from '~/modules/follows/follows.service'
 import { OkResponse } from '~/core/success.response'
 import { ToggleFollowDto } from '~/modules/users/users.dto'
-import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
 
 class FollowsController {
   async toggleFollow(req: Request, res: Response) {

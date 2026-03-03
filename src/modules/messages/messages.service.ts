@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
 import pLimit from 'p-limit'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
-import { IQuery } from '~/shared/interfaces/common/query.interface'
+import { IQuery } from '~/shared/interfaces/query.interface'
 import { IMedia } from '~/modules/media/media.interface'
 import { IMessage } from '~/modules/messages/messages.interface'
 import { ResMultiType } from '~/shared/types/response.type'

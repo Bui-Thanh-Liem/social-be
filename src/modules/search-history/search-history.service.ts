@@ -1,13 +1,11 @@
 import { ObjectId } from 'mongodb'
 import { CreateSearchHistoryDto } from '~/modules/search-history/search-history.dto'
-import { IQuery } from '~/shared/interfaces/common/query.interface'
+import { IQuery } from '~/shared/interfaces/query.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { SearchHistoryCollection, SearchHistorySchema } from './search-history.schema'
 import { ISearchHistory } from './search-history.interface'
 import { IUser } from '../users/users.interface'
 import BadWordsService from '../bad-words/bad-words.service'
-import UserViolationsService from '../user-violations/user-violations.service'
-import { ESourceViolation } from '~/shared/enums/common.enum'
 
 class SearchHistoryService {
   async create({ payload, user_active }: { payload: CreateSearchHistoryDto; user_active: IUser }) {
@@ -45,15 +43,15 @@ class SearchHistoryService {
       })
     )
 
-    // Lưu vi phạm từ cấm nếu có
+    // Lưu vi phạm từ cấm nếu có (rabbitmq)
     if (_text.bad_words_ids.length > 0) {
-      await UserViolationsService.create({
-        user_id: user_active._id!.toString(),
-        source_id: created.insertedId.toString(),
-        source: ESourceViolation.SearchHistory,
-        final_content: _text.matched_words.join() || '',
-        bad_word_ids: _text.bad_words_ids
-      })
+      // await UserViolationsService.create({
+      //   user_id: user_active._id!.toString(),
+      //   source_id: created.insertedId.toString(),
+      //   source: ESourceViolation.SearchHistory,
+      //   final_content: _text.matched_words.join() || '',
+      //   bad_word_ids: _text.bad_words_ids
+      // })
     }
 
     return !!created.insertedId

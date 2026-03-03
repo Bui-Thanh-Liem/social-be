@@ -4,12 +4,12 @@ import { clientMongodb } from '~/database/mongodb.db'
 import cacheService from '~/helpers/cache.helper'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { ParamIdTweetDto } from '~/modules/tweets/tweets.dto'
-import { ResToggleLike } from '~/shared/dtos/res/like.dto'
 import { logger } from '~/utils/logger.util'
 import { NotFoundError } from '~/core/error.response'
 import TweetsService from '~/modules/tweets/tweets.service'
 import { LikesCollection } from './likes.schema'
 import { TweetsCollection } from '../tweets/tweets.schema'
+import { ResToggleLike } from './like.dto'
 
 class LikesService {
   async toggleLike(user_id: string, payload: ParamIdTweetDto): Promise<ResToggleLike> {

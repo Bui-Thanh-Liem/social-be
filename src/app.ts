@@ -8,11 +8,12 @@ import morgan from 'morgan'
 import { envs } from './configs/env.config'
 // import StreamVideoController from './controllers/StreamVideo.controller'
 import { corsMiddleware } from './shared/middlewares/cors.middleware'
-import { errorHandler } from './shared/middlewares/errorhandler.middleware'
+import { errorHandler } from './utils/errorhandler.middleware'
 import { loggerMiddleware } from './shared/middlewares/logger.middleware'
 import { globalRateLimit } from './shared/middlewares/ratelimit.middleware'
 import rootRoute from './route'
 import { logger } from './utils/logger.util'
+// import path from 'path'
 
 //
 // import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/constants'
@@ -82,6 +83,8 @@ const staticOptions = {
 }
 
 // Static media
+// export const UPLOAD_IMAGE_FOLDER_PATH = path.resolve('uploads/images')
+// export const UPLOAD_VIDEO_FOLDER_PATH = path.resolve('uploads/videos')
 // app.use('/uploads', [
 //   express.static(UPLOAD_IMAGE_FOLDER_PATH, staticOptions),
 //   express.static(UPLOAD_VIDEO_FOLDER_PATH, staticOptions)

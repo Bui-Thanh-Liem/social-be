@@ -1,27 +1,23 @@
 import { Router } from 'express'
 import SearchHistoryController from '~/modules/search-history/search-history.controller'
-import { requestBodyValidate } from '~/shared/middlewares/request-body-validate.middleware'
-import { requestParamsValidate } from '~/shared/middlewares/request-params-validate.middleware'
-import { requestQueryValidate } from '~/shared/middlewares/request-query-validate.middleware'
-import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
-import { verifyUserEmail } from '~/shared/middlewares/user/verify-user-email.middleware'
-import { ParamIdDtoSchema } from '~/shared/dtos/req/common/param-id.dto'
-import { QueryDtoSchema } from '~/shared/dtos/req/common/query.dto'
 import { CreateSearchHistoryDtoSchema } from '~/modules/search-history/search-history.dto'
+import { ParamIdDtoSchema } from '~/shared/dtos/common/param-id.dto'
+import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
+import { bodyValidate } from '~/utils/body-validate.middleware'
+import { paramsValidate } from '~/utils/params-validate.middleware'
+import { queryValidate } from '~/utils/query-validate.middleware'
+import { authenticationMiddleware } from '~/shared/middlewares/user/authentication.middleware'
+import { verifyUserEmailMiddleware } from '~/shared/middlewares/user/verify-user-email.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 
 const searchHistoryRoute = Router()
 
-searchHistoryRoute.use(verifyAccessToken, verifyUserEmail)
+searchHistoryRoute.use(authenticationMiddleware, verifyUserEmailMiddleware)
 
-searchHistoryRoute.post(
-  '/',
-  requestBodyValidate(CreateSearchHistoryDtoSchema),
-  asyncHandler(SearchHistoryController.create)
-)
+searchHistoryRoute.post('/', bodyValidate(CreateSearchHistoryDtoSchema), asyncHandler(SearchHistoryController.create))
 
-searchHistoryRoute.get('/', requestQueryValidate(QueryDtoSchema), asyncHandler(SearchHistoryController.getMulti))
+searchHistoryRoute.get('/', queryValidate(QueryDtoSchema), asyncHandler(SearchHistoryController.getMulti))
 
-searchHistoryRoute.delete('/:id', requestParamsValidate(ParamIdDtoSchema), asyncHandler(SearchHistoryController.delete))
+searchHistoryRoute.delete('/:id', paramsValidate(ParamIdDtoSchema), asyncHandler(SearchHistoryController.delete))
 
 export default searchHistoryRoute

@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
-import { MediaBareDtoSchema } from '~/shared/dtos/req/common/media-bare.dto'
-import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
+import { MediaBareDtoSchema } from '~/shared/dtos/common/media-bare.dto'
+import { EUserVerifyStatus } from '../users/users.enum'
+import { IUser } from '../users/users.interface'
 
 export const RegisterUserDtoSchema = z
   .object({
@@ -21,7 +22,7 @@ export const RegisterUserDtoSchema = z
       return arg
     }, z.date()),
     avatar: MediaBareDtoSchema.optional(),
-    verify: z.nativeEnum(EAuthVerifyStatus).optional()
+    verify: z.nativeEnum(EUserVerifyStatus).optional()
   })
   .refine((data) => data.password === data.confirm_password, {
     path: ['confirm_password'],
@@ -86,3 +87,5 @@ export type LoginAuthDto = z.infer<typeof LoginAuthDtoSchema>
 export type ForgotPasswordDto = z.infer<typeof ForgotPasswordDtoSchema>
 export type ResetPasswordDto = z.infer<typeof ResetPasswordDtoSchema>
 export type UpdateMeDto = z.infer<typeof UpdateMeDtoSchema>
+export type ResRegisterUser = Pick<IUser, 'email'>
+export type ResLoginUser = { access_token: string; refresh_token: string }

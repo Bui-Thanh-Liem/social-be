@@ -1,9 +1,8 @@
 import { ObjectId } from 'mongodb'
 import { logger } from './logger.util'
 import TweetsService from '~/modules/tweets/tweets.service'
-import { ETweetType } from '~/shared/enums/type.enum'
-import { ETweetAudience } from '~/shared/enums/common.enum'
 import { IUser } from '~/modules/users/users.interface'
+import { ETweetAudience, ETweetType } from '~/modules/tweets/tweets.enum'
 
 // const tweets = [
 //   {

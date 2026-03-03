@@ -4,7 +4,7 @@ import { UnauthorizedError } from '~/core/error.response'
 import UsersService from '~/modules/users/users.service'
 import { verifyToken } from '~/utils/jwt.util'
 
-export async function verifyAccessToken(req: Request, res: Response, next: NextFunction) {
+export async function authenticationMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
     const authorization = req.headers['authorization'] || ''
     const access_token = authorization.split(' ')[1]

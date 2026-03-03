@@ -1,33 +1,33 @@
 import { Router } from 'express'
 import NotificationsController from '~/modules/notifications/notifications.controller'
-import { requestParamsValidate } from '~/shared/middlewares/request-params-validate.middleware'
-import { requestQueryValidate } from '~/shared/middlewares/request-query-validate.middleware'
-import { verifyAccessToken } from '~/shared/middlewares/user/verify-access-token.middleware'
-import { verifyUserEmail } from '~/shared/middlewares/user/verify-user-email.middleware'
-import { ParamIdNotiDtoSchema, GetMultiByTypeNotiDtoSchema } from '~/modules/notifications/notifications.dto'
-import { QueryDtoSchema } from '~/shared/dtos/req/common/query.dto'
+import { GetMultiByTypeNotiDtoSchema, ParamIdNotiDtoSchema } from '~/modules/notifications/notifications.dto'
+import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
+import { paramsValidate } from '~/utils/params-validate.middleware'
+import { queryValidate } from '~/utils/query-validate.middleware'
+import { authenticationMiddleware } from '~/shared/middlewares/user/authentication.middleware'
+import { verifyUserEmailMiddleware } from '~/shared/middlewares/user/verify-user-email.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 
 const notificationRoute = Router()
 
-notificationRoute.use(verifyAccessToken, verifyUserEmail)
+notificationRoute.use(authenticationMiddleware, verifyUserEmailMiddleware)
 
 notificationRoute.get(
   '/:type',
-  requestQueryValidate(QueryDtoSchema),
-  requestParamsValidate(GetMultiByTypeNotiDtoSchema),
+  queryValidate(QueryDtoSchema),
+  paramsValidate(GetMultiByTypeNotiDtoSchema),
   asyncHandler(NotificationsController.getMultiByType)
 )
 
 notificationRoute.patch(
   '/read/:noti_id',
-  requestParamsValidate(ParamIdNotiDtoSchema),
+  paramsValidate(ParamIdNotiDtoSchema),
   asyncHandler(NotificationsController.read)
 )
 
 notificationRoute.delete(
   '/:noti_id',
-  requestParamsValidate(ParamIdNotiDtoSchema),
+  paramsValidate(ParamIdNotiDtoSchema),
   asyncHandler(NotificationsController.delete)
 )
 

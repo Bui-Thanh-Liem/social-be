@@ -1,13 +1,13 @@
 import { ObjectId } from 'mongodb'
-import { notificationQueue } from '~/infra/queues'
 import { envs } from '~/configs/env.config'
 import { BadRequestError } from '~/core/error.response'
-import { CONSTANT_JOB } from '~/shared/constants'
-import { ENotificationType } from '~/shared/enums/type.enum'
-import { ETweetStatus } from '~/shared/enums/status.enum'
+import { notificationQueue } from '~/infra/queues'
 import TweetsService from '~/modules/tweets/tweets.service'
-import { ReportTweetCollection } from './report-tweet.schema'
+import { CONSTANT_JOB } from '~/shared/constants'
+import { ENotificationType } from '../notifications/notifications.enum'
+import { ETweetStatus } from '../tweets/tweets.enum'
 import { TweetsCollection } from '../tweets/tweets.schema'
+import { ReportTweetCollection } from './report-tweet.schema'
 
 class ReportTweetService {
   async report({ reporter_id, tweet_id }: { tweet_id: string; reporter_id: string }) {

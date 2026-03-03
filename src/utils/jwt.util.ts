@@ -1,7 +1,7 @@
 import jwt, { SignOptions } from 'jsonwebtoken'
 import { StringValue } from 'ms'
 import { envs } from '~/configs/env.config'
-import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
 
 // Tạo token đơn giản
 // muốn bảo mật hơn:

@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { IBase } from '~/shared/interfaces/schemas/base.interface'
+import { IBase } from '~/shared/interfaces/base.interface'
 
 export interface ISearchHistory extends IBase {
   owner: ObjectId
