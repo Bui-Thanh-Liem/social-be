@@ -3,7 +3,6 @@ import { IBase } from '~/shared/interfaces/schemas/base.interface'
 
 export interface IToken extends IBase {
   user_id: ObjectId
-  access_token: string
   refresh_token: string
   refresh_token_used: string[]
   iat: Date | number | undefined

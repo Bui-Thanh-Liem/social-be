@@ -1,34 +1,29 @@
 import { ObjectId } from 'mongodb'
-import cacheService from '~/helpers/cache.helper'
-import { shortKeyFromToken } from '~/utils/crypto.util'
-import { IToken } from './tokens.interface'
-import { TokensCollection } from './tokens.schema'
+import { TokensCollection, TokensSchema } from './tokens.schema'
 
 export class TokensService {
   async create({
     iat,
     exp,
     user_id,
-    access_token,
     refresh_token
   }: {
     iat?: number
     exp?: number
     user_id: string
     refresh_token: string
-    access_token: string
   }) {
-    const filter = { user_id: new ObjectId(user_id) }
+    const filter = { user_id: new ObjectId(user_id), refresh_token: refresh_token }
     await TokensCollection.findOneAndUpdate(
       filter,
       {
-        $set: {
-          access_token,
+        $setOnInsert: new TokensSchema({
+          // khớp thì không làm, không khớp thì tạo mới
+          iat,
+          exp,
           refresh_token,
-          iat: iat ? new Date(iat * 1000) : undefined,
-          exp: exp ? new Date(exp * 1000) : undefined,
           user_id: new ObjectId(user_id)
-        }
+        })
       },
       { upsert: true, returnDocument: 'after' }
     )
@@ -50,20 +45,6 @@ export class TokensService {
 
   async findByRefreshToken({ refresh_token }: { refresh_token: string }) {
     return await TokensCollection.findOne({ refresh_token })
-  }
-
-  async findByAccessToken({ access_token, user_id }: { access_token: string; user_id: string }) {
-    const keyCache = `{user}:token_access:${shortKeyFromToken(access_token)}`
-    const cachedToken = await cacheService.get<IToken>(keyCache)
-    if (cachedToken) {
-      return cachedToken
-    } else {
-      const token = await TokensCollection.findOne({ access_token, user_id: new ObjectId(user_id) })
-      if (token) {
-        await cacheService.set(keyCache, token, 300)
-      }
-      return token
-    }
   }
 
   async findByRefreshTokenUsed({ refresh_token }: { refresh_token: string }) {

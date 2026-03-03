@@ -10,8 +10,8 @@ import { AdminCollection, AdminSchema } from '~/modules/admin/admin.schema'
 import { ResActive2Fa, ResLoginAdmin, ResVerify2Fa } from '~/shared/dtos/res/admin.dto'
 import { EAuthVerifyStatus } from '~/shared/enums/status.enum'
 import { createTokenPair } from '~/utils/auth.util'
-import { createKeyAdminActive, createKeySessionLogin } from '~/utils/create-key-cache.util'
-import { hashPassword, shortKeyFromToken, verifyPassword } from '~/utils/crypto.util'
+import { createKeyAdminActive, createKeyAdminAT, createKeySessionLogin } from '~/utils/create-key-cache.util'
+import { hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { verifyToken } from '~/utils/jwt.util'
 import AdminTokensService from '../admin-tokens/admin-tokens.service'
 import { LoginAdminDto } from './admin.dto'
@@ -226,7 +226,7 @@ class AdminService {
 
     // Xóa session login sau khi kích hoạt thành công
     await cacheService.del(keySessionLogin)
-    const keyCacheAdminToken = `{admin}:token_access:${shortKeyFromToken(adminToken.access_token)}`
+    const keyCacheAdminToken = createKeyAdminAT(access_token)
     await cacheService.del(keyCacheAdminToken)
 
     return {

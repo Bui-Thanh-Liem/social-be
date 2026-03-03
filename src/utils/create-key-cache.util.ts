@@ -1,3 +1,5 @@
+import { shortKeyFromToken } from './crypto.util'
+
 export function createKeyVerifyEmail(email: string) {
   return `{verify}:${email}`
 }
@@ -44,6 +46,10 @@ export function createKeyTweetLikesSync(tweet_id: string) {
 
 export function createKeyConvIdsByUserId(user_id: string) {
   return `{conv}:${user_id}`
+}
+
+export function createKeyAdminAT(token: string) {
+  return `{admin}:at:${shortKeyFromToken(token)}` // at: access token
 }
 
 export const createKeyUserLastSeen = (): string => '{user}:last_seen'

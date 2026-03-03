@@ -1,5 +1,4 @@
 import { Request, Response, Router } from 'express'
-// import { startMockData } from '~/utils/mock-data.util'
 import authRoute from './modules/auth-user/auth.routes'
 import bookmarksRoute from './modules/bookmarks/bookmarks.route'
 import communitiesRoute from './modules/communities/communities.route'
@@ -22,7 +21,6 @@ import adminRoute from './modules/admin/admin.route'
 import { envs } from './configs/env.config'
 import badWordsRoute from './modules/bad-words/bad-words.route'
 import userViolationsRoute from './modules/user-violations/user-violations.route'
-// import { startMockDataTweets } from '~/utils/mock-data-tweet.util'
 
 const rootRoute = Router()
 

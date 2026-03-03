@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { envs } from '~/configs/env.config'
 import { UnauthorizedError } from '~/core/error.response'
-import TokensService from '~/modules/tokens/tokens.service'
 import UsersService from '~/modules/users/users.service'
 import { verifyToken } from '~/utils/jwt.util'
 
@@ -17,13 +16,10 @@ export async function verifyAccessToken(req: Request, res: Response, next: NextF
 
     //
     if (decoded.user_id) {
-      const [user, token] = await Promise.all([
-        UsersService.getUserActive(decoded.user_id),
-        TokensService.findByAccessToken({ access_token, user_id: decoded.user_id })
-      ])
+      const user = await UsersService.getUserActive(decoded.user_id)
 
-      if (!user || !token) {
-        throw new UnauthorizedError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+      if (!user) {
+        throw new UnauthorizedError('Vui lòng đăng nhập.')
       }
 
       req.user = user

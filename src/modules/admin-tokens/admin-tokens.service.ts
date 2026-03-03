@@ -1,9 +1,8 @@
 import { ObjectId } from 'mongodb'
 import CacheService from '~/helpers/cache.helper'
-import { shortKeyFromToken } from '~/utils/crypto.util'
 import { IAdminToken } from './admin-tokens.interface'
 import { AdminTokensCollection } from './admin-tokens.schema'
-
+import { createKeyAdminAT } from '~/utils/create-key-cache.util'
 
 export class AdminTokensService {
   async create({
@@ -55,7 +54,7 @@ export class AdminTokensService {
   }
 
   async findByAccessToken({ access_token }: { access_token: string }) {
-    const keyCache = `{admin}:token_access:${shortKeyFromToken(access_token)}`
+    const keyCache = createKeyAdminAT(access_token)
     const cachedToken = await CacheService.get<IAdminToken>(keyCache)
     if (cachedToken) {
       return cachedToken
