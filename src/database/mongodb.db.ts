@@ -226,7 +226,6 @@ class Database {
       if (!indexToken) {
         TokensCollection.createIndex({ user_id: 1 })
         TokensCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
-        TokensCollection.createIndex({ access_token: 1 }, { unique: true })
       }
 
       // Tweet - default_language: 'none' -> cho phép sử dụng stop words
@@ -333,4 +332,3 @@ class Database {
 const instanceMongodb = Database.getInstance()
 const clientMongodb = Database.getClient()
 export { clientMongodb, Database, instanceMongodb }
-
