@@ -20,6 +20,7 @@ import { EConversationType } from './conversations.enum'
 import { IConversation } from './conversations.interface'
 import { ConversationsCollection, ConversationsSchema } from './conversations.schema'
 import { COLLECTION_MESSAGES_NAME } from '../messages/messages.schema'
+import { last } from 'lodash'
 
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {
@@ -110,6 +111,7 @@ class ConversationsService {
     const conversations = await ConversationsCollection.aggregate<ConversationsSchema>([
       {
         $match: {
+          last_message: { $ne: null }, // Chỉ lấy conversation có last_message (đã từng nhắn tin)
           participants: {
             $in: [new ObjectId(user_id)]
           },
@@ -135,9 +137,9 @@ class ConversationsService {
       {
         $lookup: {
           from: COLLECTION_MESSAGES_NAME,
-          localField: 'lastMessage',
+          localField: 'last_message',
           foreignField: '_id',
-          as: 'lastMessage',
+          as: 'last_message',
           pipeline: [
             {
               $project: {
@@ -169,7 +171,7 @@ class ConversationsService {
       },
       {
         $unwind: {
-          path: '$lastMessage',
+          path: '$last_message',
           preserveNullAndEmptyArrays: true
         }
       },
@@ -312,13 +314,13 @@ class ConversationsService {
           _id: new ObjectId(id)
         }
       },
-      // Lấy lastMessage
+      // Lấy last_message
       {
         $lookup: {
           from: COLLECTION_MESSAGES_NAME,
-          localField: 'lastMessage',
+          localField: 'last_message',
           foreignField: '_id',
-          as: 'lastMessage',
+          as: 'last_message',
           pipeline: [
             {
               $project: {
@@ -349,7 +351,7 @@ class ConversationsService {
           ]
         }
       },
-      { $unwind: { path: '$lastMessage', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$last_message', preserveNullAndEmptyArrays: true } },
       {
         $addFields: {
           name: {
@@ -476,15 +478,15 @@ class ConversationsService {
     message_id: string
     conversation_id: string
   }) {
-    // 1. Update lastMessage + readStatus
+    // 1. Update last_message + read_status
     const updated = await ConversationsCollection.findOneAndUpdate(
       { _id: new ObjectId(conversation_id) },
       [
         {
           $set: {
-            lastMessage: new ObjectId(message_id),
+            last_message: new ObjectId(message_id),
             deleted_for: [],
-            readStatus: {
+            read_status: {
               $map: {
                 input: {
                   $filter: {
@@ -523,13 +525,13 @@ class ConversationsService {
         {
           $lookup: {
             from: COLLECTION_MESSAGES_NAME,
-            localField: 'lastMessage',
+            localField: 'last_message',
             foreignField: '_id',
-            as: 'lastMessage',
+            as: 'last_message',
             pipeline: [{ $project: { created_at: 1, sender: 1, content: 1 } }]
           }
         },
-        { $unwind: { path: '$lastMessage', preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: '$last_message', preserveNullAndEmptyArrays: true } },
         {
           $addFields: {
             name: {
@@ -613,13 +615,13 @@ class ConversationsService {
       {
         $lookup: {
           from: COLLECTION_MESSAGES_NAME,
-          localField: 'lastMessage',
+          localField: 'last_message',
           foreignField: '_id',
-          as: 'lastMessage',
+          as: 'last_message',
           pipeline: [{ $project: { created_at: 1, sender: 1, content: 1 } }]
         }
       },
-      { $unwind: { path: '$lastMessage', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$last_message', preserveNullAndEmptyArrays: true } },
       {
         $addFields: {
           name: {
@@ -689,7 +691,7 @@ class ConversationsService {
     //
     const updated = await ConversationsCollection.findOneAndUpdate(
       { _id: new ObjectId(conv_id) },
-      { $pull: { readStatus: new ObjectId(user_id) } },
+      { $pull: { read_status: new ObjectId(user_id) } },
       { returnDocument: 'after' }
     )
 
@@ -715,9 +717,9 @@ class ConversationsService {
       {
         $lookup: {
           from: COLLECTION_MESSAGES_NAME,
-          localField: 'lastMessage',
+          localField: 'last_message',
           foreignField: '_id',
-          as: 'lastMessage',
+          as: 'last_message',
           pipeline: [
             {
               $project: {
@@ -729,7 +731,7 @@ class ConversationsService {
           ]
         }
       },
-      { $unwind: { path: '$lastMessage', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$last_message', preserveNullAndEmptyArrays: true } },
       {
         $addFields: {
           name: {
@@ -803,7 +805,7 @@ class ConversationsService {
 
   async countUnread(user_id: string) {
     return await ConversationsCollection.countDocuments({
-      readStatus: { $in: [new ObjectId(user_id)] },
+      read_status: { $in: [new ObjectId(user_id)] },
       deleted_for: {
         $nin: [new ObjectId(user_id)]
       }

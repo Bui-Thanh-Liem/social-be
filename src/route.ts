@@ -1,6 +1,8 @@
 import { Request, Response, Router } from 'express'
 import { OkResponse } from '~/core/success.response'
 import { envs } from './configs/env.config'
+import { checkApiKeyMiddleware } from './middlewares/check-api-key.middleware'
+import accessRecentRoute from './modules/access-recent/access-recent.route'
 import authRoute from './modules/auth/auth.routes'
 import badWordsRoute from './modules/bad-words/bad-words.route'
 import bookmarksRoute from './modules/bookmarks/bookmarks.route'
@@ -18,7 +20,6 @@ import trendingRoute from './modules/trending/trending.route'
 import tweetsRoute from './modules/tweets/tweets.route'
 import uploadsRoute from './modules/uploads/uploads.route'
 import usersRoute from './modules/users/users.route'
-import { checkApiKeyMiddleware } from './middlewares/check-api-key.middleware'
 
 const rootRoute = Router()
 
@@ -37,6 +38,7 @@ rootRoute.use('/hashtags', hashtagsRoute)
 rootRoute.use('/likes', likesRoute)
 rootRoute.use('/messages', messagesRoute)
 rootRoute.use('/notifications', notificationRoute)
+rootRoute.use('/access-recent', accessRecentRoute)
 rootRoute.use('/report-tweet', reportTweetRoute)
 rootRoute.use('/search', searchRoute)
 rootRoute.use('/search-history', searchHistoryRoute)

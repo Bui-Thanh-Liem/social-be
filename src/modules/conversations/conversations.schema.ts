@@ -1,8 +1,8 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { BaseSchema } from '~/shared/schemas/base.schema'
-import { IConversation, IPinned } from './conversations.interface'
-import { EConversationType } from './conversations.enum'
 import { IMediaBare } from '~/shared/interfaces/media-bare.interface'
+import { BaseSchema } from '~/shared/schemas/base.schema'
+import { EConversationType } from './conversations.enum'
+import { IConversation, IPinned } from './conversations.interface'
 
 const COLLECTION_NAME = 'conversations'
 export class ConversationsSchema extends BaseSchema implements IConversation {
@@ -10,10 +10,10 @@ export class ConversationsSchema extends BaseSchema implements IConversation {
   mentors: ObjectId[]
   participants: ObjectId[]
   deleted_for: ObjectId[]
-  lastMessage: null | ObjectId
+  last_message: null | ObjectId
   name: string | null
   avatar?: IMediaBare[] | IMediaBare | null
-  readStatus: ObjectId[] | null
+  read_status: ObjectId[] | null
   pinned: IPinned[]
 
   constructor(conversation: Partial<IConversation>) {
@@ -23,10 +23,10 @@ export class ConversationsSchema extends BaseSchema implements IConversation {
     this.participants = conversation.participants || [new ObjectId()]
     this.deleted_for = conversation.deleted_for || [new ObjectId()]
     this.pinned = conversation.pinned || []
-    this.lastMessage = conversation.lastMessage || null
+    this.last_message = conversation.last_message || null
     this.name = conversation.name || null
     this.avatar = conversation.avatar || undefined
-    this.readStatus = conversation.readStatus || null
+    this.read_status = conversation.read_status || null
   }
 }
 

@@ -1,6 +1,7 @@
 import { Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { BadRequestError, InternalServerError } from '~/core/error.response'
+import { AccessRecentCollection, initAccessRecentCollection } from '~/modules/access-recent/access-recent.schema'
 import { BadWordsCollection, initBadWordsCollection } from '~/modules/bad-words/bad-words.schema'
 import { initBookmarksCollection } from '~/modules/bookmarks/bookmarks.schema'
 import {
@@ -171,6 +172,7 @@ class Database {
       initCommunityActivityCollection(this.db)
       initSearchHistoryCollection(this.db)
       initBadWordsCollection(this.db)
+      initAccessRecentCollection(this.db)
     } catch (error) {
       logger.error('Collection initialization failed:', error)
       throw error
@@ -209,6 +211,7 @@ class Database {
       const indexSearchHistory = await SearchHistoryCollection.indexExists(['owner_1'])
       const indexMedia = await MediasCollection.indexExists(['s3_key_1'])
       const indexBadWord = await BadWordsCollection.indexExists(['words_text'])
+      const indexAccessRecent = await AccessRecentCollection.indexExists(['user_id_1'])
 
       // User
       if (!indexUser) {
@@ -320,6 +323,11 @@ class Database {
         BadWordsCollection.createIndex({ words: 'text' }, { default_language: 'none' })
       }
 
+      // AccessRecent
+      if (!indexAccessRecent) {
+        AccessRecentCollection.createIndex({ user_id: 1 })
+      }
+
       logger.info('All indexes are ensured successfully')
     } catch (error) {
       logger.error('Index initialization failed:', error)
@@ -332,3 +340,4 @@ class Database {
 const instanceMongodb = Database.getInstance()
 const clientMongodb = Database.getClient()
 export { clientMongodb, Database, instanceMongodb }
+
