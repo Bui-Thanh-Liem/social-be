@@ -6,6 +6,8 @@ import { SearchHistoryCollection, SearchHistorySchema } from './search-history.s
 import { ISearchHistory } from './search-history.interface'
 import { IUser } from '../users/users.interface'
 import BadWordsService from '../bad-words/bad-words.service'
+import { COLLECTION_USER_NAME } from '../users/users.schema'
+import { COLLECTION_COMMUNITIES_NAME } from '../communities/communities.schema'
 
 class SearchHistoryService {
   async create({ payload, user_active }: { payload: CreateSearchHistoryDto; user_active: IUser }) {
@@ -67,7 +69,7 @@ class SearchHistoryService {
       { $limit: limit },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'user',
           foreignField: '_id',
           as: 'user',
@@ -85,7 +87,7 @@ class SearchHistoryService {
       },
       {
         $lookup: {
-          from: 'communities',
+          from: COLLECTION_COMMUNITIES_NAME,
           localField: 'community',
           foreignField: '_id',
           as: 'community',

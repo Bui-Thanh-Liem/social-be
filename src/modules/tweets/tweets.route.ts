@@ -20,6 +20,7 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const tweetsRoute = Router()
 
+// Tạo mới tweet
 tweetsRoute.post(
   '/',
   authenticationMiddleware,
@@ -27,6 +28,7 @@ tweetsRoute.post(
   asyncHandler(TweetsController.create)
 )
 
+// Xóa tweet
 tweetsRoute.delete(
   '/:tweet_id',
   authenticationMiddleware,
@@ -41,6 +43,7 @@ Following = 'following' // Chỉ người mình follow
  */
 tweetsRoute.get(
   '/feeds/:feed_type',
+  optionLogin(authenticationMiddleware),
   queryValidate(QueryDtoSchema),
   paramsValidate(getNewFeedTypeDtoSchema),
   asyncHandler(TweetsController.getNewFeeds)
@@ -62,6 +65,7 @@ tweetsRoute.get(
   asyncHandler(TweetsController.getCommunityTweets)
 )
 
+// Lấy bài viết của profile (của mình hoặc người khác)
 tweetsRoute.get(
   '/profile/:tweet_type',
   authenticationMiddleware,
@@ -70,6 +74,7 @@ tweetsRoute.get(
   asyncHandler(TweetsController.getProfileTweets)
 )
 
+// Lấy bài viết đã like
 tweetsRoute.get(
   '/liked',
   authenticationMiddleware,
@@ -77,6 +82,7 @@ tweetsRoute.get(
   asyncHandler(TweetsController.getTweetLiked)
 )
 
+// Lấy bài viết đã bookmark
 tweetsRoute.get(
   '/bookmarked',
   authenticationMiddleware,
@@ -84,6 +90,7 @@ tweetsRoute.get(
   asyncHandler(TweetsController.getTweetBookmarked)
 )
 
+// Lấy danh sách bài viết con (reply, quote) của một bài viết
 tweetsRoute.get(
   '/:tweet_id/:tweet_type/children',
   optionLogin(authenticationMiddleware),
@@ -97,6 +104,7 @@ tweetsRoute.get(
 // chart view, like, bookmark trong tuần
 tweetsRoute.get('/view-like-bookmark', asyncHandler(TweetsController.countViewLinkBookmarkInWeek))
 
+// Lấy một bài viết theo id (dùng cho cả new feed, profile, community)
 tweetsRoute.get(
   '/:tweet_id',
   optionLogin(authenticationMiddleware),

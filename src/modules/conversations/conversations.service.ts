@@ -14,11 +14,12 @@ import ConversationGateway from '~/socket/gateways/Conversation.gateway'
 import { createKeyAllConversationIds, createKeyConvIdsByUserId } from '~/utils/create-key-cache.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { ENotificationType } from '../notifications/notifications.enum'
-import { UsersCollection } from '../users/users.schema'
+import { COLLECTION_USER_NAME, UsersCollection } from '../users/users.schema'
 import { CreateConversationDto } from './conversations.dto'
 import { EConversationType } from './conversations.enum'
 import { IConversation } from './conversations.interface'
 import { ConversationsCollection, ConversationsSchema } from './conversations.schema'
+import { COLLECTION_MESSAGES_NAME } from '../messages/messages.schema'
 
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {
@@ -133,7 +134,7 @@ class ConversationsService {
       },
       {
         $lookup: {
-          from: 'messages',
+          from: COLLECTION_MESSAGES_NAME,
           localField: 'lastMessage',
           foreignField: '_id',
           as: 'lastMessage',
@@ -150,7 +151,7 @@ class ConversationsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'participants',
           foreignField: '_id',
           as: 'participants',
@@ -314,7 +315,7 @@ class ConversationsService {
       // Lấy lastMessage
       {
         $lookup: {
-          from: 'messages',
+          from: COLLECTION_MESSAGES_NAME,
           localField: 'lastMessage',
           foreignField: '_id',
           as: 'lastMessage',
@@ -332,7 +333,7 @@ class ConversationsService {
       // Lấy participants
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'participants',
           foreignField: '_id',
           as: 'participants',
@@ -512,7 +513,7 @@ class ConversationsService {
         { $match: { _id: updated._id } },
         {
           $lookup: {
-            from: 'users',
+            from: COLLECTION_USER_NAME,
             localField: 'participants',
             foreignField: '_id',
             as: 'participants',
@@ -521,7 +522,7 @@ class ConversationsService {
         },
         {
           $lookup: {
-            from: 'messages',
+            from: COLLECTION_MESSAGES_NAME,
             localField: 'lastMessage',
             foreignField: '_id',
             as: 'lastMessage',
@@ -602,7 +603,7 @@ class ConversationsService {
       { $match: { _id: updated._id } },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'participants',
           foreignField: '_id',
           as: 'participants',
@@ -611,7 +612,7 @@ class ConversationsService {
       },
       {
         $lookup: {
-          from: 'messages',
+          from: COLLECTION_MESSAGES_NAME,
           localField: 'lastMessage',
           foreignField: '_id',
           as: 'lastMessage',
@@ -697,7 +698,7 @@ class ConversationsService {
       { $match: { _id: updated?._id } },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'participants',
           foreignField: '_id',
           as: 'participants',
@@ -713,7 +714,7 @@ class ConversationsService {
       },
       {
         $lookup: {
-          from: 'messages',
+          from: COLLECTION_MESSAGES_NAME,
           localField: 'lastMessage',
           foreignField: '_id',
           as: 'lastMessage',

@@ -9,8 +9,10 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const notificationRoute = Router()
 
+// Các route dưới đây cần authentication
 notificationRoute.use(authenticationMiddleware)
 
+// Lấy danh sách notification theo type
 notificationRoute.get(
   '/:type',
   queryValidate(QueryDtoSchema),
@@ -18,12 +20,14 @@ notificationRoute.get(
   asyncHandler(NotificationsController.getMultiByType)
 )
 
+// Đánh dấu notification đã đọc
 notificationRoute.patch(
   '/read/:noti_id',
   paramsValidate(ParamIdNotiDtoSchema),
   asyncHandler(NotificationsController.read)
 )
 
+// Xóa notification
 notificationRoute.delete(
   '/:noti_id',
   paramsValidate(ParamIdNotiDtoSchema),

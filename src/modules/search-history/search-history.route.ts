@@ -11,12 +11,16 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const searchHistoryRoute = Router()
 
+// Các route dưới đây cần authentication
 searchHistoryRoute.use(authenticationMiddleware)
 
+// Tạo mới search history
 searchHistoryRoute.post('/', bodyValidate(CreateSearchHistoryDtoSchema), asyncHandler(SearchHistoryController.create))
 
+// Lấy danh sách search history
 searchHistoryRoute.get('/', queryValidate(QueryDtoSchema), asyncHandler(SearchHistoryController.getMulti))
 
+// Xóa search history
 searchHistoryRoute.delete('/:id', paramsValidate(ParamIdDtoSchema), asyncHandler(SearchHistoryController.delete))
 
 export default searchHistoryRoute

@@ -11,8 +11,10 @@ import { ConversationIdDtoSchema, CreateConversationDtoSchema, ParticipantsDtoSc
 
 const conversationsRoute = Router()
 
+// Các route dưới đây cần authentication
 conversationsRoute.use(authenticationMiddleware)
 
+// Tạo conversation mới
 conversationsRoute.post(
   '/',
   bodyValidate(CreateConversationDtoSchema),
@@ -20,6 +22,7 @@ conversationsRoute.post(
   asyncHandler(ConversationsController.create)
 )
 
+// Thêm, xóa thành viên và promote mentor trong conversation
 conversationsRoute.post(
   '/add-participants/:conv_id',
   paramsValidate(ConversationIdDtoSchema),
@@ -28,6 +31,7 @@ conversationsRoute.post(
   asyncHandler(ConversationsController.addParticipants)
 )
 
+// Xóa thành viên khỏi conversation
 conversationsRoute.post(
   '/remove-participants/:conv_id',
   paramsValidate(ConversationIdDtoSchema),
@@ -36,6 +40,7 @@ conversationsRoute.post(
   asyncHandler(ConversationsController.removeParticipants)
 )
 
+// Promote mentor trong conversation
 conversationsRoute.post(
   '/promote/:conv_id',
   paramsValidate(ConversationIdDtoSchema),
@@ -44,20 +49,24 @@ conversationsRoute.post(
   asyncHandler(ConversationsController.promoteMentor)
 )
 
+// Lấy danh sách conversation của user
 conversationsRoute.get('/', queryValidate(QueryDtoSchema), asyncHandler(ConversationsController.getMulti))
 
+// Đánh dấu đã đọc conversation
 conversationsRoute.patch(
   '/read/:conv_id',
   paramsValidate(ConversationIdDtoSchema),
   asyncHandler(ConversationsController.read)
 )
 
+// Ghim, bỏ ghim conversation
 conversationsRoute.patch(
   '/toggle-pin/:conv_id',
   paramsValidate(ConversationIdDtoSchema),
   asyncHandler(ConversationsController.togglePinConv)
 )
 
+// Xóa conversation
 conversationsRoute.delete(
   '/:conv_id',
   paramsValidate(ConversationIdDtoSchema),

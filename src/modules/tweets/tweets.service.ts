@@ -21,11 +21,17 @@ import { getFilterQuery } from '~/utils/get-filter-query'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { normalizeWeekData } from '~/utils/normalize-week-data.util'
 import BadWordsService from '../bad-words/bad-words.service'
-import { BookmarksCollection } from '../bookmarks/bookmarks.schema'
+import { BookmarksCollection, COLLECTION_BOOKMARKS_NAME } from '../bookmarks/bookmarks.schema'
 import bookmarksService from '../bookmarks/bookmarks.service'
 import { EMembershipType, EVisibilityType } from '../communities/communities.enum'
 import { ICommunity } from '../communities/communities.interface'
-import { CommunitiesCollection, CommunitiesSchema } from '../communities/communities.schema'
+import {
+  COLLECTION_COMMUNITIES_NAME,
+  COLLECTION_MEMBER_NAME,
+  COLLECTION_MENTOR_NAME,
+  CommunitiesCollection,
+  CommunitiesSchema
+} from '../communities/communities.schema'
 import CommunitiesService from '../communities/communities.service'
 import FollowsService from '../follows/follows.service'
 import HashtagsService from '../hashtags/hashtags.service'
@@ -35,10 +41,10 @@ import { ENotificationType } from '../notifications/notifications.enum'
 import TrendingService from '../trending/trending.service'
 import UploadsServices from '../uploads/uploads.service'
 import { IUser } from '../users/users.interface'
-import { UsersCollection } from '../users/users.schema'
+import { COLLECTION_USER_NAME, UsersCollection } from '../users/users.schema'
 import { EFeedType, EFeedTypeItem, ETweetAudience, ETweetStatus, ETweetType } from './tweets.enum'
 import { ITweet } from './tweets.interface'
-import { TweetsCollection, TweetsSchema } from './tweets.schema'
+import { COLLECTION_TWEET_NAME, TweetsCollection, TweetsSchema } from './tweets.schema'
 
 class TweetsService {
   //
@@ -329,7 +335,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
@@ -338,7 +344,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'communities',
+          from: COLLECTION_COMMUNITIES_NAME,
           localField: 'community_id',
           foreignField: '_id',
           as: 'community_id',
@@ -350,7 +356,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users', // tên collection chứa user
+          from: COLLECTION_USER_NAME, // tên collection chứa user
           localField: 'user_id', // field trong tweet
           foreignField: '_id', // field trong user
           as: 'user_id',
@@ -394,7 +400,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'bookmarks', // collection chứa bookmark
+          from: COLLECTION_BOOKMARKS_NAME, // collection chứa bookmark
           localField: '_id', // _id của tweet
           foreignField: 'tweet_id', // field trong bookmark trỏ đến tweet
           as: 'bookmarks', // tên array chứa kết quả
@@ -424,7 +430,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'tweets',
+          from: COLLECTION_TWEET_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'
@@ -595,7 +601,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions'
@@ -603,7 +609,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -632,7 +638,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'bookmarks',
+          from: COLLECTION_BOOKMARKS_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'bookmarks'
@@ -648,7 +654,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'tweets',
+          from: COLLECTION_TWEET_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'
@@ -878,7 +884,7 @@ class TweetsService {
 
         {
           $lookup: {
-            from: 'users',
+            from: COLLECTION_USER_NAME,
             localField: 'user_id',
             foreignField: '_id',
             as: 'user_id',
@@ -952,7 +958,7 @@ class TweetsService {
         },
         {
           $lookup: {
-            from: 'users',
+            from: COLLECTION_USER_NAME,
             localField: 'mentions',
             foreignField: '_id',
             as: 'mentions',
@@ -971,7 +977,7 @@ class TweetsService {
         },
         {
           $lookup: {
-            from: 'bookmarks',
+            from: COLLECTION_BOOKMARKS_NAME,
             localField: '_id',
             foreignField: 'tweet_id',
             as: 'bookmarks',
@@ -1001,7 +1007,7 @@ class TweetsService {
         },
         {
           $lookup: {
-            from: 'tweets',
+            from: COLLECTION_TWEET_NAME,
             localField: '_id',
             foreignField: 'parent_id',
             as: 'tweets_children'
@@ -1091,6 +1097,7 @@ class TweetsService {
           }
         }
       ]).toArray(),
+
       feed_type !== EFeedType.Following &&
         CommunitiesCollection.aggregate<CommunitiesSchema>([
           // 1️⃣ Chỉ lấy community mở
@@ -1099,7 +1106,7 @@ class TweetsService {
           // 2️⃣ Join sang bảng mentor
           {
             $lookup: {
-              from: 'community-mentors',
+              from: COLLECTION_MENTOR_NAME,
               localField: '_id',
               foreignField: 'community_id',
               as: 'mentors'
@@ -1109,7 +1116,7 @@ class TweetsService {
           // 3️⃣ Join sang bảng member
           {
             $lookup: {
-              from: 'community-members',
+              from: COLLECTION_MEMBER_NAME,
               localField: '_id',
               foreignField: 'community_id',
               as: 'members'
@@ -1223,7 +1230,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id'
@@ -1352,7 +1359,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -1373,7 +1380,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'communities',
+          from: COLLECTION_COMMUNITIES_NAME,
           localField: 'community_id',
           foreignField: '_id',
           as: 'community_id',
@@ -1446,7 +1453,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
@@ -1465,7 +1472,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'bookmarks',
+          from: COLLECTION_BOOKMARKS_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'bookmarks',
@@ -1495,7 +1502,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'tweets',
+          from: COLLECTION_TWEET_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'
@@ -1654,7 +1661,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -1721,7 +1728,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
@@ -1740,7 +1747,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'bookmarks',
+          from: COLLECTION_BOOKMARKS_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'bookmarks',
@@ -1770,7 +1777,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'tweets',
+          from: COLLECTION_TWEET_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'
@@ -1921,7 +1928,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -1988,7 +1995,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
@@ -2004,7 +2011,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'bookmarks',
+          from: COLLECTION_BOOKMARKS_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'bookmarks',
@@ -2034,7 +2041,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'tweets',
+          from: COLLECTION_TWEET_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'
@@ -2262,7 +2269,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id'
@@ -2524,7 +2531,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -2596,7 +2603,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
@@ -2615,7 +2622,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'bookmarks',
+          from: COLLECTION_BOOKMARKS_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'bookmarks',
@@ -2645,7 +2652,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'tweets',
+          from: COLLECTION_TWEET_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'
@@ -2813,7 +2820,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',

@@ -2,6 +2,7 @@ import { Collection, Db, ObjectId } from 'mongodb'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 import { IToken } from './tokens.interface'
 
+export const COLLECTION_TOKENS_NAME = 'tokens'
 export class TokensSchema extends BaseSchema implements IToken {
   user_id: ObjectId
   refresh_token: string
@@ -22,5 +23,5 @@ export class TokensSchema extends BaseSchema implements IToken {
 export let TokensCollection: Collection<TokensSchema>
 
 export function initTokensCollection(db: Db) {
-  TokensCollection = db.collection<TokensSchema>('tokens')
+  TokensCollection = db.collection<TokensSchema>(COLLECTION_TOKENS_NAME)
 }

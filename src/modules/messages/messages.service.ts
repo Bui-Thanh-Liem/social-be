@@ -10,6 +10,7 @@ import UploadsServices from '../uploads/uploads.service'
 import ConversationsService from '../conversations/conversations.service'
 import { MessagesCollection, MessagesSchema } from './messages.schema'
 import { CreateMessageDto } from './messages.dto'
+import { COLLECTION_USER_NAME } from '../users/users.schema'
 
 class MessagesService {
   async create(sender_id: string, payload: CreateMessageDto) {
@@ -45,7 +46,7 @@ class MessagesService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'sender',
           foreignField: '_id',
           as: 'sender',
@@ -91,7 +92,7 @@ class MessagesService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'sender',
           foreignField: '_id',
           as: 'sender',

@@ -8,8 +8,10 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const reportTweetRoute = Router()
 
+// Các route dưới đây cần authentication
 reportTweetRoute.use(authenticationMiddleware)
 
+// Báo cáo tweet
 reportTweetRoute.post(
   '/:tweet_id',
   paramsValidate(paramIdTweetDtoSchema),

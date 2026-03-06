@@ -5,7 +5,7 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { slug } from '~/utils/slug.util'
 import { EVisibilityType } from '../communities/communities.enum'
 import { ICommunity } from '../communities/communities.interface'
-import { CommunitiesCollection, CommunitiesSchema } from '../communities/communities.schema'
+import { COLLECTION_COMMUNITIES_NAME, CommunitiesCollection, CommunitiesSchema } from '../communities/communities.schema'
 import CommunitiesService from '../communities/communities.service'
 import FollowsService from '../follows/follows.service'
 import { ITrending } from '../trending/trending.interface'
@@ -13,12 +13,13 @@ import { TrendingCollection, TrendingSchema } from '../trending/trending.schema'
 import TrendingService from '../trending/trending.service'
 import { ETweetAudience, ETweetType } from '../tweets/tweets.enum'
 import { ITweet } from '../tweets/tweets.interface'
-import { TweetsCollection, TweetsSchema } from '../tweets/tweets.schema'
+import { COLLECTION_TWEET_NAME, TweetsCollection, TweetsSchema } from '../tweets/tweets.schema'
 import tweetsService from '../tweets/tweets.service'
 import { IUser } from '../users/users.interface'
-import { UsersCollection, UsersSchema } from '../users/users.schema'
+import { COLLECTION_USER_NAME, UsersCollection, UsersSchema } from '../users/users.schema'
 import UsersService from '../users/users.service'
 import { ResSearchPending } from './search.dto'
+import { COLLECTION_BOOKMARKS_NAME } from '../bookmarks/bookmarks.schema'
 
 // Những hàm search sẽ ưu tiên sort sau limit
 class SearchService {
@@ -190,7 +191,7 @@ class SearchService {
         // lightweight lookup -> children counts grouped by type
         {
           $lookup: {
-            from: 'tweets',
+            from: COLLECTION_TWEET_NAME,
             let: { tid: '$_id' },
             pipeline: [
               { $match: { $expr: { $eq: ['$parent_id', '$$tid'] } } },
@@ -250,7 +251,7 @@ class SearchService {
       { $limit: limit },
       {
         $lookup: {
-          from: 'communities',
+          from: COLLECTION_COMMUNITIES_NAME,
           localField: 'community_id',
           foreignField: '_id',
           as: 'community_id',
@@ -280,7 +281,7 @@ class SearchService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -352,7 +353,7 @@ class SearchService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
@@ -371,7 +372,7 @@ class SearchService {
       },
       {
         $lookup: {
-          from: 'bookmarks',
+          from: COLLECTION_BOOKMARKS_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'bookmarks',
@@ -401,7 +402,7 @@ class SearchService {
       },
       {
         $lookup: {
-          from: 'tweets',
+          from: COLLECTION_TWEET_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'

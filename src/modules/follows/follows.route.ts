@@ -8,8 +8,10 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const followsRoute = Router()
 
+// Tất cả route của follows đều cần authentication
 followsRoute.use(authenticationMiddleware)
 
+// Toggle follow/unfollow user
 followsRoute.post(
   '/toggle/:user_id',
   paramsValidate(UserIdDtoSchema),

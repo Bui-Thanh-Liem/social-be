@@ -14,15 +14,14 @@ class TrendingController {
   }
 
   async getTodayNews(req: Request, res: Response) {
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const results = await TrendingService.getTodayNews({ user_id, query: req.query })
-
+    const user = req.decoded_authorization as IJwtPayload
+    const results = await TrendingService.getTodayNews({ user_id: user?.user_id, query: req.query })
     res.status(200).json(new OkResponse('Get today news Success', results))
   }
 
   async getOutStandingThisWeekNews(req: Request, res: Response) {
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const results = await TrendingService.getOutStandingThisWeekNews({ user_id, query: req.query })
+    const user = req.decoded_authorization as IJwtPayload
+    const results = await TrendingService.getOutStandingThisWeekNews({ user_id: user?.user_id, query: req.query })
     res.status(200).json(new OkResponse('Get outstanding this week Success', results))
   }
 

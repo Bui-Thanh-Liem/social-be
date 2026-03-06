@@ -3,6 +3,7 @@ import { BaseSchema } from '~/shared/schemas/base.schema'
 import { slug } from '~/utils/slug.util'
 import { IHashtag } from './hashtags.interface'
 
+const COLLECTION_NAME = 'hashtags'
 export class HashtagsSchema extends BaseSchema implements IHashtag {
   name: string
   slug: string
@@ -17,5 +18,5 @@ export class HashtagsSchema extends BaseSchema implements IHashtag {
 export let HashtagsCollection: Collection<HashtagsSchema>
 
 export function initHashtagsCollection(db: Db) {
-  HashtagsCollection = db.collection<HashtagsSchema>('hashtags')
+  HashtagsCollection = db.collection<HashtagsSchema>(COLLECTION_NAME)
 }

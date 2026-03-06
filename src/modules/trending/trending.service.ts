@@ -17,11 +17,13 @@ import followsService from '../follows/follows.service'
 import hashtagsService from '../hashtags/hashtags.service'
 import { ETweetAudience, ETweetType } from '../tweets/tweets.enum'
 import { ITweet } from '../tweets/tweets.interface'
-import { TweetsCollection, TweetsSchema } from '../tweets/tweets.schema'
+import { COLLECTION_TWEET_NAME, TweetsCollection, TweetsSchema } from '../tweets/tweets.schema'
 import { IUser } from '../users/users.interface'
 import { IResTodayNewsOrOutstanding } from './trending.dto'
 import { ITrending } from './trending.interface'
 import { TrendingCollection, TrendingSchema } from './trending.schema'
+import { COLLECTION_USER_NAME } from '../users/users.schema'
+import { COLLECTION_BOOKMARKS_NAME } from '../bookmarks/bookmarks.schema'
 
 class TrendingService {
   // Tạo khi đăng bài - khi tìm kiếm (>=5)
@@ -244,7 +246,7 @@ class TrendingService {
       { $limit: 500 },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -474,7 +476,7 @@ class TrendingService {
       { $limit: 500 },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -756,7 +758,7 @@ class TrendingService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -831,7 +833,7 @@ class TrendingService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
@@ -854,7 +856,7 @@ class TrendingService {
       },
       {
         $lookup: {
-          from: 'bookmarks',
+          from: COLLECTION_BOOKMARKS_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'bookmarks',
@@ -884,7 +886,7 @@ class TrendingService {
       },
       {
         $lookup: {
-          from: 'tweets',
+          from: COLLECTION_TWEET_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'

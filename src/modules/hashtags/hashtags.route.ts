@@ -7,8 +7,10 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const hashtagsRoute = Router()
 
+// Các route dưới đây cần authentication
 hashtagsRoute.use(authenticationMiddleware)
 
+// Lấy danh sách hashtag
 hashtagsRoute.get('/', queryValidate(QueryDtoSchema), asyncHandler(HashtagsController.getMulti))
 
 export default hashtagsRoute

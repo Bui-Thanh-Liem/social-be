@@ -14,6 +14,13 @@ import {
   ICommunityPin
 } from './communities.interface'
 
+export const COLLECTION_COMMUNITIES_NAME = 'communities'
+export const COLLECTION_MENTOR_NAME = 'community-mentors'
+export const COLLECTION_MEMBER_NAME = 'community-members'
+export const COLLECTION_PIN_NAME = 'community-pins'
+export const COLLECTION_INVITATION_NAME = 'community-invitations'
+export const COLLECTION_ACTIVITY_NAME = 'community-activities'
+
 // Cộng đồngđồng
 export class CommunitiesSchema extends BaseSchema implements ICommunity {
   name: string
@@ -134,25 +141,25 @@ export let CommunityInvitationCollection: Collection<CommunityInvitationSchema>
 export let CommunityActivityCollection: Collection<CommunityActivitySchema>
 
 export function initCommunitiesCollection(db: Db) {
-  CommunitiesCollection = db.collection<CommunitiesSchema>('communities')
+  CommunitiesCollection = db.collection<CommunitiesSchema>(COLLECTION_COMMUNITIES_NAME)
 }
 
 export function initCommunityMentorCollection(db: Db) {
-  CommunityMentorCollection = db.collection<CommunityMentorSchema>('community-mentors')
+  CommunityMentorCollection = db.collection<CommunityMentorSchema>(COLLECTION_MENTOR_NAME)
 }
 
 export function initCommunityMemberCollection(db: Db) {
-  CommunityMemberCollection = db.collection<CommunityMemberSchema>('community-members')
+  CommunityMemberCollection = db.collection<CommunityMemberSchema>(COLLECTION_MEMBER_NAME)
 }
 
 export function initCommunityPinCollection(db: Db) {
-  CommunityPinCollection = db.collection<CommunityPinSchema>('community-pins')
+  CommunityPinCollection = db.collection<CommunityPinSchema>(COLLECTION_PIN_NAME)
 }
 
 export function initCommunityInvitationCollection(db: Db) {
-  CommunityInvitationCollection = db.collection<CommunityInvitationSchema>('community-invitations')
+  CommunityInvitationCollection = db.collection<CommunityInvitationSchema>(COLLECTION_INVITATION_NAME)
 }
 
 export function initCommunityActivityCollection(db: Db) {
-  CommunityActivityCollection = db.collection<CommunityActivitySchema>('community-activities')
+  CommunityActivityCollection = db.collection<CommunityActivitySchema>(COLLECTION_ACTIVITY_NAME)
 }

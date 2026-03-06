@@ -2,6 +2,7 @@ import { Collection, Db, ObjectId } from 'mongodb'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 import { IFollower } from './follows.interface'
 
+const COLLECTION_NAME = 'followers'
 export class FollowersSchema extends BaseSchema implements IFollower {
   user_id: ObjectId
   followed_user_id: ObjectId
@@ -16,5 +17,5 @@ export class FollowersSchema extends BaseSchema implements IFollower {
 export let FollowersCollection: Collection<FollowersSchema>
 
 export function initFollowersCollection(db: Db) {
-  FollowersCollection = db.collection<FollowersSchema>('followers')
+  FollowersCollection = db.collection<FollowersSchema>(COLLECTION_NAME)
 }

@@ -35,6 +35,7 @@ import {
 import CommunityInvitationService from './community-invitation.service'
 import CommunityMemberService from './community-member.service'
 import CommunityMentorService from './community-mentor.service'
+import { COLLECTION_USER_NAME } from '../users/users.schema'
 
 interface IPromoteDemote {
   actor_id: string
@@ -669,7 +670,7 @@ class CommunityService {
       // 1️⃣ Lấy thông tin admin
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'admin',
           foreignField: '_id',
           as: 'admin',
@@ -727,7 +728,7 @@ class CommunityService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'memberRefs.user_id',
           foreignField: '_id',
           as: 'members',
@@ -749,7 +750,7 @@ class CommunityService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'mentorRefs.user_id',
           foreignField: '_id',
           as: 'mentors',
@@ -808,7 +809,7 @@ class CommunityService {
       // lookup admin info
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'admin',
           foreignField: '_id',
           as: 'admin',
@@ -994,7 +995,7 @@ class CommunityService {
           pipeline: [
             {
               $lookup: {
-                from: 'users',
+                from: COLLECTION_USER_NAME,
                 localField: 'user_id',
                 foreignField: '_id',
                 as: 'user',
@@ -1057,7 +1058,7 @@ class CommunityService {
             // Lookup user để có thể search
             {
               $lookup: {
-                from: 'users',
+                from: COLLECTION_USER_NAME,
                 localField: 'user_id',
                 foreignField: '_id',
                 as: 'userInfo'

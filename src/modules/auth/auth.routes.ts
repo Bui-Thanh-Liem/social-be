@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { loginRateLimit } from '~/middlewares/ratelimit.middleware'
 import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
+import { loginRateLimit } from '~/middlewares/ratelimit.middleware'
 import { verifyRefreshTokenMiddleware } from '~/middlewares/user/verify-refresh-token.middleware'
 import { verifyTokenForgotPasswordMiddleware } from '~/middlewares/user/verify-token-forgot-password.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
@@ -16,8 +16,10 @@ import {
 
 const authRoute = Router()
 
+// Signup
 authRoute.post('/signup', bodyValidate(RegisterUserDtoSchema), asyncHandler(AuthController.signup))
 
+// Login
 authRoute.post(
   '/login',
   asyncHandler(loginRateLimit),
@@ -25,14 +27,19 @@ authRoute.post(
   asyncHandler(AuthController.login)
 )
 
+// Google login
 authRoute.get('/google-login', asyncHandler(AuthController.googleLogin))
 
+// Facebook login
 authRoute.get('/facebook-login', asyncHandler(AuthController.facebookLogin))
 
+// Refresh token
 authRoute.post('/refresh-token', asyncHandler(AuthController.refreshToken))
 
+// Forgot password
 authRoute.post('/forgot-password', bodyValidate(ForgotPasswordDtoSchema), asyncHandler(AuthController.forgotPassword))
 
+// Reset password
 authRoute.post(
   '/reset-password',
   bodyValidate(ResetPasswordDtoSchema),
@@ -40,11 +47,16 @@ authRoute.post(
   asyncHandler(AuthController.resetPassword)
 )
 
-authRoute.post('/logout', authenticationMiddleware, verifyRefreshTokenMiddleware, asyncHandler(AuthController.logout))
+// Các route dưới đây cần authentication
+authRoute.use(authenticationMiddleware)
 
+// Logout
+authRoute.post('/logout', verifyRefreshTokenMiddleware, asyncHandler(AuthController.logout))
+
+// GetMe & UpdateMe
 authRoute
   .route('/me')
-  .get(authenticationMiddleware, asyncHandler(AuthController.getMeUser))
-  .patch(authenticationMiddleware, bodyValidate(UpdateMeDtoSchema), asyncHandler(AuthController.updateMeUser))
+  .get(asyncHandler(AuthController.getMeUser))
+  .patch(bodyValidate(UpdateMeDtoSchema), asyncHandler(AuthController.updateMeUser))
 
 export default authRoute

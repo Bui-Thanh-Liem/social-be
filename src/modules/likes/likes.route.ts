@@ -8,8 +8,10 @@ import { asyncHandler } from '~/utils/async-handler.util'
 
 const likesRoute = Router()
 
+// Các route dưới đây cần authentication
 likesRoute.use(authenticationMiddleware)
 
+// Toggle like/unlike tweet
 likesRoute.post(
   '/toggle/:tweet_id',
   paramsValidate(paramIdTweetDtoSchema),

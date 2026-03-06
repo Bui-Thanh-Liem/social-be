@@ -7,7 +7,7 @@ import { IQuery } from '~/shared/interfaces/query.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import CommunitiesService from '../communities/communities.service'
 import { ENotificationType } from '../notifications/notifications.enum'
-import { UsersCollection } from '../users/users.schema'
+import { COLLECTION_USER_NAME, UsersCollection } from '../users/users.schema'
 import { CreateCommunityInvitationDto, DeleteInvitationDto } from './communities.dto'
 import { EInvitationStatus } from './communities.enum'
 import { ICommunity, ICommunityPayload } from './communities.interface'
@@ -93,7 +93,7 @@ class CommunityInvitationService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -112,7 +112,7 @@ class CommunityInvitationService {
       },
       {
         $lookup: {
-          from: 'users',
+          from: COLLECTION_USER_NAME,
           localField: 'inviter',
           foreignField: '_id',
           as: 'inviter',

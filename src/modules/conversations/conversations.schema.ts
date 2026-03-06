@@ -4,6 +4,7 @@ import { IConversation, IPinned } from './conversations.interface'
 import { EConversationType } from './conversations.enum'
 import { IMediaBare } from '~/shared/interfaces/media-bare.interface'
 
+const COLLECTION_NAME = 'conversations'
 export class ConversationsSchema extends BaseSchema implements IConversation {
   type: EConversationType
   mentors: ObjectId[]
@@ -32,5 +33,5 @@ export class ConversationsSchema extends BaseSchema implements IConversation {
 export let ConversationsCollection: Collection<ConversationsSchema>
 
 export function initConversationsCollection(db: Db) {
-  ConversationsCollection = db.collection<ConversationsSchema>('conversations')
+  ConversationsCollection = db.collection<ConversationsSchema>(COLLECTION_NAME)
 }

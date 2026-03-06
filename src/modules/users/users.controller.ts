@@ -29,8 +29,8 @@ class UsersController {
   }
 
   async getTopFollowedUsers(req: Request, res: Response) {
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await UsersService.getTopFollowedUsers({ query: req.query, user_id })
+    const user = req.decoded_authorization as IJwtPayload
+    const result = await UsersService.getTopFollowedUsers({ query: req.query, user_id: user?.user_id })
     res.json(new OkResponse('Lấy người dùng có nhiều người theo dõi thành công', result))
   }
 

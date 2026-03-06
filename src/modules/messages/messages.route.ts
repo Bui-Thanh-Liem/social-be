@@ -10,8 +10,10 @@ import { GetMultiMessageByConversationDtoSchema } from './messages.dto'
 
 const messagesRoute = Router()
 
+// Các route dưới đây cần authentication
 messagesRoute.use(authenticationMiddleware)
 
+// Lấy danh sách message theo conversation
 messagesRoute.get(
   '/:conversation_id',
   paramsValidate(GetMultiMessageByConversationDtoSchema),

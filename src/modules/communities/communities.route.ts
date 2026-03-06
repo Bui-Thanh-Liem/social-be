@@ -1,10 +1,11 @@
 import { Router } from 'express'
+import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
+import { checkExistMembersMiddleware } from '~/middlewares/community/check-exist-members.middleware'
 import CommunityController from '~/modules/communities/communities.controller'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
-import { checkExistMembersMiddleware } from '~/middlewares/community/check-exist-members.middleware'
-import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 import { bodyValidate } from '~/utils/body-validate.middleware'
+import { optionLogin } from '~/utils/option-login.middleware'
 import { paramsValidate } from '~/utils/params-validate.middleware'
 import { queryValidate } from '~/utils/query-validate.middleware'
 import {
@@ -23,14 +24,18 @@ import {
   PromoteMentorDtoSchema,
   UpdateDtoSchema
 } from './communities.dto'
-import { optionLogin } from '~/utils/option-login.middleware'
 
 const communitiesRoute = Router()
 
-// Lấy những cộng đồng
-communitiesRoute.get('/explore', queryValidate(QueryDtoSchema), asyncHandler(CommunityController.getMultiExplore))
+// Lấy danh sách cộng đồng explore
+communitiesRoute.get(
+  '/explore',
+  optionLogin(authenticationMiddleware),
+  queryValidate(QueryDtoSchema),
+  asyncHandler(CommunityController.getMultiExplore)
+)
 
-// Lấy thông tin tổng quát một community theo slug
+// Lấy thông tin chi tiết một cộng đồng theo slug
 communitiesRoute.get(
   '/slug/:slug',
   optionLogin(authenticationMiddleware),
@@ -38,7 +43,7 @@ communitiesRoute.get(
   asyncHandler(CommunityController.getOneBareInfoBySlug)
 )
 
-// Thêm middleware xác thực
+// Các route dưới đây cần authentication
 communitiesRoute.use(authenticationMiddleware)
 
 // Tạo cộng đồng mới
@@ -81,34 +86,34 @@ communitiesRoute.post(
   asyncHandler(CommunityController.inviteMembers)
 )
 
-//
+// Tham gia cộng đồng
 communitiesRoute.post(
   '/join/:community_id',
   paramsValidate(JoinLeaveCommunityDtoSchema),
   asyncHandler(CommunityController.join)
 )
 
-//
+// Rời khỏi cộng đồng
 communitiesRoute.post(
   '/leave/:community_id',
   paramsValidate(JoinLeaveCommunityDtoSchema),
   asyncHandler(CommunityController.leave)
 )
 
-//
+// Thăng chức thành mentor
 communitiesRoute.post('/promote', bodyValidate(PromoteMentorDtoSchema), asyncHandler(CommunityController.promoteMentor))
 
-//
+// Hạ chức mentor
 communitiesRoute.post('/demote', bodyValidate(DemoteMentorDtoSchema), asyncHandler(CommunityController.demoteMentor))
 
-//
+// Thay đổi trạng thái bài viết trong cộng đồng (chỉ owner mới có quyền)
 communitiesRoute.post(
   '/change-status',
   bodyValidate(ChangeStatusTweetInCommunityDtoSchema),
   asyncHandler(CommunityController.changeStatusTweet)
 )
 
-//
+// Cập nhật các thiết lập khác của cộng đồng (không bao gồm thông tin cơ bản như tên, mô tả, ...)
 communitiesRoute.patch('/update', bodyValidate(UpdateDtoSchema), asyncHandler(CommunityController.update))
 
 // Lấy thông tin chi tiết members mentors một community theo id
@@ -127,7 +132,7 @@ communitiesRoute.get(
   asyncHandler(CommunityController.getMultiInvitations)
 )
 
-// Lấy những lời mời đã mời
+// Lấy hoạt động của một cộng đồng (bài viết mới, thành viên mới, ...)
 communitiesRoute.get(
   '/activity/:community_id',
   queryValidate(QueryDtoSchema),

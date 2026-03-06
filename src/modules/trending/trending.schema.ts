@@ -3,6 +3,7 @@ import { BaseSchema } from '~/shared/schemas/base.schema'
 import { slug } from '~/utils/slug.util'
 import { ITrending } from './trending.interface'
 
+const COLLECTION_TRENDING_NAME = 'trending'
 export class TrendingSchema extends BaseSchema implements ITrending {
   topic?: string | undefined
   slug?: string | undefined
@@ -21,5 +22,5 @@ export class TrendingSchema extends BaseSchema implements ITrending {
 export let TrendingCollection: Collection<TrendingSchema>
 
 export function initTrendingCollection(db: Db) {
-  TrendingCollection = db.collection<TrendingSchema>('trending')
+  TrendingCollection = db.collection<TrendingSchema>(COLLECTION_TRENDING_NAME)
 }
