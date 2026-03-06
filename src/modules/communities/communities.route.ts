@@ -23,6 +23,7 @@ import {
   PromoteMentorDtoSchema,
   UpdateDtoSchema
 } from './communities.dto'
+import { optionLogin } from '~/utils/option-login.middleware'
 
 const communitiesRoute = Router()
 
@@ -32,6 +33,7 @@ communitiesRoute.get('/explore', queryValidate(QueryDtoSchema), asyncHandler(Com
 // Lấy thông tin tổng quát một community theo slug
 communitiesRoute.get(
   '/slug/:slug',
+  optionLogin(authenticationMiddleware),
   paramsValidate(GetOneBySlugDtoSchema),
   asyncHandler(CommunityController.getOneBareInfoBySlug)
 )
