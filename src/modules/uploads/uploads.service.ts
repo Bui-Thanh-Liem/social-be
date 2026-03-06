@@ -95,7 +95,6 @@ class UploadsServices {
   }
 
   // ====== ADMIN ONLY ======
-
   async remind({ admin_id, media_id }: { admin_id: string; media_id: string }) {
     //
     const media = await MediasCollection.findOne({ _id: new ObjectId(media_id) })
@@ -110,6 +109,8 @@ class UploadsServices {
       ref_id: media._id.toString()
     })
   }
+
+  // Xoá ảnh/ video của người dùng vi phạm chính sách cộng đồng
   async deleteByAdmin({ admin_id, body }: { body: DeleteMediaDto; admin_id: string }) {
     const deleted = await this.delete(body)
     notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {

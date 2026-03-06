@@ -1,5 +1,5 @@
 import cors from 'cors'
-import { envs } from '../../configs/env.config'
+import { envs } from '../configs/env.config'
 
 // Danh sách các origin được phép
 export const allowedOrigins = [envs.CLIENT_DOMAIN, envs.CLIENT_DOMAIN_ADMIN]
@@ -26,6 +26,7 @@ export const corsMiddleware = cors({
     'Origin',
     'Accept',
     'Pragma',
+    'x-api-key', // kiểm tra sau
     'x-client-id', // kiểm tra sau
     'Content-Type',
     'Authorization',

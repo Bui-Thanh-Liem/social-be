@@ -10,7 +10,6 @@ import { IQuery } from '~/shared/interfaces/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { createKeyUserActive } from '~/utils/create-key-cache.util'
 import { hashPassword } from '~/utils/crypto.util'
-import { getFilterQuery } from '~/utils/get-filter-query'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
@@ -546,48 +545,6 @@ class UsersService {
     )
 
     return this.signedCloudfrontAvatarUrls(user) as IUser
-  }
-
-  //
-  async adminGetUsers({ admin_id, query }: { admin_id: string; query: IQuery<IUser> }): Promise<ResMultiType<IUser>> {
-    //
-    const { skip, limit, sort, q, qf } = getPaginationAndSafeQuery<IUser>(query)
-    let filter: any = q
-      ? { $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }] }
-      : {}
-
-    //
-    filter = getFilterQuery(qf, filter as any)
-
-    // Trường hợp đặt biệt , status lồng trong 2 cấp
-    if (filter?.status) {
-      filter['status.status'] = filter.status
-      delete filter.status
-    }
-
-    //
-    const [users, total] = await Promise.all([
-      UsersCollection.aggregate<UsersSchema>([
-        { $match: filter },
-        { $sort: sort },
-        { $skip: skip },
-        { $limit: limit },
-        {
-          $project: {
-            password: 0,
-            email_verify_token: 0,
-            forgot_password_token: 0
-          }
-        }
-      ]).toArray(),
-      UsersCollection.countDocuments(filter)
-    ])
-
-    return {
-      total,
-      total_page: Math.ceil(total / limit),
-      items: this.signedCloudfrontAvatarUrls(users) as IUser[]
-    }
   }
 
   //

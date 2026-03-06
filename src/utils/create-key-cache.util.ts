@@ -12,6 +12,10 @@ export function createKeyTweetDetails(tweet_id: string) {
   return `{tweet}:details:${tweet_id}`
 }
 
+export function createKeyTweetOnlyUser(tweet_id: string) {
+  return `{tweet}:only_user:${tweet_id}`
+}
+
 export function createKeyTweetDetailsLock(tweet_id: string) {
   return `{tweet}:details:lock:${tweet_id}`
 }

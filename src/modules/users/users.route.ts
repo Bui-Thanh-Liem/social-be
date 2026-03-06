@@ -5,13 +5,14 @@ import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
 import { bodyValidate } from '~/utils/body-validate.middleware'
 import { paramsValidate } from '~/utils/params-validate.middleware'
 import { queryValidate } from '~/utils/query-validate.middleware'
-import { resendRateLimit } from '~/shared/middlewares/ratelimit.middleware'
-import { authenticationMiddleware } from '~/shared/middlewares/user/authentication.middleware'
-import { verifyUserActiveForChangePasswordMiddleware } from '~/shared/middlewares/user/verify-user-active-for-change-password.middleware'
-import { verifyUserEmailMiddleware } from '~/shared/middlewares/user/verify-user-email.middleware'
+import { resendRateLimit } from '~/middlewares/ratelimit.middleware'
+import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
+import { verifyUserActiveForChangePasswordMiddleware } from '~/middlewares/user/verify-user-active-for-change-password.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 
 const usersRoute = Router()
+
+usersRoute.get('/username/:username', asyncHandler(UsersController.getOneByUsername))
 
 usersRoute.use(authenticationMiddleware)
 
@@ -19,7 +20,6 @@ usersRoute.post('/verify-email', bodyValidate(VerifyEmailDtoSchema), asyncHandle
 
 usersRoute.post('/resend-verify-email', asyncHandler(resendRateLimit), asyncHandler(UsersController.resendVerifyEmail))
 
-usersRoute.get('/username/:username', asyncHandler(UsersController.getOneByUsername))
 usersRoute.get('/mentions/:username', asyncHandler(UsersController.getMultiForMentions))
 
 usersRoute.get(
@@ -36,12 +36,7 @@ usersRoute.get(
   asyncHandler(UsersController.getFollowingUsersBasic)
 )
 
-usersRoute.get(
-  '/top-followed',
-  verifyUserEmailMiddleware,
-  queryValidate(QueryDtoSchema),
-  asyncHandler(UsersController.getTopFollowedUsers)
-)
+usersRoute.get('/top-followed', queryValidate(QueryDtoSchema), asyncHandler(UsersController.getTopFollowedUsers))
 
 usersRoute.post(
   '/change-password',

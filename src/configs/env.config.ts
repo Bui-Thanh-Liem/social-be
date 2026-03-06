@@ -42,10 +42,6 @@ export const envs = {
   MAIL_SERVICE_PASS: process.env.MAIL_SERVICE_PASS || 'Error',
   MAIL_SERVICE_ROOT: process.env.MAIL_SERVICE_ROOT || 'Error',
 
-  // Admin
-  ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'Error',
-  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'Error',
-
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || 'Error',
   GOOGLE_REDIRECT_URIS: process.env.GOOGLE_REDIRECT_URIS || 'Error',
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || 'Error',
@@ -79,5 +75,7 @@ export const envs = {
   AWS_SIGNED_URL_EXPIRES_IN: process.env.AWS_SIGNED_URL_EXPIRES_IN || '0',
 
   AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME || 'Error',
-  AWS_PRESIGNED_URL_EXPIRES_IN: process.env.AWS_PRESIGNED_URL_EXPIRES_IN || '0'
+  AWS_PRESIGNED_URL_EXPIRES_IN: process.env.AWS_PRESIGNED_URL_EXPIRES_IN || '0',
+
+  API_KEY: process.env.API_KEY || 'Error'
 }

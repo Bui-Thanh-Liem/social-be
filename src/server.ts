@@ -4,7 +4,7 @@ import app from './app'
 import { envs } from './configs/env.config'
 import { instanceMongodb } from './database/mongodb.db'
 import { initSubscriber } from './pubsub/subscriber'
-import { allowedOrigins } from './shared/middlewares/cors.middleware'
+import { allowedOrigins } from './middlewares/cors.middleware'
 import { initializeSocket } from './socket'
 
 //

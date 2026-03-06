@@ -45,6 +45,8 @@ class FollowsService {
 
   // Lấy user mình đang follow
   async getUserFollowing(user_id: string) {
+    if (!user_id) return []
+
     const result_following = await FollowersCollection.find(
       {
         user_id: new ObjectId(user_id)
@@ -65,6 +67,8 @@ class FollowsService {
 
   // Lấy user đang follow mình
   async getUserFollowers(user_id: string) {
+    if (!user_id) return []
+
     const result_follower = await FollowersCollection.find(
       {
         followed_user_id: new ObjectId(user_id)

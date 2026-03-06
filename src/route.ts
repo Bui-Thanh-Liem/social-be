@@ -18,11 +18,17 @@ import trendingRoute from './modules/trending/trending.route'
 import tweetsRoute from './modules/tweets/tweets.route'
 import uploadsRoute from './modules/uploads/uploads.route'
 import usersRoute from './modules/users/users.route'
+import { checkApiKeyMiddleware } from './middlewares/check-api-key.middleware'
 
 const rootRoute = Router()
 
 // Mount các route con
 rootRoute.use('/auth', authRoute)
+
+// API key middleware
+rootRoute.use(checkApiKeyMiddleware)
+
+//
 rootRoute.use('/bookmarks', bookmarksRoute)
 rootRoute.use('/communities', communitiesRoute)
 rootRoute.use('/conversations', conversationsRoute)

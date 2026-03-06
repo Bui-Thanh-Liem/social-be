@@ -19,16 +19,21 @@ class TweetsController {
   }
 
   async getOneById(req: Request, res: Response) {
-    const tweet = req.tweet as ITweet
+    const { tweet_id } = req.params as ParamIdTweetDto
     const user = req?.decoded_authorization as IJwtPayload
-    const { guest_view, user_view, created_at } = await TweetsService.increaseView(tweet._id!, user?.user_id)
+    // const tweet = req.tweet as ITweet
+    // const { guest_view, user_view, created_at } = await TweetsService.increaseView(tweet._id!, user?.user_id)
+    const tweeDetail = await TweetsService.getOneById({
+      tweet_id,
+      user_active_id: user?.user_id || ''
+    })
 
-    tweet.guest_view = guest_view
-    tweet.user_view = user_view
-    tweet.created_at = created_at
+    // tweet.guest_view = guest_view
+    // tweet.user_view = user_view
+    // tweet.created_at = created_at
 
     // Trả về ngay tại controller vì ở middleware đã query rồi
-    res.status(200).json(new OkResponse('Get tweet Success', tweet))
+    res.status(200).json(new OkResponse('Get tweet Success', tweeDetail))
   }
 
   async getTweetChildren(req: Request, res: Response) {
@@ -52,7 +57,7 @@ class TweetsController {
     const result = await TweetsService.getNewFeeds({
       feed_type,
       query: req.query,
-      user_active_id: user.user_id
+      user_active_id: user?.user_id
     })
     res.status(200).json(new OkResponse('Get new feeds success', result))
   }
@@ -126,8 +131,8 @@ class TweetsController {
   }
 
   async countViewLinkBookmarkInWeek(req: Request, res: Response) {
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await TweetsService.countViewLinkBookmarkInWeek(user_id)
+    const user = req.decoded_authorization as IJwtPayload
+    const result = await TweetsService.countViewLinkBookmarkInWeek(user?.user_id || '')
     res.status(200).json(new OkResponse('Thống kê lượt xem, thích, lưu trong tuần thành công', result))
   }
 }

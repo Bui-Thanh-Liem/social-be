@@ -2,13 +2,12 @@ import { Router } from 'express'
 import UploadsControllers from '~/modules/uploads/uploads.controller'
 import { deleteMediaDtoSchema, presignedUrlDtoSchema, uploadConfirmDtoSchema } from '~/modules/uploads/uploads.dto'
 import { bodyValidate } from '~/utils/body-validate.middleware'
-import { authenticationMiddleware } from '~/shared/middlewares/user/authentication.middleware'
-import { verifyUserEmailMiddleware } from '~/shared/middlewares/user/verify-user-email.middleware'
+import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 
 const uploadsRoute = Router()
 
-uploadsRoute.use(authenticationMiddleware, verifyUserEmailMiddleware)
+uploadsRoute.use(authenticationMiddleware)
 
 //
 uploadsRoute.post('/presigned-url', bodyValidate(presignedUrlDtoSchema), asyncHandler(UploadsControllers.presignedURL))

@@ -111,8 +111,8 @@ class CommunityController {
   }
 
   async getMultiExplore(req: Request, res: Response) {
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await communitiesService.getMultiExplore({ user_id, query: req.query })
+    const user = req.decoded_authorization as IJwtPayload
+    const result = await communitiesService.getMultiExplore({ user_id: user?.user_id, query: req.query })
     res.json(new OkResponse(`Lấy nhiều cộng đồng thành công.`, result))
   }
 
@@ -129,8 +129,8 @@ class CommunityController {
 
   async getOneBareInfoBySlug(req: Request, res: Response) {
     const { slug } = req.params as GetOneBySlugDto
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await communitiesService.getOneBareInfoBySlug({ slug, user_id })
+    const user = req.decoded_authorization as IJwtPayload
+    const result = await communitiesService.getOneBareInfoBySlug({ slug, user_id: user?.user_id })
     res.json(new OkResponse(`Lấy cộng đồng bằng slug thành công.`, result))
   }
 

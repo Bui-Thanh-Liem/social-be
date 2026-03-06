@@ -16,7 +16,7 @@ import CommentGateway from '~/socket/gateways/Comment.gateway'
 import CommunityGateway from '~/socket/gateways/Community.gateway'
 import { chunkArray } from '~/utils/chunk-array'
 import { convertObjectId } from '~/utils/convert-object-id'
-import { createKeyTweetDetails, createKeyTweetDetailsLock } from '~/utils/create-key-cache.util'
+import { createKeyTweetDetails, createKeyTweetDetailsLock, createKeyTweetOnlyUser } from '~/utils/create-key-cache.util'
 import { getFilterQuery } from '~/utils/get-filter-query'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { normalizeWeekData } from '~/utils/normalize-week-data.util'
@@ -177,7 +177,10 @@ class TweetsService {
       } as CreateNotiCommentDto)
 
       //
-      const newTw = await this.getOneById(user_id, newTweet.insertedId.toString())
+      const newTw = await this.getOneById({
+        tweet_id: newTweet.insertedId.toString(),
+        user_active_id: user_id
+      })
       if (newTw && parent_id) {
         await CommentGateway.sendNewComment(newTw, parent_id)
       }
@@ -213,7 +216,13 @@ class TweetsService {
   }
 
   // (cache, pessimistic lock) => sử dụng đệ quy
-  async getOneById(user_active_id: string, tweet_id: string): Promise<TweetsSchema | null> {
+  async getOneById({
+    tweet_id,
+    user_active_id
+  }: {
+    tweet_id: string
+    user_active_id: string
+  }): Promise<TweetsSchema | null> {
     // 1. Tạo key cache
     const key_cache = createKeyTweetDetails(tweet_id)
 
@@ -236,7 +245,10 @@ class TweetsService {
     if (lock) {
       try {
         // 5. Nếu không có cache thì truy vấn DB
-        const tweet_db = await this._getOneById(user_active_id, tweet_id)
+        const tweet_db = await this._getOneById({
+          tweet_id,
+          user_active_id
+        })
 
         //    - Nếu không tìm thấy tweet
         if (!tweet_db) {
@@ -250,6 +262,11 @@ class TweetsService {
         await cacheService.set(key_cache, tweet_db, 300)
 
         //    - Tính toán is_like và is_bookmark ở tầng ứng dụng (Application Layer)
+        console.log(
+          'this._processUserSpecificFields(tweet_db, user_active_id):::',
+          this._processUserSpecificFields(tweet_db, user_active_id)
+        )
+
         return this._processUserSpecificFields(tweet_db, user_active_id)
       } catch (err) {
         console.log('Error in getOneById:', err)
@@ -264,17 +281,26 @@ class TweetsService {
     } else {
       // Nếu không lấy được lock thì chờ 100ms và thử lại
       await new Promise((resolve) => setTimeout(resolve, 100))
-      return this.getOneById(user_active_id, tweet_id)
+      return this.getOneById({
+        tweet_id,
+        user_active_id
+      })
     }
   }
 
   //
-  private async _getOneById(user_active_id: string, tweet_id: string): Promise<TweetsSchema | null> {
+  private async _getOneById({
+    tweet_id,
+    user_active_id
+  }: {
+    tweet_id: string
+    user_active_id: string
+  }): Promise<TweetsSchema | null> {
     const followed_user_ids = await FollowsService.getUserFollowing(user_active_id)
     followed_user_ids.push(user_active_id)
 
     //
-    const userActiveObjectId = new ObjectId(user_active_id)
+    const userActiveObjectId = user_active_id ? new ObjectId(user_active_id) : null
 
     // 1. Định nghĩa điều kiện match (không đổi)
     const match_condition = {
@@ -510,15 +536,15 @@ class TweetsService {
    * @returns TweetSchema với các trường is_like, is_bookmark đã được thêm vào.
    */
   private _processUserSpecificFields(tweet_db: any, user_active_id: string): TweetsSchema {
-    const userActiveObjectId = new ObjectId(user_active_id)
+    const userActiveObjectId = user_active_id ? new ObjectId(user_active_id) : null
 
     // Lấy mảng user_id đã like và bookmark từ kết quả Aggregate
     const liked_user_ids = tweet_db.likes.map((like: any) => like.user_id.toString())
     const bookmarked_user_ids = tweet_db.bookmarks.map((bookmark: any) => bookmark.user_id.toString())
 
     // Kiểm tra và thêm trường mới vào object
-    tweet_db.is_like = liked_user_ids.includes(userActiveObjectId.toString())
-    tweet_db.is_bookmark = bookmarked_user_ids.includes(userActiveObjectId.toString())
+    tweet_db.is_like = userActiveObjectId && liked_user_ids.includes(userActiveObjectId.toString())
+    tweet_db.is_bookmark = userActiveObjectId && bookmarked_user_ids.includes(userActiveObjectId.toString())
 
     //
     console.log('liked_user_ids:::', liked_user_ids)
@@ -773,9 +799,9 @@ class TweetsService {
     feed_type,
     user_active_id
   }: {
+    feed_type: EFeedType
     query: IQuery<ITweet>
     user_active_id: string
-    feed_type: EFeedType
   }): Promise<ResMultiType<ITweet>> {
     //
     const activeObjectId = new ObjectId(user_active_id)
@@ -1185,6 +1211,12 @@ class TweetsService {
 
   //
   async getTweetOnlyUserId(tweet_id: string) {
+    const keyCache = createKeyTweetOnlyUser(tweet_id)
+    const cached = await cacheService.get<TweetsSchema>(keyCache)
+    if (cached) {
+      return cached
+    }
+
     const tweet = await TweetsCollection.aggregate<TweetsSchema>([
       {
         $match: { _id: new ObjectId(tweet_id) }
@@ -1208,6 +1240,8 @@ class TweetsService {
         }
       }
     ]).next()
+
+    await cacheService.set(keyCache, tweet, 300)
 
     return this.signedCloudfrontMediaUrls(tweet) as TweetsSchema
   }
@@ -2249,6 +2283,10 @@ class TweetsService {
 
   // Thống kê view, link, bookmark trong tuần
   async countViewLinkBookmarkInWeek(user_id: string): Promise<ResCountViewLinkBookmarkInWeek> {
+    if (!user_id) {
+      throw new NotFoundError('Không tìm thấy người dùng')
+    }
+
     const now = new Date()
 
     /**
@@ -2806,87 +2844,6 @@ class TweetsService {
     ]).toArray()
 
     const total = await TweetsCollection.countDocuments(match_condition)
-
-    return {
-      total,
-      total_page: Math.ceil(total / limit),
-      items: this.signedCloudfrontMediaUrls(tweets) as TweetsSchema[]
-    }
-  }
-
-  // ============================ ADMIN ============================
-  async adminGetTweets({
-    query
-  }: {
-    query: IQuery<TweetsSchema>
-    admin_id: string
-  }): Promise<ResMultiType<TweetsSchema>> {
-    const { skip, limit, sort, q, qf } = getPaginationAndSafeQuery<TweetsSchema>(query)
-    let filter: any = q ? { $text: { $search: q } } : {}
-
-    //
-    filter = getFilterQuery(qf, filter as any)
-
-    //
-    const tweets = await TweetsCollection.aggregate<TweetsSchema>([
-      {
-        $match: filter
-      },
-      {
-        $sort: sort
-      },
-      {
-        $skip: skip
-      },
-      {
-        $limit: limit
-      },
-      {
-        $lookup: {
-          from: 'communities',
-          localField: 'community_id',
-          foreignField: '_id',
-          as: 'community_id',
-          pipeline: [
-            {
-              $project: {
-                cover: 1,
-                name: 1,
-                slug: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $unwind: { path: '$community_id', preserveNullAndEmptyArrays: true }
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'user_id',
-          foreignField: '_id',
-          as: 'user_id',
-          pipeline: [
-            {
-              $project: {
-                name: 1,
-                username: 1,
-                email: 1,
-                avatar: 1,
-                verify: 1,
-                cover_photo: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $unwind: { path: '$user_id', preserveNullAndEmptyArrays: true }
-      }
-    ]).toArray()
-
-    const total = await TweetsCollection.countDocuments(filter)
 
     return {
       total,

@@ -6,13 +6,12 @@ import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
 import { bodyValidate } from '~/utils/body-validate.middleware'
 import { paramsValidate } from '~/utils/params-validate.middleware'
 import { queryValidate } from '~/utils/query-validate.middleware'
-import { authenticationMiddleware } from '~/shared/middlewares/user/authentication.middleware'
-import { verifyUserEmailMiddleware } from '~/shared/middlewares/user/verify-user-email.middleware'
+import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 
 const searchHistoryRoute = Router()
 
-searchHistoryRoute.use(authenticationMiddleware, verifyUserEmailMiddleware)
+searchHistoryRoute.use(authenticationMiddleware)
 
 searchHistoryRoute.post('/', bodyValidate(CreateSearchHistoryDtoSchema), asyncHandler(SearchHistoryController.create))
 

@@ -1,9 +1,8 @@
 import { Router } from 'express'
 import CommunityController from '~/modules/communities/communities.controller'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
-import { checkExistMembersMiddleware } from '~/shared/middlewares/community/check-exist-members.middleware'
-import { authenticationMiddleware } from '~/shared/middlewares/user/authentication.middleware'
-import { verifyUserEmailMiddleware } from '~/shared/middlewares/user/verify-user-email.middleware'
+import { checkExistMembersMiddleware } from '~/middlewares/community/check-exist-members.middleware'
+import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 import { bodyValidate } from '~/utils/body-validate.middleware'
 import { paramsValidate } from '~/utils/params-validate.middleware'
@@ -27,8 +26,18 @@ import {
 
 const communitiesRoute = Router()
 
+// Lấy những cộng đồng
+communitiesRoute.get('/explore', queryValidate(QueryDtoSchema), asyncHandler(CommunityController.getMultiExplore))
+
+// Lấy thông tin tổng quát một community theo slug
+communitiesRoute.get(
+  '/slug/:slug',
+  paramsValidate(GetOneBySlugDtoSchema),
+  asyncHandler(CommunityController.getOneBareInfoBySlug)
+)
+
 // Thêm middleware xác thực
-communitiesRoute.use(authenticationMiddleware, verifyUserEmailMiddleware)
+communitiesRoute.use(authenticationMiddleware)
 
 // Tạo cộng đồng mới
 communitiesRoute.post(
@@ -100,13 +109,6 @@ communitiesRoute.post(
 //
 communitiesRoute.patch('/update', bodyValidate(UpdateDtoSchema), asyncHandler(CommunityController.update))
 
-// Lấy thông tin tổng quát một community theo slug
-communitiesRoute.get(
-  '/slug/:slug',
-  paramsValidate(GetOneBySlugDtoSchema),
-  asyncHandler(CommunityController.getOneBareInfoBySlug)
-)
-
 // Lấy thông tin chi tiết members mentors một community theo id
 communitiesRoute.get(
   '/mm/:community_id',
@@ -143,8 +145,5 @@ communitiesRoute.get('/owner', queryValidate(QueryDtoSchema), asyncHandler(Commu
 
 // Lấy những cộng đồng đã tham gia
 communitiesRoute.get('/joined', queryValidate(QueryDtoSchema), asyncHandler(CommunityController.getMultiJoined))
-
-// Lấy những cộng đồng
-communitiesRoute.get('/explore', queryValidate(QueryDtoSchema), asyncHandler(CommunityController.getMultiExplore))
 
 export default communitiesRoute

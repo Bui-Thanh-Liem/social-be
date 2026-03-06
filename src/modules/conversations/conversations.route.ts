@@ -2,17 +2,16 @@ import { Router } from 'express'
 import ConversationsController from '~/modules/conversations/conversations.controller'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
 import { bodyValidate } from '~/utils/body-validate.middleware'
-import { checkExistParticipantsMiddleware } from '~/shared/middlewares/community/check-exist-participants.middleware'
+import { checkExistParticipantsMiddleware } from '~/middlewares/community/check-exist-participants.middleware'
 import { paramsValidate } from '~/utils/params-validate.middleware'
 import { queryValidate } from '~/utils/query-validate.middleware'
-import { authenticationMiddleware } from '~/shared/middlewares/user/authentication.middleware'
-import { verifyUserEmailMiddleware } from '~/shared/middlewares/user/verify-user-email.middleware'
+import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 import { ConversationIdDtoSchema, CreateConversationDtoSchema, ParticipantsDtoSchema } from './conversations.dto'
 
 const conversationsRoute = Router()
 
-conversationsRoute.use(authenticationMiddleware, verifyUserEmailMiddleware)
+conversationsRoute.use(authenticationMiddleware)
 
 conversationsRoute.post(
   '/',
