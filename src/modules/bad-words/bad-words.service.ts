@@ -9,15 +9,8 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { removeVietnameseAccent } from '~/utils/remove-vietnamese-accent.util'
 import { ENotificationType } from '../notifications/notifications.enum'
 import { ActionBadWordDto } from './bad-words.dto'
-import { IBadWord } from './bad-words.interface'
+import { IBadWord, IBadWordsCached } from './bad-words.interface'
 import { BadWordSchema, BadWordsCollection } from './bad-words.schema'
-
-interface IBadWordsCached {
-  _id: string
-  original: string
-  normalized: string
-  replaceWith: string
-}
 
 export class BadWordsService {
   private LEET_MAP: Record<string, string> = {

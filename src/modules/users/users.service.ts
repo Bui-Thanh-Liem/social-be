@@ -18,6 +18,7 @@ import { ETokenType } from '../tokens/tokens.enum'
 import { EUserVerifyStatus } from './users.enum'
 import { IUser } from './users.interface'
 import { UsersCollection, UsersSchema } from './users.schema'
+import AccessRecentService from '../access-recent/access-recent.service'
 
 class UsersService {
   async verifyEmail({
@@ -152,6 +153,13 @@ class UsersService {
     if (!user) {
       throw new NotFoundError('Người dùng không tồn tại.')
     }
+
+    // Lưu vào truy cập gần đây
+    await AccessRecentService.create({
+      type: 'user',
+      user_id: user_id_active,
+      ref_id: user._id?.toString() || ''
+    })
 
     return this.signedCloudfrontAvatarUrls(user) as IUser
   }

@@ -14,7 +14,11 @@ import { optionLogin } from '~/utils/option-login.middleware'
 const usersRoute = Router()
 
 // Lấy thông tin user theo username (dùng cho profile, mentions)
-usersRoute.get('/username/:username', asyncHandler(UsersController.getOneByUsername))
+usersRoute.get(
+  '/username/:username',
+  optionLogin(authenticationMiddleware),
+  asyncHandler(UsersController.getOneByUsername)
+)
 
 // Lấy thông tin user có nhiều người theo dõi nhất (dùng cho phần gợi ý người dùng)
 usersRoute.get(

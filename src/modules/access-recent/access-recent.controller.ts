@@ -1,11 +1,30 @@
 import { Request, Response } from 'express'
-import { CreatedResponse } from '~/core/success.response'
-import accessRecentService from './access-recent.service'
+import { CreatedResponse, OkResponse } from '~/core/success.response'
+import AccessRecentService from './access-recent.service'
 
 class AccessRecentController {
   async create(req: Request, res: Response) {
-    const newBadWord = await accessRecentService.create({ body: req.body })
+    const newBadWord = await AccessRecentService.create(req.body)
     res.json(new CreatedResponse('Tạo truy cập gần đây thành công', newBadWord))
+  }
+
+  async getMulti(req: Request, res: Response) {
+    const accessRecent = await AccessRecentService.getMulti(req.queryParsed)
+    res.json(new OkResponse('Lấy danh sách truy cập gần đây thành công', accessRecent))
+  }
+
+  async delete(req: Request, res: Response) {
+    const deletedBadWord = await AccessRecentService.delete({
+      access_recent_id: req.params.access_recent_id
+    })
+    res.json(new OkResponse(`Xóa truy cập gần đây thành công`, deletedBadWord))
+  }
+
+  async delete(req: Request, res: Response) {
+    const deletedBadWord = await AccessRecentService.delete({
+      access_recent_id: req.params.access_recent_id
+    })
+    res.json(new OkResponse(`Xóa truy cập gần đây thành công`, deletedBadWord))
   }
 }
 

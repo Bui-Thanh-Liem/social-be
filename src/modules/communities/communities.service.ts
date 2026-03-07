@@ -36,6 +36,7 @@ import CommunityInvitationService from './community-invitation.service'
 import CommunityMemberService from './community-member.service'
 import CommunityMentorService from './community-mentor.service'
 import { COLLECTION_USER_NAME } from '../users/users.schema'
+import AccessRecentService from '../access-recent/access-recent.service'
 
 interface IPromoteDemote {
   actor_id: string
@@ -965,6 +966,13 @@ class CommunityService {
     if (!community) {
       throw new NotFoundError(`Không tìm thấy cộng đồng với slug ${slug}`)
     }
+
+    // Lưu vào truy cập gần đây
+    await AccessRecentService.create({
+      user_id,
+      type: 'community',
+      ref_id: community._id?.toString() || ''
+    })
 
     return this.signedCloudfrontCoverUrls(community) as ICommunity
   }

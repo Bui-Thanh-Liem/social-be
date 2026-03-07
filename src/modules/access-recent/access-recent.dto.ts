@@ -28,4 +28,12 @@ export const CreateAccessRecentDtoSchema = z
       path: ['ref_slug'] // Gán lỗi trực tiếp vào trường ref_slug để dễ hiển thị ở UI
     }
   )
+
+export const paramIdAccessRecentDtoSchema = z.object({
+  access_recent_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+    message: 'ObjectId không hợp lệ'
+  })
+})
+
 export type CreateAccessRecentDto = z.infer<typeof CreateAccessRecentDtoSchema>
+export type ParamIdAccessRecentDto = z.infer<typeof paramIdAccessRecentDtoSchema>

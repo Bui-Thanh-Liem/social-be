@@ -8,3 +8,10 @@ export interface IBadWord extends IBase {
   usage_count: number
   action: EActionBadWord
 }
+
+export interface IBadWordsCached {
+  _id: string
+  original: string
+  normalized: string
+  replaceWith: string
+}
