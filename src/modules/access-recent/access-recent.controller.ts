@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { CreatedResponse, OkResponse } from '~/core/success.response'
+import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
 import AccessRecentService from './access-recent.service'
 
 class AccessRecentController {
@@ -20,11 +21,12 @@ class AccessRecentController {
     res.json(new OkResponse(`Xóa truy cập gần đây thành công`, deletedBadWord))
   }
 
-  async delete(req: Request, res: Response) {
-    const deletedBadWord = await AccessRecentService.delete({
-      access_recent_id: req.params.access_recent_id
+  async deleteAll(req: Request, res: Response) {
+    const { user_id } = req.decoded_authorization as IJwtPayload
+    const deletedBadWord = await AccessRecentService.deleteAll({
+      user_id
     })
-    res.json(new OkResponse(`Xóa truy cập gần đây thành công`, deletedBadWord))
+    res.json(new OkResponse(`Xóa tất cả truy cập gần đây thành công`, deletedBadWord))
   }
 }
 

@@ -20,11 +20,7 @@ accessRecentRoute
   .post(bodyValidate(CreateAccessRecentDtoSchema), asyncHandler(AccessRecentController.create))
 
 // Xóa tất cả truy cập gần đây của user
-accessRecentRoute.delete(
-  '/all',
-  paramsValidate(paramIdAccessRecentDtoSchema),
-  asyncHandler(AccessRecentController.deleteAll)
-)
+accessRecentRoute.delete('/all', asyncHandler(AccessRecentController.deleteAll))
 
 // Xóa truy cập gần đây
 accessRecentRoute.delete(

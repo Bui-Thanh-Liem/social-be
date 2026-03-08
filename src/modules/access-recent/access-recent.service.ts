@@ -1,12 +1,12 @@
 import { ObjectId } from 'mongodb'
-import { CreateAccessRecentDto } from './access-recent.dto'
-import { AccessRecentCollection, AccessRecentSchema } from './access-recent.schema'
+import { IQuery } from '~/shared/interfaces/query.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
-import { IAccessRecent } from './access-recent.interface'
-import { COLLECTION_USER_NAME } from '../users/users.schema'
 import { COLLECTION_COMMUNITIES_NAME } from '../communities/communities.schema'
 import { COLLECTION_TWEET_NAME } from '../tweets/tweets.schema'
-import { IQuery } from '~/shared/interfaces/query.interface'
+import { COLLECTION_USER_NAME } from '../users/users.schema'
+import { CreateAccessRecentDto } from './access-recent.dto'
+import { IAccessRecent } from './access-recent.interface'
+import { AccessRecentCollection, AccessRecentSchema } from './access-recent.schema'
 
 class AccessRecentService {
   async create(body: CreateAccessRecentDto) {
@@ -112,6 +112,10 @@ class AccessRecentService {
   async delete({ access_recent_id }: { access_recent_id: string }) {
     const deletedAccessRecent = await AccessRecentCollection.findOneAndDelete({ _id: new ObjectId(access_recent_id) })
     return deletedAccessRecent
+  }
+
+  async deleteAll({ user_id }: { user_id: string }) {
+    return await AccessRecentCollection.deleteMany({ user_id: new ObjectId(user_id) })
   }
 }
 

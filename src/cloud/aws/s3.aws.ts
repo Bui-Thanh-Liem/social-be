@@ -86,6 +86,7 @@ export const deleteFromS3 = async (keys: string[]) => {
     })
 
     console.log(`Đã xử lý xóa ${keys.length} file.`)
+    return true
   } catch (error) {
     // Lỗi này thường là lỗi kết nối hoặc quyền hạn (IAM Role)
     console.error('Lỗi hệ thống khi xóa hàng loạt:', error)

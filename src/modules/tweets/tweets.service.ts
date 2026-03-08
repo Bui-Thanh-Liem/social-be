@@ -267,11 +267,6 @@ class TweetsService {
         await cacheService.set(key_cache, tweet_db, 300)
 
         //    - Tính toán is_like và is_bookmark ở tầng ứng dụng (Application Layer)
-        console.log(
-          'this._processUserSpecificFields(tweet_db, user_active_id):::',
-          this._processUserSpecificFields(tweet_db, user_active_id)
-        )
-
         return this._processUserSpecificFields(tweet_db, user_active_id)
       } catch (err) {
         console.log('Error in getOneById:', err)
