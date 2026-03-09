@@ -32,8 +32,8 @@ class SearchHistoryService {
     if (Object.keys(query).length === 1) return false
 
     // Kiểm tra đã tồn tại hay chưa
-    const existed = await SearchHistoryCollection.findOne(query)
-    if (existed) return true
+    const exists = await SearchHistoryCollection.findOne(query)
+    if (exists) return true
 
     const created = await SearchHistoryCollection.insertOne(
       new SearchHistorySchema({

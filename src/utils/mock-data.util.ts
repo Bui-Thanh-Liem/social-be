@@ -14,8 +14,8 @@ import { UsersCollection, UsersSchema } from '~/modules/users/users.schema'
 import { hashPassword } from './crypto.util'
 import { logger } from './logger.util'
 
-const MY_ID = new ObjectId('69708f6ab776baa192a24a3f')
-const MY_USERNAME = '@liem_buithanh'
+const MY_ID = new ObjectId('69ac449d81a954630a462fd1')
+const MY_USERNAME = '@liem_bui_thanh'
 const PASS = 'User123@'
 
 function generateRandomTweet(hashtags: string[], username: string): string {

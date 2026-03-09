@@ -20,6 +20,7 @@ import trendingRoute from './modules/trending/trending.route'
 import tweetsRoute from './modules/tweets/tweets.route'
 import uploadsRoute from './modules/uploads/uploads.route'
 import usersRoute from './modules/users/users.route'
+import { startMockData } from './utils/mock-data.util'
 
 const rootRoute = Router()
 
@@ -50,8 +51,7 @@ rootRoute.use('/bad-words', badWordsRoute)
 
 // Route tạo dữ liệu giả lập (mock data) cho việc phát triển và thử nghiệm
 rootRoute.post('/mock-data', async (req: Request, res: Response) => {
-  // await startMockData()
-  // await startMockDataTweets()
+  await startMockData()
   res.status(200).json(new OkResponse('✅ - Mock data created successfully'))
 })
 

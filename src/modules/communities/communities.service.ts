@@ -804,7 +804,9 @@ class CommunityService {
     const community = await CommunitiesCollection.aggregate<CommunitiesSchema>([
       // match slug
       {
-        $match: { slug }
+        $match: {
+          slug: { $regex: slug, $options: 'i' }
+        }
       },
 
       // lookup admin info

@@ -60,7 +60,7 @@ tweetsRoute.get(
 // Lấy bài viết trong cộng đồng (feeds)
 tweetsRoute.get(
   '/community',
-  authenticationMiddleware,
+  optionLogin(authenticationMiddleware),
   queryValidate(QueryDtoSchema),
   asyncHandler(TweetsController.getCommunityTweets)
 )

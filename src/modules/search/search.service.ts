@@ -5,7 +5,11 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { slug } from '~/utils/slug.util'
 import { EVisibilityType } from '../communities/communities.enum'
 import { ICommunity } from '../communities/communities.interface'
-import { COLLECTION_COMMUNITIES_NAME, CommunitiesCollection, CommunitiesSchema } from '../communities/communities.schema'
+import {
+  COLLECTION_COMMUNITIES_NAME,
+  CommunitiesCollection,
+  CommunitiesSchema
+} from '../communities/communities.schema'
 import CommunitiesService from '../communities/communities.service'
 import FollowsService from '../follows/follows.service'
 import { ITrending } from '../trending/trending.interface'
