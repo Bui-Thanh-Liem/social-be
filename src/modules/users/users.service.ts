@@ -14,7 +14,7 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
 import followsService from '../follows/follows.service'
-import { ETokenType } from '../tokens/tokens.enum'
+import { ETokenType } from '../user-tokens/user-tokens.enum'
 import { EUserVerifyStatus } from './users.enum'
 import { IUser } from './users.interface'
 import { UsersCollection, UsersSchema } from './users.schema'

@@ -2,7 +2,7 @@ import { StringValue } from 'ms'
 import { envs } from '~/configs/env.config'
 import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
 import { signToken } from './jwt.util'
-import { ETokenType } from '~/modules/tokens/tokens.enum'
+import { ETokenType } from '~/modules/user-tokens/user-tokens.enum'
 
 //
 export async function createTokenPair({

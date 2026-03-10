@@ -1,4 +1,4 @@
-export enum ETokenType {
+export enum EUserTokenType {
   AccessToken,
   RefreshToken,
   VerifyToken,

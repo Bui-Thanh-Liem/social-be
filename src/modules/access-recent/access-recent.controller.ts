@@ -18,6 +18,8 @@ class AccessRecentController {
     const deletedBadWord = await AccessRecentService.delete({
       access_recent_id: req.params.access_recent_id
     })
+    console.log('AccessRecentController - delete :::', deletedBadWord)
+
     res.json(new OkResponse(`Xóa truy cập gần đây thành công`, deletedBadWord))
   }
 
@@ -26,6 +28,7 @@ class AccessRecentController {
     const deletedBadWord = await AccessRecentService.deleteAll({
       user_id
     })
+    console.log('AccessRecentController - deleteAll :::', deletedBadWord)
     res.json(new OkResponse(`Xóa tất cả truy cập gần đây thành công`, deletedBadWord))
   }
 }

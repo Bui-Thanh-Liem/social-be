@@ -1,16 +1,16 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { BaseSchema } from '~/shared/schemas/base.schema'
-import { IToken } from './tokens.interface'
+import { IUserToken } from './user-tokens.interface'
 
-export const COLLECTION_TOKENS_NAME = 'tokens'
-export class TokensSchema extends BaseSchema implements IToken {
+export const COLLECTION_USER_TOKENS_NAME = 'user_tokens'
+export class UserTokensSchema extends BaseSchema implements IUserToken {
   user_id: ObjectId
   refresh_token: string
   iat: Date | undefined
   exp: Date | undefined
   refresh_token_used: string[]
 
-  constructor(token: Pick<IToken, 'user_id' | 'refresh_token' | 'iat' | 'exp'>) {
+  constructor(token: Pick<IUserToken, 'user_id' | 'refresh_token' | 'iat' | 'exp'>) {
     super()
     this.refresh_token_used = [] // Mới tạo thì chưa có token nào đã sử dụng.
     this.user_id = token.user_id
@@ -20,8 +20,8 @@ export class TokensSchema extends BaseSchema implements IToken {
   }
 }
 
-export let TokensCollection: Collection<TokensSchema>
+export let UserTokensCollection: Collection<UserTokensSchema>
 
-export function initTokensCollection(db: Db) {
-  TokensCollection = db.collection<TokensSchema>(COLLECTION_TOKENS_NAME)
+export function initUserTokensCollection(db: Db) {
+  UserTokensCollection = db.collection<UserTokensSchema>(COLLECTION_USER_TOKENS_NAME)
 }

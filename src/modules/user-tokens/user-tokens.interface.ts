@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
 import { IBase } from '~/shared/interfaces/base.interface'
 
-export interface IToken extends IBase {
+export interface IUserToken extends IBase {
   user_id: ObjectId
   refresh_token: string
   refresh_token_used: string[]

@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongodb'
+import { BadRequestError } from '~/core/error.response'
 import { IQuery } from '~/shared/interfaces/query.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { COLLECTION_COMMUNITIES_NAME } from '../communities/communities.schema'
@@ -7,7 +8,6 @@ import { COLLECTION_USER_NAME } from '../users/users.schema'
 import { CreateAccessRecentDto } from './access-recent.dto'
 import { IAccessRecent } from './access-recent.interface'
 import { AccessRecentCollection, AccessRecentSchema } from './access-recent.schema'
-
 class AccessRecentService {
   async create(body: CreateAccessRecentDto) {
     const { ref_id, user_id, ref_slug } = body
@@ -110,12 +110,23 @@ class AccessRecentService {
   }
 
   async delete({ access_recent_id }: { access_recent_id: string }) {
-    const deletedAccessRecent = await AccessRecentCollection.findOneAndDelete({ _id: new ObjectId(access_recent_id) })
-    return deletedAccessRecent
+    const deleted = await AccessRecentCollection.findOneAndDelete({ _id: new ObjectId(access_recent_id) })
+
+    if (!deleted?._id) {
+      throw new BadRequestError('Xóa truy cập gần đây thất bại')
+    }
+
+    return Boolean(deleted?._id)
   }
 
   async deleteAll({ user_id }: { user_id: string }) {
-    return await AccessRecentCollection.deleteMany({ user_id: new ObjectId(user_id) })
+    const deleted = await AccessRecentCollection.deleteMany({ user_id: new ObjectId(user_id) })
+
+    if (!deleted.deletedCount) {
+      throw new BadRequestError('Xóa tất cả truy cập gần đây thất bại')
+    }
+
+    return Boolean(deleted.deletedCount)
   }
 }
 

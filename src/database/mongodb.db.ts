@@ -27,9 +27,9 @@ import { initMessagesCollection, MessagesCollection } from '~/modules/messages/m
 import { initNotificationsCollection } from '~/modules/notifications/notifications.schema'
 import { initReportTweetCollection, ReportTweetCollection } from '~/modules/report-tweet/report-tweet.schema'
 import { initSearchHistoryCollection, SearchHistoryCollection } from '~/modules/search-history/search-history.schema'
-import { initTokensCollection, TokensCollection } from '~/modules/tokens/tokens.schema'
 import { initTrendingCollection, TrendingCollection } from '~/modules/trending/trending.schema'
 import { initTweetsCollection, TweetsCollection } from '~/modules/tweets/tweets.schema'
+import { initUserTokensCollection, UserTokensCollection } from '~/modules/user-tokens/user-tokens.schema'
 import { initUsersCollection, UsersCollection } from '~/modules/users/users.schema'
 import { logger } from '~/utils/logger.util'
 
@@ -152,7 +152,7 @@ class Database {
     try {
       this.checkConnection()
       initUsersCollection(this.db)
-      initTokensCollection(this.db)
+      initUserTokensCollection(this.db)
       initFollowersCollection(this.db)
       initMediasCollection(this.db)
       initTweetsCollection(this.db)
@@ -185,7 +185,7 @@ class Database {
       const indexUser = await UsersCollection.indexExists(['email_1', 'username_1', 'bio_text'])
       const indexLike = await LikesCollection.indexExists(['user_id_1_tweet_id_1'])
       const indexReportTweet = await ReportTweetCollection.indexExists(['tweet_id_1'])
-      const indexToken = await TokensCollection.indexExists(['exp_1', 'user_id_1', 'access_token_1'])
+      const indexUserToken = await UserTokensCollection.indexExists(['exp_1', 'user_id_1', 'access_token_1'])
       const indexTweet = await TweetsCollection.indexExists(['content_text'])
       const indexTrending = await TrendingCollection.indexExists(['slug_1', 'created_at_-1'])
       const indexHashtag = await HashtagsCollection.indexExists(['slug_1'])
@@ -226,9 +226,9 @@ class Database {
       }
 
       // Token
-      if (!indexToken) {
-        TokensCollection.createIndex({ user_id: 1 })
-        TokensCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
+      if (!indexUserToken) {
+        UserTokensCollection.createIndex({ user_id: 1 })
+        UserTokensCollection.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
       }
 
       // Tweet - default_language: 'none' -> cho phép sử dụng stop words

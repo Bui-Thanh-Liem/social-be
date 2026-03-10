@@ -16,8 +16,8 @@ import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
 import BadWordsService from '../bad-words/bad-words.service'
 import { ENotificationType } from '../notifications/notifications.enum'
-import { ETokenType } from '../tokens/tokens.enum'
-import TokensService from '../tokens/tokens.service'
+import { EUserTokenType } from '../user-tokens/user-tokens.enum'
+import TokensService from '../user-tokens/user-tokens.service'
 import { EUserStatus, EUserVerifyStatus } from '../users/users.enum'
 import { UsersCollection, UsersSchema } from '../users/users.schema'
 import UsersService from '../users/users.service'
@@ -45,7 +45,7 @@ class AuthService {
     let email_verify_token = ''
     if (!payload.verify) {
       email_verify_token = await signToken({
-        payload: { user_id: '', type: ETokenType.VerifyToken, role: 'USER', admin_id: '' },
+        payload: { user_id: '', type: EUserTokenType.VerifyToken, role: 'USER', admin_id: '' },
         privateKey: envs.JWT_SECRET_TEMP,
         options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
       })
@@ -359,7 +359,7 @@ class AuthService {
 
     //
     const forgot_password_token = await signToken({
-      payload: { user_id: user._id.toString(), type: ETokenType.ForgotPasswordToken, role: 'USER', admin_id: '' },
+      payload: { user_id: user._id.toString(), type: EUserTokenType.ForgotPasswordToken, role: 'USER', admin_id: '' },
       privateKey: envs.JWT_SECRET_TEMP,
       options: { expiresIn: envs.TEMP_TOKEN_EXPIRES_IN as StringValue }
     })
