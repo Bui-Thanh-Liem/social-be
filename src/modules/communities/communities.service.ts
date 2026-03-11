@@ -10,10 +10,12 @@ import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { logger } from '~/utils/logger.util'
 import { slug } from '~/utils/slug.util'
+import AccessRecentService from '../access-recent/access-recent.service'
 import BadWordsService from '../bad-words/bad-words.service'
 import { ENotificationType } from '../notifications/notifications.enum'
 import { ETweetStatus } from '../tweets/tweets.enum'
 import { IUser } from '../users/users.interface'
+import { COLLECTION_USER_NAME } from '../users/users.schema'
 import {
   ChangeInfoDto,
   CreateCommunityActivityDto,
@@ -35,8 +37,6 @@ import {
 import CommunityInvitationService from './community-invitation.service'
 import CommunityMemberService from './community-member.service'
 import CommunityMentorService from './community-mentor.service'
-import { COLLECTION_USER_NAME } from '../users/users.schema'
-import AccessRecentService from '../access-recent/access-recent.service'
 
 interface IPromoteDemote {
   actor_id: string
@@ -654,7 +654,11 @@ class CommunityService {
     const match_stage: Record<string, any> = {}
 
     if (q) {
-      match_stage.$or = [{ name: { $regex: q, $options: 'i' } }, { $text: { $search: q } }]
+      match_stage.$or = [
+        { name: { $regex: q, $options: 'i' } },
+        { category: { $regex: qe, $options: 'i' } },
+        { $text: { $search: q } }
+      ]
     }
 
     if (qe) {

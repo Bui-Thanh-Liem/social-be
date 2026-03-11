@@ -3,6 +3,7 @@ import { IQuery } from '~/shared/interfaces/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { slug } from '~/utils/slug.util'
+import { COLLECTION_BOOKMARKS_NAME } from '../bookmarks/bookmarks.schema'
 import { EVisibilityType } from '../communities/communities.enum'
 import { ICommunity } from '../communities/communities.interface'
 import {
@@ -23,7 +24,6 @@ import { IUser } from '../users/users.interface'
 import { COLLECTION_USER_NAME, UsersCollection, UsersSchema } from '../users/users.schema'
 import UsersService from '../users/users.service'
 import { ResSearchPending } from './search.dto'
-import { COLLECTION_BOOKMARKS_NAME } from '../bookmarks/bookmarks.schema'
 
 // Những hàm search sẽ ưu tiên sort sau limit
 class SearchService {

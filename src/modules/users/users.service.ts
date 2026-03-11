@@ -13,12 +13,12 @@ import { hashPassword } from '~/utils/crypto.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
+import AccessRecentService from '../access-recent/access-recent.service'
 import followsService from '../follows/follows.service'
-import { ETokenType } from '../user-tokens/user-tokens.enum'
+import { EUserTokenType } from '../user-tokens/user-tokens.enum'
 import { EUserVerifyStatus } from './users.enum'
 import { IUser } from './users.interface'
 import { UsersCollection, UsersSchema } from './users.schema'
-import AccessRecentService from '../access-recent/access-recent.service'
 
 class UsersService {
   async verifyEmail({
@@ -72,7 +72,7 @@ class UsersService {
   async resendVerifyEmail(id: string) {
     //
     const email_verify_token = await signToken({
-      payload: { user_id: id, type: ETokenType.VerifyToken, admin_id: '', role: 'USER' },
+      payload: { user_id: id, type: EUserTokenType.VerifyToken, admin_id: '', role: 'USER' },
       privateKey: envs.JWT_SECRET_TEMP,
       options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
     })

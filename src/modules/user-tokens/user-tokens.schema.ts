@@ -2,7 +2,7 @@ import { Collection, Db, ObjectId } from 'mongodb'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 import { IUserToken } from './user-tokens.interface'
 
-export const COLLECTION_USER_TOKENS_NAME = 'user_tokens'
+export const COLLECTION_USER_TOKENS_NAME = 'user-tokens'
 export class UserTokensSchema extends BaseSchema implements IUserToken {
   user_id: ObjectId
   refresh_token: string

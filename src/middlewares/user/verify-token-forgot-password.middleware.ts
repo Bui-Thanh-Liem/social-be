@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { BadRequestError, UnauthorizedError } from '~/core/error.response'
-import { ETokenType } from '~/modules/user-tokens/user-tokens.enum'
+import { EUserTokenType } from '~/modules/user-tokens/user-tokens.enum'
 import { UsersCollection } from '~/modules/users/users.schema'
 import { verifyToken } from '~/utils/jwt.util'
 
@@ -17,7 +17,7 @@ export async function verifyTokenForgotPasswordMiddleware(req: Request, res: Res
     const decoded = await verifyToken({ token, privateKey: envs.JWT_SECRET_TEMP })
 
     // Kiểm tra thêm , xem loại token có phải reset password không
-    if (decoded.type !== ETokenType.ForgotPasswordToken) {
+    if (decoded.type !== EUserTokenType.ForgotPasswordToken) {
       throw new BadRequestError('Chúng tôi nhận thấy hành động của bạn không giống người dùng bình thường ?')
     }
 
