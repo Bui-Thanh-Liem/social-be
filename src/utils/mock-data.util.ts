@@ -567,3 +567,8 @@ export async function startMockData() {
   await createRandomTweets(users)
   await createRandomCommunities({ username: MY_USERNAME, _id: MY_ID })
 }
+
+export async function startMockTweets() {
+  const users = await UsersCollection.find({}, { projection: { _id: 1, username: 1 } }).toArray()
+  await createRandomTweets(users)
+}

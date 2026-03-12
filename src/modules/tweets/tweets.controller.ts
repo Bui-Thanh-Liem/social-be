@@ -70,7 +70,7 @@ class TweetsController {
     const result = await TweetsService.getProfileTweets({
       tweet_type,
       query: queries,
-      user_active_id: user.user_id,
+      user_active_id: user?.user_id,
       isHighlight: queries?.ishl === '1',
       isMedia: queries?.isMedia === '1',
       user_id: queries?.user_id as string

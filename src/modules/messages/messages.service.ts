@@ -1,16 +1,15 @@
 import { ObjectId } from 'mongodb'
-import pLimit from 'p-limit'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
-import { IQuery } from '~/shared/interfaces/query.interface'
 import { IMedia } from '~/modules/media/media.interface'
 import { IMessage } from '~/modules/messages/messages.interface'
+import { IQuery } from '~/shared/interfaces/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
-import UploadsServices from '../uploads/uploads.service'
 import ConversationsService from '../conversations/conversations.service'
-import { MessagesCollection, MessagesSchema } from './messages.schema'
-import { CreateMessageDto } from './messages.dto'
+import UploadsServices from '../uploads/uploads.service'
 import { COLLECTION_USER_NAME } from '../users/users.schema'
+import { CreateMessageDto } from './messages.dto'
+import { MessagesCollection, MessagesSchema } from './messages.schema'
 
 class MessagesService {
   async create(sender_id: string, payload: CreateMessageDto) {
@@ -120,50 +119,50 @@ class MessagesService {
     }
   }
 
-  async cleanupOldMessages() {
-    const three_days_ago = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
-    const limit = pLimit(10) // chỉ cho phép 10 task xóa chạy song song
+  // async cleanupOldMessages() {
+  //   const three_days_ago = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+  //   const limit = pLimit(10) // chỉ cho phép 10 task xóa chạy song song
 
-    const conversations = await MessagesCollection.aggregate([
-      { $match: { created_at: { $lt: three_days_ago } } },
-      { $group: { _id: '$conversation_id' } }
-    ]).toArray()
+  //   const conversations = await MessagesCollection.aggregate([
+  //     { $match: { created_at: { $lt: three_days_ago } } },
+  //     { $group: { _id: '$conversation_id' } }
+  //   ]).toArray()
 
-    for (const conv of conversations) {
-      const convId = conv._id
+  //   for (const conv of conversations) {
+  //     const convId = conv._id
 
-      const latestMessages = await MessagesCollection.find({ conversation_id: convId })
-        .sort({ created_at: -1 })
-        .limit(500)
-        .project({ _id: 1 })
-        .toArray()
+  //     const latestMessages = await MessagesCollection.find({ conversation_id: convId })
+  //       .sort({ created_at: -1 })
+  //       .limit(500)
+  //       .project({ _id: 1 })
+  //       .toArray()
 
-      const keepIds = latestMessages.map((m) => m._id)
+  //     const keepIds = latestMessages.map((m) => m._id)
 
-      // Lấy danh sách message sẽ bị xóa
-      const oldMessages = await MessagesCollection.find({
-        conversation_id: convId,
-        created_at: { $lt: three_days_ago },
-        _id: { $nin: keepIds }
-      }).toArray()
+  //     // Lấy danh sách message sẽ bị xóa
+  //     const oldMessages = await MessagesCollection.find({
+  //       conversation_id: convId,
+  //       created_at: { $lt: three_days_ago },
+  //       _id: { $nin: keepIds }
+  //     }).toArray()
 
-      // Xóa media song song có giới hạn
-      await Promise.all(
-        oldMessages.map((msg) =>
-          limit(async () => {
-            await UploadsServices.delete({ s3_keys: msg.attachments?.map((att) => att.s3_key) || [] })
-          })
-        )
-      )
+  //     // Xóa media song song có giới hạn
+  //     await Promise.all(
+  //       oldMessages.map((msg) =>
+  //         limit(async () => {
+  //           await UploadsServices.delete({ s3_keys: msg.attachments?.map((att) => att.s3_key) || [] })
+  //         })
+  //       )
+  //     )
 
-      // Xóa message trong DB
-      await MessagesCollection.deleteMany({
-        conversation_id: convId,
-        created_at: { $lt: three_days_ago },
-        _id: { $nin: keepIds }
-      })
-    }
-  }
+  //     // Xóa message trong DB
+  //     await MessagesCollection.deleteMany({
+  //       conversation_id: convId,
+  //       created_at: { $lt: three_days_ago },
+  //       _id: { $nin: keepIds }
+  //     })
+  //   }
+  // }
 
   async deleteConversationMessages(conversationId: string) {
     const convObjId = new ObjectId(conversationId)

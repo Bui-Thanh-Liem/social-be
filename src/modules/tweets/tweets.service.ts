@@ -1270,7 +1270,7 @@ class TweetsService {
     const followed_user_ids = await FollowsService.getUserFollowers(user_id)
 
     // ép về string để so sánh cho chắc
-    const is_following = followed_user_ids.some((f: ObjectId | string) => f.toString() === user_active_id.toString())
+    const is_following = followed_user_ids.some((f: ObjectId | string) => f.toString() === user_active_id?.toString())
 
     //
     const match_condition: any = {

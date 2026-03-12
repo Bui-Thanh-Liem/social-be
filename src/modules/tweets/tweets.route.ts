@@ -68,7 +68,7 @@ tweetsRoute.get(
 // Lấy bài viết của profile (của mình hoặc người khác)
 tweetsRoute.get(
   '/profile/:tweet_type',
-  authenticationMiddleware,
+  optionLogin(authenticationMiddleware),
   paramsValidate(getProfileTweetDtoSchema),
   queryValidate(QueryDtoSchema),
   asyncHandler(TweetsController.getProfileTweets)
