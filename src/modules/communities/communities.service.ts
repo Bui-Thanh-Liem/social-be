@@ -37,6 +37,7 @@ import {
 import CommunityInvitationService from './community-invitation.service'
 import CommunityMemberService from './community-member.service'
 import CommunityMentorService from './community-mentor.service'
+import { log } from 'node:console'
 
 interface IPromoteDemote {
   actor_id: string
@@ -654,11 +655,7 @@ class CommunityService {
     const match_stage: Record<string, any> = {}
 
     if (q) {
-      match_stage.$or = [
-        { name: { $regex: q, $options: 'i' } },
-        { category: { $regex: qe, $options: 'i' } },
-        { $text: { $search: q } }
-      ]
+      match_stage.$or = [{ $text: { $search: q } }, { name: { $regex: q, $options: 'i' } }]
     }
 
     if (qe) {
