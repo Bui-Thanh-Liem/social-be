@@ -3,9 +3,9 @@ import { authenticationMiddleware } from '~/middlewares/authentication.middlewar
 import { ParamIdTrendingDtoSchema } from '~/modules/trending/trending.dto'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
-import { optionLogin } from '~/utils/option-login.middleware'
-import { paramsValidate } from '~/utils/params-validate.middleware'
-import { queryValidate } from '~/utils/query-validate.middleware'
+import { optionLogin } from '~/middlewares/option-login.middleware'
+import { paramsValidate } from '~/middlewares/params-validate.middleware'
+import { queryValidate } from '~/middlewares/query-validate.middleware'
 import TrendingController from './trending.controller'
 
 const trendingRoute = Router()

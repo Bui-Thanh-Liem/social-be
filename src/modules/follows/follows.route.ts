@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import FollowsController from '~/modules/follows/follows.controller'
 import { UserIdDtoSchema } from '~/modules/users/users.dto'
-import { paramsValidate } from '~/utils/params-validate.middleware'
+import { paramsValidate } from '~/middlewares/params-validate.middleware'
 import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
 import { checkUserParamsMiddleware } from '~/middlewares/user/check-user-params.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'

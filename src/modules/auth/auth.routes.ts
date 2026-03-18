@@ -4,7 +4,7 @@ import { loginRateLimit } from '~/middlewares/ratelimit.middleware'
 import { verifyRefreshTokenMiddleware } from '~/middlewares/user/verify-refresh-token.middleware'
 import { verifyTokenForgotPasswordMiddleware } from '~/middlewares/user/verify-token-forgot-password.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
-import { bodyValidate } from '~/utils/body-validate.middleware'
+import { bodyValidate } from '~/middlewares/body-validate.middleware'
 import AuthController from './auth.controller'
 import {
   ForgotPasswordDtoSchema,

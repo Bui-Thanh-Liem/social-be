@@ -2,14 +2,14 @@ import { Router } from 'express'
 import UsersController from '~/modules/users/users.controller'
 import { ChangePasswordDtoSchema, UserIdDtoSchema, VerifyEmailDtoSchema } from '~/modules/users/users.dto'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
-import { bodyValidate } from '~/utils/body-validate.middleware'
-import { paramsValidate } from '~/utils/params-validate.middleware'
-import { queryValidate } from '~/utils/query-validate.middleware'
+import { bodyValidate } from '~/middlewares/body-validate.middleware'
+import { paramsValidate } from '~/middlewares/params-validate.middleware'
+import { queryValidate } from '~/middlewares/query-validate.middleware'
 import { resendRateLimit } from '~/middlewares/ratelimit.middleware'
 import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
 import { verifyUserActiveForChangePasswordMiddleware } from '~/middlewares/user/verify-user-active-for-change-password.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
-import { optionLogin } from '~/utils/option-login.middleware'
+import { optionLogin } from '~/middlewares/option-login.middleware'
 
 const usersRoute = Router()
 

@@ -1,12 +1,12 @@
 import { Router } from 'express'
 import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
-import { bodyValidate } from '~/utils/body-validate.middleware'
+import { bodyValidate } from '~/middlewares/body-validate.middleware'
 import AccessRecentController from './access-recent.controller'
 import { CreateAccessRecentDtoSchema, paramIdAccessRecentDtoSchema } from './access-recent.dto'
-import { queryValidate } from '~/utils/query-validate.middleware'
+import { queryValidate } from '~/middlewares/query-validate.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
-import { paramsValidate } from '~/utils/params-validate.middleware'
+import { paramsValidate } from '~/middlewares/params-validate.middleware'
 
 const accessRecentRoute = Router()
 

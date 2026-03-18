@@ -3,7 +3,7 @@ import { authenticationMiddleware } from '~/middlewares/authentication.middlewar
 import { checkTweetExistMiddleware } from '~/middlewares/tweet/check-tweet-exist.middleware'
 import { paramIdTweetDtoSchema } from '~/modules/tweets/tweets.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
-import { paramsValidate } from '~/utils/params-validate.middleware'
+import { paramsValidate } from '~/middlewares/params-validate.middleware'
 import BookmarksController from './bookmarks.controller'
 
 const bookmarksRoute = Router()

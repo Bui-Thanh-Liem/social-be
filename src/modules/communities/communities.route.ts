@@ -4,10 +4,10 @@ import { checkExistMembersMiddleware } from '~/middlewares/community/check-exist
 import CommunityController from '~/modules/communities/communities.controller'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
-import { bodyValidate } from '~/utils/body-validate.middleware'
-import { optionLogin } from '~/utils/option-login.middleware'
-import { paramsValidate } from '~/utils/params-validate.middleware'
-import { queryValidate } from '~/utils/query-validate.middleware'
+import { bodyValidate } from '~/middlewares/body-validate.middleware'
+import { optionLogin } from '~/middlewares/option-login.middleware'
+import { paramsValidate } from '~/middlewares/params-validate.middleware'
+import { queryValidate } from '~/middlewares/query-validate.middleware'
 import {
   ChangeInfoDtoSchema,
   ChangeStatusTweetInCommunityDtoSchema,

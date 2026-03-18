@@ -2,8 +2,8 @@ import { Router } from 'express'
 import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
-import { optionLogin } from '~/utils/option-login.middleware'
-import { queryValidate } from '~/utils/query-validate.middleware'
+import { optionLogin } from '~/middlewares/option-login.middleware'
+import { queryValidate } from '~/middlewares/query-validate.middleware'
 import SearchController from './search.controller'
 
 const searchRoute = Router()

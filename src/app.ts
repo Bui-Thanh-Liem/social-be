@@ -11,7 +11,7 @@ import { corsMiddleware } from './middlewares/cors.middleware'
 import { loggerMiddleware } from './middlewares/logger.middleware'
 import { globalRateLimit } from './middlewares/ratelimit.middleware'
 import rootRoute from './route'
-import { errorHandler } from './utils/errorhandler.middleware'
+import { errorHandler } from './middlewares/errorhandler.middleware'
 import { logger } from './utils/logger.util'
 // import path from 'path'
 

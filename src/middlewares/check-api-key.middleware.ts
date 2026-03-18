@@ -7,11 +7,11 @@ export async function checkApiKeyMiddleware(req: Request, res: Response, next: N
     const key = req.headers['x-api-key'] || ''
 
     if (!key) {
-      throw new UnauthorizedError('Vui lòng cung cấp API key.')
+      throw new UnauthorizedError('Forbidden: API key is missing.')
     }
 
     if (key !== envs.API_KEY) {
-      throw new UnauthorizedError('API key không hợp lệ.')
+      throw new UnauthorizedError('Forbidden: API key is invalid.')
     }
 
     next()

@@ -3,9 +3,9 @@ import SearchHistoryController from '~/modules/search-history/search-history.con
 import { CreateSearchHistoryDtoSchema } from '~/modules/search-history/search-history.dto'
 import { ParamIdDtoSchema } from '~/shared/dtos/common/param-id.dto'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
-import { bodyValidate } from '~/utils/body-validate.middleware'
-import { paramsValidate } from '~/utils/params-validate.middleware'
-import { queryValidate } from '~/utils/query-validate.middleware'
+import { bodyValidate } from '~/middlewares/body-validate.middleware'
+import { paramsValidate } from '~/middlewares/params-validate.middleware'
+import { queryValidate } from '~/middlewares/query-validate.middleware'
 import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 
