@@ -5,6 +5,8 @@ import { UnauthorizedError } from '~/core/error.response'
 export async function checkApiKeyMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
     const key = req.headers['x-api-key'] || ''
+    console.log('client sent :::', key)
+    console.log('server has :::', envs.API_KEY)
 
     if (!key) {
       throw new UnauthorizedError('Forbidden: API key is missing.')
