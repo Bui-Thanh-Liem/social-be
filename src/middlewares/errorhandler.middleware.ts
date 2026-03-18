@@ -22,23 +22,6 @@ export const errorHandler: ErrorRequestHandler = async (err: any, req: Request, 
 
     //
     message = formattedErrors.map((e) => e.message).join(' - ')
-
-    //
-    if (!isDev) {
-      // await DiscordLog.sendLogError('🛑 Zod Validation Error:', {
-      //   clientIp: req.ip,
-      //   clientId: req.headers['x-client-id'] as string,
-      //   request: {
-      //     method: req.method,
-      //     url: req.originalUrl,
-      //     body: req.body,
-      //     params: req.params,
-      //     query: req.query
-      //   },
-      //   message: message,
-      //   statusCode: statusCode
-      // })
-    }
   }
 
   // Log đầy đủ để dev dễ debug
@@ -57,23 +40,9 @@ export const errorHandler: ErrorRequestHandler = async (err: any, req: Request, 
       )
   }
   console.log('resError :::', resError)
-  if (resError.statusCode !== 401 && !isDev) {
-    // await DiscordLog.sendLogError(message, {
-    //   clientIp: req.ip,
-    //   clientId: req.headers['x-client-id'] as string,
-    //   request: {
-    //     method: req.method,
-    //     url: req.originalUrl
-    //   },
-    //   message: resError.message,
-    //   statusCode: resError.statusCode,
-    //   stack: resError.stack,
-    //   ...resError.otherFields
-    // })
-  }
 
   // Trả response ra client
-  res.status(statusCode).json(new ErrorResponse(statusCode, message, isDev ? stack : {}))
+  res.status(statusCode).json(new ErrorResponse(statusCode, message, isDev && stack))
 
   return // đảm bảo không rơi vào nhánh nào khác
 }
