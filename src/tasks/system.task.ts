@@ -50,7 +50,7 @@ cron.schedule('0 4 * * *', async () => {
 /**
  * 🧹 JOB 6 — Mỗi 00h: tạo mỗi user 5 tweets
  */
-cron.schedule('50 21 * * *', async () => {
+cron.schedule('0 0 * * *', async () => {
   console.log('[CRON-1D] 🧹 Creating mock tweets...')
   systemQueue.add(CONSTANT_JOB.MOCK_DATA, {})
   console.log('[CRON-1D] ✅ Created mock tweets')
