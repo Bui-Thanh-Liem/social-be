@@ -3,7 +3,7 @@ import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { BadRequestError, NotFoundError } from '~/core/error.response'
 import { clientMongodb } from '~/database/mongodb.db'
 import cacheService from '~/helpers/cache.helper'
-import { cleanupQueue, notificationQueue } from '~/infra/queues'
+import { systemQueue, notificationQueue } from '~/infra/queues'
 import MessagesService from '~/modules/messages/messages.service'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { IQuery } from '~/shared/interfaces/query.interface'
@@ -20,7 +20,6 @@ import { EConversationType } from './conversations.enum'
 import { IConversation } from './conversations.interface'
 import { ConversationsCollection, ConversationsSchema } from './conversations.schema'
 import { COLLECTION_MESSAGES_NAME } from '../messages/messages.schema'
-import { last } from 'lodash'
 
 class ConversationsService {
   async create({ user_id, payload }: { user_id: string; payload: CreateConversationDto }) {
@@ -858,7 +857,7 @@ class ConversationsService {
       // Tránh transaction quá lâu + tránh conflict
       if (shouldDeleteCompletely) {
         // Xóa các record của bookmark/like/comment
-        await cleanupQueue.add(CONSTANT_JOB.DELETE_MESSAGES, { conversation_id: conv_id })
+        await systemQueue.add(CONSTANT_JOB.DELETE_MESSAGES, { conversation_id: conv_id })
         await ConversationsCollection.deleteOne({ _id: new ObjectId(conv_id) })
       }
 

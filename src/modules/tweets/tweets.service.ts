@@ -5,7 +5,7 @@ import { clientMongodb } from '~/database/mongodb.db'
 import cacheService from '~/helpers/cache.helper'
 import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
 import { notificationQueue } from '~/infra/queues'
-import { cleanupQueue } from '~/infra/queues/cleanup.queue'
+import { systemQueue } from '~/infra/queues/system.queue'
 import { IMedia } from '~/modules/media/media.interface'
 import { CreateNotiCommentDto } from '~/modules/notifications/notifications.dto'
 import { CreateTweetDto, ResCountViewLinkBookmarkInWeek } from '~/modules/tweets/tweets.dto'
@@ -2180,7 +2180,7 @@ class TweetsService {
         }
 
         // Xóa các record của bookmark/like/comment
-        await cleanupQueue.add(CONSTANT_JOB.DELETE_CHILDREN_TWEET, { parent_id: tweet_id })
+        await systemQueue.add(CONSTANT_JOB.DELETE_CHILDREN_TWEET, { parent_id: tweet_id })
       })
       return true
     } catch (error) {
