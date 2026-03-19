@@ -49,7 +49,19 @@ class TweetsService {
   //
   async create(user_id: string, payload: CreateTweetDto) {
     let message = 'Đăng bài thành công'
-    const { audience, type, content, parent_id, community_id, mentions, medias, bgColor, textColor, codes } = payload
+    const {
+      audience,
+      type,
+      content,
+      parent_id,
+      community_id,
+      mentions,
+      medias,
+      bgColor,
+      embed_code,
+      textColor,
+      codes
+    } = payload
 
     // Lọc từ cấm trong content
     const _content = await BadWordsService.detectInText({
@@ -127,7 +139,8 @@ class TweetsService {
         status: status,
         textColor: textColor || '',
         bgColor: bgColor || '',
-        codes: codes || null
+        codes: codes || null,
+        embed_code: embed_code || ''
       })
     )
 

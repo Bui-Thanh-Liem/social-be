@@ -23,6 +23,7 @@ export class TweetsSchema extends BaseSchema implements ITweet {
   textColor: string
   bgColor: string
   codes: ICodesTweet[] | null
+  embed_code: string
 
   constructor(tweet: Partial<ITweet>) {
     super()
@@ -39,6 +40,7 @@ export class TweetsSchema extends BaseSchema implements ITweet {
     this.textColor = tweet.textColor || '' // Fe set default màu chữ
     this.bgColor = tweet.bgColor || '' // Fe set default màu nền
     this.codes = tweet.codes || null
+    this.embed_code = tweet.embed_code || ''
     this.guest_view = tweet.guest_view || 0
     this.user_view = tweet.user_view || 0
     this.community_id = tweet.community_id || null

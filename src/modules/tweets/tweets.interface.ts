@@ -25,6 +25,7 @@ export interface ITweet extends IBase {
   textColor: string // màu chữ
   bgColor: string // màu nền
   codes: ICodesTweet[] | null // mã code nếu có
+  embed_code: string // mã nhúng nếu có
 
   //
   community_id: null | ObjectId

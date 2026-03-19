@@ -432,6 +432,7 @@ async function createRandomTweets(users: Pick<IUser, '_id' | 'username'>[], comm
           type: ETweetType.Tweet,
           audience: ETweetAudience.Everyone,
           content: generateRandomTweet(ht1, user.username!),
+          embed_code: '',
           hashtags: ht1,
           mentions: [user._id?.toString() || ''],
           medias: [
@@ -445,6 +446,7 @@ async function createRandomTweets(users: Pick<IUser, '_id' | 'username'>[], comm
           type: ETweetType.Tweet,
           audience: ETweetAudience.Everyone,
           content: generateRandomTweet([...ht2], user.username!),
+          embed_code: '',
           hashtags: ht2,
           mentions: [user._id?.toString() || ''],
           medias: [
@@ -458,6 +460,7 @@ async function createRandomTweets(users: Pick<IUser, '_id' | 'username'>[], comm
           type: ETweetType.Tweet,
           audience: ETweetAudience.Everyone,
           content: generateRandomTweet([...ht3], user.username!),
+          embed_code: '',
           hashtags: ht3,
           mentions: [user._id?.toString() || ''],
           medias: [
@@ -471,6 +474,7 @@ async function createRandomTweets(users: Pick<IUser, '_id' | 'username'>[], comm
           type: ETweetType.Tweet,
           audience: ETweetAudience.Everyone,
           content: generateRandomTweet([...ht4], user.username!),
+          embed_code: '',
           hashtags: ht4,
           mentions: [user._id?.toString() || ''],
           medias: [
@@ -484,6 +488,7 @@ async function createRandomTweets(users: Pick<IUser, '_id' | 'username'>[], comm
           type: ETweetType.Tweet,
           audience: ETweetAudience.Everyone,
           content: generateRandomTweet([...ht5], user.username!),
+          embed_code: '',
           hashtags: ht5,
           mentions: [user._id?.toString() || ''],
           medias: [
