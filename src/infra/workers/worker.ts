@@ -1,6 +1,9 @@
 import { instanceMongodb } from '~/database/mongodb.db'
 import { logger } from '~/utils/logger.util'
-import { emailWorker, inviteWorker, notificationWorker, systemWorker } from './index'
+import { emailWorker } from './email.worker'
+import { inviteWorker } from './invite.worker'
+import { notificationWorker } from './notification.worker'
+import { systemWorker } from './system.worker'
 
 async function bootstrapWorker() {
   try {

@@ -15,11 +15,13 @@ import { startMockTweets } from '~/utils/mock-data.util'
 export const systemWorker = new Worker(
   CONSTANT_QUEUE.SYSTEM,
   async (job) => {
+    console.log('Processing job:', job.name)
     switch (job.name) {
-      case CONSTANT_JOB.SYNC_LIKE:
+      case CONSTANT_JOB.SYNC_LIKE: {
         await likesService.syncLikesFromCacheToDB()
         console.log(`✅ Synced likes from cache to DB`)
         break
+      }
       case CONSTANT_JOB.DELETE_CHILDREN_TWEET: {
         const { parent_id } = job.data
         await TweetsService.deleteChildrenTweet(parent_id)
