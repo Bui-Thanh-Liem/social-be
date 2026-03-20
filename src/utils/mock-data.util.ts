@@ -422,10 +422,10 @@ async function createRandomTweets(users: Pick<IUser, '_id' | 'username'>[], comm
   await Promise.all(
     users.map(async (user) => {
       const ht1 = [randomHashtag(), randomHashtag(), randomHashtag()]
-      const ht2 = [randomHashtag(), randomHashtag(), randomHashtag()]
-      const ht3 = [randomHashtag(), randomHashtag(), randomHashtag()]
-      const ht4 = [randomHashtag(), randomHashtag(), randomHashtag()]
-      const ht5 = [randomHashtag(), randomHashtag(), randomHashtag()]
+      // const ht2 = [randomHashtag(), randomHashtag(), randomHashtag()]
+      // const ht3 = [randomHashtag(), randomHashtag(), randomHashtag()]
+      // const ht4 = [randomHashtag(), randomHashtag(), randomHashtag()]
+      // const ht5 = [randomHashtag(), randomHashtag(), randomHashtag()]
 
       await Promise.all([
         TweetsService.create(user._id!.toString(), {
@@ -441,63 +441,63 @@ async function createRandomTweets(users: Pick<IUser, '_id' | 'username'>[], comm
             { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any
           ],
           community_id: community_id ? community_id : undefined
-        }),
-        TweetsService.create(user._id!.toString(), {
-          type: ETweetType.Tweet,
-          audience: ETweetAudience.Everyone,
-          content: generateRandomTweet([...ht2], user.username!),
-          embed_code: '',
-          hashtags: ht2,
-          mentions: [user._id?.toString() || ''],
-          medias: [
-            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
-            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
-            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any
-          ],
-          community_id: community_id ? community_id : undefined
-        }),
-        TweetsService.create(user._id!.toString(), {
-          type: ETweetType.Tweet,
-          audience: ETweetAudience.Everyone,
-          content: generateRandomTweet([...ht3], user.username!),
-          embed_code: '',
-          hashtags: ht3,
-          mentions: [user._id?.toString() || ''],
-          medias: [
-            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
-            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
-            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any
-          ],
-          community_id: community_id ? community_id : undefined
-        }),
-        TweetsService.create(user._id!.toString(), {
-          type: ETweetType.Tweet,
-          audience: ETweetAudience.Everyone,
-          content: generateRandomTweet([...ht4], user.username!),
-          embed_code: '',
-          hashtags: ht4,
-          mentions: [user._id?.toString() || ''],
-          medias: [
-            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
-            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
-            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any
-          ],
-          community_id: community_id ? community_id : undefined
-        }),
-        TweetsService.create(user._id!.toString(), {
-          type: ETweetType.Tweet,
-          audience: ETweetAudience.Everyone,
-          content: generateRandomTweet([...ht5], user.username!),
-          embed_code: '',
-          hashtags: ht5,
-          mentions: [user._id?.toString() || ''],
-          medias: [
-            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
-            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
-            { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any
-          ],
-          community_id: community_id ? community_id : undefined
         })
+        // TweetsService.create(user._id!.toString(), {
+        //   type: ETweetType.Tweet,
+        //   audience: ETweetAudience.Everyone,
+        //   content: generateRandomTweet([...ht2], user.username!),
+        //   embed_code: '',
+        //   hashtags: ht2,
+        //   mentions: [user._id?.toString() || ''],
+        //   medias: [
+        //     { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+        //     { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+        //     { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any
+        //   ],
+        //   community_id: community_id ? community_id : undefined
+        // }),
+        // TweetsService.create(user._id!.toString(), {
+        //   type: ETweetType.Tweet,
+        //   audience: ETweetAudience.Everyone,
+        //   content: generateRandomTweet([...ht3], user.username!),
+        //   embed_code: '',
+        //   hashtags: ht3,
+        //   mentions: [user._id?.toString() || ''],
+        //   medias: [
+        //     { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+        //     { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+        //     { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any
+        //   ],
+        //   community_id: community_id ? community_id : undefined
+        // }),
+        // TweetsService.create(user._id!.toString(), {
+        //   type: ETweetType.Tweet,
+        //   audience: ETweetAudience.Everyone,
+        //   content: generateRandomTweet([...ht4], user.username!),
+        //   embed_code: '',
+        //   hashtags: ht4,
+        //   mentions: [user._id?.toString() || ''],
+        //   medias: [
+        //     { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+        //     { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+        //     { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any
+        //   ],
+        //   community_id: community_id ? community_id : undefined
+        // }),
+        // TweetsService.create(user._id!.toString(), {
+        //   type: ETweetType.Tweet,
+        //   audience: ETweetAudience.Everyone,
+        //   content: generateRandomTweet([...ht5], user.username!),
+        //   embed_code: '',
+        //   hashtags: ht5,
+        //   mentions: [user._id?.toString() || ''],
+        //   medias: [
+        //     { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+        //     { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any,
+        //     { url: faker.image.avatar(), s3_key: '', file_type: 'image/png' } as any
+        //   ],
+        //   community_id: community_id ? community_id : undefined
+        // })
       ])
     })
   )
@@ -574,6 +574,9 @@ export async function startMockData() {
 }
 
 export async function startMockTweets() {
-  const users = await UsersCollection.find({}, { projection: { _id: 1, username: 1 } }).toArray()
+  const users = await UsersCollection.find(
+    { created_at: { $lt: new Date('2026-03-10T15:30:37.659+00:00') } },
+    { projection: { _id: 1, username: 1 } }
+  ).toArray()
   await createRandomTweets(users)
 }

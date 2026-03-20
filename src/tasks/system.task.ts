@@ -48,7 +48,7 @@ cron.schedule('0 4 * * *', async () => {
 })
 
 /**
- * 🧹 JOB 6 — Mỗi 00h: tạo mỗi user 5 tweets
+ * 🧹 JOB 6 — Mỗi 00h: tạo mỗi user (tạo trước ngày 10/03/2026) 1 tweets
  */
 cron.schedule('0 0 * * *', async () => {
   console.log('[CRON-1D] 🧹 Creating mock tweets...')
