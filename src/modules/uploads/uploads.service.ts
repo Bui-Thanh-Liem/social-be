@@ -80,6 +80,7 @@ class UploadsServices {
     const media = await MediasCollection.findOne({ s3_key: body.s3_keys[0] })
     if (!media) {
       console.log('Hình ảnh / video không tồn tại')
+      return null
     }
 
     // Xóa file khỏi S3
