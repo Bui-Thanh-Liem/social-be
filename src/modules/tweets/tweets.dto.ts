@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { CONSTANT_REGEX } from '~/shared/constants'
 import { MediaBareDtoSchema } from '../../shared/dtos/common/media-bare.dto'
 import { ICommunity } from '../communities/communities.interface'
-import { CONSTANT_MAX_LENGTH_CONTENT, CONSTANT_MAX_LENGTH_EMBED_CODE } from './tweet.constant'
+import { CONSTANT_MAX_LENGTH_CONTENT } from './tweet.constant'
 import { EFeedType, EFeedTypeItem, ETweetAudience, ETweetType } from './tweets.enum'
 import { ITweet } from './tweets.interface'
 
@@ -10,7 +10,7 @@ import { ITweet } from './tweets.interface'
 export const codesDtoSchema = z.object({
   _id: z.string().trim(),
   langKey: z.string().trim(),
-  code: z.string().max(500, `Nội dung tối đa 500 kí tự`).trim()
+  code: z.string().max(CONSTANT_MAX_LENGTH_CONTENT, `Nội dung tối đa ${CONSTANT_MAX_LENGTH_CONTENT} kí tự`).trim()
 })
 
 export const createTweetDtoSchema = z.object({
@@ -33,7 +33,7 @@ export const createTweetDtoSchema = z.object({
   content: z.string().max(CONSTANT_MAX_LENGTH_CONTENT, `Nội dung tối đa ${CONSTANT_MAX_LENGTH_CONTENT} kí tự`).trim(),
   embed_code: z
     .string()
-    .max(CONSTANT_MAX_LENGTH_EMBED_CODE, `Nội dung tối đa ${CONSTANT_MAX_LENGTH_EMBED_CODE} kí tự`)
+    .max(CONSTANT_MAX_LENGTH_CONTENT, `Nội dung tối đa ${CONSTANT_MAX_LENGTH_CONTENT} kí tự`)
     .trim(),
   hashtags: z.array(z.string().trim()).optional(), // client gửi lên name
   mentions: z
