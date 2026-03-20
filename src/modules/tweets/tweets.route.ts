@@ -102,7 +102,11 @@ tweetsRoute.get(
 )
 
 // chart view, like, bookmark trong tuần
-tweetsRoute.get('/view-like-bookmark', asyncHandler(TweetsController.countViewLinkBookmarkInWeek))
+tweetsRoute.get(
+  '/view-like-bookmark',
+  optionLogin(authenticationMiddleware),
+  asyncHandler(TweetsController.countViewLinkBookmarkInWeek)
+)
 
 // Lấy một bài viết theo id (dùng cho cả new feed, profile, community)
 tweetsRoute.get(
