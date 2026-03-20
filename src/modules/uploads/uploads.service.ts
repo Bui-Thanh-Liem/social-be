@@ -78,7 +78,9 @@ class UploadsServices {
   //
   async delete(body: DeleteMediaDto) {
     const media = await MediasCollection.findOne({ s3_key: body.s3_keys[0] })
-    if (!media) throw new NotFoundError('Hình ảnh / video không tồn tại')
+    if (!media) {
+      console.log('Hình ảnh / video không tồn tại')
+    }
 
     // Xóa file khỏi S3
     const deletedToS3 = await deleteFromS3(body?.s3_keys)
@@ -113,12 +115,14 @@ class UploadsServices {
   // Xoá ảnh/ video của người dùng vi phạm chính sách cộng đồng
   async deleteByAdmin({ admin_id, body }: { body: DeleteMediaDto; admin_id: string }) {
     const deleted = await this.delete(body)
-    notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
-      content: 'Ảnh/ video của bạn đã bị xoá bởi Admin vì vi phạm chính sách cộng đồng.',
-      receiver: deleted.user_id?.toString(),
-      sender: admin_id,
-      type: ENotificationType.Other
-    })
+    if (deleted) {
+      notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+        content: 'Ảnh/ video của bạn đã bị xoá bởi Admin vì vi phạm chính sách cộng đồng.',
+        receiver: deleted.user_id?.toString(),
+        sender: admin_id,
+        type: ENotificationType.Other
+      })
+    }
   }
   // ========================
 }
