@@ -43,6 +43,13 @@ communitiesRoute.get(
   asyncHandler(CommunityController.getOneBareInfoBySlug)
 )
 
+// Lấy categories của từng community (trả về danh sách)
+communitiesRoute.get(
+  '/categories',
+  optionLogin(authenticationMiddleware),
+  asyncHandler(CommunityController.getAllCategories)
+)
+
 // Các route dưới đây cần authentication
 communitiesRoute.use(authenticationMiddleware)
 
@@ -60,9 +67,6 @@ communitiesRoute.patch(
   bodyValidate(ChangeInfoDtoSchema),
   asyncHandler(CommunityController.changeInfo)
 )
-
-// Lấy categories của từng community (trả về danh sách)
-communitiesRoute.get('/categories', asyncHandler(CommunityController.getAllCategories))
 
 // Lấy danh sách name, id của cộng đồng
 communitiesRoute.get('/bare', asyncHandler(CommunityController.getAllBare))
