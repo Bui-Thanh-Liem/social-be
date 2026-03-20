@@ -8,19 +8,15 @@ import morgan from 'morgan'
 import { envs } from './configs/env.config'
 // import StreamVideoController from './controllers/StreamVideo.controller'
 import { corsMiddleware } from './middlewares/cors.middleware'
+import { errorHandler } from './middlewares/errorhandler.middleware'
 import { loggerMiddleware } from './middlewares/logger.middleware'
 import { globalRateLimit } from './middlewares/ratelimit.middleware'
 import rootRoute from './route'
-import { errorHandler } from './middlewares/errorhandler.middleware'
+import './tasks/system.task'
 import { logger } from './utils/logger.util'
-// import path from 'path'
 
 //
 // import { UPLOAD_IMAGE_FOLDER_PATH, UPLOAD_VIDEO_FOLDER_PATH } from './shared/constants'
-import './tasks/auto-remove-from-system.task'
-import './tasks/cleanup.task'
-import './tasks/mock-data.task'
-import './tasks/sync.task'
 
 const isDev = process.env.NODE_ENV === 'development'
 

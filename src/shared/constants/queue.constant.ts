@@ -1,8 +1,7 @@
 export const CONSTANT_QUEUE = {
   MAIL: '{email}',
-  SYNC: '{sync}',
   INVITE: '{invite}',
-  CLEANUP: '{cleanup}',
+  SYSTEM: '{system}',
   NOTIFICATION: '{notification}'
 } as const
 
@@ -15,5 +14,16 @@ export const CONSTANT_JOB = {
   FORGOT_PASSWORD: 'forgot-password',
   DELETE_MESSAGES: 'delete-messages',
   SEND_NOTI_COMMENT: 'send-noti-comment',
-  DELETE_CHILDREN_TWEET: 'delete-children-tweet'
+  DELETE_CHILDREN_TWEET: 'delete-children-tweet',
+
+  //
+  DELETE_TWEET_REPORT: 'delete-tweet-report',
+
+  //
+  CLEANUP_OLD_TRENDING: 'cleanup-old-trending',
+  CLEANUP_WEAK_TRENDING: 'cleanup-weak-trending',
+  CLEANUP_OLD_NOTIFICATIONS: 'cleanup-old-notifications',
+
+  //
+  MOCK_DATA: 'mock-data'
 } as const

@@ -3,14 +3,14 @@ import { bullRedisOptions } from '~/configs/redis.config'
 import { CONSTANT_QUEUE } from '~/shared/constants'
 import { configDefaultJobOptions } from './config-job'
 
-export const cleanupQueue = new Queue(CONSTANT_QUEUE.CLEANUP, {
+export const systemQueue = new Queue(CONSTANT_QUEUE.SYSTEM, {
   connection: bullRedisOptions,
   defaultJobOptions: {
     ...configDefaultJobOptions
   }
 })
 
-const queueEvents = new QueueEvents(CONSTANT_QUEUE.CLEANUP, {
+const queueEvents = new QueueEvents(CONSTANT_QUEUE.SYSTEM, {
   connection: bullRedisOptions
 })
 
