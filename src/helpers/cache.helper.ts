@@ -13,6 +13,41 @@ export class CacheService {
 
   // ioredis tự động quản lý connection nên không cần hàm connect() thủ công
 
+  /**
+   * Kiểm tra key có tồn tại hay không
+   * @param key Tên key cần kiểm tra
+   */
+  async exists(key: string): Promise<boolean> {
+    try {
+      const result = await this.client.exists(key)
+      return result > 0
+    } catch (err) {
+      logger.error(`Failed to check exists for key ${key}:`, err)
+      return false
+    }
+  }
+
+  /**
+   * Đổi tên một key.
+   * CHÚ Ý: Trong Redis Cluster, source và destination MUST có cùng hash tag.
+   * @param oldKey Tên key hiện tại
+   * @param newKey Tên key mới
+   */
+  async rename(oldKey: string, newKey: string): Promise<boolean> {
+    try {
+      const result = await this.client.rename(oldKey, newKey)
+      return result === 'OK'
+    } catch (err) {
+      // Ép kiểu err để kiểm tra message (tránh lỗi linter)
+      const error = err as Error
+      if (error.message.includes('no such key')) {
+        return false
+      }
+      logger.error(`Failed to rename key ${oldKey} to ${newKey}:`, error)
+      return false
+    }
+  }
+
   async set<T>(key: string, value: T, ttl?: number): Promise<boolean> {
     try {
       const storeValue = typeof value === 'object' ? JSON.stringify(value) : String(value)

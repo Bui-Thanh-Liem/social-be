@@ -74,89 +74,120 @@ class LikesService {
 
   async syncLikesFromCacheToDB() {
     const key_queue = `tweet_like_sync_queue`
+    // 1. Lấy tweet_id ra khỏi queue
     const tweet_id = await cacheService.rPop(key_queue)
     if (!tweet_id) return
 
     const key_sync = `{tw:${tweet_id}}:sync_status`
+    const key_processing = `{tw:${tweet_id}}:processing`
     const key_count = `{tw:${tweet_id}}:count`
 
-    // Lấy dữ liệu thay đổi
-    const users_status = await cacheService.hGetAll(key_sync)
-    if (Object.keys(users_status).length === 0) return
-
-    // Xóa sync status ngay để tránh job sau xử lý đè
-    await cacheService.del(key_sync)
-
-    const users_unlike: ObjectId[] = []
-    const users_like: any[] = []
-    const tweet_obj_id = new ObjectId(tweet_id)
-
-    //
-    const tweet_owner_id = await TweetsService.getUserIdByTweetId(tweet_id)
-    if (!tweet_owner_id) {
-      throw new NotFoundError('Bài viết không tồn tại')
-    }
-
-    Object.entries(users_status).forEach(([uid, status]) => {
-      if (status === '0') users_unlike.push(new ObjectId(uid))
-      else users_like.push({ user_id: new ObjectId(uid), tweet_id: tweet_obj_id, tweet_owner_id: tweet_owner_id })
-    })
-
-    const session = clientMongodb.startSession()
     try {
-      await session.withTransaction(async () => {
-        // 1. Xử lý Unlike
-        if (users_unlike.length > 0) {
-          await LikesCollection.deleteMany(
-            {
-              tweet_id: tweet_obj_id,
-              user_id: { $in: users_unlike }
-            },
+      // 2. Kiểm tra và Snapshot dữ liệu bằng RENAME
+      // Dùng rename để "đóng băng" danh sách user đang cần sync,
+      // tránh việc user mới Like làm sai lệch data đang xử lý.
+      const exists = await cacheService.exists(key_sync)
+      if (!exists) return
+      await cacheService.rename(key_sync, key_processing)
+
+      const users_status = await cacheService.hGetAll(key_processing)
+      const uids = Object.keys(users_status)
+      if (uids.length === 0) {
+        await cacheService.del(key_processing)
+        return
+      }
+
+      // 3. Chuẩn bị dữ liệu
+      const tweet_obj_id = new ObjectId(tweet_id)
+      const tweet_owner_id = await TweetsService.getUserIdByTweetId(tweet_id)
+      if (!tweet_owner_id) {
+        // Nếu tweet không tồn tại, dọn dẹp cache và thoát
+        await cacheService.del(key_processing)
+        return
+      }
+
+      const bulkOps: any[] = []
+      const users_to_notify: string[] = []
+
+      for (const [uid, status] of Object.entries(users_status)) {
+        const user_obj_id = new ObjectId(uid)
+
+        if (status === '0') {
+          // Case: UNLIKE
+          bulkOps.push({
+            deleteMany: {
+              filter: { tweet_id: tweet_obj_id, user_id: user_obj_id }
+            }
+          })
+        } else {
+          // Case: LIKE
+          users_to_notify.push(uid)
+          bulkOps.push({
+            updateOne: {
+              filter: { tweet_id: tweet_obj_id, user_id: user_obj_id },
+              update: {
+                $set: {
+                  tweet_id: tweet_obj_id,
+                  user_id: user_obj_id,
+                  tweet_owner_id: new ObjectId(tweet_owner_id)
+                },
+                $setOnInsert: { created_at: new Date() }
+              },
+              upsert: true
+            }
+          })
+        }
+      }
+
+      // 4. Thực thi Transaction với BulkWrite
+      const session = clientMongodb.startSession()
+      try {
+        await session.withTransaction(async () => {
+          // Thực hiện gộp tất cả Like/Unlike vào 1 lần gọi DB
+          if (bulkOps.length > 0) {
+            await LikesCollection.bulkWrite(bulkOps, { session })
+          }
+
+          // Cập nhật số lượng Like chuẩn từ Redis vào Tweet
+          const finalCount = await cacheService.get<string>(key_count)
+          await TweetsCollection.updateOne(
+            { _id: tweet_obj_id },
+            { $set: { likes_count: parseInt(finalCount || '0') } },
             { session }
           )
+        })
+
+        // 5. Thành công: Xóa key tạm và gửi thông báo
+        await cacheService.del(key_processing)
+
+        if (users_to_notify.length > 0) {
+          const jobs = users_to_notify.map((uid) => ({
+            name: CONSTANT_JOB.SEND_NOTI_LIKE,
+            data: { sender_id: uid, tweet_id },
+            opts: { removeOnComplete: true, attempts: 3 }
+          }))
+          await notificationQueue.addBulk(jobs)
         }
-
-        // 2. Xử lý Like
-        if (users_like.length > 0) {
-          for (const doc of users_like) {
-            await LikesCollection.updateOne(
-              { tweet_id: doc.tweet_id, user_id: doc.user_id },
-              {
-                $set: doc,
-                $setOnInsert: {
-                  created_at: new Date()
-                }
-              },
-
-              { upsert: true, session }
-            )
-          }
-        }
-
-        // 3. Cập nhật Count chuẩn từ Cache sang DB
-        const finalCount = await cacheService.get<string>(key_count)
-        await TweetsCollection.updateOne(
-          { _id: tweet_obj_id },
-          { $set: { likes_count: parseInt(finalCount || '0') } },
-          { session }
-        )
-      })
-
-      // 4. Gửi thông báo (chỉ cho những người mới Like)
-      if (users_like.length > 0) {
-        const jobs = users_like.map((doc) => ({
-          name: CONSTANT_JOB.SEND_NOTI_LIKE,
-          data: { sender_id: doc.user_id.toString(), tweet_id },
-          opts: { removeOnComplete: true, attempts: 3 }
-        }))
-        await notificationQueue.addBulk(jobs)
+      } catch (dbError) {
+        logger.error(`DB Transaction Error [Tweet: ${tweet_id}]:`, dbError)
+        throw dbError // Đẩy ra ngoài để catch xử lý retry
+      } finally {
+        await session.endSession()
       }
     } catch (error) {
-      logger.error('>>> Sync DB Error:', error)
-      // Nếu lỗi, đẩy lại queue để retry
-      await cacheService.lPush(key_queue, tweet_id)
-    } finally {
-      await session.endSession()
+      logger.error(`>>> Sync DB Error [Tweet: ${tweet_id}]:`, error)
+
+      // 6. Xử lý lỗi: Trả data về lại key_sync để lần sau chạy tiếp
+      try {
+        const processingExists = await cacheService.exists(key_processing)
+        if (processingExists) {
+          // Merge hoặc rename ngược lại (tùy cấu trúc Redis của bạn)
+          await cacheService.rename(key_processing, key_sync)
+        }
+        await cacheService.lPush(key_queue, tweet_id)
+      } catch (redisError) {
+        logger.error('CRITICAL: Could not recovery sync_status key', redisError)
+      }
     }
   }
 
