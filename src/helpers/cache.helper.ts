@@ -48,6 +48,22 @@ export class CacheService {
     }
   }
 
+  async lRangeAndTrim(key: string): Promise<string[]> {
+    try {
+      // Lấy tất cả phần tử hiện có trong list
+      const items = await this.client.lrange(key, 0, -1)
+      if (items.length > 0) {
+        // Xóa các phần tử đã lấy để tránh worker khác lấy trùng
+        await this.client.ltrim(key, items.length, -1)
+      }
+      // Loại bỏ các ID trùng lặp bằng Set (vì 1 tweet có thể được push nhiều lần vào queue)
+      return [...new Set(items)]
+    } catch (err) {
+      logger.error(`Failed to lRangeAndTrim for key ${key}:`, err)
+      return []
+    }
+  }
+
   async set<T>(key: string, value: T, ttl?: number): Promise<boolean> {
     try {
       const storeValue = typeof value === 'object' ? JSON.stringify(value) : String(value)

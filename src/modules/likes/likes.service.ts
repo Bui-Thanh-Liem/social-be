@@ -5,7 +5,6 @@ import cacheService from '~/helpers/cache.helper'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { ParamIdTweetDto } from '~/modules/tweets/tweets.dto'
 import { logger } from '~/utils/logger.util'
-import { NotFoundError } from '~/core/error.response'
 import TweetsService from '~/modules/tweets/tweets.service'
 import { LikesCollection } from './likes.schema'
 import { TweetsCollection } from '../tweets/tweets.schema'
@@ -74,119 +73,104 @@ class LikesService {
 
   async syncLikesFromCacheToDB() {
     const key_queue = `tweet_like_sync_queue`
-    // 1. Lấy tweet_id ra khỏi queue
-    const tweet_id = await cacheService.rPop(key_queue)
-    if (!tweet_id) return
 
-    const key_sync = `{tw:${tweet_id}}:sync_status`
-    const key_processing = `{tw:${tweet_id}}:processing`
-    const key_count = `{tw:${tweet_id}}:count`
+    // 1. LẤY TẤT CẢ TWEET_ID ĐANG ĐỢI (Batching)
+    const tweetIds = await cacheService.lRangeAndTrim(key_queue)
 
-    try {
-      // 2. Kiểm tra và Snapshot dữ liệu bằng RENAME
-      // Dùng rename để "đóng băng" danh sách user đang cần sync,
-      // tránh việc user mới Like làm sai lệch data đang xử lý.
-      const exists = await cacheService.exists(key_sync)
-      if (!exists) return
-      await cacheService.rename(key_sync, key_processing)
+    if (tweetIds.length === 0) return
 
-      const users_status = await cacheService.hGetAll(key_processing)
-      const uids = Object.keys(users_status)
-      if (uids.length === 0) {
-        await cacheService.del(key_processing)
-        return
-      }
+    logger.info(`Starting sync for ${tweetIds.length} tweets`)
 
-      // 3. Chuẩn bị dữ liệu
-      const tweet_obj_id = new ObjectId(tweet_id)
-      const tweet_owner_id = await TweetsService.getUserIdByTweetId(tweet_id)
-      if (!tweet_owner_id) {
-        // Nếu tweet không tồn tại, dọn dẹp cache và thoát
-        await cacheService.del(key_processing)
-        return
-      }
+    // 2. Xử lý từng tweet (Có thể dùng Promise.all để nhanh hơn nếu số lượng tweet vừa phải)
+    for (const tweet_id of tweetIds) {
+      const key_sync = `{tw:${tweet_id}}:sync_status`
+      const key_processing = `{tw:${tweet_id}}:processing`
+      const key_count = `{tw:${tweet_id}}:count`
 
-      const bulkOps: any[] = []
-      const users_to_notify: string[] = []
+      try {
+        // Snapshot dữ liệu của Tweet này
+        const exists = await cacheService.exists(key_sync)
+        if (!exists) continue
 
-      for (const [uid, status] of Object.entries(users_status)) {
-        const user_obj_id = new ObjectId(uid)
+        await cacheService.rename(key_sync, key_processing)
+        const users_status = await cacheService.hGetAll(key_processing)
+        const uids = Object.keys(users_status)
+        if (uids.length === 0) {
+          await cacheService.del(key_processing)
+          continue
+        }
 
-        if (status === '0') {
-          // Case: UNLIKE
-          bulkOps.push({
-            deleteMany: {
-              filter: { tweet_id: tweet_obj_id, user_id: user_obj_id }
-            }
-          })
-        } else {
-          // Case: LIKE
-          users_to_notify.push(uid)
-          bulkOps.push({
-            updateOne: {
-              filter: { tweet_id: tweet_obj_id, user_id: user_obj_id },
-              update: {
-                $set: {
-                  tweet_id: tweet_obj_id,
-                  user_id: user_obj_id,
-                  tweet_owner_id: new ObjectId(tweet_owner_id)
+        const tweet_obj_id = new ObjectId(tweet_id)
+        const tweet_owner_id = await TweetsService.getUserIdByTweetId(tweet_id)
+        if (!tweet_owner_id) {
+          await cacheService.del(key_processing)
+          continue
+        }
+
+        // Gom tất cả Like/Unlike của Tweet này vào BulkWrite
+        const bulkOps: any[] = []
+        const users_to_notify: string[] = []
+
+        for (const [uid, status] of Object.entries(users_status)) {
+          const user_obj_id = new ObjectId(uid)
+          if (status === '0') {
+            bulkOps.push({
+              deleteMany: { filter: { tweet_id: tweet_obj_id, user_id: user_obj_id } }
+            })
+          } else {
+            users_to_notify.push(uid)
+            bulkOps.push({
+              updateOne: {
+                filter: { tweet_id: tweet_obj_id, user_id: user_obj_id },
+                update: {
+                  $set: { tweet_id: tweet_obj_id, user_id: user_obj_id, tweet_owner_id: new ObjectId(tweet_owner_id) },
+                  $setOnInsert: { created_at: new Date() }
                 },
-                $setOnInsert: { created_at: new Date() }
-              },
-              upsert: true
-            }
-          })
-        }
-      }
-
-      // 4. Thực thi Transaction với BulkWrite
-      const session = clientMongodb.startSession()
-      try {
-        await session.withTransaction(async () => {
-          // Thực hiện gộp tất cả Like/Unlike vào 1 lần gọi DB
-          if (bulkOps.length > 0) {
-            await LikesCollection.bulkWrite(bulkOps, { session })
+                upsert: true
+              }
+            })
           }
-
-          // Cập nhật số lượng Like chuẩn từ Redis vào Tweet
-          const finalCount = await cacheService.get<string>(key_count)
-          await TweetsCollection.updateOne(
-            { _id: tweet_obj_id },
-            { $set: { likes_count: parseInt(finalCount || '0') } },
-            { session }
-          )
-        })
-
-        // 5. Thành công: Xóa key tạm và gửi thông báo
-        await cacheService.del(key_processing)
-
-        if (users_to_notify.length > 0) {
-          const jobs = users_to_notify.map((uid) => ({
-            name: CONSTANT_JOB.SEND_NOTI_LIKE,
-            data: { sender_id: uid, tweet_id },
-            opts: { removeOnComplete: true, attempts: 3 }
-          }))
-          await notificationQueue.addBulk(jobs)
         }
-      } catch (dbError) {
-        logger.error(`DB Transaction Error [Tweet: ${tweet_id}]:`, dbError)
-        throw dbError // Đẩy ra ngoài để catch xử lý retry
-      } finally {
-        await session.endSession()
-      }
-    } catch (error) {
-      logger.error(`>>> Sync DB Error [Tweet: ${tweet_id}]:`, error)
 
-      // 6. Xử lý lỗi: Trả data về lại key_sync để lần sau chạy tiếp
-      try {
-        const processingExists = await cacheService.exists(key_processing)
-        if (processingExists) {
-          // Merge hoặc rename ngược lại (tùy cấu trúc Redis của bạn)
+        const session = clientMongodb.startSession()
+        try {
+          await session.withTransaction(async () => {
+            if (bulkOps.length > 0) {
+              await LikesCollection.bulkWrite(bulkOps, { session })
+            }
+            const finalCount = await cacheService.get<string>(key_count)
+            await TweetsCollection.updateOne(
+              { _id: tweet_obj_id },
+              { $set: { likes_count: parseInt(finalCount || '0') } },
+              { session }
+            )
+          })
+
+          await cacheService.del(key_processing)
+
+          // Gửi thông báo theo lô
+          if (users_to_notify.length > 0) {
+            const jobs = users_to_notify.map((uid) => ({
+              name: CONSTANT_JOB.SEND_NOTI_LIKE,
+              data: { sender_id: uid, tweet_id },
+              opts: { removeOnComplete: true, attempts: 3 }
+            }))
+            await notificationQueue.addBulk(jobs)
+          }
+        } catch (innerError) {
+          logger.error(`Transaction error for tweet ${tweet_id}:`, innerError)
+          throw innerError
+        } finally {
+          await session.endSession()
+        }
+      } catch (error) {
+        logger.error(`Error syncing tweet ${tweet_id}:`, error)
+        // Trả lại ID vào queue để lần sau quét lại
+        await cacheService.lPush(key_queue, tweet_id)
+        // Trả lại data sync_status nếu có thể
+        if (await cacheService.exists(key_processing)) {
           await cacheService.rename(key_processing, key_sync)
         }
-        await cacheService.lPush(key_queue, tweet_id)
-      } catch (redisError) {
-        logger.error('CRITICAL: Could not recovery sync_status key', redisError)
       }
     }
   }
