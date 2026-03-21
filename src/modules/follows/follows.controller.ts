@@ -9,7 +9,7 @@ class FollowsController {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const { user_id: followed_user_id } = req.params as ToggleFollowDto
     const result = await FollowsService.toggleFollow(user_id, followed_user_id)
-    res.json(new OkResponse(`Toggle follow Success`, result))
+    res.json(new OkResponse(`Thành công`, result))
   }
 }
 

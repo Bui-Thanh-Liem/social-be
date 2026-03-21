@@ -273,11 +273,13 @@ class TweetsService {
           //  - Flow bình thường thì sẽ không có trường hợp này xảy ra
           //  - Trường hợp không tìm thấy tweet, lưu cache null trong 3 giây để tránh tấn công dò tìm id (Anti-DDoS)
           await cacheService.set(key_cache, null, 3) // Negative Caching
-          throw new NotFoundError('Tweet không tồn tại')
+          throw new NotFoundError('Bài viết không tồn tại')
         }
 
         //    - Lưu vào cache với ttl 5 phút
-        await cacheService.set(key_cache, tweet_db, 300)
+        if (tweet_db.audience === ETweetAudience.Everyone) {
+          await cacheService.set(key_cache, tweet_db, 300)
+        }
 
         //    - Tính toán is_like và is_bookmark ở tầng ứng dụng (Application Layer)
         return this._processUserSpecificFields(tweet_db, user_active_id)
@@ -558,11 +560,6 @@ class TweetsService {
     // Kiểm tra và thêm trường mới vào object
     tweet_db.is_like = userActiveObjectId && liked_user_ids.includes(userActiveObjectId.toString())
     tweet_db.is_bookmark = userActiveObjectId && bookmarked_user_ids.includes(userActiveObjectId.toString())
-
-    //
-    console.log('liked_user_ids:::', liked_user_ids)
-    console.log('userActiveObjectId:::', userActiveObjectId)
-    // console.log('tweet_db:::', tweet_db)
 
     return this.signedCloudfrontMediaUrls(tweet_db) as TweetsSchema
   }
@@ -1544,17 +1541,17 @@ class TweetsService {
               in: { $arrayElemAt: ['$$matched._id', 0] }
             }
           },
-          mentions: {
-            $map: {
-              input: '$mentions',
-              as: 'm',
-              in: {
-                _id: '$m._id',
-                name: '$m.name',
-                username: '$m.username'
-              }
-            }
-          },
+          // mentions: {
+          //   $map: {
+          //     input: '$mentions',
+          //     as: 'm',
+          //     in: {
+          //       _id: '$m._id',
+          //       name: '$m.name',
+          //       username: '$m.username'
+          //     }
+          //   }
+          // },
           comments_count: {
             $size: {
               $filter: {
