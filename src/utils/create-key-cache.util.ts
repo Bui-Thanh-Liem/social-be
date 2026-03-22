@@ -8,6 +8,10 @@ export function createKeyAllConversationIds(user_id: string) {
   return `{convs_ids}:${user_id}`
 }
 
+export function createKeyFeed(user_id?: string) {
+  return `{feed}:${user_id ? user_id : 'guest'}` // hệ thống có 10 user thì sẽ có 11 cache cho feed (10 online)
+}
+
 export function createKeyTweetDetails(tweet_id: string) {
   return `{tweet}:details:${tweet_id}`
 }

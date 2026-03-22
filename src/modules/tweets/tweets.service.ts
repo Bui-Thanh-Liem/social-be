@@ -824,46 +824,35 @@ class TweetsService {
     // Dynamic match condition based on feed type
     let match_condition: any
 
+    //
     switch (feed_type) {
-      case EFeedType.Following:
-        // Chỉ tweets following
-        match_condition = {
-          user_id: { $in: followed_user_ids.map((id) => new ObjectId(id)) }
-        }
-        break
-      case EFeedType.Everyone:
+      case EFeedType.Everyone: {
         // Chỉ tweets công khai từ tất cả mọi người
         match_condition = {
           audience: ETweetAudience.Everyone
         }
         break
+      }
+
+      case EFeedType.Following: {
+        // Chỉ tweets following
+        match_condition = {
+          user_id: { $in: followed_user_ids.map((id) => new ObjectId(id)) }
+        }
+        break
+      }
 
       default:
         match_condition = {
           $or: [
-            {
-              audience: ETweetAudience.Everyone
-            },
-            {
-              $and: [
-                {
-                  audience: ETweetAudience.Followers
-                },
-                {
-                  user_id: {
-                    $in: followed_user_ids
-                  }
-                }
-              ]
-            },
-            {
-              audience: ETweetAudience.Mentions,
-              mentions: { $in: [user_active_id] }
-            }
+            { audience: ETweetAudience.Everyone },
+            { audience: ETweetAudience.Mentions, mentions: { $in: [user_active_id] } },
+            { $and: [{ audience: ETweetAudience.Followers }, { user_id: { $in: followed_user_ids } }] }
           ]
         }
     }
 
+    //
     const skipCom = Math.floor(skip / 3)
     const [tweets, communities] = await Promise.all([
       TweetsCollection.aggregate<TweetsSchema>([
@@ -1156,9 +1145,8 @@ class TweetsService {
     ])
 
     // Increase views
-    const ids = tweets.map((tweet) => tweet._id as ObjectId)
     const date = new Date()
-
+    const ids = tweets.map((tweet) => tweet._id as ObjectId)
     const [total] = await Promise.all([
       TweetsCollection.countDocuments(match_condition),
       TweetsCollection.updateMany(
@@ -1176,7 +1164,7 @@ class TweetsService {
       )
     ])
 
-    //
+    // Cập nhật updated_at và tăng số lần xem
     tweets.forEach((tweet) => {
       tweet.updated_at = date
       if (user_active_id) {
