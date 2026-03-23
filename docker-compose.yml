@@ -18,6 +18,8 @@ services:
       start_period: 30s
     env_file:
       - .env
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
     ports:
       - '9000:9000'
     networks:
@@ -42,6 +44,8 @@ services:
       start_period: 30s
     env_file:
       - .env
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
     networks:
       - social-network
 

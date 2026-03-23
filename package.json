@@ -4,8 +4,8 @@
   "main": "server.js",
   "scripts": {
     "start:dev": "concurrently --names \"SERVER,WORKER\" \"npm run start:server\" \"npm run start:worker\"",
-    "start:server": "cross-env TZ=Asia/Ho_Chi_Minh NODE_ENV=development nodemon",
-    "start:worker": "cross-env TZ=Asia/Ho_Chi_Minh NODE_ENV=development ts-node -r tsconfig-paths/register src/infra/workers/worker.ts",
+    "start:server": "cross-env NODE_ENV=development nodemon",
+    "start:worker": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/infra/workers/worker.ts",
     "build": "rimraf ./dist && tsc && tsc-alias && copyfiles -u 1 src/**/*.handlebars dist",
     "start:prod": "concurrently \"npm run start:server:prod\" \"npm run start:worker:prod\"",
     "start:server:prod": "node dist/server.js",
