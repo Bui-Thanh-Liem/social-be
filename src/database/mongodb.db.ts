@@ -1,9 +1,9 @@
 import { Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { BadRequestError, InternalServerError } from '~/core/error.response'
-import { AccessRecentCollection, initAccessRecentCollection } from '~/modules/access-recent/access-recent.schema'
-import { BadWordsCollection, initBadWordsCollection } from '~/modules/bad-words/bad-words.schema'
-import { initBookmarksCollection } from '~/modules/bookmarks/bookmarks.schema'
+import { AccessRecentCollection, initAccessRecentCollection } from '~/models/access-recent.schema'
+import { BadWordsCollection, initBadWordsCollection } from '~/models/bad-words.schema'
+import { initBookmarksCollection } from '~/models/bookmarks.schema'
 import {
   CommunitiesCollection,
   CommunityActivityCollection,
@@ -17,20 +17,21 @@ import {
   initCommunityMemberCollection,
   initCommunityMentorCollection,
   initCommunityPinCollection
-} from '~/modules/communities/communities.schema'
-import { ConversationsCollection, initConversationsCollection } from '~/modules/conversations/conversations.schema'
-import { initFollowersCollection } from '~/modules/follows/follows.schema'
-import { HashtagsCollection, initHashtagsCollection } from '~/modules/hashtags/hashtags.schema'
-import { initLikesCollection, LikesCollection } from '~/modules/likes/likes.schema'
-import { initMediasCollection, MediasCollection } from '~/modules/media/media.schema'
-import { initMessagesCollection, MessagesCollection } from '~/modules/messages/messages.schema'
-import { initNotificationsCollection } from '~/modules/notifications/notifications.schema'
-import { initReportTweetCollection, ReportTweetCollection } from '~/modules/report-tweet/report-tweet.schema'
-import { initSearchHistoryCollection, SearchHistoryCollection } from '~/modules/search-history/search-history.schema'
-import { initTrendingCollection, TrendingCollection } from '~/modules/trending/trending.schema'
-import { initTweetsCollection, TweetsCollection } from '~/modules/tweets/tweets.schema'
-import { initUserTokensCollection, UserTokensCollection } from '~/modules/user-tokens/user-tokens.schema'
-import { initUsersCollection, UsersCollection } from '~/modules/users/users.schema'
+} from '~/models/communities.schema'
+import { ConversationsCollection, initConversationsCollection } from '~/models/conversations.schema'
+import { initFollowersCollection } from '~/models/follows.schema'
+import { HashtagsCollection, initHashtagsCollection } from '~/models/hashtags.schema'
+import { initLikesCollection, LikesCollection } from '~/models/likes.schema'
+import { initMediasCollection, MediasCollection } from '~/models/media.schema'
+import { initMessagesCollection, MessagesCollection } from '~/models/messages.schema'
+import { initNotificationsCollection } from '~/models/notifications.schema'
+import { initReportTweetCollection, ReportTweetCollection } from '~/models/report-tweet.schema'
+import { initSearchHistoryCollection, SearchHistoryCollection } from '~/models/search-history.schema'
+import { initTrendingCollection, TrendingCollection } from '~/models/trending.schema'
+import { initTweetsCollection, TweetsCollection } from '~/models/tweets.schema'
+import { initUserTokensCollection, UserTokensCollection } from '~/models/user-tokens.schema'
+import { initUserViolationsCollection } from '~/models/user-violations.schema'
+import { initUsersCollection, UsersCollection } from '~/models/users.schema'
 import { logger } from '~/utils/logger.util'
 
 const _MINPOOLSIZE = 5
@@ -173,6 +174,7 @@ class Database {
       initSearchHistoryCollection(this.db)
       initBadWordsCollection(this.db)
       initAccessRecentCollection(this.db)
+      initUserViolationsCollection(this.db)
     } catch (error) {
       logger.error('Collection initialization failed:', error)
       throw error

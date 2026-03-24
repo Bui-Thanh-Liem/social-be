@@ -1,0 +1,29 @@
+import { Request, Response } from 'express'
+import { CreatedResponse, OkResponse } from '~/core/success.response'
+import { CreateSearchHistoryDto } from '~/dtos/search-history.dto'
+import { IUser } from '~/interfaces/users.interface'
+import searchHistoryService from '~/services/search-history.service'
+import { ParamIdDto } from '~/shared/dtos/common/param-id.dto'
+
+class SearchHistoryController {
+  async create(req: Request, res: Response) {
+    const user_active = req.user as IUser
+    const payload = req.body as CreateSearchHistoryDto
+    const result = await searchHistoryService.create({ payload, user_active })
+    res.json(new CreatedResponse('Tạo lịch sử tìm kiếm thành công.', result))
+  }
+
+  async getMulti(req: Request, res: Response) {
+    const user_active = req.user as IUser
+    const result = await searchHistoryService.getMulti({ queries: req.query, user_active })
+    res.json(new CreatedResponse('Lấy tất cả lịch sử tìm kiếm thành công.', result))
+  }
+
+  async delete(req: Request, res: Response) {
+    const { id } = req.params as ParamIdDto
+    const result = await searchHistoryService.delete(id)
+    res.json(new OkResponse(`Xóa lịch sử tìm kiếm thành công`, result))
+  }
+}
+
+export default new SearchHistoryController()

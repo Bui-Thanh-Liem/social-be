@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import UsersService from '~/modules/users/users.service'
+import UsersService from '~/services/users.service'
 
 export async function checkExistMembersMiddleware(req: Request, res: Response, next: NextFunction) {
   try {

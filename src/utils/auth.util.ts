@@ -1,6 +1,6 @@
 import { StringValue } from 'ms'
 import { envs } from '~/configs/env.config'
-import { EUserTokenType } from '~/modules/user-tokens/user-tokens.enum'
+import { EUserTokenType } from '~/enums/user-tokens.enum'
 import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
 import { signToken } from './jwt.util'
 

@@ -1,7 +1,7 @@
+import { IConversation } from '~/interfaces/conversations.interface'
+import conversationsService from '~/services/conversations.service'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 import { getIO } from '..'
-import ConversationsService from '~/modules/conversations/conversations.service'
-import { IConversation } from '~/modules/conversations/conversations.interface'
 
 class ConversationGateway {
   async sendNewConversation(conversation: IConversation, receiverId: string) {
@@ -25,7 +25,7 @@ class ConversationGateway {
   //
   async sendCountUnreadConv(receiverId: string) {
     const io = getIO()
-    const count = await ConversationsService.countUnread(receiverId)
+    const count = await conversationsService.countUnread(receiverId)
     io.to(receiverId).emit(CONSTANT_EVENT_NAMES.UNREAD_COUNT_CONVERSATION, count)
   }
 }

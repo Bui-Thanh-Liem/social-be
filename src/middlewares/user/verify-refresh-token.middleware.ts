@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { envs } from '~/configs/env.config'
 import { UnauthorizedError } from '~/core/error.response'
-import RefreshTokenService from '~/modules/user-tokens/user-tokens.service'
+import userTokensService from '~/services/user-tokens.service'
 import { verifyToken } from '~/utils/jwt.util'
 
 export async function verifyRefreshTokenMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -15,7 +15,7 @@ export async function verifyRefreshTokenMiddleware(req: Request, res: Response, 
     //
     const [decoded, tokenInDatabase] = await Promise.all([
       verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH }),
-      RefreshTokenService.findByRefreshToken({ refresh_token })
+      userTokensService.findByRefreshToken({ refresh_token })
     ])
 
     //

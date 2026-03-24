@@ -1,12 +1,12 @@
 import { Worker } from 'bullmq'
 import { bullRedisOptions } from '~/configs/redis.config'
 import botTelegramService from '~/helpers/bot-telegram.helper'
-import likesService from '~/modules/likes/likes.service'
-import MessagesService from '~/modules/messages/messages.service'
-import NotificationsService from '~/modules/notifications/notifications.service'
-import ReportTweetService from '~/modules/report-tweet/report-tweet.service'
-import TrendingService from '~/modules/trending/trending.service'
-import TweetsService from '~/modules/tweets/tweets.service'
+import likesService from '~/services/likes.service'
+import MessagesService from '~/services/messages.service'
+import NotificationsService from '~/services/notifications.service'
+import reportTweetService from '~/services/report-tweet.service'
+import TrendingService from '~/services/trending.service'
+import TweetsService from '~/services/tweets.service'
 import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants'
 import { logger } from '~/utils/logger.util'
 import { startMockTweets } from '~/utils/mock-data.util'
@@ -29,7 +29,7 @@ export const systemWorker = new Worker(
         break
       }
       case CONSTANT_JOB.DELETE_TWEET_REPORT: {
-        await ReportTweetService.checkTweet()
+        await reportTweetService.checkTweet()
         console.log('Checked reported tweets')
         break
       }

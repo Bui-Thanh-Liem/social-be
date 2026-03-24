@@ -1,6 +1,6 @@
 import { Server } from 'socket.io'
 import cacheService from '~/helpers/cache.helper'
-import ConversationsService from '~/modules/conversations/conversations.service'
+import conversationsService from '~/services/conversations.service'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 
 //
@@ -13,7 +13,7 @@ export async function statusHandler(io: Server, user_id: string, handle: 'onl' |
   }
 
   // 2. Lấy tất cả conversationId mà user này tham gia
-  const convIds = await ConversationsService.getIdsByUserId(user_id)
+  const convIds = await conversationsService.getIdsByUserId(user_id)
 
   // 3. Chỉ gửi đúng thông tin: "Thằng A vừa Online"
   const eventData = {

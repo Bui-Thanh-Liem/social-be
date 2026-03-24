@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { envs } from '~/configs/env.config'
 import { UnauthorizedError } from '~/core/error.response'
-import UsersService from '~/modules/users/users.service'
+import UsersService from '~/services/users.service'
 import { verifyToken } from '~/utils/jwt.util'
 
 export async function authenticationMiddleware(req: Request, res: Response, next: NextFunction) {
