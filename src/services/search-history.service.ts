@@ -18,11 +18,11 @@ class SearchHistoryService {
     // Lọc từ cấm trong text khi tạo search history
     const _text = await BadWordsService.detectInText({
       text: text || '',
-      user_id: user_active._id!.toString()
+      user_id: user_active?._id!.toString()
     })
 
     const query: any = {
-      owner: user_active._id
+      owner: user_active?._id
     }
 
     if (text) query.text = text
@@ -39,7 +39,7 @@ class SearchHistoryService {
 
     const created = await SearchHistoryCollection.insertOne(
       new SearchHistorySchema({
-        owner: user_active._id,
+        owner: user_active?._id,
         text: _text.text || undefined,
         user: user ? new ObjectId(user) : undefined,
         trending: trending ? new ObjectId(trending) : undefined,
@@ -50,7 +50,7 @@ class SearchHistoryService {
     // Lưu vi phạm từ cấm nếu có (rabbitmq)
     if (_text.bad_words_ids.length > 0) {
       await UserViolationsService.create({
-        user_id: user_active._id!.toString(),
+        user_id: user_active?._id!.toString(),
         source_id: created.insertedId.toString(),
         source: ESourceViolation.SearchHistory,
         final_content: _text.matched_words.join() || '',
@@ -65,7 +65,7 @@ class SearchHistoryService {
     const { skip, limit, sort } = getPaginationAndSafeQuery<ISearchHistory>(queries)
 
     const pipeline: any[] = [
-      { $match: { owner: user_active._id } },
+      { $match: { owner: user_active?._id } },
       { $sort: sort },
       { $skip: skip },
       { $limit: limit },
@@ -111,7 +111,7 @@ class SearchHistoryService {
     ]
 
     const history = await SearchHistoryCollection.aggregate<SearchHistorySchema>(pipeline).toArray()
-    const total = await SearchHistoryCollection.countDocuments({ owner: user_active._id })
+    const total = await SearchHistoryCollection.countDocuments({ owner: user_active?._id })
 
     return {
       total,

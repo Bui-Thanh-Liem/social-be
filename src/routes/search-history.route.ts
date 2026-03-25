@@ -3,6 +3,7 @@ import searchHistoryController from '~/controllers/search-history.controller'
 import { CreateSearchHistoryDtoSchema } from '~/dtos/search-history.dto'
 import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
 import { bodyValidate } from '~/middlewares/body-validate.middleware'
+import { optionLogin } from '~/middlewares/option-login.middleware'
 import { paramsValidate } from '~/middlewares/params-validate.middleware'
 import { queryValidate } from '~/middlewares/query-validate.middleware'
 import { ParamIdDtoSchema } from '~/shared/dtos/common/param-id.dto'
@@ -12,7 +13,7 @@ import { asyncHandler } from '~/utils/async-handler.util'
 const searchHistoryRoute = Router()
 
 // Các route dưới đây cần authentication
-searchHistoryRoute.use(authenticationMiddleware)
+searchHistoryRoute.use(optionLogin(authenticationMiddleware))
 
 // Tạo mới search history
 searchHistoryRoute.post('/', bodyValidate(CreateSearchHistoryDtoSchema), asyncHandler(searchHistoryController.create))

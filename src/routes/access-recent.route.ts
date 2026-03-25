@@ -7,11 +7,12 @@ import { queryValidate } from '~/middlewares/query-validate.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
 import { CreateAccessRecentDtoSchema, paramIdAccessRecentDtoSchema } from '../dtos/access-recent.dto'
+import { optionLogin } from '~/middlewares/option-login.middleware'
 
 const accessRecentRoute = Router()
 
 // Tất cả route của access-recent đều cần authentication
-accessRecentRoute.use(authenticationMiddleware)
+accessRecentRoute.use(optionLogin(authenticationMiddleware))
 
 // CRUD truy cập gần đây
 accessRecentRoute
