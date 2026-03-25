@@ -87,8 +87,8 @@ class CommunityController {
   }
 
   async getPinnedBare(req: Request, res: Response) {
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await communitiesService.getPinnedBare(user_id)
+    const user = req.decoded_authorization as IJwtPayload
+    const result = await communitiesService.getPinnedBare(user?.user_id)
     res.json(new OkResponse(`Lấy danh sách slug và tên cộng đồng thành công.`, result))
   }
 
