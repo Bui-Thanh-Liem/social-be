@@ -11,14 +11,22 @@ import { optionLogin } from '~/middlewares/option-login.middleware'
 
 const accessRecentRoute = Router()
 
-// Tất cả route của access-recent đều cần authentication
-accessRecentRoute.use(optionLogin(authenticationMiddleware))
-
 // CRUD truy cập gần đây
 accessRecentRoute
   .route('/')
-  .get(queryValidate(QueryDtoSchema), asyncHandler(accessRecentController.getMulti))
-  .post(bodyValidate(CreateAccessRecentDtoSchema), asyncHandler(accessRecentController.create))
+  .get(
+    queryValidate(QueryDtoSchema),
+    optionLogin(authenticationMiddleware),
+    asyncHandler(accessRecentController.getMulti)
+  )
+  .post(
+    bodyValidate(CreateAccessRecentDtoSchema),
+    authenticationMiddleware,
+    asyncHandler(accessRecentController.create)
+  )
+
+// Tất cả route của access-recent đều cần authentication
+accessRecentRoute.use(authenticationMiddleware)
 
 // Xóa tất cả truy cập gần đây của user
 accessRecentRoute.delete('/all', asyncHandler(accessRecentController.deleteAll))
