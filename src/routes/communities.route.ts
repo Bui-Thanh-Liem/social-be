@@ -50,6 +50,13 @@ communitiesRoute.get(
   asyncHandler(communitiesController.getAllCategories)
 )
 
+// Lấy danh sách slug, tên của cộng đồng đã ghim
+communitiesRoute.get(
+  '/pinned-bare',
+  optionLogin(authenticationMiddleware),
+  asyncHandler(communitiesController.getPinnedBare)
+)
+
 // Các route dưới đây cần authentication
 communitiesRoute.use(authenticationMiddleware)
 
@@ -70,9 +77,6 @@ communitiesRoute.patch(
 
 // Lấy danh sách name, id của cộng đồng
 communitiesRoute.get('/bare', asyncHandler(communitiesController.getAllBare))
-
-// Lấy danh sách slug, tên của cộng đồng đã ghim
-communitiesRoute.get('/pinned-bare', asyncHandler(communitiesController.getPinnedBare))
 
 // Ghim cộng đồng lên đầu trang1
 communitiesRoute.patch(
