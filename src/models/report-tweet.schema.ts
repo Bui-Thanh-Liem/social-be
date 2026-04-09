@@ -2,7 +2,7 @@ import { Collection, Db, ObjectId } from 'mongodb'
 import { IReportTweet } from '~/interfaces/report-tweet.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 
-export const COLLECTION_REPORT_TWEET_NAME = 'tweet-reports'
+export const COLLECTION_REPORT_TWEETS_NAME = 'tweet-reports'
 export class ReportTweetSchema extends BaseSchema implements IReportTweet {
   reason: string
   tweet_id: ObjectId
@@ -21,5 +21,5 @@ export class ReportTweetSchema extends BaseSchema implements IReportTweet {
 export let ReportTweetCollection: Collection<ReportTweetSchema>
 
 export function initReportTweetCollection(db: Db) {
-  ReportTweetCollection = db.collection<ReportTweetSchema>(COLLECTION_REPORT_TWEET_NAME)
+  ReportTweetCollection = db.collection<ReportTweetSchema>(COLLECTION_REPORT_TWEETS_NAME)
 }

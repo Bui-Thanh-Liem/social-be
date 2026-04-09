@@ -3,7 +3,7 @@ import { EMediaStatus } from '~/enums/media.enum'
 import { IMedia } from '~/interfaces/media.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 
-const COLLECTION_NAME = 'medias'
+const COLLECTION_MEDIA_NAME = 'medias'
 export class MediasSchema extends BaseSchema implements IMedia {
   file_size: number
   url?: string | undefined
@@ -28,5 +28,5 @@ export class MediasSchema extends BaseSchema implements IMedia {
 export let MediasCollection: Collection<MediasSchema>
 
 export function initMediasCollection(db: Db) {
-  MediasCollection = db.collection<MediasSchema>(COLLECTION_NAME)
+  MediasCollection = db.collection<MediasSchema>(COLLECTION_MEDIA_NAME)
 }

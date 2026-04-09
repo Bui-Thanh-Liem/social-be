@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { UnauthorizedError } from '~/core/error.response'
-import { EUserVerifyStatus } from '~/models/users.enum'
+import { EUserVerifyStatus } from '~/enums/users.enum'
 
 // Verify user coi đã xác thực email chưa
 export async function verifyUserEmailMiddleware(req: Request, res: Response, next: NextFunction) {

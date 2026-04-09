@@ -5,7 +5,7 @@ import { IUser } from '~/interfaces/users.interface'
 import searchHistoryService from '~/services/search-history.service'
 import { ParamIdDto } from '~/shared/dtos/common/param-id.dto'
 
-class SearchHistoryController {
+class SearchHistoriesController {
   async create(req: Request, res: Response) {
     const user_active = req.user as IUser
     const payload = req.body as CreateSearchHistoryDto
@@ -26,4 +26,4 @@ class SearchHistoryController {
   }
 }
 
-export default new SearchHistoryController()
+export default new SearchHistoriesController()

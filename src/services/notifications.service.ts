@@ -4,7 +4,7 @@ import { CreateNotiDto } from '~/dtos/notifications.dto'
 import { INotification } from '~/interfaces/notifications.interface'
 import { IUser } from '~/interfaces/users.interface'
 import { COLLECTION_COMMUNITIES_NAME } from '~/models/communities.schema'
-import { COLLECTION_USER_NAME } from '~/models/users.schema'
+import { COLLECTION_USERS_NAME } from '~/models/users.schema'
 import { publishNotification } from '~/pubsub/publisher'
 import { IQuery } from '~/shared/interfaces/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
@@ -12,7 +12,7 @@ import NotificationGateway from '~/socket/gateways/Notification.gateway'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { ENotificationType } from '../enums/notifications.enum'
 import { NotificationsCollection, NotificationsSchema } from '../models/notifications.schema'
-import { COLLECTION_TWEET_NAME } from '../models/tweets.schema'
+import { COLLECTION_TWEETS_NAME } from '../models/tweets.schema'
 
 class NotificationService {
   async create(payload: CreateNotiDto) {
@@ -34,7 +34,7 @@ class NotificationService {
       { $match: { _id: result.insertedId } },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'sender',
           foreignField: '_id',
           as: 'sender',
@@ -43,7 +43,7 @@ class NotificationService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'receiver',
           foreignField: '_id',
           as: 'receiver',
@@ -55,7 +55,7 @@ class NotificationService {
     if (type === ENotificationType.Mention_like) {
       pipeline.push({
         $lookup: {
-          from: COLLECTION_TWEET_NAME,
+          from: COLLECTION_TWEETS_NAME,
           localField: 'ref_id',
           foreignField: '_id',
           as: 'tweet_ref',
@@ -67,7 +67,7 @@ class NotificationService {
     if (type === ENotificationType.Follow) {
       pipeline.push({
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'ref_id',
           foreignField: '_id',
           as: 'user_ref',
@@ -149,7 +149,7 @@ class NotificationService {
       { $limit: limit },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'sender',
           foreignField: '_id',
           as: 'sender',
@@ -158,7 +158,7 @@ class NotificationService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'receiver',
           foreignField: '_id',
           as: 'receiver',
@@ -170,7 +170,7 @@ class NotificationService {
     if (type === ENotificationType.Mention_like) {
       pipeline.push({
         $lookup: {
-          from: COLLECTION_TWEET_NAME,
+          from: COLLECTION_TWEETS_NAME,
           localField: 'ref_id',
           foreignField: '_id',
           as: 'tweet_ref',
@@ -182,7 +182,7 @@ class NotificationService {
     if (type === ENotificationType.Follow) {
       pipeline.push({
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'ref_id',
           foreignField: '_id',
           as: 'user_ref',

@@ -25,6 +25,7 @@ import { initLikesCollection, LikesCollection } from '~/models/likes.schema'
 import { initMediasCollection, MediasCollection } from '~/models/media.schema'
 import { initMessagesCollection, MessagesCollection } from '~/models/messages.schema'
 import { initNotificationsCollection } from '~/models/notifications.schema'
+import { initReelsCollection, ReelsCollection } from '~/models/reels.schema'
 import { initReportTweetCollection, ReportTweetCollection } from '~/models/report-tweet.schema'
 import { initSearchHistoryCollection, SearchHistoryCollection } from '~/models/search-history.schema'
 import { initTrendingCollection, TrendingCollection } from '~/models/trending.schema'
@@ -175,6 +176,7 @@ class Database {
       initBadWordsCollection(this.db)
       initAccessRecentCollection(this.db)
       initUserViolationsCollection(this.db)
+      initReelsCollection(this.db)
     } catch (error) {
       logger.error('Collection initialization failed:', error)
       throw error
@@ -214,6 +216,7 @@ class Database {
       const indexMedia = await MediasCollection.indexExists(['s3_key_1'])
       const indexBadWord = await BadWordsCollection.indexExists(['words_text'])
       const indexAccessRecent = await AccessRecentCollection.indexExists(['user_id_1'])
+      const indexReel = await ReelsCollection.indexExists(['content_text'])
 
       // User
       if (!indexUser) {
@@ -330,6 +333,11 @@ class Database {
         AccessRecentCollection.createIndex({ user_id: 1 })
       }
 
+      // Reel
+      if (!indexReel) {
+        ReelsCollection.createIndex({ content: 'text' }, { default_language: 'none' })
+      }
+
       logger.info('All indexes are ensured successfully')
     } catch (error) {
       logger.error('Index initialization failed:', error)
@@ -342,4 +350,3 @@ class Database {
 const instanceMongodb = Database.getInstance()
 const clientMongodb = Database.getClient()
 export { clientMongodb, Database, instanceMongodb }
-

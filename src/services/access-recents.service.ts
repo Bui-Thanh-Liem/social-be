@@ -4,8 +4,8 @@ import { CreateAccessRecentDto } from '~/dtos/access-recent.dto'
 import { IAccessRecent } from '~/interfaces/access-recent.interface'
 import { AccessRecentCollection, AccessRecentSchema } from '~/models/access-recent.schema'
 import { COLLECTION_COMMUNITIES_NAME } from '~/models/communities.schema'
-import { COLLECTION_TWEET_NAME } from '~/models/tweets.schema'
-import { COLLECTION_USER_NAME } from '~/models/users.schema'
+import { COLLECTION_TWEETS_NAME } from '~/models/tweets.schema'
+import { COLLECTION_USERS_NAME } from '~/models/users.schema'
 import { IQuery } from '~/shared/interfaces/query.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 class AccessRecentService {
@@ -49,7 +49,7 @@ class AccessRecentService {
         // 1. Lookup cho User
         {
           $lookup: {
-            from: COLLECTION_USER_NAME,
+            from: COLLECTION_USERS_NAME,
             localField: 'ref_id',
             foreignField: '_id',
             as: 'user_data',
@@ -69,7 +69,7 @@ class AccessRecentService {
         // 3. Lookup cho Tweet
         {
           $lookup: {
-            from: COLLECTION_TWEET_NAME,
+            from: COLLECTION_TWEETS_NAME,
             localField: 'ref_id',
             foreignField: '_id',
             as: 'tweet_data',

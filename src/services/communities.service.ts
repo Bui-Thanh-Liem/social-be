@@ -21,7 +21,7 @@ import {
   CommunityMentorCollection,
   CommunityPinCollection
 } from '~/models/communities.schema'
-import { COLLECTION_USER_NAME } from '~/models/users.schema'
+import { COLLECTION_USERS_NAME } from '~/models/users.schema'
 import TweetsService from '~/services/tweets.service'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { IQuery } from '~/shared/interfaces/query.interface'
@@ -33,7 +33,7 @@ import { EActivityType, EInvitationStatus, EMembershipType } from '../enums/comm
 import { ENotificationType } from '../enums/notifications.enum'
 import { ETweetStatus } from '../enums/tweets.enum'
 import { ESourceViolation } from '../enums/user-violations.enum'
-import accessRecentService from './access-recent.service'
+import accessRecentService from './access-recents.service'
 import BadWordsService from './bad-words.service'
 import CommunityInvitationService from './community-invitation.service'
 import CommunityMemberService from './community-member.service'
@@ -673,7 +673,7 @@ class CommunityService {
       // 1️⃣ Lấy thông tin admin
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'admin',
           foreignField: '_id',
           as: 'admin',
@@ -731,7 +731,7 @@ class CommunityService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'memberRefs.user_id',
           foreignField: '_id',
           as: 'members',
@@ -753,7 +753,7 @@ class CommunityService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'mentorRefs.user_id',
           foreignField: '_id',
           as: 'mentors',
@@ -814,7 +814,7 @@ class CommunityService {
       // lookup admin info
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'admin',
           foreignField: '_id',
           as: 'admin',
@@ -1007,7 +1007,7 @@ class CommunityService {
           pipeline: [
             {
               $lookup: {
-                from: COLLECTION_USER_NAME,
+                from: COLLECTION_USERS_NAME,
                 localField: 'user_id',
                 foreignField: '_id',
                 as: 'user',
@@ -1070,7 +1070,7 @@ class CommunityService {
             // Lookup user để có thể search
             {
               $lookup: {
-                from: COLLECTION_USER_NAME,
+                from: COLLECTION_USERS_NAME,
                 localField: 'user_id',
                 foreignField: '_id',
                 as: 'userInfo'

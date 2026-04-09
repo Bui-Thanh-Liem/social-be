@@ -20,7 +20,7 @@ import {
   CommunitiesCollection,
   CommunitiesSchema
 } from '~/models/communities.schema'
-import { COLLECTION_USER_NAME, UsersCollection } from '~/models/users.schema'
+import { COLLECTION_USERS_NAME, UsersCollection } from '~/models/users.schema'
 import { CONSTANT_JOB, CONSTANT_REGEX } from '~/shared/constants'
 import { IQuery } from '~/shared/interfaces/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
@@ -35,17 +35,18 @@ import { EMembershipType, EVisibilityType } from '../enums/communities.enum'
 import { ENotificationType } from '../enums/notifications.enum'
 import { EFeedType, EFeedTypeItem, ETweetAudience, ETweetStatus, ETweetType } from '../enums/tweets.enum'
 import { ESourceViolation } from '../enums/user-violations.enum'
-import { LikesCollection } from '../models/likes.schema'
-import { COLLECTION_TWEET_NAME, TweetsCollection, TweetsSchema } from '../models/tweets.schema'
-import BadWordsService from './bad-words.service'
+import { COLLECTION_LIKES_NAME, LikesCollection } from '../models/likes.schema'
+import { COLLECTION_TWEETS_NAME, TweetsCollection, TweetsSchema } from '../models/tweets.schema'
 import bookmarksService from './bookmarks.service'
 import CommunitiesService from './communities.service'
 import followsService from './follows.service'
-import HashtagsService from './hashtags.service'
 import likesService from './likes.service'
-import TrendingService from './trending.service'
 import uploadsService from './uploads.service'
-import UserViolationsService from './user-violations.service'
+import badWordsService from './bad-words.service'
+import hashtagsService from './hashtags.service'
+import trendingService from './trending.service'
+import userViolationsService from './user-violations.service'
+import { log } from 'console'
 
 class TweetsService {
   //
@@ -62,11 +63,12 @@ class TweetsService {
       bgColor,
       embed_code,
       textColor,
-      codes
+      codes,
+      hashtags
     } = payload
 
     // Lọc từ cấm trong content
-    const _content = await BadWordsService.detectInText({
+    const _content = await badWordsService.detectInText({
       text: content || '',
       user_id
     })
@@ -86,19 +88,17 @@ class TweetsService {
     }
 
     // Tạo hashtags chop tweet
-    const hashtags = await HashtagsService.checkHashtags(payload.hashtags, user_id)
+    const _hashtags = await hashtagsService.checkHashtags(hashtags, user_id)
 
     // Thêm hashtag vào trending
-    if (payload?.hashtags?.length && type !== ETweetType.Comment) {
-      await Promise.all(
-        payload.hashtags.map((hashtagName) => TrendingService.createTrending(`#${hashtagName}`, user_id))
-      )
+    if (hashtags?.length && type !== ETweetType.Comment) {
+      await Promise.all(hashtags.map((hashtagName) => trendingService.createTrending(`#${hashtagName}`, user_id)))
     }
 
     // Thêm từ khóa vào trending (những từ trong content, nhưng được viết in hoa)
     if (_content && type !== ETweetType.Comment) {
       const keyWords = _content.text.match(CONSTANT_REGEX.FIND_KEYWORD) || []
-      await Promise.all(keyWords.map((w) => TrendingService.createTrending(w, user_id)))
+      await Promise.all(keyWords.map((w) => trendingService.createTrending(w, user_id)))
     }
 
     // Kiểm tra nếu đăng trong cộng đồng
@@ -132,7 +132,7 @@ class TweetsService {
         type: type,
         user_id: new ObjectId(user_id),
         audience: audience,
-        hashtags: hashtags,
+        hashtags: _hashtags,
         content: _content.text,
         parent_id: parent_id ? new ObjectId(parent_id) : null,
         community_id: community_id ? new ObjectId(community_id) : null,
@@ -146,9 +146,9 @@ class TweetsService {
       })
     )
 
-    // Lưu vi phạm từ cấm nếu có (rabbitmq)
+    // Lưu vi phạm từ cấm nếu có
     if (_content.bad_words_ids.length > 0) {
-      await UserViolationsService.create({
+      await userViolationsService.create({
         user_id: user_id,
         source: ESourceViolation.Tweet,
         bad_word_ids: _content.bad_words_ids,
@@ -346,7 +346,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
@@ -367,7 +367,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME, // tên collection chứa user
+          from: COLLECTION_USERS_NAME, // tên collection chứa user
           localField: 'user_id', // field trong tweet
           foreignField: '_id', // field trong user
           as: 'user_id',
@@ -382,7 +382,8 @@ class TweetsService {
                 cover_photo: 1,
                 day_of_birth: 1,
                 location: 1,
-                website: 1
+                website: 1,
+                isPinnedReel: 1
               }
             }
           ]
@@ -426,7 +427,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'likes',
+          from: COLLECTION_LIKES_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'likes',
@@ -441,7 +442,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_TWEET_NAME,
+          from: COLLECTION_TWEETS_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'
@@ -607,7 +608,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions'
@@ -615,7 +616,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -652,7 +653,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'likes',
+          from: COLLECTION_LIKES_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'likes'
@@ -660,7 +661,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_TWEET_NAME,
+          from: COLLECTION_TWEETS_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'
@@ -855,12 +856,13 @@ class TweetsService {
     }
 
     //
-    const skipCom = Math.floor(skip / 3)
+    const skipCom = Math.floor(skip / 3) // Giả sử cứ 3 bài viết sẽ có 1 bài trong cộng đồng, thì skip của cộng đồng sẽ là skip/3
     const [tweets, communities] = await Promise.all([
+      //
       TweetsCollection.aggregate<TweetsSchema>([
         {
           $match: {
-            community_id: { $eq: null },
+            community_id: { $eq: null }, // Chỉ lấy những bài viết không trong cộng đồng
             ...match_condition
           }
         },
@@ -879,7 +881,7 @@ class TweetsService {
 
         {
           $lookup: {
-            from: COLLECTION_USER_NAME,
+            from: COLLECTION_USERS_NAME,
             localField: 'user_id',
             foreignField: '_id',
             as: 'user_id',
@@ -894,7 +896,8 @@ class TweetsService {
                   cover_photo: 1,
                   day_of_birth: 1,
                   location: 1,
-                  website: 1
+                  website: 1,
+                  isPinnedReel: 1
                 }
               }
             ]
@@ -906,6 +909,7 @@ class TweetsService {
             preserveNullAndEmptyArrays: true
           }
         },
+
         // lookup để kiểm tra user hiện tại có follow user_id không
         {
           $lookup: {
@@ -953,7 +957,7 @@ class TweetsService {
         },
         {
           $lookup: {
-            from: COLLECTION_USER_NAME,
+            from: COLLECTION_USERS_NAME,
             localField: 'mentions',
             foreignField: '_id',
             as: 'mentions',
@@ -987,7 +991,7 @@ class TweetsService {
         },
         {
           $lookup: {
-            from: 'likes',
+            from: COLLECTION_LIKES_NAME,
             localField: '_id',
             foreignField: 'tweet_id',
             as: 'likes',
@@ -1002,7 +1006,7 @@ class TweetsService {
         },
         {
           $lookup: {
-            from: COLLECTION_TWEET_NAME,
+            from: COLLECTION_TWEETS_NAME,
             localField: '_id',
             foreignField: 'parent_id',
             as: 'tweets_children'
@@ -1093,6 +1097,7 @@ class TweetsService {
         }
       ]).toArray(),
 
+      //
       feed_type !== EFeedType.Following &&
         CommunitiesCollection.aggregate<CommunitiesSchema>([
           // 1️⃣ Chỉ lấy community mở
@@ -1224,7 +1229,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id'
@@ -1275,7 +1280,7 @@ class TweetsService {
     //
     const match_condition: any = {
       user_id: new ObjectId(user_id),
-      type: tweet_type
+      type: tweet_type === ETweetType.Retweet ? { $in: [ETweetType.Retweet, ETweetType.QuoteTweet] } : tweet_type
     }
 
     // Nếu người xem profile là chính chủ
@@ -1324,7 +1329,7 @@ class TweetsService {
       // --- IMPORTANT: lookup likes trước sort để có likes_count ---
       {
         $lookup: {
-          from: 'likes',
+          from: COLLECTION_LIKES_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'likes',
@@ -1353,7 +1358,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -1447,7 +1452,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
@@ -1481,7 +1486,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'likes',
+          from: COLLECTION_LIKES_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'likes',
@@ -1496,7 +1501,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_TWEET_NAME,
+          from: COLLECTION_TWEETS_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'
@@ -1655,7 +1660,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -1722,7 +1727,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
@@ -1756,7 +1761,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'likes',
+          from: COLLECTION_LIKES_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'likes',
@@ -1771,7 +1776,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_TWEET_NAME,
+          from: COLLECTION_TWEETS_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'
@@ -1922,7 +1927,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -1989,7 +1994,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
@@ -2020,7 +2025,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'likes',
+          from: COLLECTION_LIKES_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'likes',
@@ -2035,7 +2040,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_TWEET_NAME,
+          from: COLLECTION_TWEETS_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'
@@ -2263,7 +2268,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id'
@@ -2496,7 +2501,7 @@ class TweetsService {
       // --- IMPORTANT: lookup likes trước sort để có likes_count ---
       {
         $lookup: {
-          from: 'likes',
+          from: COLLECTION_LIKES_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'likes',
@@ -2525,7 +2530,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -2597,7 +2602,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
@@ -2631,7 +2636,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: 'likes',
+          from: COLLECTION_LIKES_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'likes',
@@ -2646,7 +2651,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_TWEET_NAME,
+          from: COLLECTION_TWEETS_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'
@@ -2814,7 +2819,7 @@ class TweetsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',

@@ -2,7 +2,7 @@ import { Collection, Db, ObjectId } from 'mongodb'
 import { ISearchHistory } from '~/interfaces/search-history.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 
-export const COLLECTION_SEARCH_HISTORY_NAME = 'search-histories'
+export const COLLECTION_SEARCH_HISTORIES_NAME = 'search-histories'
 export class SearchHistorySchema extends BaseSchema implements ISearchHistory {
   user: ObjectId | undefined
 
@@ -27,5 +27,5 @@ export class SearchHistorySchema extends BaseSchema implements ISearchHistory {
 export let SearchHistoryCollection: Collection<SearchHistorySchema>
 
 export function initSearchHistoryCollection(db: Db) {
-  SearchHistoryCollection = db.collection<SearchHistorySchema>(COLLECTION_SEARCH_HISTORY_NAME)
+  SearchHistoryCollection = db.collection<SearchHistorySchema>(COLLECTION_SEARCH_HISTORIES_NAME)
 }

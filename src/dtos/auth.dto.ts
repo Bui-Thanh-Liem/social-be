@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { IUser } from '~/interfaces/users.interface'
-import { EUserVerifyStatus } from '~/models/users.enum'
+import { EUserVerifyStatus } from '~/enums/users.enum'
 import { CONSTANT_REGEX } from '~/shared/constants'
 import { MediaBareDtoSchema } from '~/shared/dtos/common/media-bare.dto'
 

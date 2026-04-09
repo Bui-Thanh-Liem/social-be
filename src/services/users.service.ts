@@ -16,8 +16,8 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
 import { EUserTokenType } from '../enums/user-tokens.enum'
-import { EUserVerifyStatus } from '../models/users.enum'
-import accessRecentService from './access-recent.service'
+import { EUserVerifyStatus } from '../enums/users.enum'
+import accessRecentService from './access-recents.service'
 import followsService from './follows.service'
 
 class UsersService {
@@ -553,6 +553,28 @@ class UsersService {
     )
 
     return this.signedCloudfrontAvatarUrls(user) as IUser
+  }
+
+  //
+  async pinnedReel({ user_id, isPinned }: { user_id: string; isPinned: boolean }) {
+    //
+    const user = await UsersCollection.countDocuments({ _id: new ObjectId(user_id) })
+    if (!user) {
+      throw new NotFoundError('Người dùng không tồn tại.')
+    }
+
+    //
+    return await UsersCollection.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          isPinnedReel: isPinned
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
   }
 
   //

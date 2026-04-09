@@ -6,7 +6,7 @@ import { ITweet } from '~/interfaces/tweets.interface'
 import { IUser } from '~/interfaces/users.interface'
 import { COLLECTION_BOOKMARKS_NAME } from '~/models/bookmarks.schema'
 import { TrendingCollection, TrendingSchema } from '~/models/trending.schema'
-import { COLLECTION_USER_NAME } from '~/models/users.schema'
+import { COLLECTION_USERS_NAME } from '~/models/users.schema'
 import TweetsService from '~/services/tweets.service'
 import { IQuery } from '~/shared/interfaces/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
@@ -21,9 +21,10 @@ import { slug } from '~/utils/slug.util'
 import { IResTodayNewsOrOutstanding } from '../dtos/trending.dto'
 import { ETweetAudience, ETweetType } from '../enums/tweets.enum'
 import { ITrending } from '../interfaces/trending.interface'
-import { COLLECTION_TWEET_NAME, TweetsCollection, TweetsSchema } from '../models/tweets.schema'
+import { COLLECTION_TWEETS_NAME, TweetsCollection, TweetsSchema } from '../models/tweets.schema'
 import followsService from './follows.service'
 import hashtagsService from './hashtags.service'
+import { COLLECTION_LIKES_NAME } from '~/models/likes.schema'
 
 class TrendingService {
   // Tạo khi đăng bài - khi tìm kiếm (>=5)
@@ -246,7 +247,7 @@ class TrendingService {
       { $limit: 500 },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -295,7 +296,7 @@ class TrendingService {
       },
       {
         $lookup: {
-          from: 'likes',
+          from: COLLECTION_BOOKMARKS_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'likes',
@@ -476,7 +477,7 @@ class TrendingService {
       { $limit: 500 },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -525,7 +526,7 @@ class TrendingService {
       },
       {
         $lookup: {
-          from: 'likes',
+          from: COLLECTION_LIKES_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'likes',
@@ -758,7 +759,7 @@ class TrendingService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -833,7 +834,7 @@ class TrendingService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
@@ -871,7 +872,7 @@ class TrendingService {
       },
       {
         $lookup: {
-          from: 'likes',
+          from: COLLECTION_LIKES_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'likes',
@@ -886,7 +887,7 @@ class TrendingService {
       },
       {
         $lookup: {
-          from: COLLECTION_TWEET_NAME,
+          from: COLLECTION_TWEETS_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'

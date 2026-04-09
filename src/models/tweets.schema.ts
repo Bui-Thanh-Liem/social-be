@@ -4,7 +4,7 @@ import { BaseSchema } from '~/shared/schemas/base.schema'
 import { ETweetAudience, ETweetStatus, ETweetType } from '../enums/tweets.enum'
 import { ICodesTweet, ITweet } from '~/interfaces/tweets.interface'
 
-export const COLLECTION_TWEET_NAME = 'tweets'
+export const COLLECTION_TWEETS_NAME = 'tweets'
 export class TweetsSchema extends BaseSchema implements ITweet {
   user_id: ObjectId
   type: ETweetType
@@ -51,5 +51,5 @@ export class TweetsSchema extends BaseSchema implements ITweet {
 export let TweetsCollection: Collection<TweetsSchema>
 
 export function initTweetsCollection(db: Db) {
-  TweetsCollection = db.collection<TweetsSchema>(COLLECTION_TWEET_NAME)
+  TweetsCollection = db.collection<TweetsSchema>(COLLECTION_TWEETS_NAME)
 }

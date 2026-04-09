@@ -3,7 +3,7 @@ import { CreateSearchHistoryDto } from '~/dtos/search-history.dto'
 import { IUser } from '~/interfaces/users.interface'
 import { COLLECTION_COMMUNITIES_NAME } from '~/models/communities.schema'
 import { SearchHistoryCollection, SearchHistorySchema } from '~/models/search-history.schema'
-import { COLLECTION_USER_NAME } from '~/models/users.schema'
+import { COLLECTION_USERS_NAME } from '~/models/users.schema'
 import { IQuery } from '~/shared/interfaces/query.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { ESourceViolation } from '../enums/user-violations.enum'
@@ -71,7 +71,7 @@ class SearchHistoryService {
       { $limit: limit },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'user',
           foreignField: '_id',
           as: 'user',

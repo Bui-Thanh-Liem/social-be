@@ -5,7 +5,7 @@ import { CreateCommunityInvitationDto, DeleteInvitationDto } from '~/dtos/commun
 import { inviteQueue, notificationQueue } from '~/infra/queues'
 import { ICommunity, ICommunityPayload } from '~/interfaces/communities.interface'
 import { CommunityInvitationCollection, CommunityInvitationSchema } from '~/models/communities.schema'
-import { COLLECTION_USER_NAME, UsersCollection } from '~/models/users.schema'
+import { COLLECTION_USERS_NAME, UsersCollection } from '~/models/users.schema'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { IQuery } from '~/shared/interfaces/query.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
@@ -93,7 +93,7 @@ class CommunityInvitationService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -112,7 +112,7 @@ class CommunityInvitationService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'inviter',
           foreignField: '_id',
           as: 'inviter',

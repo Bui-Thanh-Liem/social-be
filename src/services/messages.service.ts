@@ -3,7 +3,7 @@ import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { IMedia } from '~/interfaces/media.interface'
 import { IMessage } from '~/interfaces/messages.interface'
 import { MessagesCollection, MessagesSchema } from '~/models/messages.schema'
-import { COLLECTION_USER_NAME } from '~/models/users.schema'
+import { COLLECTION_USERS_NAME } from '~/models/users.schema'
 import { IQuery } from '~/shared/interfaces/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
@@ -45,7 +45,7 @@ class MessagesService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'sender',
           foreignField: '_id',
           as: 'sender',
@@ -91,7 +91,7 @@ class MessagesService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'sender',
           foreignField: '_id',
           as: 'sender',

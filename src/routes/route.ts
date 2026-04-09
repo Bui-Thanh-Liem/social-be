@@ -2,13 +2,13 @@ import { Request, Response, Router } from 'express'
 import { OkResponse } from '~/core/success.response'
 import { envs } from '../configs/env.config'
 import { checkApiKeyMiddleware } from '../middlewares/check-api-key.middleware'
-import accessRecentRoute from './access-recent.route'
+import accessRecentRoute from './access-recents.route'
 import followsRoute from './follows.route'
 import hashtagsRoute from './hashtags.route'
 import likesRoute from './likes.route'
 import notificationRoute from './notifications.route'
-import reportTweetRoute from './report-tweet.route'
-import searchHistoryRoute from './search-history.route'
+import reportTweetRoute from './report-tweets.route'
+import searchHistoryRoute from './search-histories.route'
 import tweetsRoute from './tweets.route'
 import uploadsRoute from './uploads.route'
 import usersRoute from './users.route'
@@ -21,6 +21,7 @@ import messagesRoute from './messages.route'
 import searchRoute from './search.route'
 import trendingRoute from './trending.route'
 import badWordsRoute from './bad-words.route'
+import reelRoute from './reels.routes'
 
 const rootRoute = Router()
 
@@ -48,6 +49,7 @@ rootRoute.use('/tweets', tweetsRoute)
 rootRoute.use('/uploads', uploadsRoute)
 rootRoute.use('/users', usersRoute)
 rootRoute.use('/bad-words', badWordsRoute)
+rootRoute.use('/reels', reelRoute)
 
 // Route tạo dữ liệu giả lập (mock data) cho việc phát triển và thử nghiệm
 rootRoute.post('/mock-data', async (req: Request, res: Response) => {

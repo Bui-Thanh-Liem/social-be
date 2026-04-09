@@ -2,9 +2,10 @@ import { Collection, Db } from 'mongodb'
 import { IUser, IUserStatus } from '~/interfaces/users.interface'
 import { IMediaBare } from '~/shared/interfaces/media-bare.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
-import { EUserStatus, EUserVerifyStatus } from './users.enum'
+import { EUserStatus, EUserVerifyStatus } from '../enums/users.enum'
+import { IReel } from '~/interfaces/reel.interface'
 
-export const COLLECTION_USER_NAME = 'users'
+export const COLLECTION_USERS_NAME = 'users'
 export class UsersSchema extends BaseSchema implements IUser {
   name: string
   email: string
@@ -18,8 +19,10 @@ export class UsersSchema extends BaseSchema implements IUser {
   website?: string
   username?: string
   avatar?: IMediaBare
+  isPinReel?: boolean
   cover_photo?: IMediaBare
   status: IUserStatus
+  isPinnedReel: boolean
 
   constructor(user: Partial<IUser>) {
     super()
@@ -35,6 +38,7 @@ export class UsersSchema extends BaseSchema implements IUser {
     this.location = user.location || ''
     this.website = user.website || ''
     this.username = user.username || ''
+    this.isPinnedReel = user.isPinnedReel || false
     this.avatar = user.avatar || undefined
     this.cover_photo = user.cover_photo || undefined
   }
@@ -43,5 +47,5 @@ export class UsersSchema extends BaseSchema implements IUser {
 export let UsersCollection: Collection<UsersSchema>
 
 export function initUsersCollection(db: Db) {
-  UsersCollection = db.collection<UsersSchema>(COLLECTION_USER_NAME)
+  UsersCollection = db.collection<UsersSchema>(COLLECTION_USERS_NAME)
 }

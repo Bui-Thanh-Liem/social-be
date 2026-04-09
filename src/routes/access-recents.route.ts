@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import accessRecentController from '~/controllers/access-recent.controller'
+import accessRecentController from '~/controllers/access-recents.controller'
 import { authenticationMiddleware } from '~/middlewares/authentication.middleware'
 import { bodyValidate } from '~/middlewares/body-validate.middleware'
 import { paramsValidate } from '~/middlewares/params-validate.middleware'

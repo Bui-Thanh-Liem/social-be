@@ -2,7 +2,7 @@ import { Collection, Db, ObjectId } from 'mongodb'
 import { ILike } from '~/interfaces/likes.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 
-const COLLECTION_NAME = 'likes'
+export const COLLECTION_LIKES_NAME = 'likes'
 export class LikesSchema extends BaseSchema implements ILike {
   user_id: ObjectId
   tweet_id: ObjectId
@@ -19,5 +19,5 @@ export class LikesSchema extends BaseSchema implements ILike {
 export let LikesCollection: Collection<LikesSchema>
 
 export function initLikesCollection(db: Db) {
-  LikesCollection = db.collection<LikesSchema>(COLLECTION_NAME)
+  LikesCollection = db.collection<LikesSchema>(COLLECTION_LIKES_NAME)
 }

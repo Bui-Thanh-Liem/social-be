@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { CreatedResponse, OkResponse } from '~/core/success.response'
-import accessRecentService from '~/services/access-recent.service'
+import accessRecentService from '~/services/access-recents.service'
 import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
 
 class AccessRecentController {

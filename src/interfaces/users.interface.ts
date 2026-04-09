@@ -1,6 +1,7 @@
 import { IMediaBare } from '~/shared/interfaces/media-bare.interface'
 import { IBase } from '~/shared/interfaces/base.interface'
-import { EUserStatus, EUserVerifyStatus } from '~/models/users.enum'
+import { EUserStatus, EUserVerifyStatus } from '~/enums/users.enum'
+import { IReel } from './reel.interface'
 
 // interface IUserSettings {
 //   dark_mode: boolean
@@ -28,6 +29,7 @@ export interface IUser extends IBase {
   website?: string
   username?: string
   avatar?: IMediaBare
+  isPinnedReel: boolean
   cover_photo?: IMediaBare
   // settings: IUserSettings
 

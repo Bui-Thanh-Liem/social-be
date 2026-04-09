@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { BadRequestError, UnauthorizedError } from '~/core/error.response'
 import { ChangePasswordDto } from '~/dtos/users.dto'
-import { EUserVerifyStatus } from '~/models/users.enum'
+import { EUserVerifyStatus } from '~/enums/users.enum'
 import { verifyPassword } from '~/utils/crypto.util'
 
 export async function verifyUserActiveForChangePasswordMiddleware(req: Request, res: Response, next: NextFunction) {

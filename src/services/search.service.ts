@@ -5,7 +5,7 @@ import { IUser } from '~/interfaces/users.interface'
 import { COLLECTION_BOOKMARKS_NAME } from '~/models/bookmarks.schema'
 import { COLLECTION_COMMUNITIES_NAME, CommunitiesCollection, CommunitiesSchema } from '~/models/communities.schema'
 import { TrendingCollection, TrendingSchema } from '~/models/trending.schema'
-import { COLLECTION_USER_NAME, UsersCollection, UsersSchema } from '~/models/users.schema'
+import { COLLECTION_USERS_NAME, UsersCollection, UsersSchema } from '~/models/users.schema'
 import { IQuery } from '~/shared/interfaces/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
@@ -14,12 +14,13 @@ import { ResSearchPending } from '../dtos/search.dto'
 import { EVisibilityType } from '../enums/communities.enum'
 import { ETweetAudience, ETweetType } from '../enums/tweets.enum'
 import { ITrending } from '../interfaces/trending.interface'
-import { COLLECTION_TWEET_NAME, TweetsCollection, TweetsSchema } from '../models/tweets.schema'
+import { COLLECTION_TWEETS_NAME, TweetsCollection, TweetsSchema } from '../models/tweets.schema'
 import CommunitiesService from './communities.service'
 import followsService from './follows.service'
 import TrendingService from './trending.service'
 import tweetsService from './tweets.service'
 import UsersService from './users.service'
+import { COLLECTION_LIKES_NAME } from '~/models/likes.schema'
 
 // Những hàm search sẽ ưu tiên sort sau limit
 class SearchService {
@@ -181,7 +182,7 @@ class SearchService {
       hasTop.query = [
         {
           $lookup: {
-            from: 'likes',
+            from: COLLECTION_LIKES_NAME,
             let: { tid: '$_id' },
             pipeline: [{ $match: { $expr: { $eq: ['$tweet_id', '$$tid'] } } }, { $count: 'count' }],
             as: 'likes_count_arr'
@@ -191,7 +192,7 @@ class SearchService {
         // lightweight lookup -> children counts grouped by type
         {
           $lookup: {
-            from: COLLECTION_TWEET_NAME,
+            from: COLLECTION_TWEETS_NAME,
             let: { tid: '$_id' },
             pipeline: [
               { $match: { $expr: { $eq: ['$parent_id', '$$tid'] } } },
@@ -281,7 +282,7 @@ class SearchService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'user_id',
           foreignField: '_id',
           as: 'user_id',
@@ -353,7 +354,7 @@ class SearchService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'mentions',
           foreignField: '_id',
           as: 'mentions',
@@ -387,7 +388,7 @@ class SearchService {
       },
       {
         $lookup: {
-          from: 'likes',
+          from: COLLECTION_LIKES_NAME,
           localField: '_id',
           foreignField: 'tweet_id',
           as: 'likes',
@@ -402,7 +403,7 @@ class SearchService {
       },
       {
         $lookup: {
-          from: COLLECTION_TWEET_NAME,
+          from: COLLECTION_TWEETS_NAME,
           localField: '_id',
           foreignField: 'parent_id',
           as: 'tweets_children'

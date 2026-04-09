@@ -10,7 +10,7 @@ import { notificationQueue, systemQueue } from '~/infra/queues'
 import { IConversation } from '~/interfaces/conversations.interface'
 import { ConversationsCollection, ConversationsSchema } from '~/models/conversations.schema'
 import { COLLECTION_MESSAGES_NAME } from '~/models/messages.schema'
-import { COLLECTION_USER_NAME, UsersCollection } from '~/models/users.schema'
+import { COLLECTION_USERS_NAME, UsersCollection } from '~/models/users.schema'
 import MessagesService from '~/services/messages.service'
 import { CONSTANT_JOB } from '~/shared/constants'
 import { IMediaBare } from '~/shared/interfaces/media-bare.interface'
@@ -152,7 +152,7 @@ class ConversationsService {
       },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'participants',
           foreignField: '_id',
           as: 'participants',
@@ -334,7 +334,7 @@ class ConversationsService {
       // Lấy participants
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'participants',
           foreignField: '_id',
           as: 'participants',
@@ -514,7 +514,7 @@ class ConversationsService {
         { $match: { _id: updated._id } },
         {
           $lookup: {
-            from: COLLECTION_USER_NAME,
+            from: COLLECTION_USERS_NAME,
             localField: 'participants',
             foreignField: '_id',
             as: 'participants',
@@ -604,7 +604,7 @@ class ConversationsService {
       { $match: { _id: updated._id } },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'participants',
           foreignField: '_id',
           as: 'participants',
@@ -699,7 +699,7 @@ class ConversationsService {
       { $match: { _id: updated?._id } },
       {
         $lookup: {
-          from: COLLECTION_USER_NAME,
+          from: COLLECTION_USERS_NAME,
           localField: 'participants',
           foreignField: '_id',
           as: 'participants',
