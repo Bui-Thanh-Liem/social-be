@@ -69,17 +69,33 @@ export const envs = {
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || 'Error',
   AWS_REGION: process.env.AWS_REGION || 'Error',
 
+  // CloudFront (dùng để tạo signed URL cho client tải ảnh lên, sau đó CloudFront sẽ chuyển tiếp đến S3)
   AWS_CLOUDFRONT_DOMAIN: process.env.AWS_CLOUDFRONT_DOMAIN || 'Error',
   AWS_CLOUDFRONT_KEY_PAIR_ID: process.env.AWS_CLOUDFRONT_KEY_PAIR_ID || 'Error',
   AWS_CLOUDFRONT_PRIVATE_KEY: process.env.AWS_CLOUDFRONT_PRIVATE_KEY || 'Error',
   AWS_SIGNED_URL_EXPIRES_IN: process.env.AWS_SIGNED_URL_EXPIRES_IN || '0',
 
+  // S3
   AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME || 'Error',
   AWS_PRESIGNED_URL_EXPIRES_IN: process.env.AWS_PRESIGNED_URL_EXPIRES_IN || '0',
 
+  //
   API_KEY: process.env.API_KEY || 'Error',
 
+  //
   TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || 'Error',
   TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID || 'Error',
-  TELEGRAM_CHAT_GROUP_ID: process.env.TELEGRAM_CHAT_GROUP_ID || 'Error'
+  TELEGRAM_CHAT_GROUP_ID: process.env.TELEGRAM_CHAT_GROUP_ID || 'Error',
+
+  //
+  GUEST_EMAIL_1: process.env.GUEST_EMAIL_1 || 'Error',
+  GUEST_EMAIL_2: process.env.GUEST_EMAIL_2 || 'Error',
+  GUEST_EMAIL_3: process.env.GUEST_EMAIL_3 || 'Error',
+  GUEST_EMAIL_4: process.env.GUEST_EMAIL_4 || 'Error',
+  GUEST_EMAIL_5: process.env.GUEST_EMAIL_5 || 'Error',
+  GUEST_EMAIL_6: process.env.GUEST_EMAIL_6 || 'Error',
+  GUEST_EMAIL_7: process.env.GUEST_EMAIL_7 || 'Error',
+  GUEST_EMAIL_8: process.env.GUEST_EMAIL_8 || 'Error',
+  GUEST_EMAIL_9: process.env.GUEST_EMAIL_9 || 'Error',
+  GUEST_EMAIL_10: process.env.GUEST_EMAIL_10 || 'Error'
 }

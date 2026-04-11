@@ -28,6 +28,9 @@ usersRoute.get(
   asyncHandler(usersController.getTopFollowedUsers)
 )
 
+// Lấy danh sách user khách (dùng cho phần gợi ý người dùng khách khi đăng nhập bằng tài khoản khách)
+usersRoute.get('/guests', asyncHandler(usersController.getGuestUsers))
+
 // Các route dưới đây cần authentication
 usersRoute.use(authenticationMiddleware)
 

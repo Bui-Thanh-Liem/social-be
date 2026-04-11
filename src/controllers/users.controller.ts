@@ -59,6 +59,11 @@ class UsersController {
     res.json(new OkResponse('Lấy người dùng mình đang theo dõi thành công', result))
   }
 
+  async getGuestUsers(req: Request, res: Response) {
+    const result = await usersService.getGuestUsers()
+    res.json(new OkResponse('Lấy người dùng khách thành công', result))
+  }
+
   async changePassword(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const { new_password } = req.body as ChangePasswordDto

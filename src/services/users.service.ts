@@ -578,6 +578,29 @@ class UsersService {
   }
 
   //
+  async getGuestUsers() {
+    const guestEmails = [
+      envs.GUEST_EMAIL_1,
+      envs.GUEST_EMAIL_2,
+      envs.GUEST_EMAIL_3,
+      envs.GUEST_EMAIL_4,
+      envs.GUEST_EMAIL_5,
+      envs.GUEST_EMAIL_6,
+      envs.GUEST_EMAIL_7,
+      envs.GUEST_EMAIL_8,
+      envs.GUEST_EMAIL_9,
+      envs.GUEST_EMAIL_10
+    ]
+    const users = await UsersCollection.find(
+      { email: { $in: guestEmails } },
+      { projection: { email: 1, avatar: 1 } }
+    ).toArray()
+
+    return users
+    // return this.signedCloudfrontAvatarUrls(users) as IUser[]
+  }
+
+  //
   signedCloudfrontAvatarUrls = (users: IUser[] | IUser | null) => {
     //
     if (!users) return users
