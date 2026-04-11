@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { NotFoundError } from '~/core/error.response'
-import TweetsService from '~/services/tweets.service'
+import TweetsService from '~/services/public/tweets.service'
 
 // Y rang checkTweetParams nhưng sẽ query kiểm tra tồn tại và lấy author thôi
 export async function checkTweetExistMiddleware(req: Request, res: Response, next: NextFunction) {

@@ -1,5 +1,5 @@
 import pubSubServiceInstance from '~/helpers/pub_sub.helper'
-import { INotification } from '~/interfaces/notifications.interface'
+import { INotification } from '~/interfaces/public/notifications.interface'
 
 // Sẽ đưa sang rabbitmq sau
 export const PUBLISH_NOTIFICATION = 'publish-notification'

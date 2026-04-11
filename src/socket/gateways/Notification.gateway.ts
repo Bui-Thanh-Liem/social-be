@@ -1,6 +1,6 @@
-import NotificationService from '~/services/notifications.service'
+import NotificationService from '~/services/public/notifications.service'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
-import { INotification } from '~/interfaces/notifications.interface'
+import { INotification } from '~/interfaces/public/notifications.interface'
 import { getIO } from '..'
 
 class NotificationGateway {

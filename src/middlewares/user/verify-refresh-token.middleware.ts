@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { envs } from '~/configs/env.config'
 import { UnauthorizedError } from '~/core/error.response'
-import userTokensService from '~/services/user-tokens.service'
+import userTokensService from '~/services/public/user-tokens.service'
 import { verifyToken } from '~/utils/jwt.util'
 
 export async function verifyRefreshTokenMiddleware(req: Request, res: Response, next: NextFunction) {

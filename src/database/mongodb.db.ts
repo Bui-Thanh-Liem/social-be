@@ -1,9 +1,9 @@
 import { Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { BadRequestError, InternalServerError } from '~/core/error.response'
-import { AccessRecentCollection, initAccessRecentCollection } from '~/models/access-recent.schema'
-import { BadWordsCollection, initBadWordsCollection } from '~/models/bad-words.schema'
-import { initBookmarksCollection } from '~/models/bookmarks.schema'
+import { AccessRecentCollection, initAccessRecentCollection } from '~/models/public/access-recent.schema'
+import { BadWordsCollection, initBadWordsCollection } from '~/models/public/bad-words.schema'
+import { initBookmarksCollection } from '~/models/public/bookmarks.schema'
 import {
   CommunitiesCollection,
   CommunityActivityCollection,
@@ -17,22 +17,22 @@ import {
   initCommunityMemberCollection,
   initCommunityMentorCollection,
   initCommunityPinCollection
-} from '~/models/communities.schema'
-import { ConversationsCollection, initConversationsCollection } from '~/models/conversations.schema'
-import { initFollowersCollection } from '~/models/follows.schema'
-import { HashtagsCollection, initHashtagsCollection } from '~/models/hashtags.schema'
-import { initLikesCollection, LikesCollection } from '~/models/likes.schema'
-import { initMediasCollection, MediasCollection } from '~/models/media.schema'
-import { initMessagesCollection, MessagesCollection } from '~/models/messages.schema'
-import { initNotificationsCollection } from '~/models/notifications.schema'
-import { initReelsCollection, ReelsCollection } from '~/models/reels.schema'
-import { initReportTweetCollection, ReportTweetCollection } from '~/models/report-tweet.schema'
-import { initSearchHistoryCollection, SearchHistoryCollection } from '~/models/search-history.schema'
-import { initTrendingCollection, TrendingCollection } from '~/models/trending.schema'
-import { initTweetsCollection, TweetsCollection } from '~/models/tweets.schema'
-import { initUserTokensCollection, UserTokensCollection } from '~/models/user-tokens.schema'
-import { initUserViolationsCollection } from '~/models/user-violations.schema'
-import { initUsersCollection, UsersCollection } from '~/models/users.schema'
+} from '~/models/public/communities.schema'
+import { ConversationsCollection, initConversationsCollection } from '~/models/public/conversations.schema'
+import { initFollowersCollection } from '~/models/public/follows.schema'
+import { HashtagsCollection, initHashtagsCollection } from '~/models/public/hashtags.schema'
+import { initLikesCollection, LikesCollection } from '~/models/public/likes.schema'
+import { initMediasCollection, MediasCollection } from '~/models/public/media.schema'
+import { initMessagesCollection, MessagesCollection } from '~/models/public/messages.schema'
+import { initNotificationsCollection } from '~/models/public/notifications.schema'
+import { initReelsCollection, ReelsCollection } from '~/models/public/reels.schema'
+import { initReportTweetCollection, ReportTweetCollection } from '~/models/public/report-tweet.schema'
+import { initSearchHistoryCollection, SearchHistoryCollection } from '~/models/public/search-history.schema'
+import { initTrendingCollection, TrendingCollection } from '~/models/public/trending.schema'
+import { initTweetsCollection, TweetsCollection } from '~/models/public/tweets.schema'
+import { initUserTokensCollection, UserTokensCollection } from '~/models/public/user-tokens.schema'
+import { initUserViolationsCollection } from '~/models/public/user-violations.schema'
+import { initUsersCollection, UsersCollection } from '~/models/public/users.schema'
 import { logger } from '~/utils/logger.util'
 
 const _MINPOOLSIZE = 5

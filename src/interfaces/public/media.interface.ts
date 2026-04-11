@@ -1,0 +1,14 @@
+import { ObjectId } from 'mongodb'
+import { EMediaStatus } from '~/enums/public/media.enum'
+
+export interface IMedia {
+  file_type: string
+  file_size: number
+  file_name: string
+
+  url?: string | undefined
+  s3_key: string
+
+  user_id?: ObjectId
+  status: EMediaStatus
+}

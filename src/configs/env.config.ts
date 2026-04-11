@@ -34,9 +34,11 @@ export const envs = {
   JWT_SECRET_REFRESH_ADMIN: process.env.JWT_SECRET_REFRESH_ADMIN || 'Error',
   JWT_SECRET_TEMP_ADMIN: process.env.JWT_SECRET_TEMP_ADMIN || 'Error',
 
+  //
   TEMP_TOKEN_EXPIRES_IN: process.env.TEMP_TOKEN_EXPIRES_IN || '5m',
-  ACCESS_TOKEN_EXPIRES_IN: process.env.ACCESS_TOKEN_EXPIRES_IN || '1d',
-  REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d',
+  ACCESS_TOKEN_USER_EXPIRES_IN: process.env.ACCESS_TOKEN_USER_EXPIRES_IN || '15m',
+  ACCESS_TOKEN_ADMIN_EXPIRES_IN: process.env.ACCESS_TOKEN_ADMIN_EXPIRES_IN || '1d',
+  REFRESH_TOKEN_USER_EXPIRES_IN: process.env.REFRESH_TOKEN_USER_EXPIRES_IN || '30d',
 
   MAIL_SERVICE_USER: process.env.MAIL_SERVICE_USER || 'Error',
   MAIL_SERVICE_PASS: process.env.MAIL_SERVICE_PASS || 'Error',
@@ -97,5 +99,9 @@ export const envs = {
   GUEST_EMAIL_7: process.env.GUEST_EMAIL_7 || 'Error',
   GUEST_EMAIL_8: process.env.GUEST_EMAIL_8 || 'Error',
   GUEST_EMAIL_9: process.env.GUEST_EMAIL_9 || 'Error',
-  GUEST_EMAIL_10: process.env.GUEST_EMAIL_10 || 'Error'
+  GUEST_EMAIL_10: process.env.GUEST_EMAIL_10 || 'Error',
+
+  // Admin
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'Error',
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'Error'
 }

@@ -1,5 +1,5 @@
-import { IConversation } from '~/interfaces/conversations.interface'
-import conversationsService from '~/services/conversations.service'
+import { IConversation } from '~/interfaces/public/conversations.interface'
+import conversationsService from '~/services/public/conversations.service'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 import { getIO } from '..'
 

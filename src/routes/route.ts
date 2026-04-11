@@ -2,26 +2,27 @@ import { Request, Response, Router } from 'express'
 import { OkResponse } from '~/core/success.response'
 import { envs } from '../configs/env.config'
 import { checkApiKeyMiddleware } from '../middlewares/check-api-key.middleware'
-import accessRecentRoute from './access-recents.route'
-import followsRoute from './follows.route'
-import hashtagsRoute from './hashtags.route'
-import likesRoute from './likes.route'
-import notificationRoute from './notifications.route'
-import reportTweetRoute from './report-tweets.route'
-import searchHistoryRoute from './search-histories.route'
-import tweetsRoute from './tweets.route'
-import uploadsRoute from './uploads.route'
-import usersRoute from './users.route'
+import accessRecentRoute from './public/access-recents.route'
+import followsRoute from './public/follows.route'
+import hashtagsRoute from './public/hashtags.route'
+import likesRoute from './public/likes.route'
+import notificationRoute from './public/notifications.route'
+import reportTweetRoute from './public/report-tweets.route'
+import searchHistoryRoute from './public/search-histories.route'
+import tweetsRoute from './public/tweets.route'
+import uploadsRoute from './public/uploads.route'
+import usersRoute from './public/users.route'
 import { startMockData } from '../utils/mock-data.util'
-import authRoute from './auth.route'
-import bookmarksRoute from './bookmarks.route'
-import conversationsRoute from './conversations.route'
-import communitiesRoute from './communities.route'
-import messagesRoute from './messages.route'
-import searchRoute from './search.route'
-import trendingRoute from './trending.route'
-import badWordsRoute from './bad-words.route'
-import reelRoute from './reels.routes'
+import authRoute from './public/auth-user.route'
+import bookmarksRoute from './public/bookmarks.route'
+import conversationsRoute from './public/conversations.route'
+import communitiesRoute from './public/communities.route'
+import messagesRoute from './public/messages.route'
+import searchRoute from './public/search.route'
+import trendingRoute from './public/trending.route'
+import badWordsRoute from './public/bad-words.route'
+import reelRoute from './public/reels.routes'
+import authAdminRoute from './private/auth-admin.route'
 
 const rootRoute = Router()
 
@@ -31,7 +32,7 @@ rootRoute.use('/auth', authRoute)
 // API key middleware
 rootRoute.use(checkApiKeyMiddleware)
 
-//
+// PUBLIC ROUTES
 rootRoute.use('/bookmarks', bookmarksRoute)
 rootRoute.use('/communities', communitiesRoute)
 rootRoute.use('/conversations', conversationsRoute)
@@ -50,6 +51,9 @@ rootRoute.use('/uploads', uploadsRoute)
 rootRoute.use('/users', usersRoute)
 rootRoute.use('/bad-words', badWordsRoute)
 rootRoute.use('/reels', reelRoute)
+
+// PRIVATE ROUTES
+rootRoute.use('/admin', authAdminRoute)
 
 // Route tạo dữ liệu giả lập (mock data) cho việc phát triển và thử nghiệm
 rootRoute.post('/mock-data', async (req: Request, res: Response) => {

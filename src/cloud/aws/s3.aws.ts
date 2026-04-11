@@ -6,7 +6,7 @@ import { readFileSync, unlinkSync } from 'fs'
 import { envs } from '~/configs/env.config'
 import { BadRequestError } from '~/core/error.response'
 import { MAX_LENGTH_UPLOAD, MAX_SIZE_UPLOAD } from '~/constants/upload.constant'
-import { PresignedUrlDto, ResPresignedUrl } from '~/dtos/uploads.dto'
+import { PresignedUrlDto, ResPresignedUrl } from '~/dtos/public/uploads.dto'
 import { generateKey } from '~/utils/create-key-upload-media.util'
 
 //
