@@ -163,7 +163,7 @@ tweetsRoute.get(
 /**
  * @description API để lấy một bài viết theo id (dùng cho cả new feed, profile, community).
  * @method GET
- * @route /api/tweets/:tweet_id
+ * @route /api/tweets/:id
  * @access Private (có thể truy cập nếu không đăng nhập)
  */
 tweetsRoute.get(

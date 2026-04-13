@@ -15,6 +15,8 @@ class TweetsController {
 
   async getOneById(req: Request, res: Response) {
     const { user_id } = req?.decoded_authorization as IJwtPayload
+    console.log('req.params.id::', req.params.id)
+
     // const tweet = req.tweet as ITweet
     // const { guest_view, user_view, created_at } = await TweetsService.increaseView(tweet._id!, user?.user_id)
     const tweeDetail = await TweetsService.getOneById({

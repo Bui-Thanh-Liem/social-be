@@ -5,14 +5,14 @@ import TweetsService from '~/services/public/tweets.service'
 // Y rang checkTweetParams nhưng sẽ query kiểm tra tồn tại và lấy author thôi
 export async function checkTweetExistMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
-    const { tweet_id } = req.params as { tweet_id: string }
+    const id = req.params?.id as string
 
-    if (!tweet_id) {
+    if (!id) {
       throw new NotFoundError('Bài viết không tồn tại.')
     }
 
     //
-    const tweet = await TweetsService.getTweetOnlyUserId(tweet_id)
+    const tweet = await TweetsService.getTweetOnlyUserId(id)
     req.tweet = tweet!
 
     //
