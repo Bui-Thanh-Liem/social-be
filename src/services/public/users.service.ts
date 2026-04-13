@@ -190,11 +190,13 @@ class UsersService {
   }
 
   async getFollowedUsersBasic({
+    query,
     user_id,
-    query
+    user_id_active
   }: {
     user_id: string
     query: IQuery<IUser>
+    user_id_active?: string
   }): Promise<ResMultiType<IUser>> {
     //
     const { skip, limit, sort, q } = getPaginationAndSafeQuery<IUser>(query)
@@ -245,7 +247,7 @@ class UsersService {
       {
         $addFields: {
           isFollow: {
-            $in: [new ObjectId(user_id), '$followers.user_id']
+            $in: [new ObjectId(user_id_active), '$followers.user_id']
           }
         }
       },
@@ -272,7 +274,15 @@ class UsersService {
     }
   }
 
-  async getFollowingUsersBasic({ id, query }: { id: string; query: IQuery<IUser> }): Promise<ResMultiType<IUser>> {
+  async getFollowingUsersBasic({
+    id,
+    query,
+    user_id_active
+  }: {
+    id: string
+    query: IQuery<IUser>
+    user_id_active?: string
+  }): Promise<ResMultiType<IUser>> {
     //
     const { skip, limit, sort, q } = getPaginationAndSafeQuery<IUser>(query)
 
@@ -323,7 +333,7 @@ class UsersService {
       {
         $addFields: {
           isFollow: {
-            $in: [new ObjectId(id), '$followers.user_id']
+            $in: [new ObjectId(user_id_active), '$followers.user_id']
           }
         }
       },
