@@ -30,11 +30,11 @@ class ReelsController {
   }
 
   async getProfileReels(req: Request, res: Response) {
-    const { user_id } = req?.decoded_authorization as IJwtPayload
+    const user = req?.decoded_authorization as IJwtPayload
     const reels = await reelsService.getProfileReels({
       query: req.query,
       user_id: req.params.id,
-      user_active_id: user_id!
+      user_active_id: user?.user_id
     })
 
     res.json(new CreatedResponse('Lấy danh sách reels của profile thành công', reels))
