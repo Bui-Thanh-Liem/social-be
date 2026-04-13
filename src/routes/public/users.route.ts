@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import usersController from '~/controllers/public/users.controller'
-import { ChangePasswordDtoSchema, UserIdDtoSchema, VerifyEmailDtoSchema } from '~/dtos/public/users.dto'
+import { ChangePasswordDtoSchema, VerifyEmailDtoSchema } from '~/dtos/public/users.dto'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { bodyValidate } from '~/middlewares/common/body-validate.middleware'
 import { optionLogin } from '~/middlewares/common/option-login.middleware'
@@ -10,6 +10,7 @@ import { resendRateLimit } from '~/middlewares/common/ratelimit.middleware'
 import { verifyUserActiveForChangePasswordMiddleware } from '~/middlewares/public/user/verify-user-active-for-change-password.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
+import { ParamIdDtoSchema } from '~/shared/dtos/common/param-id.dto'
 
 /**
  * @module UsersRoutes
@@ -83,12 +84,12 @@ usersRoute.get('/mentions/:username', asyncHandler(usersController.getMultiForMe
 /**
  * @description API để lấy danh sách người theo dõi của một user
  * @method GET
- * @route /api/users/followed/:user_id
+ * @route /api/users/followed/:id
  * @access Private
  */
 usersRoute.get(
-  '/followed/:user_id',
-  paramsValidate(UserIdDtoSchema),
+  '/followed/:id',
+  paramsValidate(ParamIdDtoSchema),
   queryValidate(QueryDtoSchema),
   asyncHandler(usersController.getFollowedUsersBasic)
 )
@@ -101,7 +102,7 @@ usersRoute.get(
  */
 usersRoute.get(
   '/following/:id',
-  paramsValidate(UserIdDtoSchema),
+  paramsValidate(ParamIdDtoSchema),
   queryValidate(QueryDtoSchema),
   asyncHandler(usersController.getFollowingUsersBasic)
 )
