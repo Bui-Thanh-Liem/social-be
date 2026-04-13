@@ -38,8 +38,8 @@ class UsersController {
 
   async getOneByUsername(req: Request, res: Response) {
     const { username } = req.params
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await usersService.getOneByUsername(username, user_id!)
+    const user = req.decoded_authorization as IJwtPayload
+    const result = await usersService.getOneByUsername(username, user?.user_id)
     res.json(new OkResponse(`${result} Thành công`, result))
   }
 
