@@ -50,7 +50,7 @@ export const createTweetDtoSchema = z.object({
 })
 
 export const getTweetChildrenDtoSchemaParams = z.object({
-  tweet_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+  id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
     message: 'ObjectId không hợp lệ'
   }),
   tweet_type: z.preprocess(

@@ -33,11 +33,11 @@ class TweetsController {
   }
 
   async getTweetChildren(req: Request, res: Response) {
-    const { tweet_id, tweet_type } = req.params as unknown as GetTweetChildrenDtoParams
+    const { id, tweet_type } = req.params as unknown as GetTweetChildrenDtoParams
     const { user_id } = req?.decoded_authorization as IJwtPayload
 
     const tweets = await TweetsService.getTweetChildren({
-      tweet_id,
+      id,
       tweet_type,
       query: req.query,
       user_id: user_id

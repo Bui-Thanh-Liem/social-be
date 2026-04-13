@@ -564,12 +564,12 @@ class TweetsService {
 
   //
   async getTweetChildren({
+    id,
     query,
     user_id,
-    tweet_id,
     tweet_type
   }: {
-    tweet_id: string
+    id: string
     query: IQuery<ITweet>
     tweet_type: ETweetType
     user_id: string | undefined
@@ -580,7 +580,7 @@ class TweetsService {
     const tweets = await TweetsCollection.aggregate<TweetsSchema>([
       {
         $match: {
-          parent_id: new ObjectId(tweet_id),
+          parent_id: new ObjectId(id),
           type: tweet_type
         }
       },
@@ -765,7 +765,7 @@ class TweetsService {
     //
     const [total] = await Promise.all([
       TweetsCollection.countDocuments({
-        parent_id: new ObjectId(tweet_id),
+        parent_id: new ObjectId(id),
         type: tweet_type
       }),
 
