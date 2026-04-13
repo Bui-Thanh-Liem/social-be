@@ -1,6 +1,6 @@
 import { StringValue } from 'ms'
-import { EUserTokenType } from '~/enums/public/user-tokens.enum'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { EUserTokenType } from '~/shared/enums/public/user-tokens.enum'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { signToken } from './jwt.util'
 
 //

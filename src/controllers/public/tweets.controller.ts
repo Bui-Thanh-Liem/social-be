@@ -1,10 +1,10 @@
 import { Request, Response } from 'express'
 import { CreatedResponse, OkResponse } from '~/core/success.response'
-import { GetNewFeedTypeDto, GetProfileTweetDto, GetTweetChildrenDtoParams } from '~/dtos/public/tweets.dto'
-import { ITweet } from '~/interfaces/public/tweets.interface'
+import { GetNewFeedTypeDto, GetProfileTweetDto, GetTweetChildrenDtoParams } from '~/shared/dtos/public/tweets.dto'
+import { ITweet } from '~/shared/interfaces/public/tweet.interface'
 import TweetsService from '~/services/public/tweets.service'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
-import { IQuery } from '~/shared/interfaces/query.interface'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { IQuery } from '~/shared/interfaces/common/query.interface'
 
 class TweetsController {
   async create(req: Request, res: Response) {

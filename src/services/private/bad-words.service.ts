@@ -1,16 +1,16 @@
 import { ObjectId } from 'mongodb'
 import { ConflictError } from '~/core/error.response'
-import { ActionBadWordDto } from '~/dtos/public/bad-words.dto'
+import { ActionBadWordDto } from '~/shared/dtos/public/bad-words.dto'
 import CacheService from '~/helpers/cache.helper'
 import { notificationQueue } from '~/infra/queues'
-import { IBadWord, IBadWordsCached } from '~/interfaces/public/bad-words.interface'
-import { BadWordSchema, BadWordsCollection } from '~/models/private/bad-words.schema'
-import { CONSTANT_JOB } from '~/shared/constants'
+import { IBadWord, IBadWordsCached } from '~/shared/interfaces/public/bad-word.interface'
+import { BadWordSchema, BadWordsCollection } from '~/models/private/bad-word.schema'
+import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
 import { createKeyBadWord, createKeyBadWords } from '~/utils/create-key-cache.util'
 import { getFilterQuery } from '~/utils/get-filter-query.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { removeVietnameseAccent } from '~/utils/remove-vietnamese-accent.util'
-import { ENotificationType } from '../../enums/public/notifications.enum'
+import { ENotificationType } from '../../shared/enums/public/notifications.enum'
 
 class BadWordsService {
   private LEET_MAP: Record<string, string> = {

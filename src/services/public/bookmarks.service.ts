@@ -1,9 +1,9 @@
 import { ObjectId } from 'mongodb'
 import { NotFoundError } from '~/core/error.response'
-import { ParamIdTweetDto } from '~/dtos/public/tweets.dto'
-import { BookmarksCollection } from '~/models/public/bookmarks.schema'
+import { ParamIdTweetDto } from '~/shared/dtos/public/tweets.dto'
+import { BookmarksCollection } from '~/models/public/bookmark.schema'
 import TweetsService from '~/services/public/tweets.service'
-import { ResToggleBookmark } from '../../dtos/public/bookmarks.dto'
+import { ResToggleBookmark } from '../../shared/dtos/public/bookmarks.dto'
 
 class BookmarksService {
   async toggleBookmark(user_id: string, payload: ParamIdTweetDto): Promise<ResToggleBookmark> {

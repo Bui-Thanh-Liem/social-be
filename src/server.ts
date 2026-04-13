@@ -3,7 +3,7 @@ import { Server } from 'socket.io'
 import app from './app'
 import { envs } from './configs/env.config'
 import { instanceMongodb } from './database/mongodb.db'
-import { initSubscriber } from './pubsub/subscriber'
+import { initSubscriber } from './helpers/pubsub/subscriber'
 import { allowedOrigins } from './middlewares/common/cors.middleware'
 import { initializeSocket } from './socket'
 

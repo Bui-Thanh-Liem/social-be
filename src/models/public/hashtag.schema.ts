@@ -1,0 +1,22 @@
+import { Collection, Db } from 'mongodb'
+import { BaseSchema } from '~/shared/schemas/base.schema'
+import { slug } from '~/utils/slug.util'
+import { IHashtag } from '../../shared/interfaces/public/hashtag.interface'
+
+const COLLECTION_NAME = 'hashtags'
+export class HashtagsSchema extends BaseSchema implements IHashtag {
+  name: string
+  slug: string
+
+  constructor(hashtag: Partial<IHashtag>) {
+    super()
+    this.name = hashtag.name || ''
+    this.slug = slug(this.name)
+  }
+}
+
+export let HashtagsCollection: Collection<HashtagsSchema>
+
+export function initHashtagsCollection(db: Db) {
+  HashtagsCollection = db.collection<HashtagsSchema>(COLLECTION_NAME)
+}

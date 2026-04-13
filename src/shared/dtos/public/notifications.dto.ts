@@ -1,0 +1,36 @@
+import { z } from 'zod'
+import { CONSTANT_REGEX } from '~/shared/constants/regex.constant'
+import { ENotificationType } from '~/shared/enums/public/notifications.enum'
+
+export const CreateNotiDtoSchema = z.object({
+  content: z.string().trim(),
+  type: z.nativeEnum(ENotificationType),
+  sender: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+    message: 'ObjectId không hợp lệ'
+  }),
+  receiver: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
+    message: 'ObjectId không hợp lệ'
+  }),
+  ref_id: z
+    .string()
+    .trim()
+    .regex(CONSTANT_REGEX.ID_MONGO, {
+      message: 'ObjectId không hợp lệ'
+    })
+    .optional()
+})
+
+export const GetMultiByTypeNotiDtoSchema = z.object({
+  type: z.nativeEnum(ENotificationType)
+})
+
+export type CreateNotiDto = z.infer<typeof CreateNotiDtoSchema>
+export type GetMultiByTypeNotiDto = z.infer<typeof GetMultiByTypeNotiDtoSchema>
+
+//
+export type CreateNotiLikeDto = {
+  sender_id: string
+  tweet_id: string
+}
+
+export type CreateNotiCommentDto = CreateNotiLikeDto

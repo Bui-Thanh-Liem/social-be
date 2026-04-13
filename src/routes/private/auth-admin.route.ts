@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { asyncHandler } from '../../utils/async-handler.util'
 import { bodyValidate } from '../../middlewares/common/body-validate.middleware'
-import { LoginAdminDtoSchema } from '~/dtos/private/auth-admin.dto'
+import { LoginAdminDtoSchema } from '~/shared/dtos/private/auth-admin.dto'
 import { loginRateLimit, setupF2aRateLimit, verifyF2aRateLimit } from '~/middlewares/common/ratelimit.middleware'
 import authAdminController from '~/controllers/private/auth-admin.controller'
 import { authenticationAdminMiddleware } from '~/middlewares/private/authentication-admin.middleware'

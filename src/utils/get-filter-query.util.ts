@@ -1,4 +1,4 @@
-import { IQf } from '~/shared/interfaces/query.interface'
+import { IQf } from '~/shared/interfaces/common/query.interface'
 
 export function getFilterQuery<T>(qf: IQf<T>[], filter: Partial<Record<keyof T, any>>) {
   //

@@ -1,10 +1,10 @@
 import { ObjectId } from 'mongodb'
-import { ResToggleFollow } from '~/dtos/public/follows.dto'
-import { ENotificationType } from '~/enums/public/notifications.enum'
+import { ResToggleFollow } from '~/shared/dtos/public/follows.dto'
+import { ENotificationType } from '~/shared/enums/public/notifications.enum'
 import { notificationQueue } from '~/infra/queues'
-import { FollowersCollection } from '~/models/public/follows.schema'
-import { UsersCollection } from '~/models/public/users.schema'
-import { CONSTANT_JOB } from '~/shared/constants'
+import { FollowersCollection } from '~/models/public/follow.schema'
+import { UsersCollection } from '~/models/public/user.schema'
+import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
 
 class FollowsService {
   async toggleFollow(user_id: string, followed_user_id: string): Promise<ResToggleFollow> {

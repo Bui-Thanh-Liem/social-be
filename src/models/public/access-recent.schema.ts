@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { IAccessRecent } from '~/interfaces/public/access-recent.interface'
+import { IAccessRecent } from '~/shared/interfaces/public/access-recent.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 
 export const COLLECTION_ACCESS_RECENT_NAME = 'access-recent'

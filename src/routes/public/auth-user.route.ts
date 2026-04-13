@@ -6,7 +6,7 @@ import {
   RegisterUserDtoSchema,
   ResetPasswordUserDtoSchema,
   UpdateMeUserDtoSchema
-} from '~/dtos/public/auth-user.dto'
+} from '~/shared/dtos/public/auth-user.dto'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { bodyValidate } from '~/middlewares/common/body-validate.middleware'
 import { loginRateLimit } from '~/middlewares/common/ratelimit.middleware'

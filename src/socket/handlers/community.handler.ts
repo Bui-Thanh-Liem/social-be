@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io'
-import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
 import CommunityGateway from '../gateways/Community.gateway'
+import { CONSTANT_EVENT_NAMES } from '~/shared/constants/socket.constant'
 
 export async function communityHandler(io: Server, socket: Socket) {
   // Join vào community

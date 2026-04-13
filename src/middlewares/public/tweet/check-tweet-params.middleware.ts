@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import TweetsService from '~/services/public/tweets.service'
 import { NotFoundError } from '~/core/error.response'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 export async function checkTweetByIdParamsMiddleware(req: Request, res: Response, next: NextFunction) {
   try {

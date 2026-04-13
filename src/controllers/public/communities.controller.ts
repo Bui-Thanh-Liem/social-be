@@ -14,12 +14,12 @@ import {
   JoinLeaveCommunityDto,
   PromoteMentorDto,
   UpdateDto
-} from '~/dtos/public/communities.dto'
-import { ICommunity } from '~/interfaces/public/communities.interface'
+} from '~/shared/dtos/public/communities.dto'
+import { ICommunity } from '~/shared/interfaces/public/community.interface'
 import communitiesService from '~/services/public/communities.service'
 import communityInvitationService from '~/services/public/community-invitations.service'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
-import { IQuery } from '~/shared/interfaces/query.interface'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { IQuery } from '~/shared/interfaces/common/query.interface'
 
 class CommunityController {
   async create(req: Request, res: Response) {

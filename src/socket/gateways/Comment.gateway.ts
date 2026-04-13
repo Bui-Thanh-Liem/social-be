@@ -1,6 +1,6 @@
-import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
+import { CONSTANT_EVENT_NAMES } from '~/shared/constants/socket.constant'
 import { getIO } from '..'
-import { ITweet } from '~/interfaces/public/tweets.interface'
+import { ITweet } from '~/shared/interfaces/public/tweet.interface'
 
 class CommentGateway {
   async sendNewComment(comment: ITweet, receiverId: string) {

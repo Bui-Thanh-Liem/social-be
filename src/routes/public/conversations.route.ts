@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import conversationsController from '~/controllers/public/conversations.controller'
-import { CreateConversationDtoSchema, ParticipantsDtoSchema } from '~/dtos/public/conversations.dto'
+import { CreateConversationDtoSchema, ParticipantsDtoSchema } from '~/shared/dtos/public/conversations.dto'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { bodyValidate } from '~/middlewares/common/body-validate.middleware'
 import { checkExistParticipantsMiddleware } from '~/middlewares/public/community/check-exist-participants.middleware'

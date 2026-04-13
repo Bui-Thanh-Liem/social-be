@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import trendingController from '~/controllers/public/trending.controller'
-import { ParamIdTrendingDtoSchema } from '~/dtos/public/trending.dto'
+import { ParamIdTrendingDtoSchema } from '~/shared/dtos/public/trending.dto'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { optionLogin } from '~/middlewares/common/option-login.middleware'
 import { paramsValidate } from '~/middlewares/common/params-validate.middleware'

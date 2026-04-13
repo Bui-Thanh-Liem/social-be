@@ -1,7 +1,7 @@
 import { Server } from 'socket.io'
 import cacheService from '~/helpers/cache.helper'
 import conversationsService from '~/services/public/conversations.service'
-import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
+import { CONSTANT_EVENT_NAMES } from '~/shared/constants/socket.constant'
 
 //
 export async function statusHandler(io: Server, user_id: string, handle: 'onl' | 'off') {

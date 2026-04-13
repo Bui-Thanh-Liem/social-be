@@ -3,12 +3,12 @@ import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { deleteFromS3, presignedURL } from '~/cloud/aws/s3.aws'
 import { BadRequestError, NotFoundError } from '~/core/error.response'
 import { notificationQueue } from '~/infra/queues'
-import { EMediaStatus } from '~/enums/public/media.enum'
-import { ENotificationType } from '~/enums/public/notifications.enum'
-import { DeleteMediaDto, PresignedUrlDto, ResPresignedUrl, UploadConfirmDto } from '~/dtos/public/uploads.dto'
-import { CONSTANT_JOB } from '~/shared/constants'
+import { EMediaStatus } from '~/shared/enums/public/medias.enum'
+import { ENotificationType } from '~/shared/enums/public/notifications.enum'
+import { DeleteMediaDto, PresignedUrlDto, ResPresignedUrl, UploadConfirmDto } from '~/shared/dtos/public/uploads.dto'
 import { MediasCollection } from '~/models/common/media.schema'
-import { IMedia } from '~/interfaces/common/media.interface'
+import { IMedia } from '~/shared/interfaces/common/media.interface'
+import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
 
 class UploadsServices {
   //

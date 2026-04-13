@@ -1,4 +1,4 @@
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { Request, Response } from 'express'
 import reelsService from '~/services/public/reels.service'
 import { CreatedResponse } from '~/core/success.response'

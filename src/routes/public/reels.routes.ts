@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import reelsController from '~/controllers/public/reels.controller'
-import { ChangeStatusReelDtoSchema, CreateReelDtoSchema } from '~/dtos/public/reels.dto'
+import { ChangeStatusReelDtoSchema, CreateReelDtoSchema } from '~/shared/dtos/public/reels.dto'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { bodyValidate } from '~/middlewares/common/body-validate.middleware'
 import { optionLogin } from '~/middlewares/common/option-login.middleware'

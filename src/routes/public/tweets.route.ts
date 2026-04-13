@@ -5,7 +5,7 @@ import {
   getNewFeedTypeDtoSchema,
   getProfileTweetDtoSchema,
   getTweetChildrenDtoSchemaParams
-} from '~/dtos/public/tweets.dto'
+} from '~/shared/dtos/public/tweets.dto'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { bodyValidate } from '~/middlewares/common/body-validate.middleware'
 import { optionLogin } from '~/middlewares/common/option-login.middleware'

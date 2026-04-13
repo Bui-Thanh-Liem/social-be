@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
 import messagesController from '~/controllers/public/messages.controller'
-import { GetMultiMessageByConversationDtoSchema } from '~/dtos/public/messages.dto'
+import { GetMultiMessageByConversationDtoSchema } from '~/shared/dtos/public/messages.dto'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { paramsValidate } from '~/middlewares/common/params-validate.middleware'
 import { queryValidate } from '~/middlewares/common/query-validate.middleware'

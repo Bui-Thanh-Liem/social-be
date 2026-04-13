@@ -4,9 +4,9 @@ import {
   AddParticipantsBodyDto,
   PromoteMentorBodyDto,
   RemoveParticipantsBodyDto
-} from '~/dtos/public/conversations.dto'
+} from '~/shared/dtos/public/conversations.dto'
 import conversationsService from '~/services/public/conversations.service'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class ConversationsController {
   async create(req: Request, res: Response) {

@@ -1,6 +1,6 @@
 import cron from 'node-cron'
 import { systemQueue } from '~/infra/queues'
-import { CONSTANT_JOB } from '~/shared/constants'
+import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
 
 const config = {
   timezone: process.env.TZ,

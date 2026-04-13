@@ -1,13 +1,13 @@
 import { ObjectId } from 'mongodb'
 import { clientMongodb } from '~/database/mongodb.db'
-import { ResToggleLike } from '~/dtos/public/like.dto'
-import { ParamIdTweetDto } from '~/dtos/public/tweets.dto'
+import { ResToggleLike } from '~/shared/dtos/public/like.dto'
+import { ParamIdTweetDto } from '~/shared/dtos/public/tweets.dto'
 import cacheService from '~/helpers/cache.helper'
 import { notificationQueue } from '~/infra/queues'
-import { LikesCollection } from '~/models/public/likes.schema'
-import { TweetsCollection } from '~/models/public/tweets.schema'
+import { LikesCollection } from '~/models/public/like.schema'
+import { TweetsCollection } from '~/models/public/tweet.schema'
 import TweetsService from '~/services/public/tweets.service'
-import { CONSTANT_JOB } from '~/shared/constants'
+import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
 import { logger } from '~/utils/logger.util'
 
 class LikesService {

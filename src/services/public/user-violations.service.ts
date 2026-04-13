@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
-import { CreateUserViolationsDto } from '../../dtos/public/user-violations.dto'
-import { UserViolationSchema, UserViolationsCollection } from '../../models/public/user-violations.schema'
+import { CreateUserViolationsDto } from '../../shared/dtos/public/user-violations.dto'
+import { UserViolationSchema, UserViolationsCollection } from '../../models/public/user-violation.schema'
 
 class UserViolationsService {
   async create(payload: CreateUserViolationsDto) {

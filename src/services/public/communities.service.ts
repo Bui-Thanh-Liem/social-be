@@ -8,10 +8,10 @@ import {
   CreateCommunityDto,
   InvitationMembersDto,
   UpdateDto
-} from '~/dtos/public/communities.dto'
+} from '~/shared/dtos/public/communities.dto'
 import { notificationQueue } from '~/infra/queues'
-import { ICommunity, ICommunityActivity, ICommunityPayload } from '~/interfaces/public/communities.interface'
-import { IUser } from '~/interfaces/public/users.interface'
+import { ICommunity, ICommunityActivity, ICommunityPayload } from '~/shared/interfaces/public/community.interface'
+import { IUser } from '~/shared/interfaces/public/user.interface'
 import {
   CommunitiesCollection,
   CommunitiesSchema,
@@ -20,26 +20,26 @@ import {
   CommunityMemberCollection,
   CommunityMentorCollection,
   CommunityPinCollection
-} from '~/models/public/communities.schema'
-import { COLLECTION_USERS_NAME } from '~/models/public/users.schema'
+} from '~/models/public/community.schema'
+import { COLLECTION_USERS_NAME } from '~/models/public/user.schema'
 import TweetsService from '~/services/public/tweets.service'
-import { CONSTANT_JOB } from '~/shared/constants'
-import { IQuery } from '~/shared/interfaces/query.interface'
+import { ResMultiDto } from '~/shared/dtos/common/res-multi.dto'
+import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { logger } from '~/utils/logger.util'
 import { slug } from '~/utils/slug.util'
-import { EActivityType, EInvitationStatus, EMembershipType } from '../../enums/public/communities.enum'
-import { ENotificationType } from '../../enums/public/notifications.enum'
-import { ETweetStatus } from '../../enums/public/tweets.enum'
-import { ESourceViolation } from '../../enums/public/user-violations.enum'
-import accessRecentService from './access-recents.service'
+import { EActivityType, EInvitationStatus, EMembershipType } from '../../shared/enums/public/communities.enum'
+import { ENotificationType } from '../../shared/enums/public/notifications.enum'
+import { ETweetStatus } from '../../shared/enums/public/tweets.enum'
+import { ESourceViolation } from '../../shared/enums/public/user-violations.enum'
+import userViolationsService from '../common/user-violations.service'
 import BadWordsService from '../private/bad-words.service'
+import accessRecentService from './access-recents.service'
 import CommunityInvitationService from './community-invitations.service'
 import CommunityMemberService from './community-members.service'
 import CommunityMentorService from './community-mentors.service'
-import { ResMultiDto } from '~/shared/dtos/common/res-multi.dto'
-import userViolationsService from '../common/user-violations.service'
+import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
 
 interface IPromoteDemote {
   actor_id: string

@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express'
 import { envs } from '~/configs/env.config'
 import { UnauthorizedError } from '~/core/error.response'
 import adminTokensService from '~/services/private/admin-tokens.service'
-import adminService from '~/services/private/admin.service'
+import adminService from '~/services/private/admins.service'
 import { verifyToken } from '~/utils/jwt.util'
 
 export async function authenticationAdminMiddleware(req: Request, res: Response, next: NextFunction) {

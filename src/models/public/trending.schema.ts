@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { ITrending } from '~/interfaces/public/trending.interface'
+import { ITrending } from '~/shared/interfaces/public/trending.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 import { slug } from '~/utils/slug.util'
 

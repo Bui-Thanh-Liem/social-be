@@ -14,7 +14,7 @@ import {
   JoinLeaveCommunityDtoSchema,
   PromoteMentorDtoSchema,
   UpdateDtoSchema
-} from '~/dtos/public/communities.dto'
+} from '~/shared/dtos/public/communities.dto'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { bodyValidate } from '~/middlewares/common/body-validate.middleware'
 import { checkExistMembersMiddleware } from '~/middlewares/public/community/check-exist-members.middleware'

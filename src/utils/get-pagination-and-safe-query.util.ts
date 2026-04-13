@@ -1,4 +1,4 @@
-import { IQuery } from '~/shared/interfaces/query.interface'
+import { IQuery } from '~/shared/interfaces/common/query.interface'
 
 export function getPaginationAndSafeQuery<T>({
   page = '1',

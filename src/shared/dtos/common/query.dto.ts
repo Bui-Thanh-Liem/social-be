@@ -1,5 +1,5 @@
 import z from 'zod'
-import { CONSTANT_REGEX } from '~/shared/constants'
+import { CONSTANT_REGEX } from '~/shared/constants/regex.constant'
 
 export const MongoOperatorSchema = z.enum(['$eq', '$ne', '$gt', '$lt', '$gte', '$lte', '$in', '$nin'])
 

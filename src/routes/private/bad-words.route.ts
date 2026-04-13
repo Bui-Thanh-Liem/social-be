@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import badWordsController from '~/controllers/private/bad-words.controller'
-import { ActionBadWordDtoSchema } from '~/dtos/public/bad-words.dto'
+import { ActionBadWordDtoSchema } from '~/shared/dtos/public/bad-words.dto'
 import { bodyValidate } from '~/middlewares/common/body-validate.middleware'
 import { paramsValidate } from '~/middlewares/common/params-validate.middleware'
 import { queryValidate } from '~/middlewares/common/query-validate.middleware'

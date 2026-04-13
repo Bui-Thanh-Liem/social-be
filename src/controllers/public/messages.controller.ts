@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { OkResponse } from '~/core/success.response'
-import { GetMultiMessageByConversationDto } from '~/dtos/public/messages.dto'
+import { GetMultiMessageByConversationDto } from '~/shared/dtos/public/messages.dto'
 import MessagesService from '~/services/public/messages.service'
 
 class MessagesController {

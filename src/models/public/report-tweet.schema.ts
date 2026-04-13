@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { IReportTweet } from '~/interfaces/public/report-tweet.interface'
+import { IReportTweet } from '~/shared/interfaces/public/report-tweet.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 
 export const COLLECTION_REPORT_TWEETS_NAME = 'tweet-reports'

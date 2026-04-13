@@ -1,13 +1,13 @@
 import { Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
 import { OkResponse } from '~/core/success.response'
-import { ChangePasswordDto, UserIdDto, verifyEmailDto } from '~/dtos/public/users.dto'
-import { EUserVerifyStatus } from '~/enums/public/user.enum'
-import { IUser } from '~/interfaces/public/users.interface'
-import { UsersCollection } from '~/models/public/users.schema'
+import { ChangePasswordDto, UserIdDto, verifyEmailDto } from '~/shared/dtos/public/users.dto'
+import { EUserVerifyStatus } from '~/shared/enums/public/users.enum'
+import { IUser } from '~/shared/interfaces/public/user.interface'
+import { UsersCollection } from '~/models/public/user.schema'
 import usersService from '~/services/public/users.service'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
-import { IQuery } from '~/shared/interfaces/query.interface'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
+import { IQuery } from '~/shared/interfaces/common/query.interface'
 
 class UsersController {
   async verifyEmail(req: Request, res: Response) {

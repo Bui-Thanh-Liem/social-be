@@ -1,8 +1,8 @@
 import { Collection, Db } from 'mongodb'
+import { EAdminVerifyStatus } from '~/shared/enums/private/admins.enum'
+import { IMediaBare } from '~/shared/interfaces/common/media-bare.interface'
+import { IAdmin, ITwoFactorBackup } from '~/shared/interfaces/private/admin.interface'
 import { BaseSchema } from '../../shared/schemas/base.schema'
-import { IAdmin, ITwoFactorBackup } from '~/interfaces/private/admin.interface'
-import { IMediaBare } from '~/shared/interfaces/media-bare.interface'
-import { EAdminVerifyStatus } from '~/enums/private/admin.enum'
 
 const COLLECTION_ADMIN_NAME = 'admins'
 export class AdminSchema extends BaseSchema implements IAdmin {

@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
 import { OkResponse } from '~/core/success.response'
-import { ReportTrendingDto } from '~/dtos/public/trending.dto'
+import { ReportTrendingDto } from '~/shared/dtos/public/trending.dto'
 import trendingService from '~/services/public/trending.service'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class TrendingController {
   async getTrending(req: Request, res: Response) {

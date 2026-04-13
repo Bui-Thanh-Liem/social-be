@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import reportTweetController from '~/controllers/public/report-tweets.controller'
-import { paramIdTweetDtoSchema } from '~/dtos/public/tweets.dto'
+import { paramIdTweetDtoSchema } from '~/shared/dtos/public/tweets.dto'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { paramsValidate } from '~/middlewares/common/params-validate.middleware'
 import { checkTweetByIdParamsMiddleware } from '~/middlewares/public/tweet/check-tweet-params.middleware'

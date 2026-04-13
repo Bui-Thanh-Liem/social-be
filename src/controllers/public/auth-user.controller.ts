@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { CreatedResponse, OkResponse } from '~/core/success.response'
 import authService from '~/services/public/auth-user.service'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class AuthController {
   async signup(req: Request, res: Response) {

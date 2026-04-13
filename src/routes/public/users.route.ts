@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import usersController from '~/controllers/public/users.controller'
-import { ChangePasswordDtoSchema, VerifyEmailDtoSchema } from '~/dtos/public/users.dto'
+import { ChangePasswordDtoSchema, VerifyEmailDtoSchema } from '~/shared/dtos/public/users.dto'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { bodyValidate } from '~/middlewares/common/body-validate.middleware'
 import { optionLogin } from '~/middlewares/common/option-login.middleware'

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { StringValue } from 'ms'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 /**
  *

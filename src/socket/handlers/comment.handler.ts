@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io'
-import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
+import { CONSTANT_EVENT_NAMES } from '~/shared/constants/socket.constant'
 
 export async function commentHandler(io: Server, socket: Socket) {
   // Join vào comment

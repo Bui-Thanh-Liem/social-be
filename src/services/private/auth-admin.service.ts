@@ -1,19 +1,19 @@
 import { ObjectId } from 'mongodb'
+import { generateSecret, generateURI, verify } from 'otplib'
+import { toDataURL } from 'qrcode'
+import { LoginAdminDto, ResActive2Fa, ResLoginAdmin, ResVerify2Fa } from '~/shared/dtos/private/auth-admin.dto'
+import { EUserTokenType } from '~/shared/enums/public/user-tokens.enum'
+import botTelegramService from '~/helpers/bot-telegram.helper'
+import { AdminCollection } from '~/models/private/admin.schema'
+import { envs } from '../../configs/env.config'
 import { BadRequestError, NotFoundError, UnauthorizedError } from '../../core/error.response'
 import CacheService from '../../helpers/cache.helper'
 import { createKeyAdminActive, createKeyAdminAT, createKeySessionLogin } from '../../utils/create-key-cache.util'
 import { verifyPassword } from '../../utils/crypto.util'
-import { generateSecret, generateURI, verify } from 'otplib'
-import { toDataURL } from 'qrcode'
-import { envs } from '../../configs/env.config'
 import { signToken } from '../../utils/jwt.util'
-import adminService from './admin.service'
-import { AdminCollection } from '~/models/private/admin.schema'
-import { ITwoFactorBackup } from '~/interfaces/private/admin.interface'
-import { EUserTokenType } from '~/enums/public/user-tokens.enum'
-import { LoginAdminDto, ResActive2Fa, ResLoginAdmin, ResVerify2Fa } from '~/dtos/private/auth-admin.dto'
-import botTelegramService from '~/helpers/bot-telegram.helper'
 import adminTokensService from './admin-tokens.service'
+import adminService from './admins.service'
+import { ITwoFactorBackup } from '~/shared/interfaces/private/admin.interface'
 
 class AuthAdminService {
   // Đăng nhập admin trả về thông tin cần setup hay verify
@@ -215,10 +215,10 @@ class AuthAdminService {
     // Xóa session login sau khi kích hoạt thành công
     await Promise.all([
       CacheService.del(keySessionLogin),
-      CacheService.del(createKeyAdminAT(token_))
-      // botTelegramService.sendTelegramAlert({
-      //   message: `<b>Admin ${admin.email} đã đăng nhập thành công vào lúc ${new Date().toLocaleString()}.</b>`
-      // })
+      CacheService.del(createKeyAdminAT(token_)),
+      botTelegramService.sendTelegramAlert({
+        message: `<b>Admin ${admin.email} đã đăng nhập thành công vào lúc ${new Date().toLocaleString()}.</b>`
+      })
     ])
 
     return {

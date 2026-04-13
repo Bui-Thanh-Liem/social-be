@@ -1,5 +1,5 @@
 import TweetsService from '~/services/public/tweets.service'
-import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
+import { CONSTANT_EVENT_NAMES } from '~/shared/constants/socket.constant'
 import { getIO } from '..'
 
 class CommunityGateway {

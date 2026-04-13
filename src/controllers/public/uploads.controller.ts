@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
 import { OkResponse } from '~/core/success.response'
-import { PresignedUrlDto, UploadConfirmDto } from '~/dtos/public/uploads.dto'
+import { PresignedUrlDto, UploadConfirmDto } from '~/shared/dtos/public/uploads.dto'
 import uploadsService from '~/services/public/uploads.service'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class UploadsControllers {
   async presignedURL(req: Request, res: Response) {

@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
 import { CreatedResponse } from '~/core/success.response'
-import { ParamIdTweetDto } from '~/dtos/public/tweets.dto'
+import { ParamIdTweetDto } from '~/shared/dtos/public/tweets.dto'
 import likesService from '~/services/public/likes.service'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class LikesController {
   async toggleLike(req: Request, res: Response) {

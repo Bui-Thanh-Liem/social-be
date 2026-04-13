@@ -1,12 +1,12 @@
 import { ObjectId } from 'mongodb'
 import { BadRequestError } from '~/core/error.response'
-import { CreateAccessRecentDto } from '~/dtos/public/access-recent.dto'
-import { IAccessRecent } from '~/interfaces/public/access-recent.interface'
+import { CreateAccessRecentDto } from '~/shared/dtos/public/access-recents.dto'
+import { IAccessRecent } from '~/shared/interfaces/public/access-recent.interface'
 import { AccessRecentCollection, AccessRecentSchema } from '~/models/public/access-recent.schema'
-import { COLLECTION_COMMUNITIES_NAME } from '~/models/public/communities.schema'
-import { COLLECTION_TWEETS_NAME } from '~/models/public/tweets.schema'
-import { COLLECTION_USERS_NAME } from '~/models/public/users.schema'
-import { IQuery } from '~/shared/interfaces/query.interface'
+import { COLLECTION_COMMUNITIES_NAME } from '~/models/public/community.schema'
+import { COLLECTION_TWEETS_NAME } from '~/models/public/tweet.schema'
+import { COLLECTION_USERS_NAME } from '~/models/public/user.schema'
+import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 
 class AccessRecentService {

@@ -2,8 +2,8 @@ import { NextFunction, Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { BadRequestError, UnauthorizedError } from '~/core/error.response'
-import { EUserTokenType } from '~/enums/public/user-tokens.enum'
-import { UsersCollection } from '~/models/public/users.schema'
+import { EUserTokenType } from '~/shared/enums/public/user-tokens.enum'
+import { UsersCollection } from '~/models/public/user.schema'
 import { verifyToken } from '~/utils/jwt.util'
 
 export async function verifyTokenForgotPasswordMiddleware(req: Request, res: Response, next: NextFunction) {

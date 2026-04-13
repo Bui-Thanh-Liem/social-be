@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { CreatedResponse, OkResponse } from '~/core/success.response'
 import accessRecentService from '~/services/public/access-recents.service'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class AccessRecentController {
   async create(req: Request, res: Response) {

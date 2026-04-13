@@ -1,6 +1,6 @@
-import { ZodSchema } from 'zod'
 import { Socket } from 'socket.io'
-import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
+import { ZodSchema } from 'zod'
+import { CONSTANT_EVENT_NAMES } from '~/shared/constants/socket.constant'
 
 export function withValidationDataFromClient<T>(
   schema: ZodSchema<T>,

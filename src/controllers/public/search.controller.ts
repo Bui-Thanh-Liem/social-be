@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { OkResponse } from '~/core/success.response'
 import communitiesService from '~/services/public/communities.service'
 import searchService from '~/services/public/search.service'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
 class SearchController {
   async searchPending(req: Request, res: Response) {

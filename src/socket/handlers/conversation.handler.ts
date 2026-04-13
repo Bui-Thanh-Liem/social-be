@@ -1,9 +1,9 @@
 import { Server, Socket } from 'socket.io'
-import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import cacheService from '~/helpers/cache.helper'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import ConversationGateway from '../gateways/Conversation.gateway'
 import NotificationGateway from '../gateways/Notification.gateway'
-import cacheService from '~/helpers/cache.helper'
+import { CONSTANT_EVENT_NAMES } from '~/shared/constants/socket.constant'
 
 // Xử lý join/leave conversation
 export async function conversationHandler(io: Server, socket: Socket) {

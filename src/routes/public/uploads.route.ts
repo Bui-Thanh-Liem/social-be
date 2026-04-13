@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import UploadsControllers from '~/controllers/public/uploads.controller'
-import { deleteMediaDtoSchema, presignedUrlDtoSchema, uploadConfirmDtoSchema } from '~/dtos/public/uploads.dto'
+import { deleteMediaDtoSchema, presignedUrlDtoSchema, uploadConfirmDtoSchema } from '~/shared/dtos/public/uploads.dto'
 import { bodyValidate } from '~/middlewares/common/body-validate.middleware'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'

@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io'
 import MessagesService from '~/services/public/messages.service'
-import { CONSTANT_EVENT_NAMES } from '~/shared/constants'
+import { CONSTANT_EVENT_NAMES } from '~/shared/constants/socket.constant'
 import { sendMessageDtoSchema } from '~/shared/dtos/socket/message.dto'
 import { withValidationDataFromClient } from '../middlewares/validation.socket'
 

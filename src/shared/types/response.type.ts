@@ -1,4 +1,4 @@
-import { ResNewFeeds } from '~/dtos/public/tweets.dto'
+import { ResNewFeeds } from '~/shared/dtos/public/tweets.dto'
 
 export type ResMultiType<T> = {
   total: number

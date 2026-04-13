@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { IBase } from '~/shared/interfaces/base.interface'
+import { IBase } from '~/shared/interfaces/common/base.interface'
 
 export abstract class BaseSchema implements IBase {
   _id?: ObjectId

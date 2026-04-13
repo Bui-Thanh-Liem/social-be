@@ -1,14 +1,14 @@
 import { ObjectId } from 'mongodb'
 import { BadRequestError } from '~/core/error.response'
-import { IQuery } from '~/shared/interfaces/query.interface'
+import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { slug } from '~/utils/slug.util'
 import BadWordsService from '../private/bad-words.service'
-import { ESourceViolation } from '../../enums/public/user-violations.enum'
+import { ESourceViolation } from '../../shared/enums/public/user-violations.enum'
 import UserViolationsService from './user-violations.service'
-import { IHashtag } from '../../interfaces/public/hashtags.interface'
-import { HashtagsCollection, HashtagsSchema } from '../../models/public/hashtags.schema'
+import { IHashtag } from '../../shared/interfaces/public/hashtag.interface'
+import { HashtagsCollection, HashtagsSchema } from '../../models/public/hashtag.schema'
 
 class HashtagsService {
   //

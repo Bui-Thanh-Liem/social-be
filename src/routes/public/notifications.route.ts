@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import notificationsController from '~/controllers/public/notifications.controller'
-import { GetMultiByTypeNotiDtoSchema } from '~/dtos/public/notifications.dto'
+import { GetMultiByTypeNotiDtoSchema } from '~/shared/dtos/public/notifications.dto'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { paramsValidate } from '~/middlewares/common/params-validate.middleware'
 import { queryValidate } from '~/middlewares/common/query-validate.middleware'

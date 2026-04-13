@@ -1,7 +1,7 @@
 import { JobProgress, Queue, QueueEvents } from 'bullmq'
 import { bullRedisOptions } from '~/configs/redis.config'
-import { CONSTANT_QUEUE } from '~/shared/constants'
-import { configDefaultJobOptions } from './config-job'
+import { configDefaultJobOptions } from '../../configs/default-job.config'
+import { CONSTANT_QUEUE } from '~/shared/constants/queue.constant'
 
 export const systemQueue = new Queue(CONSTANT_QUEUE.SYSTEM, {
   connection: bullRedisOptions,

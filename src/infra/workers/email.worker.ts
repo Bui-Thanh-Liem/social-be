@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq'
 import { bullRedisOptions } from '~/configs/redis.config'
-import mailServiceInstance from '~/mail/mail.service'
-import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants'
+import mailServiceInstance from '~/helpers/mail.helper'
+import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants/queue.constant'
 import { logger } from '~/utils/logger.util'
 
 // Worker xử lý gửi email xác thực

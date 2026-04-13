@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { ISearchHistory } from '~/interfaces/public/search-history.interface'
+import { ISearchHistory } from '~/shared/interfaces/public/search-history.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 
 export const COLLECTION_SEARCH_HISTORIES_NAME = 'search-histories'

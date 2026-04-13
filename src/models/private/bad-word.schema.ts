@@ -1,0 +1,28 @@
+import { Collection, Db } from 'mongodb'
+import { EActionBadWord, EPriorityBadWord } from '~/shared/enums/public/bad-words.enum'
+import { IBadWord } from '~/shared/interfaces/public/bad-word.interface'
+import { BaseSchema } from '~/shared/schemas/base.schema'
+
+export const COLLECTION_BAD_WORDS_NAME = 'bad-words'
+export class BadWordSchema extends BaseSchema implements IBadWord {
+  words: string
+  usage_count: number
+  replace_with: string
+  priority: EPriorityBadWord
+  action: EActionBadWord
+
+  constructor(badWord: Pick<IBadWord, 'words' | 'priority' | 'replace_with' | 'action'>) {
+    super()
+    this.usage_count = 0
+    this.words = badWord.words || ''
+    this.replace_with = badWord.replace_with || ''
+    this.action = badWord.action || EActionBadWord.Warn
+    this.priority = badWord.priority || EPriorityBadWord.Low
+  }
+}
+
+export let BadWordsCollection: Collection<BadWordSchema>
+
+export function initBadWordsCollection(db: Db) {
+  BadWordsCollection = db.collection<BadWordSchema>(COLLECTION_BAD_WORDS_NAME)
+}

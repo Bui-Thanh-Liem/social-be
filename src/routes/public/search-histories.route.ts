@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import searchHistoryController from '~/controllers/public/search-histories.controller'
-import { CreateSearchHistoryDtoSchema } from '~/dtos/public/search-history.dto'
+import { CreateSearchHistoryDtoSchema } from '~/shared/dtos/public/search-history.dto'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { bodyValidate } from '~/middlewares/common/body-validate.middleware'
 import { optionLogin } from '~/middlewares/common/option-login.middleware'

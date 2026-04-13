@@ -4,8 +4,8 @@ import { BadRequestError, InternalServerError } from '~/core/error.response'
 import { AdminTokensCollection, initAdminTokensCollection } from '~/models/private/admin-tokens.schema'
 import { AdminCollection, initAdminCollection } from '~/models/private/admin.schema'
 import { AccessRecentCollection, initAccessRecentCollection } from '~/models/public/access-recent.schema'
-import { BadWordsCollection, initBadWordsCollection } from '~/models/private/bad-words.schema'
-import { initBookmarksCollection } from '~/models/public/bookmarks.schema'
+import { BadWordsCollection, initBadWordsCollection } from '~/models/private/bad-word.schema'
+import { initBookmarksCollection } from '~/models/public/bookmark.schema'
 import {
   CommunitiesCollection,
   CommunityActivityCollection,
@@ -19,22 +19,22 @@ import {
   initCommunityMemberCollection,
   initCommunityMentorCollection,
   initCommunityPinCollection
-} from '~/models/public/communities.schema'
-import { ConversationsCollection, initConversationsCollection } from '~/models/public/conversations.schema'
-import { initFollowersCollection } from '~/models/public/follows.schema'
-import { HashtagsCollection, initHashtagsCollection } from '~/models/public/hashtags.schema'
-import { initLikesCollection, LikesCollection } from '~/models/public/likes.schema'
+} from '~/models/public/community.schema'
+import { ConversationsCollection, initConversationsCollection } from '~/models/public/conversation.schema'
+import { initFollowersCollection } from '~/models/public/follow.schema'
+import { HashtagsCollection, initHashtagsCollection } from '~/models/public/hashtag.schema'
+import { initLikesCollection, LikesCollection } from '~/models/public/like.schema'
 import { initMediasCollection, MediasCollection } from '~/models/common/media.schema'
-import { initMessagesCollection, MessagesCollection } from '~/models/public/messages.schema'
-import { initNotificationsCollection } from '~/models/public/notifications.schema'
-import { initReelsCollection, ReelsCollection } from '~/models/public/reels.schema'
+import { initMessagesCollection, MessagesCollection } from '~/models/public/message.schema'
+import { initNotificationsCollection } from '~/models/public/notification.schema'
+import { initReelsCollection, ReelsCollection } from '~/models/public/reel.schema'
 import { initReportTweetCollection, ReportTweetCollection } from '~/models/public/report-tweet.schema'
 import { initSearchHistoryCollection, SearchHistoryCollection } from '~/models/public/search-history.schema'
 import { initTrendingCollection, TrendingCollection } from '~/models/public/trending.schema'
-import { initTweetsCollection, TweetsCollection } from '~/models/public/tweets.schema'
-import { initUserTokensCollection, UserTokensCollection } from '~/models/public/user-tokens.schema'
-import { initUserViolationsCollection } from '~/models/public/user-violations.schema'
-import { initUsersCollection, UsersCollection } from '~/models/public/users.schema'
+import { initTweetsCollection, TweetsCollection } from '~/models/public/tweet.schema'
+import { initUserTokensCollection, UserTokensCollection } from '~/models/public/user-token.schema'
+import { initUserViolationsCollection } from '~/models/public/user-violation.schema'
+import { initUsersCollection, UsersCollection } from '~/models/public/user.schema'
 import { logger } from '~/utils/logger.util'
 
 const _MINPOOLSIZE = 5

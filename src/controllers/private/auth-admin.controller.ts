@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { OkResponse } from '../../core/success.response'
-import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import authAdminService from '~/services/private/auth-admin.service'
 
 class AuthAdminController {

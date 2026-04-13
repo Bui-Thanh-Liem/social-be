@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb'
-import { IAdminToken } from '~/interfaces/private/admin-tokens.interface'
+import { IAdminToken } from '~/shared/interfaces/private/admin-tokens.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 
 export const COLLECTION_ADMIN_TOKENS_NAME = 'admin-tokens'
