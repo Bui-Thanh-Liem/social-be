@@ -1,24 +1,24 @@
-import jwt, { SignOptions } from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
 import { StringValue } from 'ms'
-import { envs } from '~/configs/env.config'
 import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
 
-// Tạo token đơn giản
-// muốn bảo mật hơn:
-// privateKey → dùng để sign (tạo JWT)
-// publicKey → dùng để verify (xác thực JWT)
+/**
+ *
+ * @param param
+ * @returns
+ */
 export async function signToken({
   payload,
-  privateKey = envs.JWT_SECRET_ACCESS,
-  options = { algorithm: 'HS256', expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
+  expires_in,
+  private_key
 }: {
+  private_key: string
   payload: IJwtPayload
-  privateKey?: string
-  options?: SignOptions
+  expires_in: StringValue
 }) {
   if (payload?.exp) {
     return new Promise<string>((resolve, reject) => {
-      jwt.sign({ ...payload }, privateKey, {}, (err, token) => {
+      jwt.sign({ ...payload }, private_key, {}, (err, token) => {
         if (err || !token) {
           reject(err)
           return
@@ -29,20 +29,29 @@ export async function signToken({
   }
 
   delete payload.exp
+
   return new Promise<string>((resolve, reject) => {
-    jwt.sign({ ...payload }, privateKey, options, (err, token) => {
-      if (err || !token) {
-        reject(err)
-        return
+    jwt.sign(
+      { ...payload },
+      private_key,
+      {
+        algorithm: 'HS256',
+        expiresIn: expires_in
+      },
+      (err, token) => {
+        if (err || !token) {
+          reject(err)
+          return
+        }
+        resolve(token)
       }
-      resolve(token)
-    })
+    )
   })
 }
 
-export async function verifyToken({ token, privateKey }: { token: string; privateKey: string }) {
+export async function verifyToken({ token, private_key }: { token: string; private_key: string }) {
   return new Promise<IJwtPayload>((res, rej) => {
-    jwt.verify(token, privateKey, (err, decoded) => {
+    jwt.verify(token, private_key, (err, decoded) => {
       if (err || !decoded) {
         rej(err)
         return

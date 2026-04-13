@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { CreatedResponse, OkResponse } from '~/core/success.response'
 import { CreateSearchHistoryDto } from '~/dtos/public/search-history.dto'
 import { IUser } from '~/interfaces/public/users.interface'
-import searchHistoryService from '~/services/public/search-history.service'
+import searchHistoryService from '~/services/public/search-histories.service'
 import { ParamIdDto } from '~/shared/dtos/common/param-id.dto'
 
 class SearchHistoriesController {

@@ -7,11 +7,11 @@ import {
   ResetPasswordUserDtoSchema,
   UpdateMeUserDtoSchema
 } from '~/dtos/public/auth-user.dto'
-import { authenticationUserMiddleware } from '~/middlewares/authentication-user.middleware'
-import { bodyValidate } from '~/middlewares/body-validate.middleware'
-import { loginRateLimit } from '~/middlewares/ratelimit.middleware'
-import { verifyRefreshTokenMiddleware } from '~/middlewares/user/verify-refresh-token.middleware'
-import { verifyTokenForgotPasswordMiddleware } from '~/middlewares/user/verify-token-forgot-password.middleware'
+import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
+import { bodyValidate } from '~/middlewares/common/body-validate.middleware'
+import { loginRateLimit } from '~/middlewares/common/ratelimit.middleware'
+import { verifyRefreshTokenMiddleware } from '~/middlewares/public/user/verify-refresh-token.middleware'
+import { verifyTokenForgotPasswordMiddleware } from '~/middlewares/public/user/verify-token-forgot-password.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 
 /**

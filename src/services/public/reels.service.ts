@@ -1,6 +1,6 @@
 import { CreateReelDto } from '~/dtos/public/reels.dto'
-import badWordsService from './bad-words.service'
-import { IMedia } from '~/interfaces/public/media.interface'
+import badWordsService from '../private/bad-words.service'
+import { IMedia } from '~/interfaces/common/media.interface'
 import uploadsService from './uploads.service'
 import hashtagsService from './hashtags.service'
 import { EReelStatus, EReelType } from '~/enums/public/reel.enum'

@@ -15,7 +15,7 @@ export async function authMiddleware(socket: Socket, next: (err?: ExtendedError)
 
   try {
     // Xác thực token
-    const decoded = await verifyToken({ token, privateKey: envs.JWT_SECRET_ACCESS })
+    const decoded = await verifyToken({ token, private_key: envs.JWT_SECRET_ACCESS_USER })
     socket.decoded_authorization = decoded
     next()
   } catch (err) {

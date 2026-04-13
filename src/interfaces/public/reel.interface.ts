@@ -1,5 +1,5 @@
 import { IBase } from '~/shared/interfaces/base.interface'
-import { IMedia } from './media.interface'
+import { IMedia } from '../common/media.interface'
 import { EReelStatus, EReelType } from '~/enums/public/reel.enum'
 import { ObjectId } from 'mongodb'
 

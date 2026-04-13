@@ -17,7 +17,7 @@ import {
 } from '~/dtos/public/communities.dto'
 import { ICommunity } from '~/interfaces/public/communities.interface'
 import communitiesService from '~/services/public/communities.service'
-import communityInvitationService from '~/services/public/community-invitation.service'
+import communityInvitationService from '~/services/public/community-invitations.service'
 import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
 import { IQuery } from '~/shared/interfaces/query.interface'
 
@@ -86,8 +86,8 @@ class CommunityController {
   }
 
   async getPinnedBare(req: Request, res: Response) {
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await communitiesService.getPinnedBare(user_id!)
+    const user = req.decoded_authorization as IJwtPayload
+    const result = await communitiesService.getPinnedBare(user?.user_id)
     res.json(new OkResponse(`Lấy danh sách slug và tên cộng đồng thành công.`, result))
   }
 
@@ -110,8 +110,8 @@ class CommunityController {
   }
 
   async getMultiExplore(req: Request, res: Response) {
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await communitiesService.getMultiExplore({ user_id: user_id!, query: req.query })
+    const user = req.decoded_authorization as IJwtPayload
+    const result = await communitiesService.getMultiExplore({ user_id: user?.user_id, query: req.query })
     res.json(new OkResponse(`Lấy nhiều cộng đồng thành công.`, result))
   }
 
@@ -168,6 +168,16 @@ class CommunityController {
     const { user_id } = req.decoded_authorization as IJwtPayload
     const result = await communitiesService.togglePin({ user_id: user_id!, community_id: req.params.id })
     res.json(new OkResponse(`${result.status} cộng đồng thành công.`, result))
+  }
+
+  // ===== ADMIN =====
+  async adminGetCommunities(req: Request, res: Response) {
+    const { admin_id } = req.decoded_authorization as IJwtPayload
+    const result = await communitiesService.adminGetCommunities({
+      admin_id,
+      query: req.query
+    })
+    res.json(new OkResponse('Lấy danh sách cộng đồng thành công', result))
   }
 }
 

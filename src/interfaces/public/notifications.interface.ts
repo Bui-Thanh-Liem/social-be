@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb'
 import { ENotificationType } from '../../enums/public/notifications.enum'
 import { IBase } from '../../shared/interfaces/base.interface'
 import { ICommunity } from './communities.interface'
-import { IMedia } from './media.interface'
+import { IMedia } from '../common/media.interface'
 import { ITweet } from './tweets.interface'
 import { IUser } from './users.interface'
 

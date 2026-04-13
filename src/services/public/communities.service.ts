@@ -34,11 +34,12 @@ import { ENotificationType } from '../../enums/public/notifications.enum'
 import { ETweetStatus } from '../../enums/public/tweets.enum'
 import { ESourceViolation } from '../../enums/public/user-violations.enum'
 import accessRecentService from './access-recents.service'
-import BadWordsService from './bad-words.service'
-import CommunityInvitationService from './community-invitation.service'
-import CommunityMemberService from './community-member.service'
-import CommunityMentorService from './community-mentor.service'
-import UserViolationsService from './user-violations.service'
+import BadWordsService from '../private/bad-words.service'
+import CommunityInvitationService from './community-invitations.service'
+import CommunityMemberService from './community-members.service'
+import CommunityMentorService from './community-mentors.service'
+import { ResMultiDto } from '~/shared/dtos/common/res-multi.dto'
+import userViolationsService from '../common/user-violations.service'
 
 interface IPromoteDemote {
   actor_id: string
@@ -66,7 +67,7 @@ class CommunityService {
 
     // Lưu vi phạm từ cấm nếu có (rabbitmq)
     if (_name.bad_words_ids.length > 0 || _bio.bad_words_ids.length > 0) {
-      await UserViolationsService.create({
+      await userViolationsService.create({
         user_id: user_id,
         source: ESourceViolation.Community,
         source_id: inserted.insertedId.toString(),
@@ -1310,6 +1311,98 @@ class CommunityService {
       })
     )
     return !!res.insertedId
+  }
+
+  // ===== ADMIN =====
+  async adminGetCommunities({
+    query
+  }: {
+    admin_id: string
+    query: IQuery<ICommunity>
+  }): Promise<ResMultiDto<ICommunity>> {
+    const { skip, limit, sort, q, qe } = getPaginationAndSafeQuery<ICommunity>(query)
+    const filter: any = q
+      ? {
+          $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }]
+        }
+      : {}
+
+    //
+    const [communities, total] = await Promise.all([
+      CommunitiesCollection.aggregate<CommunitiesSchema>([
+        { $match: filter },
+        { $sort: sort },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'admin',
+            foreignField: '_id',
+            as: 'admin',
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  verify: 1,
+                  avatar: 1,
+                  username: 1
+                }
+              }
+            ]
+          }
+        },
+        // count members
+        {
+          $lookup: {
+            from: 'community-members',
+            localField: '_id',
+            foreignField: 'community_id',
+            as: 'members'
+          }
+        },
+
+        // count mentors
+        {
+          $lookup: {
+            from: 'community-mentors',
+            localField: '_id',
+            foreignField: 'community_id',
+            as: 'mentors'
+          }
+        },
+
+        {
+          $addFields: {
+            member_count: { $size: '$members' },
+            mentor_count: { $size: '$mentors' }
+          }
+        },
+
+        {
+          $unwind: {
+            path: '$admin',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+
+        {
+          $project: {
+            members: 0,
+            mentors: 0
+          }
+        }
+      ]).toArray(),
+      CommunitiesCollection.countDocuments({})
+    ])
+
+    //
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: this.signedCloudfrontCoverUrls(communities) as ICommunity[]
+    }
   }
 
   //

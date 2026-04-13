@@ -1,11 +1,6 @@
 import { Request, Response } from 'express'
 import { CreatedResponse, OkResponse } from '~/core/success.response'
-import {
-  GetNewFeedTypeDto,
-  GetProfileTweetDto,
-  GetTweetChildrenDtoParams,
-  ParamIdTweetDto
-} from '~/dtos/public/tweets.dto'
+import { GetNewFeedTypeDto, GetProfileTweetDto, GetTweetChildrenDtoParams } from '~/dtos/public/tweets.dto'
 import { ITweet } from '~/interfaces/public/tweets.interface'
 import TweetsService from '~/services/public/tweets.service'
 import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
@@ -50,13 +45,13 @@ class TweetsController {
   }
 
   async getNewFeeds(req: Request, res: Response) {
-    const { user_id } = req?.decoded_authorization as IJwtPayload
+    const user = req?.decoded_authorization as IJwtPayload
     const { feed_type } = req.params as GetNewFeedTypeDto
 
     const result = await TweetsService.getNewFeeds({
       feed_type,
       query: req.query,
-      user_active_id: user_id!
+      user_active_id: user?.user_id
     })
     res.status(200).json(new OkResponse('Get new feeds success', result))
   }
@@ -132,6 +127,16 @@ class TweetsController {
     const user = req.decoded_authorization as IJwtPayload
     const result = await TweetsService.countViewLinkBookmarkInWeek(user?.user_id || '')
     res.status(200).json(new OkResponse('Thống kê lượt xem, thích, lưu trong tuần thành công', result))
+  }
+
+  // ========= Admin =========
+  async getTweets(req: Request, res: Response) {
+    const { admin_id } = req.decoded_authorization as IJwtPayload
+    const result = await TweetsService.adminGetTweets({
+      admin_id,
+      query: req.queryParsed as IQuery<ITweet>
+    })
+    res.json(new OkResponse('Lấy danh sách bài viết thành công', result))
   }
 }
 

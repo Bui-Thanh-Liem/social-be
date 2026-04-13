@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import HashtagsController from '~/controllers/public/hashtags.controller'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
-import { queryValidate } from '~/middlewares/query-validate.middleware'
-import { authenticationUserMiddleware } from '~/middlewares/authentication-user.middleware'
+import { queryValidate } from '~/middlewares/common/query-validate.middleware'
+import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 
 /**

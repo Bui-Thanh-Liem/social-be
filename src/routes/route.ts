@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express'
 import { OkResponse } from '~/core/success.response'
 import { envs } from '../configs/env.config'
-import { checkApiKeyMiddleware } from '../middlewares/check-api-key.middleware'
+import { checkApiKeyMiddleware } from '../middlewares/common/check-api-key.middleware'
 import accessRecentRoute from './public/access-recents.route'
 import followsRoute from './public/follows.route'
 import hashtagsRoute from './public/hashtags.route'
@@ -20,14 +20,21 @@ import communitiesRoute from './public/communities.route'
 import messagesRoute from './public/messages.route'
 import searchRoute from './public/search.route'
 import trendingRoute from './public/trending.route'
-import badWordsRoute from './public/bad-words.route'
+import badWordsRoute from './private/bad-words.route'
 import reelRoute from './public/reels.routes'
 import authAdminRoute from './private/auth-admin.route'
+import adminRoute from './private/admin.route'
+import privateUsersRoute from './private/user.route'
+import privateTweetsRoute from './private/tweets.route'
+import privateMediaRoute from './private/media.route'
+import privateCommunitiesRoute from './private/communities.route'
+import privateBadWordsRoute from './private/bad-words.route'
 
 const rootRoute = Router()
 
 // Mount các route con
 rootRoute.use('/auth', authRoute)
+rootRoute.use('/auth-admin', authAdminRoute)
 
 // API key middleware
 rootRoute.use(checkApiKeyMiddleware)
@@ -51,9 +58,15 @@ rootRoute.use('/uploads', uploadsRoute)
 rootRoute.use('/users', usersRoute)
 rootRoute.use('/bad-words', badWordsRoute)
 rootRoute.use('/reels', reelRoute)
+rootRoute.use('/admin', adminRoute)
 
 // PRIVATE ROUTES
-rootRoute.use('/admin', authAdminRoute)
+rootRoute.use('/admin', adminRoute)
+rootRoute.use('/private/users', privateUsersRoute)
+rootRoute.use('/private/media', privateMediaRoute)
+rootRoute.use('/private/communities', privateCommunitiesRoute)
+rootRoute.use('/private/bad-words', privateBadWordsRoute)
+rootRoute.use('/private/tweets', privateTweetsRoute)
 
 // Route tạo dữ liệu giả lập (mock data) cho việc phát triển và thử nghiệm
 rootRoute.post('/mock-data', async (req: Request, res: Response) => {

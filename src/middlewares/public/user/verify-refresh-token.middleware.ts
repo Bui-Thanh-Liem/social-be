@@ -14,7 +14,7 @@ export async function verifyRefreshTokenMiddleware(req: Request, res: Response, 
 
     //
     const [decoded, tokenInDatabase] = await Promise.all([
-      verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH }),
+      verifyToken({ token: refresh_token, private_key: envs.JWT_SECRET_REFRESH_USER }),
       userTokensService.findByRefreshToken({ refresh_token })
     ])
 

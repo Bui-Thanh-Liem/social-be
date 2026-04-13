@@ -1,8 +1,10 @@
 import { Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { BadRequestError, InternalServerError } from '~/core/error.response'
+import { AdminTokensCollection, initAdminTokensCollection } from '~/models/private/admin-tokens.schema'
+import { AdminCollection, initAdminCollection } from '~/models/private/admin.schema'
 import { AccessRecentCollection, initAccessRecentCollection } from '~/models/public/access-recent.schema'
-import { BadWordsCollection, initBadWordsCollection } from '~/models/public/bad-words.schema'
+import { BadWordsCollection, initBadWordsCollection } from '~/models/private/bad-words.schema'
 import { initBookmarksCollection } from '~/models/public/bookmarks.schema'
 import {
   CommunitiesCollection,
@@ -22,7 +24,7 @@ import { ConversationsCollection, initConversationsCollection } from '~/models/p
 import { initFollowersCollection } from '~/models/public/follows.schema'
 import { HashtagsCollection, initHashtagsCollection } from '~/models/public/hashtags.schema'
 import { initLikesCollection, LikesCollection } from '~/models/public/likes.schema'
-import { initMediasCollection, MediasCollection } from '~/models/public/media.schema'
+import { initMediasCollection, MediasCollection } from '~/models/common/media.schema'
 import { initMessagesCollection, MessagesCollection } from '~/models/public/messages.schema'
 import { initNotificationsCollection } from '~/models/public/notifications.schema'
 import { initReelsCollection, ReelsCollection } from '~/models/public/reels.schema'
@@ -177,6 +179,10 @@ class Database {
       initAccessRecentCollection(this.db)
       initUserViolationsCollection(this.db)
       initReelsCollection(this.db)
+
+      // PRIVATE
+      initAdminCollection(this.db)
+      initAdminTokensCollection(this.db)
     } catch (error) {
       logger.error('Collection initialization failed:', error)
       throw error
@@ -217,6 +223,8 @@ class Database {
       const indexBadWord = await BadWordsCollection.indexExists(['words_text'])
       const indexAccessRecent = await AccessRecentCollection.indexExists(['user_id_1'])
       const indexReel = await ReelsCollection.indexExists(['content_text'])
+      const indexAdmin = await AdminCollection.indexExists(['email_1', 'name_1'])
+      const indexAdminTokens = await AdminTokensCollection.indexExists(['admin_id_1', 'refresh_token_1'])
 
       // User
       if (!indexUser) {
@@ -336,6 +344,20 @@ class Database {
       // Reel
       if (!indexReel) {
         ReelsCollection.createIndex({ content: 'text' }, { default_language: 'none' })
+      }
+
+      // ========== PRIVATE ==========
+
+      // Admin
+      if (!indexAdmin) {
+        AdminCollection.createIndex({ email: 1 }, { unique: true })
+        AdminCollection.createIndex({ name: 1 })
+      }
+
+      // Admin Tokens
+      if (!indexAdminTokens) {
+        AdminTokensCollection.createIndex({ admin_id: 1 })
+        AdminTokensCollection.createIndex({ refresh_token: 1 }, { unique: true })
       }
 
       logger.info('All indexes are ensured successfully')

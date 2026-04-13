@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { z } from 'zod'
-import { IMedia } from '~/interfaces/public/media.interface'
+import { IMedia } from '~/interfaces/common/media.interface'
 import { ITrending } from '~/interfaces/public/trending.interface'
 import { ITweet } from '~/interfaces/public/tweets.interface'
 import { IUser } from '~/interfaces/public/users.interface'

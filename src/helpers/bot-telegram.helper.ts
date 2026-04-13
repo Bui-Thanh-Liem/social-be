@@ -1,9 +1,9 @@
+import { Markup, Telegraf } from 'telegraf'
 import axios from 'axios'
+import { envs } from '~/configs/env.config'
 import FormData from 'form-data'
 import fs from 'fs'
-import { Markup, Telegraf } from 'telegraf'
 import { message } from 'telegraf/filters'
-import { envs } from '~/configs/env.config'
 
 class BotTelegramService {
   // Token của bot Telegram, lấy từ BotFather
@@ -72,7 +72,7 @@ class BotTelegramService {
    * <pre>Preformatted text</pre> (Dạng code block, giữ nguyên format, thường dùng cho log hoặc stack trace)<pre>Fixed-width code block</pre> (Khối code)
    * <a>URL</a> (Link)
    */
-  async sendAlert({ message, chatId }: { message: string; chatId?: string }) {
+  async sendTelegramAlert({ message, chatId }: { message: string; chatId?: string }) {
     const url = `https://api.telegram.org/bot${this.botToken}/sendMessage`
     console.log('url :::', url)
 
@@ -99,7 +99,7 @@ class BotTelegramService {
    * @param caption Tin nhắn đi kèm file
    * @param chatId ID người nhận (mặc định lấy từ env)
    */
-  async sendDocument({ filePath, caption, chatId }: { filePath: string; caption?: string; chatId?: string }) {
+  async sendTelegramDocument({ filePath, caption, chatId }: { filePath: string; caption?: string; chatId?: string }) {
     const url = `https://api.telegram.org/bot${this.botToken}/sendDocument`
 
     try {
@@ -137,7 +137,7 @@ class BotTelegramService {
    * @param photoPath Đường dẫn file ảnh hoặc URL ảnh
    * @param caption Tin nhắn đi kèm bên dưới ảnh
    */
-  async sendPhoto({ photoPath, caption, chatId }: { photoPath: string; caption?: string; chatId?: string }) {
+  async sendTelegramPhoto({ photoPath, caption, chatId }: { photoPath: string; caption?: string; chatId?: string }) {
     const url = `https://api.telegram.org/bot${this.botToken}/sendPhoto`
 
     try {
@@ -193,7 +193,7 @@ class BotTelegramService {
     const chartUrl = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify(chartConfig))}`
 
     // Gửi thẳng qua Telegram
-    await this.sendPhoto({
+    await this.sendTelegramPhoto({
       photoPath: chartUrl,
       caption: `📈 <b>BÁO CÁO TĂNG TRƯỞNG</b>\n<i>Dữ liệu cập nhật realtime từ hệ thống.</i>`
     })

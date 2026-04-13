@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { CreatedResponse, OkResponse } from '~/core/success.response'
-import badWordsService from '~/services/public/bad-words.service'
+import badWordsService from '~/services/private/bad-words.service'
 
 class BadWordsController {
   async create(req: Request, res: Response) {

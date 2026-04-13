@@ -15,12 +15,12 @@ import {
   PromoteMentorDtoSchema,
   UpdateDtoSchema
 } from '~/dtos/public/communities.dto'
-import { authenticationUserMiddleware } from '~/middlewares/authentication-user.middleware'
-import { bodyValidate } from '~/middlewares/body-validate.middleware'
-import { checkExistMembersMiddleware } from '~/middlewares/community/check-exist-members.middleware'
-import { optionLogin } from '~/middlewares/option-login.middleware'
-import { paramsValidate } from '~/middlewares/params-validate.middleware'
-import { queryValidate } from '~/middlewares/query-validate.middleware'
+import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
+import { bodyValidate } from '~/middlewares/common/body-validate.middleware'
+import { checkExistMembersMiddleware } from '~/middlewares/public/community/check-exist-members.middleware'
+import { optionLogin } from '~/middlewares/common/option-login.middleware'
+import { paramsValidate } from '~/middlewares/common/params-validate.middleware'
+import { queryValidate } from '~/middlewares/common/query-validate.middleware'
 import { ParamIdDtoSchema } from '~/shared/dtos/common/param-id.dto'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
 import { asyncHandler } from '~/utils/async-handler.util'

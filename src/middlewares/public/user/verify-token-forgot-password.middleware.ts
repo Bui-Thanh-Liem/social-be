@@ -14,7 +14,7 @@ export async function verifyTokenForgotPasswordMiddleware(req: Request, res: Res
     }
 
     // Kiểm tra xem mã có hợp lệ, còn hạn không
-    const decoded = await verifyToken({ token, privateKey: envs.JWT_SECRET_TEMP })
+    const decoded = await verifyToken({ token, private_key: envs.JWT_SECRET_TEMP_USER })
 
     // Kiểm tra thêm , xem loại token có phải reset password không
     if (decoded.type !== EUserTokenType.ForgotPasswordToken) {

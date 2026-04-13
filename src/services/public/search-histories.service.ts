@@ -8,7 +8,7 @@ import { IQuery } from '~/shared/interfaces/query.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { ESourceViolation } from '../../enums/public/user-violations.enum'
 import { ISearchHistory } from '../../interfaces/public/search-history.interface'
-import BadWordsService from './bad-words.service'
+import BadWordsService from '../private/bad-words.service'
 import UserViolationsService from './user-violations.service'
 
 class SearchHistoryService {

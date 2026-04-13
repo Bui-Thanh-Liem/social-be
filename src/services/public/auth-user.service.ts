@@ -1,7 +1,6 @@
 import axios from 'axios'
 import _ from 'lodash'
 import { ObjectId } from 'mongodb'
-import { StringValue } from 'ms'
 import { envs } from '~/configs/env.config'
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from '~/core/error.response'
 import cacheService from '~/helpers/cache.helper'
@@ -14,11 +13,10 @@ import { createKeyUserActive } from '~/utils/create-key-cache.util'
 import { generatePassword, hashPassword, verifyPassword } from '~/utils/crypto.util'
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
-import BadWordsService from './bad-words.service'
+import BadWordsService from '../private/bad-words.service'
 import { ENotificationType } from '../../enums/public/notifications.enum'
 import { EUserTokenType } from '../../enums/public/user-tokens.enum'
 import { ESourceViolation } from '../../enums/public/user-violations.enum'
-import UserViolationsService from './user-violations.service'
 import { EUserStatus, EUserVerifyStatus } from '../../enums/public/user.enum'
 import UsersService from './users.service'
 import {
@@ -30,6 +28,7 @@ import {
 } from '~/dtos/public/auth-user.dto'
 import { UsersCollection, UsersSchema } from '~/models/public/users.schema'
 import userTokensService from './user-tokens.service'
+import userViolationsService from '../common/user-violations.service'
 
 class AuthUserService {
   async signup(payload: RegisterUserDto) {
@@ -54,8 +53,8 @@ class AuthUserService {
     if (!payload.verify) {
       email_verify_token = await signToken({
         payload: { user_id: '', type: EUserTokenType.VerifyToken, role: 'user', admin_id: '' },
-        privateKey: envs.JWT_SECRET_TEMP,
-        options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
+        private_key: envs.JWT_SECRET_TEMP_USER,
+        expires_in: envs.JWT_EXPIRES_IN_5M
       })
     }
 
@@ -82,8 +81,10 @@ class AuthUserService {
         admin_id: '',
         role: 'user'
       },
-      private_access_key: envs.JWT_SECRET_ACCESS,
-      private_refresh_key: envs.JWT_SECRET_REFRESH
+      private_access_key: envs.JWT_SECRET_ACCESS_USER,
+      private_refresh_key: envs.JWT_SECRET_REFRESH_USER,
+      expires_in_access: envs.JWT_EXPIRES_IN_15M,
+      expires_in_refresh: envs.JWT_EXPIRES_IN_30D
     })
 
     //
@@ -92,7 +93,7 @@ class AuthUserService {
     }
 
     // Khi đăng kí thành công thì cho người dùng đăng nhập vào ứng dụng ngay.
-    const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
+    const { iat, exp } = await verifyToken({ token: refresh_token, private_key: envs.JWT_SECRET_REFRESH_USER })
     await userTokensService.create({ refresh_token, user_id: newUser.insertedId.toString(), iat, exp })
 
     // Gửi thông báo xác thực email
@@ -141,12 +142,14 @@ class AuthUserService {
     // Tạo access/refresh token
     const [access_token, refresh_token] = await createTokenPair({
       payload: { user_id: foundUser._id.toString(), role: 'user', admin_id: '' },
-      private_access_key: envs.JWT_SECRET_ACCESS,
-      private_refresh_key: envs.JWT_SECRET_REFRESH
+      private_access_key: envs.JWT_SECRET_ACCESS_USER,
+      private_refresh_key: envs.JWT_SECRET_REFRESH_USER,
+      expires_in_access: envs.JWT_EXPIRES_IN_15M,
+      expires_in_refresh: envs.JWT_EXPIRES_IN_30D
     })
 
     // Lưu refresh token vào database
-    const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
+    const { iat, exp } = await verifyToken({ token: refresh_token, private_key: envs.JWT_SECRET_REFRESH_USER })
     await userTokensService.create({ refresh_token, user_id: foundUser._id.toString(), iat, exp })
 
     return {
@@ -176,11 +179,13 @@ class AuthUserService {
 
       const [access_token, refresh_token] = await createTokenPair({
         payload: { user_id: exist._id.toString(), role: 'user', admin_id: '' },
-        private_access_key: envs.JWT_SECRET_ACCESS,
-        private_refresh_key: envs.JWT_SECRET_REFRESH
+        private_access_key: envs.JWT_SECRET_ACCESS_USER,
+        private_refresh_key: envs.JWT_SECRET_REFRESH_USER,
+        expires_in_access: envs.JWT_EXPIRES_IN_15M,
+        expires_in_refresh: envs.JWT_EXPIRES_IN_30D
       })
 
-      const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
+      const { iat, exp } = await verifyToken({ token: refresh_token, private_key: envs.JWT_SECRET_REFRESH_USER })
       await userTokensService.create({ refresh_token, user_id: exist._id.toString(), exp, iat })
 
       return {
@@ -228,11 +233,13 @@ class AuthUserService {
     if (exist) {
       const [access_token, refresh_token] = await createTokenPair({
         payload: { user_id: exist._id.toString(), role: 'user', admin_id: '' },
-        private_access_key: envs.JWT_SECRET_ACCESS,
-        private_refresh_key: envs.JWT_SECRET_REFRESH
+        private_access_key: envs.JWT_SECRET_ACCESS_USER,
+        private_refresh_key: envs.JWT_SECRET_REFRESH_USER,
+        expires_in_access: envs.JWT_EXPIRES_IN_15M,
+        expires_in_refresh: envs.JWT_EXPIRES_IN_30D
       })
 
-      const { iat, exp } = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
+      const { iat, exp } = await verifyToken({ token: refresh_token, private_key: envs.JWT_SECRET_REFRESH_USER })
       await userTokensService.create({ refresh_token, user_id: exist._id.toString(), exp, iat })
 
       return {
@@ -368,8 +375,8 @@ class AuthUserService {
     //
     const forgot_password_token = await signToken({
       payload: { user_id: user._id.toString(), type: EUserTokenType.ForgotPasswordToken, role: 'user', admin_id: '' },
-      privateKey: envs.JWT_SECRET_TEMP,
-      options: { expiresIn: envs.TEMP_TOKEN_EXPIRES_IN as StringValue }
+      private_key: envs.JWT_SECRET_TEMP_USER,
+      expires_in: envs.JWT_EXPIRES_IN_5M
     })
 
     //
@@ -426,7 +433,7 @@ class AuthUserService {
 
     // Nếu có (hacker sử dụng rồi hoặc là chính chủ sử dụng rồi giờ hacker sử dụng lại)
     if (foundToken) {
-      const decoded = await verifyToken({ token: refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
+      const decoded = await verifyToken({ token: refresh_token, private_key: envs.JWT_SECRET_REFRESH_USER })
       logger.error('Người dùng này đang sử dụng refresh_token đã được sử dụng rồi:::', decoded.user_id)
 
       // Xoá mọi phiên đang đăng nhập của người dùng này (an toàn nhất)
@@ -441,7 +448,7 @@ class AuthUserService {
     }
 
     // Verify
-    const decoded = await verifyToken({ token: holderToken.refresh_token, privateKey: envs.JWT_SECRET_REFRESH })
+    const decoded = await verifyToken({ token: holderToken.refresh_token, private_key: envs.JWT_SECRET_REFRESH_USER })
 
     // Kiểm tra tồn tại người dùng
     const foundUser = await UsersService.findOneById(decoded.user_id)
@@ -451,8 +458,10 @@ class AuthUserService {
     const [access_token, new_refresh_token] = await createTokenPair({
       payload: { user_id: decoded.user_id, role: 'user', admin_id: '' },
       exp_refresh: decoded.exp,
-      private_access_key: envs.JWT_SECRET_ACCESS,
-      private_refresh_key: envs.JWT_SECRET_REFRESH
+      private_access_key: envs.JWT_SECRET_ACCESS_USER,
+      private_refresh_key: envs.JWT_SECRET_REFRESH_USER,
+      expires_in_access: envs.JWT_EXPIRES_IN_15M,
+      expires_in_refresh: envs.JWT_EXPIRES_IN_30D
     })
 
     // Cập nhật lại token đang sử dụng và token đã được sử dụng.
@@ -488,7 +497,7 @@ class AuthUserService {
     ])
 
     // Lưu vi phạm từ cấm nếu có (rabbitmq)
-    await UserViolationsService.create({
+    await userViolationsService.create({
       user_id: user_id,
       source_id: user_id,
       source: ESourceViolation.Auth,

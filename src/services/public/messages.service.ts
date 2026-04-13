@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
-import { IMedia } from '~/interfaces/public/media.interface'
+import { IMedia } from '~/interfaces/common/media.interface'
 import { IMessage } from '~/interfaces/public/messages.interface'
 import { MessagesCollection, MessagesSchema } from '~/models/public/messages.schema'
 import { COLLECTION_USERS_NAME } from '~/models/public/users.schema'

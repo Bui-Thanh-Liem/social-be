@@ -1,9 +1,9 @@
 import { Router } from 'express'
 import FollowsController from '~/controllers/public/follows.controller'
 import { UserIdDtoSchema } from '~/dtos/public/users.dto'
-import { paramsValidate } from '~/middlewares/params-validate.middleware'
-import { authenticationUserMiddleware } from '~/middlewares/authentication-user.middleware'
-import { checkUserParamsMiddleware } from '~/middlewares/user/check-user-params.middleware'
+import { paramsValidate } from '~/middlewares/common/params-validate.middleware'
+import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
+import { checkUserParamsMiddleware } from '~/middlewares/public/user/check-user-params.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 
 /**

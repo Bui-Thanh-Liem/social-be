@@ -21,10 +21,10 @@ class ReelsController {
   }
 
   async getNewFeed(req: Request, res: Response) {
-    const { user_id } = req?.decoded_authorization as IJwtPayload
+    const user = req?.decoded_authorization as IJwtPayload
     const reels = await reelsService.getNewFeed({
       query: req.query,
-      user_active_id: user_id!
+      user_active_id: user?.user_id
     })
     res.json(new CreatedResponse('Lấy danh sách reels thành công', reels))
   }

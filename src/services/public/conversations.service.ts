@@ -110,7 +110,7 @@ class ConversationsService {
     const conversations = await ConversationsCollection.aggregate<ConversationsSchema>([
       {
         $match: {
-          last_message: { $ne: null }, // Chỉ lấy conversation có last_message (đã từng nhắn tin)
+          $or: [{ last_message: { $ne: null }, type: EConversationType.Group }], // Nếu có last_message thì phải là group, vì private có thể không có last_message
           participants: {
             $in: [new ObjectId(user_id)]
           },

@@ -20,18 +20,18 @@ class AdminService {
       await AdminCollection.insertOne(
         new AdminSchema({
           name: 'Super Admin',
-          email: envs.ADMIN_EMAIL || '',
-          password: hashPassword(envs.ADMIN_PASSWORD || ''),
-          verify: EAdminVerifyStatus.Verified,
-          two_factor_enabled: false,
-          two_factor_secret: null,
           is_root_admin: true,
-          created_at: new Date()
+          created_at: new Date(),
+          two_factor_secret: null,
+          two_factor_enabled: false,
+          email: envs.ADMIN_EMAIL || '',
+          verify: EAdminVerifyStatus.Verified,
+          password: hashPassword(envs.ADMIN_PASSWORD || '')
         })
       )
-      console.log('✅ First admin user created successfully.')
+      console.log('✅ Tạo tài khoản admin đầu tiên thành công.')
     } else {
-      console.log('✅ First admin user already exists. No action needed.')
+      console.log('✅ Tài khoản admin đầu tiên đã tồn tại.')
     }
   }
 
@@ -72,7 +72,7 @@ class AdminService {
     }
 
     if (!adminActive) {
-      throw new NotFoundError('Admin không tồn tại.')
+      throw new NotFoundError('Quản trị viên không tồn tại.')
     }
 
     return this.signedCloudfrontAvatarUrls(adminActive) as IAdmin

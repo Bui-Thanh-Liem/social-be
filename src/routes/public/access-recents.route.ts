@@ -1,13 +1,13 @@
 import { Router } from 'express'
 import accessRecentController from '~/controllers/public/access-recent.controller'
-import { authenticationUserMiddleware } from '~/middlewares/authentication-user.middleware'
-import { bodyValidate } from '~/middlewares/body-validate.middleware'
-import { paramsValidate } from '~/middlewares/params-validate.middleware'
-import { queryValidate } from '~/middlewares/query-validate.middleware'
+import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
+import { bodyValidate } from '~/middlewares/common/body-validate.middleware'
+import { paramsValidate } from '~/middlewares/common/params-validate.middleware'
+import { queryValidate } from '~/middlewares/common/query-validate.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
 import { CreateAccessRecentDtoSchema } from '../../dtos/public/access-recent.dto'
-import { optionLogin } from '~/middlewares/option-login.middleware'
+import { optionLogin } from '~/middlewares/common/option-login.middleware'
 import { ParamIdDtoSchema } from '~/shared/dtos/common/param-id.dto'
 
 /**

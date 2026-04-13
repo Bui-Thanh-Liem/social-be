@@ -1,6 +1,6 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { EMediaStatus } from '~/enums/public/media.enum'
-import { IMedia } from '~/interfaces/public/media.interface'
+import { IMedia } from '~/interfaces/common/media.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 
 const COLLECTION_MEDIA_NAME = 'medias'

@@ -19,6 +19,8 @@ import { EUserTokenType } from '../../enums/public/user-tokens.enum'
 import { EUserVerifyStatus } from '../../enums/public/user.enum'
 import accessRecentService from './access-recents.service'
 import followsService from './follows.service'
+import { getFilterQuery } from '~/utils/get-filter-query.util'
+import { ResMultiDto } from '~/shared/dtos/common/res-multi.dto'
 
 class UsersService {
   async verifyEmail({
@@ -34,7 +36,7 @@ class UsersService {
     }
 
     //
-    await verifyToken({ token: email_verify_token, privateKey: envs.JWT_SECRET_TEMP })
+    await verifyToken({ token: email_verify_token, private_key: envs.JWT_SECRET_TEMP_USER })
 
     //
     const user = await UsersCollection.findOne({ email_verify_token })
@@ -73,8 +75,8 @@ class UsersService {
     //
     const email_verify_token = await signToken({
       payload: { user_id: id, type: EUserTokenType.VerifyToken, admin_id: '', role: 'user' },
-      privateKey: envs.JWT_SECRET_TEMP,
-      options: { expiresIn: envs.ACCESS_TOKEN_EXPIRES_IN as StringValue }
+      private_key: envs.JWT_SECRET_TEMP_USER,
+      expires_in: envs.JWT_EXPIRES_IN_15M
     })
 
     //
@@ -592,6 +594,50 @@ class UsersService {
 
     return users
     // return this.signedCloudfrontAvatarUrls(users) as IUser[]
+  }
+
+  // ===== ADMIN =====
+  async adminGetUsers({ admin_id, query }: { admin_id: string; query: IQuery<IUser> }): Promise<ResMultiDto<IUser>> {
+    //
+    const { skip, limit, sort, q, qf } = getPaginationAndSafeQuery<IUser>(query)
+    let filter: any = q
+      ? {
+          $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }]
+        }
+      : {}
+
+    //
+    filter = getFilterQuery(qf, filter as any)
+
+    // Trường hợp đặt biệt , status lồng trong 2 cấp
+    if (filter?.status) {
+      filter['status.status'] = filter.status
+      delete filter.status
+    }
+
+    //
+    const [users, total] = await Promise.all([
+      UsersCollection.aggregate<UsersSchema>([
+        { $match: filter },
+        { $sort: sort },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $project: {
+            password: 0,
+            email_verify_token: 0,
+            forgot_password_token: 0
+          }
+        }
+      ]).toArray(),
+      UsersCollection.countDocuments(filter)
+    ])
+
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: this.signedCloudfrontAvatarUrls(users) as IUser[]
+    }
   }
 
   //

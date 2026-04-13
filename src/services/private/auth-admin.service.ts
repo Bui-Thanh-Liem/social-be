@@ -3,20 +3,21 @@ import { BadRequestError, NotFoundError, UnauthorizedError } from '../../core/er
 import CacheService from '../../helpers/cache.helper'
 import { createKeyAdminActive, createKeyAdminAT, createKeySessionLogin } from '../../utils/create-key-cache.util'
 import { verifyPassword } from '../../utils/crypto.util'
-import { LoginDto, ResActive2Fa, ResLogin, ResVerify2Fa } from './auth.dto'
 import { generateSecret, generateURI, verify } from 'otplib'
 import { toDataURL } from 'qrcode'
 import { envs } from '../../configs/env.config'
-import { StringValue } from 'ms'
 import { signToken } from '../../utils/jwt.util'
 import adminService from './admin.service'
 import { AdminCollection } from '~/models/private/admin.schema'
 import { ITwoFactorBackup } from '~/interfaces/private/admin.interface'
 import { EUserTokenType } from '~/enums/public/user-tokens.enum'
+import { LoginAdminDto, ResActive2Fa, ResLoginAdmin, ResVerify2Fa } from '~/dtos/private/auth-admin.dto'
+import botTelegramService from '~/helpers/bot-telegram.helper'
+import adminTokensService from './admin-tokens.service'
 
 class AuthAdminService {
   // Đăng nhập admin trả về thông tin cần setup hay verify
-  async login(payload: LoginDto): Promise<{ message: string; data?: ResLogin }> {
+  async login(payload: LoginAdminDto): Promise<{ message: string; data?: ResLoginAdmin }> {
     // Kiểm tra tồn tại email
     const foundAdmin = await adminService.findOneByEmail(payload?.email)
     if (!foundAdmin) {
@@ -198,29 +199,26 @@ class AuthAdminService {
 
     // Tạo access/refresh token
     const token_ = await signToken({
-      privateKey: envs.JWT_SECRET_ACCESS_ADMIN,
-      payload: { admin_id, user_id: '', type: EUserTokenType.AccessToken, role: 'admin' },
-      options: { expiresIn: envs.ACCESS_TOKEN_ADMIN_EXPIRES_IN as StringValue }
+      expires_in: envs.JWT_EXPIRES_IN_30D,
+      private_key: envs.JWT_SECRET_ACCESS_ADMIN,
+      payload: { admin_id, user_id: '', type: EUserTokenType.AccessToken, role: 'admin' }
     })
 
     // Lưu refresh token vào database
-    const adminToken = await TokenService.create({
-      token: token_,
-      admin_id: new ObjectId(admin_id),
+    await adminTokensService.create({
+      refresh_token: token_,
+      admin_id: admin_id,
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 3600 * 24 * 1 // 1 ngày (JWT_EXPIRES_IN)
+      exp: Math.floor(Date.now() / 1000) + 3600 * 24 * 30 // 30 ngày (JWT_EXPIRES_IN_30D)
     })
-    if (!adminToken) {
-      throw new BadRequestError('Đã có lỗi xảy ra, vui lòng thử lại.')
-    }
 
     // Xóa session login sau khi kích hoạt thành công
     await Promise.all([
       CacheService.del(keySessionLogin),
-      CacheService.del(createKeyAdminAT(token_)),
-      TelegramService.sendTelegramAlert({
-        message: `<b>Admin ${admin.email} đã đăng nhập thành công vào lúc ${new Date().toLocaleString()}.</b>`
-      })
+      CacheService.del(createKeyAdminAT(token_))
+      // botTelegramService.sendTelegramAlert({
+      //   message: `<b>Admin ${admin.email} đã đăng nhập thành công vào lúc ${new Date().toLocaleString()}.</b>`
+      // })
     ])
 
     return {

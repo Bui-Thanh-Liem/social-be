@@ -1,11 +1,10 @@
 import { Router } from 'express'
 import { asyncHandler } from '../../utils/async-handler.util'
-import { bodyValidate } from '../../middlewares/body-validate.middleware'
-
-import { authenticationUserMiddleware } from '../../middlewares/authentication-user.middleware'
+import { bodyValidate } from '../../middlewares/common/body-validate.middleware'
 import { LoginAdminDtoSchema } from '~/dtos/private/auth-admin.dto'
-import { loginRateLimit, setupF2aRateLimit, verifyF2aRateLimit } from '~/middlewares/ratelimit.middleware'
+import { loginRateLimit, setupF2aRateLimit, verifyF2aRateLimit } from '~/middlewares/common/ratelimit.middleware'
 import authAdminController from '~/controllers/private/auth-admin.controller'
+import { authenticationAdminMiddleware } from '~/middlewares/private/authentication-admin.middleware'
 
 const authAdminRoute = Router()
 
@@ -45,7 +44,7 @@ authAdminRoute
   .post(asyncHandler(verifyF2aRateLimit), asyncHandler(authAdminController.verifyTwoFactorAuth))
 
 //
-authAdminRoute.use(authenticationUserMiddleware)
+authAdminRoute.use(authenticationAdminMiddleware)
 
 /**
  * ĐĂNG XUẤT

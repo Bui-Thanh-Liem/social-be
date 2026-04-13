@@ -7,8 +7,8 @@ import { EMediaStatus } from '~/enums/public/media.enum'
 import { ENotificationType } from '~/enums/public/notifications.enum'
 import { DeleteMediaDto, PresignedUrlDto, ResPresignedUrl, UploadConfirmDto } from '~/dtos/public/uploads.dto'
 import { CONSTANT_JOB } from '~/shared/constants'
-import { MediasCollection } from '~/models/public/media.schema'
-import { IMedia } from '~/interfaces/public/media.interface'
+import { MediasCollection } from '~/models/common/media.schema'
+import { IMedia } from '~/interfaces/common/media.interface'
 
 class UploadsServices {
   //

@@ -12,7 +12,7 @@ export async function authenticationUserMiddleware(req: Request, res: Response, 
     if (!access_token) {
       throw new UnauthorizedError('Vui lòng đăng nhập.')
     }
-    const decoded = await verifyToken({ token: access_token, privateKey: envs.JWT_SECRET_ACCESS })
+    const decoded = await verifyToken({ token: access_token, private_key: envs.JWT_SECRET_ACCESS_USER })
 
     //
     if (decoded.user_id) {

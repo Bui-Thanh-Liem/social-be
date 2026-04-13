@@ -1,6 +1,6 @@
 import { Collection, Db, ObjectId } from 'mongodb'
 import { EReelType, EReelStatus } from '~/enums/public/reel.enum'
-import { IMedia } from '~/interfaces/public/media.interface'
+import { IMedia } from '~/interfaces/common/media.interface'
 import { IReel } from '~/interfaces/public/reel.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
 

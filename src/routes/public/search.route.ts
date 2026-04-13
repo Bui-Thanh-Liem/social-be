@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import searchController from '~/controllers/public/search.controller'
-import { authenticationUserMiddleware } from '~/middlewares/authentication-user.middleware'
-import { optionLogin } from '~/middlewares/option-login.middleware'
-import { queryValidate } from '~/middlewares/query-validate.middleware'
+import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
+import { optionLogin } from '~/middlewares/common/option-login.middleware'
+import { queryValidate } from '~/middlewares/common/query-validate.middleware'
 import { QueryDtoSchema } from '~/shared/dtos/common/query.dto'
 import { asyncHandler } from '~/utils/async-handler.util'
 

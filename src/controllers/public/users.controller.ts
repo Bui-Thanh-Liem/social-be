@@ -3,9 +3,11 @@ import { ObjectId } from 'mongodb'
 import { OkResponse } from '~/core/success.response'
 import { ChangePasswordDto, UserIdDto, verifyEmailDto } from '~/dtos/public/users.dto'
 import { EUserVerifyStatus } from '~/enums/public/user.enum'
+import { IUser } from '~/interfaces/public/users.interface'
 import { UsersCollection } from '~/models/public/users.schema'
 import usersService from '~/services/public/users.service'
 import { IJwtPayload } from '~/shared/interfaces/jwt.interface'
+import { IQuery } from '~/shared/interfaces/query.interface'
 
 class UsersController {
   async verifyEmail(req: Request, res: Response) {
@@ -29,8 +31,8 @@ class UsersController {
   }
 
   async getTopFollowedUsers(req: Request, res: Response) {
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await usersService.getTopFollowedUsers({ query: req.query, user_id: user_id! })
+    const user = req.decoded_authorization as IJwtPayload
+    const result = await usersService.getTopFollowedUsers({ query: req.query, user_id: user?.user_id })
     res.json(new OkResponse('Lấy người dùng có nhiều người theo dõi thành công', result))
   }
 
@@ -68,6 +70,16 @@ class UsersController {
     const { new_password } = req.body as ChangePasswordDto
     const result = await usersService.changePassword(user_id!, new_password)
     res.json(new OkResponse(`Thay đổi mật khẩu thành công.`, result))
+  }
+
+  // ===== ADMIN =====
+  async adminGetUsers(req: Request, res: Response) {
+    const { admin_id } = req.decoded_authorization as IJwtPayload
+    const result = await usersService.adminGetUsers({
+      admin_id,
+      query: req.queryParsed as IQuery<IUser>
+    })
+    res.json(new OkResponse('Lấy danh sách người dùng thành công', result))
   }
 }
 

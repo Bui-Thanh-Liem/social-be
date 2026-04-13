@@ -4,7 +4,7 @@ import botTelegramService from '~/helpers/bot-telegram.helper'
 import likesService from '~/services/public/likes.service'
 import MessagesService from '~/services/public/messages.service'
 import NotificationsService from '~/services/public/notifications.service'
-import reportTweetService from '~/services/public/report-tweet.service'
+import reportTweetService from '~/services/public/report-tweets.service'
 import TrendingService from '~/services/public/trending.service'
 import TweetsService from '~/services/public/tweets.service'
 import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants'
@@ -56,9 +56,9 @@ export const systemWorker = new Worker(
       }
       case CONSTANT_JOB.MOCK_DATA: {
         await startMockTweets()
-        await botTelegramService.sendAlert({
-          message: `🚨 <b>Thông báo từ hệ thống:</b> Đã tạo xong 1 tweets mới cho mỗi user!`
-        })
+        // await botTelegramService.sendTelegramAlert({
+        //   message: `🚨 <b>Thông báo từ hệ thống:</b> Đã tạo xong 1 tweets mới cho mỗi user!`
+        // })
         console.log('Created mock tweets')
         break
       }

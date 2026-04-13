@@ -9,7 +9,7 @@ import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
 import { notificationQueue } from '~/infra/queues'
 import { systemQueue } from '~/infra/queues/system.queue'
 import { ICommunity } from '~/interfaces/public/communities.interface'
-import { IMedia } from '~/interfaces/public/media.interface'
+import { IMedia } from '~/interfaces/common/media.interface'
 import { ITweet } from '~/interfaces/public/tweets.interface'
 import { IUser } from '~/interfaces/public/users.interface'
 import { BookmarksCollection, COLLECTION_BOOKMARKS_NAME } from '~/models/public/bookmarks.schema'
@@ -42,11 +42,12 @@ import CommunitiesService from './communities.service'
 import followsService from './follows.service'
 import likesService from './likes.service'
 import uploadsService from './uploads.service'
-import badWordsService from './bad-words.service'
+import badWordsService from '../private/bad-words.service'
 import hashtagsService from './hashtags.service'
 import trendingService from './trending.service'
-import userViolationsService from './user-violations.service'
-import { log } from 'console'
+import { ResMultiDto } from '~/shared/dtos/common/res-multi.dto'
+import { getFilterQuery } from '~/utils/get-filter-query.util'
+import userViolationsService from '../common/user-violations.service'
 
 class TweetsService {
   //
@@ -2875,6 +2876,87 @@ class TweetsService {
         ...signedCloudfrontUrl(m)
       })) as any
     }))
+  }
+
+  // ========== ADMIN ==========
+  async adminGetTweets({
+    query
+  }: {
+    query: IQuery<TweetsSchema>
+    admin_id: string
+  }): Promise<ResMultiDto<TweetsSchema>> {
+    const { skip, limit, sort, q, qf } = getPaginationAndSafeQuery<TweetsSchema>(query)
+    let filter: any = q ? { $text: { $search: q } } : {}
+
+    //
+    filter = getFilterQuery(qf, filter as any)
+
+    //
+    const tweets = await TweetsCollection.aggregate<TweetsSchema>([
+      {
+        $match: filter
+      },
+      {
+        $sort: sort
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      },
+      {
+        $lookup: {
+          from: 'communities',
+          localField: 'community_id',
+          foreignField: '_id',
+          as: 'community_id',
+          pipeline: [
+            {
+              $project: {
+                cover: 1,
+                name: 1,
+                slug: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: { path: '$community_id', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user_id',
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                username: 1,
+                email: 1,
+                avatar: 1,
+                verify: 1,
+                cover_photo: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: { path: '$user_id', preserveNullAndEmptyArrays: true }
+      }
+    ]).toArray()
+
+    const total = await TweetsCollection.countDocuments(filter)
+
+    return {
+      total,
+      total_page: Math.ceil(total / limit),
+      items: this.signedCloudfrontMediaUrls(tweets) as TweetsSchema[]
+    }
   }
 }
 
