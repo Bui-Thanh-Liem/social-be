@@ -59,14 +59,14 @@ class TweetsController {
   }
 
   async getProfileTweets(req: Request, res: Response) {
-    const { user_id } = req?.decoded_authorization as IJwtPayload
+    const user = req?.decoded_authorization as IJwtPayload
     const { tweet_type } = req.params as unknown as GetProfileTweetDto
     const queries = req.query as IQuery<ITweet>
 
     const result = await TweetsService.getProfileTweets({
       tweet_type,
       query: queries,
-      user_active_id: user_id!,
+      user_active_id: user?.user_id,
       isHighlight: queries?.ishl === '1',
       isMedia: queries?.isMedia === '1',
       user_id: queries?.user_id as string
