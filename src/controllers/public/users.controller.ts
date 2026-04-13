@@ -50,8 +50,7 @@ class UsersController {
   }
 
   async getFollowedUsersBasic(req: Request, res: Response) {
-    const user = req.decoded_authorization as IJwtPayload
-    const result = await usersService.getFollowedUsersBasic({ user_id: user?.user_id, query: req.query })
+    const result = await usersService.getFollowedUsersBasic({ user_id: req.params.id, query: req.query })
     res.json(new OkResponse('Lấy người dùng đang theo dõi mình thành công', result))
   }
 
