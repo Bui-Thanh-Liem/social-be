@@ -7,7 +7,7 @@ import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 class LikesController {
   async toggleLike(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await likesService.toggleLike(user_id, req.params as ParamIdTweetDto)
+    const result = await likesService.toggleLike(user_id, req.params.id)
     res.status(201).json(new CreatedResponse('Toggle Like Success', result))
   }
 }

@@ -1,17 +1,16 @@
 import { ObjectId } from 'mongodb'
 import { NotFoundError } from '~/core/error.response'
-import { ParamIdTweetDto } from '~/shared/dtos/public/tweets.dto'
 import { BookmarksCollection } from '~/models/public/bookmark.schema'
 import TweetsService from '~/services/public/tweets.service'
 import { ResToggleBookmark } from '../../shared/dtos/public/bookmarks.dto'
 
 class BookmarksService {
-  async toggleBookmark(user_id: string, payload: ParamIdTweetDto): Promise<ResToggleBookmark> {
+  async toggleBookmark(user_id: string, id: string): Promise<ResToggleBookmark> {
     const user_object_id = new ObjectId(user_id)
-    const tweet_object_id = new ObjectId(payload.tweet_id)
+    const tweet_object_id = new ObjectId(id)
 
     //
-    const tweet_owner_id = await TweetsService.getUserIdByTweetId(payload.tweet_id)
+    const tweet_owner_id = await TweetsService.getUserIdByTweetId(id)
     if (!tweet_owner_id) {
       throw new NotFoundError('Bài viết không tồn tại')
     }

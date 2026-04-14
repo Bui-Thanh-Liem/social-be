@@ -1,7 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { clientMongodb } from '~/database/mongodb.db'
 import { ResToggleLike } from '~/shared/dtos/public/like.dto'
-import { ParamIdTweetDto } from '~/shared/dtos/public/tweets.dto'
 import cacheService from '~/helpers/cache.helper'
 import { notificationQueue } from '~/infra/queues'
 import { LikesCollection } from '~/models/public/like.schema'
@@ -11,14 +10,12 @@ import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
 import { logger } from '~/utils/logger.util'
 
 class LikesService {
-  async toggleLike(user_id: string, payload: ParamIdTweetDto): Promise<ResToggleLike> {
-    const { tweet_id } = payload
-
+  async toggleLike(user_id: string, id: string): Promise<ResToggleLike> {
     // Dùng Hash Tag {tw:${tweet_id}} để tất cả key liên quan đến tweet này cùng slot
-    const key_cache_tw_d = `{tw:${tweet_id}}:details`
-    const key_cache_tw_likes = `{tw:${tweet_id}}:likes`
-    const key_cache_tw_likes_count = `{tw:${tweet_id}}:count`
-    const key_cache_tw_sync_status = `{tw:${tweet_id}}:sync_status`
+    const key_cache_tw_d = `{tw:${id}}:details`
+    const key_cache_tw_likes = `{tw:${id}}:likes`
+    const key_cache_tw_likes_count = `{tw:${id}}:count`
+    const key_cache_tw_sync_status = `{tw:${id}}:sync_status`
 
     // Key queue là global → KHÔNG dùng hash tag
     const key_cache_tw_like_queue = `tweet_like_sync_queue`
@@ -62,7 +59,7 @@ class LikesService {
 
     // Tách riêng lệnh đẩy vào queue vì key này nằm ở slot khác
     // Không ảnh hưởng atomicity vì queue chỉ dùng để sync async sau
-    await cacheService.lPush(key_cache_tw_like_queue, tweet_id)
+    await cacheService.lPush(key_cache_tw_like_queue, id)
 
     return {
       _id: '',
