@@ -216,9 +216,9 @@ class AuthAdminService {
     await Promise.all([
       CacheService.del(keySessionLogin),
       CacheService.del(createKeyAdminAT(token_)),
-      botTelegramService.sendTelegramAlert({
-        message: `<b>Admin ${admin.email} đã đăng nhập thành công vào lúc ${new Date().toLocaleString()}.</b>`
-      })
+      // botTelegramService.sendTelegramAlert({
+      //   message: `<b>Admin ${admin.email} đã đăng nhập thành công vào lúc ${new Date().toLocaleString()}.</b>`
+      // })
     ])
 
     return {

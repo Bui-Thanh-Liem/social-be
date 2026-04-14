@@ -56,9 +56,9 @@ export const systemWorker = new Worker(
       }
       case CONSTANT_JOB.MOCK_DATA: {
         await startMockTweets()
-        await botTelegramService.sendTelegramAlert({
-          message: `🚨 <b>Thông báo từ hệ thống:</b> Đã tạo xong 1 tweets mới cho mỗi user!`
-        })
+        // await botTelegramService.sendTelegramAlert({
+        //   message: `🚨 <b>Thông báo từ hệ thống:</b> Đã tạo xong 1 tweets mới cho mỗi user!`
+        // })
         console.log('Created mock tweets')
         break
       }
