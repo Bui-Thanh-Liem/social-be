@@ -803,7 +803,7 @@ class CommunityService {
     }
   }
 
-  async getOneBareInfoBySlug({ slug, user_id }: { slug: string; user_id: string }): Promise<ICommunity> {
+  async getOneBareInfoBySlug({ slug, user_id }: { slug: string; user_id?: string }): Promise<ICommunity> {
     const community = await CommunitiesCollection.aggregate<CommunitiesSchema>([
       // match slug
       {

@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
 import { BadRequestError } from '~/core/error.response'
 import cacheService from '~/helpers/cache.helper'
-import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock'
+import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock.helper'
 import { ITweet } from '~/shared/interfaces/public/tweet.interface'
 import { IUser } from '~/shared/interfaces/public/user.interface'
 import { COLLECTION_BOOKMARKS_NAME } from '~/models/public/bookmark.schema'

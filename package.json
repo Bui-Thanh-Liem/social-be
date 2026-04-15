@@ -56,6 +56,7 @@
     "@aws-sdk/cloudfront-signer": "^3.966.0",
     "@aws-sdk/s3-request-presigner": "^3.939.0",
     "@faker-js/faker": "^9.9.0",
+    "@google/generative-ai": "^0.24.1",
     "axios": "^1.10.0",
     "bullmq": "^5.61.2",
     "cloudinary": "^2.8.0",

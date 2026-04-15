@@ -6,6 +6,7 @@ import { instanceMongodb } from './database/mongodb.db'
 import { initSubscriber } from './helpers/pubsub/subscriber'
 import { allowedOrigins } from './middlewares/common/cors.middleware'
 import { initializeSocket } from './socket'
+import telegram from './telegram'
 
 //
 const port = envs.SERVER_PORT
@@ -39,6 +40,9 @@ async function bootstrap() {
 
     // 3. Khởi tạo các thành phần chạy ngầm (Không dùng await để không chặn luồng chính)
     instanceMongodb.initialCollections()
+
+    // 4. Khởi tạo Telegram Bot (chạy ngầm, nếu lỗi cũng không sập app)
+    telegram.start()
 
     // Khởi tạo Index (chạy ngầm, nếu lỗi cũng không sập app)
     instanceMongodb.initialIndex().catch((err) => {

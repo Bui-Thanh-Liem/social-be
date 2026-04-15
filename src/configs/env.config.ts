@@ -94,6 +94,9 @@ export const envs = {
   TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID || 'Error',
   TELEGRAM_CHAT_GROUP_ID: process.env.TELEGRAM_CHAT_GROUP_ID || 'Error',
 
+  // Gemini
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || 'Error',
+
   // Email khách (dùng để tạo tài khoản guest, không phải email thật)
   GUEST_EMAIL_1: process.env.GUEST_EMAIL_1 || 'Error',
   GUEST_EMAIL_2: process.env.GUEST_EMAIL_2 || 'Error',

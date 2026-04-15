@@ -6,9 +6,13 @@ export const CreateAccessRecentDtoSchema = z
     ref_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
       message: 'ObjectId không hợp lệ cho ref_id'
     }),
-    user_id: z.string().trim().regex(CONSTANT_REGEX.ID_MONGO, {
-      message: 'ObjectId không hợp lệ cho user_id'
-    }),
+    user_id: z
+      .string()
+      .trim()
+      .regex(CONSTANT_REGEX.ID_MONGO, {
+        message: 'ObjectId không hợp lệ cho user_id'
+      })
+      .optional(),
     type: z.enum(['tweet', 'community', 'user'], {
       errorMap: () => ({ message: 'Type phải là tweet, community hoặc user' })
     }),

@@ -2,12 +2,12 @@ import { redis } from '~/configs/redis.config'
 import { createKeyUserLastSeen, createKeyUserOnline } from '~/utils/create-key-cache.util'
 import { logger } from '~/utils/logger.util'
 
-export class CacheService {
+export class CacheHelper {
   private client = redis
   private defaultTTL: number = 600 // 10 minutes in seconds
 
   constructor() {
-    this.client.on('ready', () => logger.info('Redis Cluster - CacheService is Ready'))
+    this.client.on('ready', () => logger.info('Redis Cluster - CacheHelper is Ready'))
     this.client.on('error', (err) => logger.error('Redis Cluster Error:', err))
   }
 
@@ -193,8 +193,8 @@ export class CacheService {
 
   async shutdown(): Promise<void> {
     await this.client.quit()
-    logger.info('CacheService shutdown complete')
+    logger.info('CacheHelper shutdown complete')
   }
 }
 
-export default new CacheService()
+export default new CacheHelper()

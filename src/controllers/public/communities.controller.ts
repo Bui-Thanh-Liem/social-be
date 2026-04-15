@@ -128,8 +128,8 @@ class CommunityController {
 
   async getOneBareInfoBySlug(req: Request, res: Response) {
     const { slug } = req.params as GetOneBySlugDto
-    const { user_id } = req.decoded_authorization as IJwtPayload
-    const result = await communitiesService.getOneBareInfoBySlug({ slug, user_id: user_id! })
+    const user = req.decoded_authorization as IJwtPayload
+    const result = await communitiesService.getOneBareInfoBySlug({ slug, user_id: user?.user_id })
     res.json(new OkResponse(`Lấy cộng đồng bằng slug thành công.`, result))
   }
 

@@ -2,7 +2,7 @@ import { Redis } from 'ioredis'
 import { redis } from '~/configs/redis.config'
 import { logger } from '~/utils/logger.util'
 
-class PubSubService {
+class PubSubHelper {
   private publisher: Redis
   private subscriber: Redis
 
@@ -81,5 +81,5 @@ class PubSubService {
   }
 }
 
-const pubSubServiceInstance = new PubSubService()
-export default pubSubServiceInstance
+const pubSubHelperInstance = new PubSubHelper()
+export default pubSubHelperInstance

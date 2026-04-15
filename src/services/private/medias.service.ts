@@ -1,5 +1,4 @@
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
-import botTelegramService from '~/helpers/bot-telegram.helper'
 import { IMedia } from '~/shared/interfaces/common/media.interface'
 import { IUser } from '~/shared/interfaces/public/user.interface'
 import { MediasCollection } from '~/models/common/media.schema'
@@ -46,11 +45,6 @@ class MediaService {
       ]).toArray(),
       MediasCollection.countDocuments()
     ])
-
-    // await botTelegramService.sendDailyReport({
-    //   data: [12, 19, 3, 5],
-    //   labels: ['T2', 'T3', 'T4', 'T5']
-    // })
 
     return {
       total,

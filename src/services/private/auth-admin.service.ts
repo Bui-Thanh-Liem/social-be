@@ -3,7 +3,6 @@ import { generateSecret, generateURI, verify } from 'otplib'
 import { toDataURL } from 'qrcode'
 import { LoginAdminDto, ResActive2Fa, ResLoginAdmin, ResVerify2Fa } from '~/shared/dtos/private/auth-admin.dto'
 import { EUserTokenType } from '~/shared/enums/public/user-tokens.enum'
-import botTelegramService from '~/helpers/bot-telegram.helper'
 import { AdminCollection } from '~/models/private/admin.schema'
 import { envs } from '../../configs/env.config'
 import { BadRequestError, NotFoundError, UnauthorizedError } from '../../core/error.response'
@@ -14,6 +13,7 @@ import { signToken } from '../../utils/jwt.util'
 import adminTokensService from './admin-tokens.service'
 import adminService from './admins.service'
 import { ITwoFactorBackup } from '~/shared/interfaces/private/admin.interface'
+import telegram from '~/telegram'
 
 class AuthAdminService {
   // Đăng nhập admin trả về thông tin cần setup hay verify
@@ -216,9 +216,7 @@ class AuthAdminService {
     await Promise.all([
       CacheService.del(keySessionLogin),
       CacheService.del(createKeyAdminAT(token_)),
-      // botTelegramService.sendTelegramAlert({
-      //   message: `<b>Admin ${admin.email} đã đăng nhập thành công vào lúc ${new Date().toLocaleString()}.</b>`
-      // })
+      telegram.sendAlert(`<b>Admin ${admin.email} đã đăng nhập thành công vào lúc ${new Date().toLocaleString()}.</b>`)
     ])
 
     return {

@@ -4,7 +4,7 @@ import { communityHandler } from './handlers/community.handler'
 import { connectionHandler } from './handlers/connection.handler'
 import { conversationHandler } from './handlers/conversation.handler'
 import { messageHandler } from './handlers/message.handler'
-import { authMiddleware } from './middlewares/auth.socket'
+import { authSocketMiddleware } from './middlewares/auth.socket'
 
 let _io: Server
 let _socket: Socket
@@ -16,7 +16,7 @@ export function initializeSocket(io: Server) {
   _io = io
 
   // Apply global middleware
-  io.use(authMiddleware)
+  io.use(authSocketMiddleware)
 
   // Lắng nghe kết nối từ client
   io.on('connection', async (socket) => {
