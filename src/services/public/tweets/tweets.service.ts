@@ -1,6 +1,6 @@
 import { Filter, ObjectId } from 'mongodb'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
-import { BadRequestError, NotFoundError } from '~/core/error.response'
+import { BadRequestError, ForbiddenError, NotFoundError } from '~/core/error.response'
 import { clientMongodb } from '~/database/mongodb.db'
 import { CreateNotiCommentDto } from '~/shared/dtos/public/notifications.dto'
 import { CreateTweetDto, ResCountViewLinkBookmarkInWeek } from '~/shared/dtos/public/tweets.dto'
@@ -552,7 +552,7 @@ class TweetsService {
     if (tweet_db?.community_id) {
       const community = tweet_db?.community_id as unknown as CommunitiesSchema
       if (community.visibility_type === EVisibilityType.Private) {
-        throw new NotFoundError('Bài viết trong cộng đồng riêng tư không được phép xem ở chế độ này.')
+        throw new ForbiddenError('Bài viết trong cộng đồng riêng tư không được phép xem ở chế độ này.')
       }
     }
 
