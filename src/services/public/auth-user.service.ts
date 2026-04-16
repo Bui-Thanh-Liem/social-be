@@ -496,15 +496,19 @@ class AuthUserService {
       BadWordsService.detectInText({ text: payload.username || '', user_id })
     ])
 
-    // Lưu vi phạm từ cấm nếu có (rabbitmq)
-    await userViolationsService.create({
-      user_id: user_id,
-      source_id: user_id,
-      source: ESourceViolation.Auth,
-      final_content:
-        (_bio.matched_words.join() || '') + (_name.matched_words.join() || '') + (_username.matched_words.join() || ''),
-      bad_word_ids: [_bio.bad_words_ids, _name.bad_words_ids, _username.bad_words_ids].flat()
-    })
+    // Lưu vi phạm từ cấm
+    if (_bio.bad_words_ids.length > 0 || _name.bad_words_ids.length > 0 || _username.bad_words_ids.length > 0) {
+      await userViolationsService.create({
+        user_id: user_id,
+        source_id: user_id,
+        source: ESourceViolation.Auth,
+        final_content:
+          (_bio.matched_words.join() || '') +
+          (_name.matched_words.join() || '') +
+          (_username.matched_words.join() || ''),
+        bad_word_ids: [_bio.bad_words_ids, _name.bad_words_ids, _username.bad_words_ids].flat()
+      })
+    }
 
     //
     return await UsersCollection.findOneAndUpdate(

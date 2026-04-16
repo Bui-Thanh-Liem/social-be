@@ -9,7 +9,7 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { ESourceViolation } from '../../shared/enums/public/user-violations.enum'
 import { ISearchHistory } from '../../shared/interfaces/public/search-history.interface'
 import BadWordsService from '../private/bad-words.service'
-import UserViolationsService from './user-violations.service'
+import userViolationsService from '../common/user-violations.service'
 
 class SearchHistoryService {
   async create({ payload, user_active }: { payload: CreateSearchHistoryDto; user_active: IUser }) {
@@ -47,9 +47,9 @@ class SearchHistoryService {
       })
     )
 
-    // Lưu vi phạm từ cấm nếu có (rabbitmq)
+    // Lưu vi phạm từ cấm
     if (_text.bad_words_ids.length > 0) {
-      await UserViolationsService.create({
+      await userViolationsService.create({
         user_id: user_active?._id!.toString(),
         source_id: created.insertedId.toString(),
         source: ESourceViolation.SearchHistory,

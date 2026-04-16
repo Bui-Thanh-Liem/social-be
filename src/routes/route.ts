@@ -26,6 +26,7 @@ import authAdminRoute from './private/auth-admin.route'
 import adminRoute from './private/admins.route'
 import privateUsersRoute from './private/users.route'
 import privateTweetsRoute from './private/tweets.route'
+import privateUserViolationsRoute from './private/user-violations.route'
 import privateMediaRoute from './private/medias.route'
 import privateCommunitiesRoute from './private/communities.route'
 import privateBadWordsRoute from './private/bad-words.route'
@@ -67,6 +68,7 @@ rootRoute.use('/private/media', privateMediaRoute)
 rootRoute.use('/private/communities', privateCommunitiesRoute)
 rootRoute.use('/private/bad-words', privateBadWordsRoute)
 rootRoute.use('/private/tweets', privateTweetsRoute)
+rootRoute.use('/private/user-violations', privateUserViolationsRoute)
 
 // Route tạo dữ liệu giả lập (mock data) cho việc phát triển và thử nghiệm
 rootRoute.post('/mock-data', async (req: Request, res: Response) => {

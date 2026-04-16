@@ -65,7 +65,7 @@ class CommunityService {
       new CommunitiesSchema({ ...payload, name: _name.text, bio: _bio.text, admin: new ObjectId(user_id) })
     )
 
-    // Lưu vi phạm từ cấm nếu có (rabbitmq)
+    // Lưu vi phạm từ cấm
     if (_name.bad_words_ids.length > 0 || _bio.bad_words_ids.length > 0) {
       await userViolationsService.create({
         user_id: user_id,

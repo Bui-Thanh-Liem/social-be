@@ -6,9 +6,9 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { slug } from '~/utils/slug.util'
 import BadWordsService from '../private/bad-words.service'
 import { ESourceViolation } from '../../shared/enums/public/user-violations.enum'
-import UserViolationsService from './user-violations.service'
 import { IHashtag } from '../../shared/interfaces/public/hashtag.interface'
 import { HashtagsCollection, HashtagsSchema } from '../../models/public/hashtag.schema'
+import userViolationsService from '../common/user-violations.service'
 
 class HashtagsService {
   //
@@ -65,9 +65,9 @@ class HashtagsService {
           { upsert: true, returnDocument: 'after' }
         )
 
-        // Lưu vi phạm từ cấm nếu có (rabbitmq)
+        // Lưu vi phạm từ cấm
         if (_name.bad_words_ids.length > 0) {
-          await UserViolationsService.create({
+          await userViolationsService.create({
             user_id: user_id,
             source_id: user_id,
             source: ESourceViolation.Hashtag,

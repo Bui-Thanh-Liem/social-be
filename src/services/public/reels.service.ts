@@ -20,8 +20,8 @@ import badWordsService from '../private/bad-words.service'
 import hashtagsService from './hashtags.service'
 import trendingService from './trending.service'
 import uploadsService from './uploads.service'
-import userViolationsService from './user-violations.service'
 import usersService from './users.service'
+import userViolationsService from '../common/user-violations.service'
 
 class ReelService {
   async create(user_id: string, createReelDto: CreateReelDto) {
