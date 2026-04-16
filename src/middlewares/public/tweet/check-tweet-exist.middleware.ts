@@ -13,6 +13,10 @@ export async function checkTweetExistMiddleware(req: Request, res: Response, nex
 
     //
     const tweet = await TweetsService.getTweetOnlyUserId(id)
+    if (!tweet) {
+      throw new NotFoundError('Bài viết không tồn tại.')
+    }
+
     req.tweet = tweet!
 
     //
