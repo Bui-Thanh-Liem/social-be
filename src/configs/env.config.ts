@@ -23,7 +23,9 @@ export const envs = {
 
   // Domains
   CLIENT_DOMAIN: process.env.CLIENT_DOMAIN || 'Error',
+  CLIENT_DOMAIN_SUB: process.env.CLIENT_DOMAIN_SUB || 'Error',
   CLIENT_DOMAIN_ADMIN: process.env.CLIENT_DOMAIN_ADMIN || 'Error',
+  CLIENT_DOMAIN_ADMIN_SUB: process.env.CLIENT_DOMAIN_ADMIN_SUB || 'Error',
   SERVER_DOMAIN: process.env.SERVER_DOMAIN || 'Error',
 
   // API Key (dùng để xác thực giữa các service nội bộ, không phải cho client)
