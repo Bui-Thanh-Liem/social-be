@@ -607,7 +607,7 @@ class UsersService {
     ]
     const users = await UsersCollection.find(
       { email: { $in: guestEmails } },
-      { projection: { email: 1, avatar: 1, status: 1 } }
+      { projection: { email: 1, name: 1, avatar: 1, status: 1 } }
     ).toArray()
 
     return users
