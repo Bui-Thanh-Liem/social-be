@@ -66,7 +66,10 @@ class SearchService {
     const users = await UsersCollection.aggregate<UsersSchema>([
       {
         $match: {
-          $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }]
+          $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }],
+          'status.status': {
+            $ne: EUserStatus.Hidden // Chỉ lấy user có status khác Hidden, nếu user bị ẩn sẽ không hiển thị thông tin
+          }
         }
       },
       { $sort: sort },
