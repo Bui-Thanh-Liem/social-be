@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from 'express'
 import { envs } from '~/configs/env.config'
-import { UnauthorizedError } from '~/core/error.response'
+import { ForbiddenError, UnauthorizedError } from '~/core/error.response'
 import UsersService from '~/services/public/users.service'
+import { EUserStatus } from '~/shared/enums/public/users.enum'
 import { verifyToken } from '~/utils/jwt.util'
 
 export async function authenticationUserMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -20,6 +21,10 @@ export async function authenticationUserMiddleware(req: Request, res: Response, 
 
       if (!user) {
         throw new UnauthorizedError('Vui lòng đăng nhập.')
+      }
+
+      if (user.status.status === EUserStatus.Block) {
+        throw new ForbiddenError(`Tài khoản của bạn đã bị khoá (${user.status.reason}), vui lòng liên hệ quản trị viên`)
       }
 
       req.user = user

@@ -18,9 +18,10 @@ import { COLLECTION_TWEETS_NAME, TweetsCollection, TweetsSchema } from '../../mo
 import CommunitiesService from './communities.service'
 import followsService from './follows.service'
 import TrendingService from './trending.service'
-import tweetsService from './tweets.service'
+import tweetsService from './tweets/tweets.service'
 import { COLLECTION_LIKES_NAME } from '~/models/public/like.schema'
 import usersService from './users.service'
+import { EUserStatus } from '~/shared/enums/public/users.enum'
 
 // Những hàm search sẽ ưu tiên sort sau limit
 class SearchService {
@@ -247,6 +248,26 @@ class SearchService {
           ...hasPf.query
         }
       },
+
+      // --- BƯỚC THÊM MỚI: Kiểm tra status người dùng ---
+      {
+        $lookup: {
+          from: COLLECTION_USERS_NAME,
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'author'
+        }
+      },
+      {
+        $unwind: '$author'
+      },
+      {
+        $match: {
+          'author.status.status': { $ne: EUserStatus.Hidden }
+        }
+      },
+      // ----------------------------------------------
+
       ...hasTop.query,
       { $skip: skip },
       { $limit: limit },
@@ -552,7 +573,10 @@ class SearchService {
     const regexMatch = {
       $match: {
         $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }],
-        ...hasPf.query
+        ...hasPf.query,
+        'status.status': {
+          $ne: EUserStatus.Hidden // Chỉ lấy user có status khác Hidden, nếu user bị ẩn sẽ không hiển thị thông tin
+        }
       }
     }
 

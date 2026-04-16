@@ -22,7 +22,7 @@ import {
   CommunityPinCollection
 } from '~/models/public/community.schema'
 import { COLLECTION_USERS_NAME } from '~/models/public/user.schema'
-import TweetsService from '~/services/public/tweets.service'
+import TweetsService from '~/services/public/tweets/tweets.service'
 import { ResMultiDto } from '~/shared/dtos/common/res-multi.dto'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'

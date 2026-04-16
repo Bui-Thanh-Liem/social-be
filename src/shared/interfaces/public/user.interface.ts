@@ -1,7 +1,6 @@
 import { IMediaBare } from '~/shared/interfaces/common/media-bare.interface'
 import { IBase } from '~/shared/interfaces/common/base.interface'
 import { EUserStatus, EUserVerifyStatus } from '~/shared/enums/public/users.enum'
-import { IReel } from './reel.interface'
 
 // interface IUserSettings {
 //   dark_mode: boolean

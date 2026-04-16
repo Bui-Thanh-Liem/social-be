@@ -36,6 +36,7 @@ import { initUserTokensCollection, UserTokensCollection } from '~/models/public/
 import { initUserViolationsCollection } from '~/models/public/user-violation.schema'
 import { initUsersCollection, UsersCollection } from '~/models/public/user.schema'
 import { logger } from '~/utils/logger.util'
+import { initLogsCollection, LogsCollection } from '~/models/private/log.schema'
 
 const _MINPOOLSIZE = 5
 const _MAXPOOLSIZE = 50 // không bao giờ vượt, nếu hơn thì phải chờ
@@ -179,6 +180,7 @@ class Database {
       initAccessRecentCollection(this.db)
       initUserViolationsCollection(this.db)
       initReelsCollection(this.db)
+      initLogsCollection(this.db)
 
       // PRIVATE
       initAdminCollection(this.db)
@@ -225,6 +227,7 @@ class Database {
       const indexReel = await ReelsCollection.indexExists(['content_text'])
       const indexAdmin = await AdminCollection.indexExists(['email_1', 'name_1'])
       const indexAdminTokens = await AdminTokensCollection.indexExists(['admin_id_1', 'refresh_token_1'])
+      const indexLogs = await LogsCollection.indexExists(['admin_id_1', 'created_at_1'])
 
       // User
       if (!indexUser) {
@@ -358,6 +361,12 @@ class Database {
       if (!indexAdminTokens) {
         AdminTokensCollection.createIndex({ admin_id: 1 })
         AdminTokensCollection.createIndex({ refresh_token: 1 }, { unique: true })
+      }
+
+      // Logs
+      if (!indexLogs) {
+        LogsCollection.createIndex({ admin_id: 1 })
+        LogsCollection.createIndex({ created_at: 1 })
       }
 
       logger.info('All indexes are ensured successfully')

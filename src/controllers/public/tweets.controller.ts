@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { CreatedResponse, OkResponse } from '~/core/success.response'
 import { GetNewFeedTypeDto, GetProfileTweetDto, GetTweetChildrenDtoParams } from '~/shared/dtos/public/tweets.dto'
 import { ITweet } from '~/shared/interfaces/public/tweet.interface'
-import TweetsService from '~/services/public/tweets.service'
+import TweetsService from '~/services/public/tweets/tweets.service'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 

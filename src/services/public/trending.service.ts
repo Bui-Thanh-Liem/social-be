@@ -7,7 +7,7 @@ import { IUser } from '~/shared/interfaces/public/user.interface'
 import { COLLECTION_BOOKMARKS_NAME } from '~/models/public/bookmark.schema'
 import { TrendingCollection, TrendingSchema } from '~/models/public/trending.schema'
 import { COLLECTION_USERS_NAME } from '~/models/public/user.schema'
-import TweetsService from '~/services/public/tweets.service'
+import TweetsService from '~/services/public/tweets/tweets.service'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import {
@@ -25,6 +25,7 @@ import { COLLECTION_TWEETS_NAME, TweetsCollection, TweetsSchema } from '../../mo
 import followsService from './follows.service'
 import hashtagsService from './hashtags.service'
 import { COLLECTION_LIKES_NAME } from '~/models/public/like.schema'
+import { EUserStatus } from '~/shared/enums/public/users.enum'
 
 class TrendingService {
   // Tạo khi đăng bài - khi tìm kiếm (>=5)
@@ -339,6 +340,26 @@ class TrendingService {
               community_id: { $eq: null }
             }
           },
+
+          // --- BƯỚC THÊM MỚI: Kiểm tra status người dùng ---
+          {
+            $lookup: {
+              from: COLLECTION_USERS_NAME,
+              localField: 'user_id',
+              foreignField: '_id',
+              as: 'author'
+            }
+          },
+          {
+            $unwind: '$author'
+          },
+          {
+            $match: {
+              'author.status.status': { $ne: EUserStatus.Hidden }
+            }
+          },
+          // ----------------------------------------------
+
           {
             $addFields: {
               score: { $meta: 'textScore' }
@@ -568,6 +589,26 @@ class TrendingService {
               community_id: { $eq: null }
             }
           },
+
+          // --- BƯỚC THÊM MỚI: Kiểm tra status người dùng ---
+          {
+            $lookup: {
+              from: COLLECTION_USERS_NAME,
+              localField: 'user_id',
+              foreignField: '_id',
+              as: 'author'
+            }
+          },
+          {
+            $unwind: '$author'
+          },
+          {
+            $match: {
+              'author.status.status': { $ne: EUserStatus.Hidden }
+            }
+          },
+          // ----------------------------------------------
+
           {
             $addFields: {
               score: { $meta: 'textScore' }

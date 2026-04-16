@@ -3,7 +3,7 @@ import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { envs } from '~/configs/env.config'
 import { NotFoundError, UnauthorizedError } from '~/core/error.response'
 import cacheService from '~/helpers/cache.helper'
-import { emailQueue } from '~/infra/queues'
+import { emailQueue, notificationQueue } from '~/infra/queues'
 import { IUser } from '~/shared/interfaces/public/user.interface'
 import { UsersCollection, UsersSchema } from '~/models/public/user.schema'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
@@ -14,12 +14,14 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
 import { EUserTokenType } from '../../shared/enums/public/user-tokens.enum'
-import { EUserVerifyStatus } from '../../shared/enums/public/users.enum'
+import { EUserStatus, EUserVerifyStatus } from '../../shared/enums/public/users.enum'
 import accessRecentService from './access-recents.service'
 import followsService from './follows.service'
 import { getFilterQuery } from '~/utils/get-filter-query.util'
 import { ResMultiDto } from '~/shared/dtos/common/res-multi.dto'
 import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
+import userTokensService from './user-tokens.service'
+import { ENotificationType } from '~/shared/enums/public/notifications.enum'
 
 class UsersService {
   async verifyEmail({
@@ -112,7 +114,11 @@ class UsersService {
     const user = await UsersCollection.aggregate<IUser>([
       {
         $match: {
-          username
+          username,
+          $or: [
+            { _id: new ObjectId(user_id_active) }, // Hoặc nếu là chính mình thì vẫn lấy được thông tin dù bị ẩn
+            { 'status.status': { $ne: EUserStatus.Hidden } } // Chỉ lấy user có status khác Hidden, nếu user bị ẩn sẽ không hiển thị thông tin
+          ]
         }
       },
       {
@@ -372,7 +378,10 @@ class UsersService {
       // bỏ chính mình
       {
         $match: {
-          _id: { $ne: new ObjectId(user_id) }
+          _id: { $ne: new ObjectId(user_id) },
+          'status.status': {
+            $ne: EUserStatus.Hidden // Chỉ lấy user có status khác Hidden, nếu user bị ẩn sẽ không hiển thị thông tin
+          }
         }
       },
       // lấy số lượng follower của user
@@ -539,8 +548,8 @@ class UsersService {
       {
         projection: {
           email: 1,
-          password: 1,
-          status: 1
+          status: 1,
+          password: 1
         }
       }
     )
@@ -605,6 +614,35 @@ class UsersService {
     // return this.signedCloudfrontAvatarUrls(users) as IUser[]
   }
 
+  //
+  signedCloudfrontAvatarUrls = (users: IUser[] | IUser | null) => {
+    //
+    if (!users) return users
+
+    //
+    if (!Array.isArray(users))
+      return {
+        ...users,
+        avatar: users?.avatar
+          ? {
+              s3_key: users.avatar.s3_key,
+              ...signedCloudfrontUrl(users.avatar)
+            }
+          : null
+      }
+
+    //
+    return users.map((user) => ({
+      ...user,
+      avatar: user?.avatar
+        ? {
+            s3_key: user.avatar.s3_key,
+            ...signedCloudfrontUrl(user.avatar)
+          }
+        : null
+    }))
+  }
+
   // ===== ADMIN =====
   async adminGetUsers({ admin_id, query }: { admin_id: string; query: IQuery<IUser> }): Promise<ResMultiDto<IUser>> {
     //
@@ -649,34 +687,74 @@ class UsersService {
     }
   }
 
-  //
-  signedCloudfrontAvatarUrls = (users: IUser[] | IUser | null) => {
+  async adminChangeUserStatus({
+    reason,
+    status,
+    user_id,
+    admin_id
+  }: {
+    reason: string
+    user_id: string
+    admin_id: string
+    status: EUserStatus
+  }) {
     //
-    if (!users) return users
+    await this.checkUsersExist([user_id])
 
-    //
-    if (!Array.isArray(users))
-      return {
-        ...users,
-        avatar: users?.avatar
-          ? {
-              s3_key: users.avatar.s3_key,
-              ...signedCloudfrontUrl(users.avatar)
-            }
-          : null
-      }
+    // Xoá mọi phiên đang đăng nhập của người dùng này
+    if (status === EUserStatus.Block) {
+      await userTokensService.deleteByUserId({ user_id })
+    }
 
-    //
-    return users.map((user) => ({
-      ...user,
-      avatar: user?.avatar
-        ? {
-            s3_key: user.avatar.s3_key,
-            ...signedCloudfrontUrl(user.avatar)
+    // Cập nhật trạng thái khoá/mở khoá tài khoản
+    await UsersCollection.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          status: {
+            status,
+            reason
           }
-        : null
-    }))
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+
+    //
+    await this.resetUserActive(user_id)
   }
+
+  async adminRemindUser({ user_id, admin_id, reason }: { user_id: string; admin_id: string; reason: string }) {
+    //
+    await this.checkUsersExist([user_id])
+
+    //
+    const result = await UsersCollection.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $inc: {
+          star: -1 // Mỗi lần nhắc nhở sẽ giảm star lên 1
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+
+    //
+    if (result.modifiedCount) {
+      await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+        content:
+          reason || 'Bạn đã vi phạm một số điều khoản của chúng tôi, vui lòng chú ý hơn để tránh bị khoá tài khoản.',
+        type: ENotificationType.Other,
+        sender: user_id,
+        receiver: user_id
+      })
+    }
+  }
+  // ===== ADMIN =====
 }
 
 export default new UsersService()

@@ -6,7 +6,7 @@ import { ETweetStatus } from '~/shared/enums/public/tweets.enum'
 import { notificationQueue } from '~/infra/queues'
 import { ReportTweetCollection } from '~/models/public/report-tweet.schema'
 import { TweetsCollection } from '~/models/public/tweet.schema'
-import TweetsService from '~/services/public/tweets.service'
+import TweetsService from '~/services/public/tweets/tweets.service'
 import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
 
 class ReportTweetService {

@@ -5,7 +5,7 @@ import cacheService from '~/helpers/cache.helper'
 import { notificationQueue } from '~/infra/queues'
 import { LikesCollection } from '~/models/public/like.schema'
 import { TweetsCollection } from '~/models/public/tweet.schema'
-import TweetsService from '~/services/public/tweets.service'
+import TweetsService from '~/services/public/tweets/tweets.service'
 import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
 import { logger } from '~/utils/logger.util'
 

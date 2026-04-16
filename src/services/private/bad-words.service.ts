@@ -11,6 +11,7 @@ import { getFilterQuery } from '~/utils/get-filter-query.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { removeVietnameseAccent } from '~/utils/remove-vietnamese-accent.util'
 import { ENotificationType } from '../../shared/enums/public/notifications.enum'
+import { IQuery } from '~/shared/interfaces/common/query.interface'
 
 class BadWordsService {
   private LEET_MAP: Record<string, string> = {
@@ -87,11 +88,11 @@ class BadWordsService {
     return badWord
   }
 
-  async getMulti({ query }: { query: any }) {
+  async getMulti({ query }: { query: IQuery<IBadWord> }) {
     const { skip, limit, sort, q, qf } = getPaginationAndSafeQuery<IBadWord>(query)
     let filter: Partial<Record<keyof IBadWord, any>> = q ? { words: { $regex: q, $options: 'i' } } : {}
 
-    //
+    // Áp dụng filter từ qf nếu có
     filter = getFilterQuery(qf, filter)
 
     //

@@ -129,8 +129,10 @@ class AuthUserService {
       throw new UnauthorizedError('Email hoặc mật khẩu không đúng.')
     }
 
-    if (foundUser.status.status !== EUserStatus.Active) {
-      throw new UnauthorizedError('Tài khoản của bạn đã bị khoá, vui lòng liên hệ quản trị viên')
+    if (foundUser.status.status === EUserStatus.Block) {
+      throw new ForbiddenError(
+        `Tài khoản của bạn đã bị khoá (${foundUser.status.reason}), vui lòng liên hệ quản trị viên`
+      )
     }
 
     // Kiểm tra mật khẩu đúng hay không
@@ -173,8 +175,10 @@ class AuthUserService {
 
     // Nếu đã đăng nhập rồi thì tạo token gửi về client
     if (exist) {
-      if (exist.status.status !== EUserStatus.Active) {
-        throw new UnauthorizedError('Tài khoản của bạn đã bị khoá, vui lòng liên hệ quản trị viên')
+      if (exist.status.status === EUserStatus.Block) {
+        throw new ForbiddenError(
+          `Tài khoản của bạn đã bị khoá (${exist.status.reason}), vui lòng liên hệ quản trị viên`
+        )
       }
 
       const [access_token, refresh_token] = await createTokenPair({
@@ -231,6 +235,12 @@ class AuthUserService {
 
     // Nếu đã đăng nhập rồi thì tạo token gửi về client
     if (exist) {
+      if (exist.status.status === EUserStatus.Block) {
+        throw new ForbiddenError(
+          `Tài khoản của bạn đã bị khoá (${exist.status.reason}), vui lòng liên hệ quản trị viên`
+        )
+      }
+
       const [access_token, refresh_token] = await createTokenPair({
         payload: { user_id: exist._id.toString(), role: 'user', admin_id: '' },
         private_access_key: envs.JWT_SECRET_ACCESS_USER,

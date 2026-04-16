@@ -10,7 +10,7 @@ import { FollowersCollection } from '~/models/public/follow.schema'
 import { EUserVerifyStatus } from '~/shared/enums/public/users.enum'
 import { UsersCollection, UsersSchema } from '~/models/public/user.schema'
 import communitiesService from '~/services/public/communities.service'
-import TweetsService from '~/services/public/tweets.service'
+import TweetsService from '~/services/public/tweets/tweets.service'
 import { hashPassword } from './crypto.util'
 import { logger } from './logger.util'
 

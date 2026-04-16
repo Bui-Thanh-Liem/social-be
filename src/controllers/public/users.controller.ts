@@ -1,13 +1,14 @@
 import { Request, Response } from 'express'
 import { ObjectId } from 'mongodb'
 import { OkResponse } from '~/core/success.response'
-import { ChangePasswordDto, UserIdDto, verifyEmailDto } from '~/shared/dtos/public/users.dto'
+import { ChangePasswordDto, verifyEmailDto } from '~/shared/dtos/public/users.dto'
 import { EUserVerifyStatus } from '~/shared/enums/public/users.enum'
 import { IUser } from '~/shared/interfaces/public/user.interface'
 import { UsersCollection } from '~/models/public/user.schema'
 import usersService from '~/services/public/users.service'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
+import { AdminChangeUserStatusDto, AdminRemindUserDto } from '~/shared/dtos/private/user.dto'
 
 class UsersController {
   async verifyEmail(req: Request, res: Response) {
@@ -38,15 +39,15 @@ class UsersController {
 
   async getOneByUsername(req: Request, res: Response) {
     const { username } = req.params
-    const user = req.decoded_authorization as IJwtPayload
-    const result = await usersService.getOneByUsername(username, user?.user_id)
-    res.json(new OkResponse(`${result} Thành công`, result))
+    const userActive = req.decoded_authorization as IJwtPayload
+    const user = await usersService.getOneByUsername(username, userActive?.user_id)
+    res.json(new OkResponse(`Thành công`, user))
   }
 
   async getMultiForMentions(req: Request, res: Response) {
     const { username } = req.params
-    const result = await usersService.getMultiForMentions(username)
-    res.json(new OkResponse(`${result} Thành công`, result))
+    const users = await usersService.getMultiForMentions(username)
+    res.json(new OkResponse(`Thành công`, users))
   }
 
   async getFollowedUsersBasic(req: Request, res: Response) {
@@ -90,6 +91,31 @@ class UsersController {
     })
     res.json(new OkResponse('Lấy danh sách người dùng thành công', result))
   }
+
+  async adminChangeUserStatus(req: Request, res: Response) {
+    const { admin_id } = req.decoded_authorization as IJwtPayload
+    const { status, reason } = req.body as AdminChangeUserStatusDto
+    const result = await usersService.adminChangeUserStatus({
+      reason,
+      status,
+      admin_id,
+      user_id: req.params.id
+    })
+    res.json(new OkResponse('Thay đổi trạng thái người dùng thành công', result))
+  }
+
+  async adminRemindUser(req: Request, res: Response) {
+    const { admin_id } = req.decoded_authorization as IJwtPayload
+    const { reason } = req.body as AdminRemindUserDto
+
+    const result = await usersService.adminRemindUser({
+      reason,
+      admin_id,
+      user_id: req.params.id
+    })
+    res.json(new OkResponse('Nhắc nhở người dùng thành công', result))
+  }
+  // ===== ADMIN =====
 }
 
 export default new UsersController()

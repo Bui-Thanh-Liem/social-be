@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import TweetsService from '~/services/public/tweets.service'
+import TweetsService from '~/services/public/tweets/tweets.service'
 import { NotFoundError } from '~/core/error.response'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
 
