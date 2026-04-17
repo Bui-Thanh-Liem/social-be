@@ -1,60 +1,51 @@
-import { ETweetAudience, ETweetType } from '~/shared/enums/public/tweets.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ITweet } from '~/shared/interfaces/public/tweet.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
-import followsService from '../follows.service'
-import { ObjectId } from 'mongodb'
+import followsService from '../../follows.service'
+import { Filter, ObjectId } from 'mongodb'
+import { ETweetAudience, ETweetStatus, ETweetType } from '~/shared/enums/public/tweets.enum'
 import { COLLECTION_TWEETS_NAME, TweetsCollection, TweetsSchema } from '~/models/public/tweet.schema'
 import { COLLECTION_LIKES_NAME } from '~/models/public/like.schema'
 import { COLLECTION_USERS_NAME } from '~/models/public/user.schema'
-import { EUserStatus } from '~/shared/enums/public/users.enum'
-import { COLLECTION_COMMUNITIES_NAME } from '~/models/public/community.schema'
 import { COLLECTION_BOOKMARKS_NAME } from '~/models/public/bookmark.schema'
-import tweetsService from './tweets.service'
+import tweetsService from '../tweets.service'
 
-export async function getProfileTweetsHelper({
+export async function getTweetsByCommunityIdHelper({
   query,
-  user_id,
   isMedia,
-  tweet_type,
   isHighlight,
+  community_id,
   user_active_id
 }: {
-  user_id: string
   isMedia?: boolean
+  community_id: string
   query: IQuery<ITweet>
   isHighlight?: boolean
-  tweet_type: ETweetType
   user_active_id: string
 }): Promise<ResMultiType<ITweet>> {
   //
-  let { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
+  // eslint-disable-next-line prefer-const
+  let { skip, limit, sort, q } = getPaginationAndSafeQuery<ITweet>(query)
 
   // Lấy danh sách của người nào đang theo dõi user_id
-  const followed_user_ids = await followsService.getUserFollowers(user_id)
-
-  // ép về string để so sánh cho chắc
-  const is_following = followed_user_ids.some((f: ObjectId | string) => f.toString() === user_active_id?.toString())
+  const following_user_ids = await followsService.getUserFollowing(user_active_id)
 
   //
-  const match_condition: any = {
-    user_id: new ObjectId(user_id),
-    type: tweet_type === ETweetType.Retweet ? { $in: [ETweetType.Retweet, ETweetType.QuoteTweet] } : tweet_type
-  }
-
-  // Nếu người xem profile là chính chủ
-  if (user_active_id === user_id) {
-    match_condition.audience = { $in: [ETweetAudience.Everyone, ETweetAudience.Followers, ETweetAudience.Mentions] }
-  } else {
-    // Nếu người khác xem profile
-    match_condition.$or = [
+  const match_condition = {
+    community_id: new ObjectId(community_id),
+    status: ETweetStatus.Ready,
+    $or: [
       { audience: ETweetAudience.Everyone },
-      ...(is_following ? [{ audience: ETweetAudience.Followers }] : [])
+      ...(following_user_ids.length
+        ? [{ audience: ETweetAudience.Followers, user_id: { $in: following_user_ids } }]
+        : [])
     ]
+  } as Filter<TweetsSchema>
 
-    // Nếu là người khác xem profile của mình thì không cho thấy
-    match_condition.community_id = { $eq: null }
+  //
+  if (q) {
+    match_condition.$text = { $search: q }
   }
 
   //
@@ -74,25 +65,6 @@ export async function getProfileTweetsHelper({
     {
       $match: match_condition
     },
-
-    // --- BƯỚC THÊM MỚI: Kiểm tra status người dùng ---
-    {
-      $lookup: {
-        from: COLLECTION_USERS_NAME,
-        localField: 'user_id',
-        foreignField: '_id',
-        as: 'author'
-      }
-    },
-    {
-      $unwind: '$author'
-    },
-    {
-      $match: {
-        $or: [{ 'author._id': new ObjectId(user_active_id) }, { 'author.status.status': { $ne: EUserStatus.Hidden } }]
-      }
-    },
-    // ----------------------------------------------
 
     // tính total_views nếu cần (ok để trước sort)
     ...(isHighlight
@@ -157,30 +129,8 @@ export async function getProfileTweetsHelper({
       }
     },
     {
-      $lookup: {
-        from: COLLECTION_COMMUNITIES_NAME,
-        localField: 'community_id',
-        foreignField: '_id',
-        as: 'community_id',
-        pipeline: [
-          {
-            $project: {
-              name: 1,
-              slug: 1
-            }
-          }
-        ]
-      }
-    },
-    {
       $unwind: {
         path: '$user_id',
-        preserveNullAndEmptyArrays: true
-      }
-    },
-    {
-      $unwind: {
-        path: '$community_id',
         preserveNullAndEmptyArrays: true
       }
     },
@@ -315,17 +265,17 @@ export async function getProfileTweetsHelper({
             in: { $arrayElemAt: ['$$matched._id', 0] }
           }
         },
-        // mentions: {
-        //   $map: {
-        //     input: '$mentions',
-        //     as: 'm',
-        //     in: {
-        //       _id: '$m._id',
-        //       name: '$m.name',
-        //       username: '$m.username'
-        //     }
-        //   }
-        // },
+        mentions: {
+          $map: {
+            input: '$mentions',
+            as: 'm',
+            in: {
+              _id: '$m._id',
+              name: '$m.name',
+              username: '$m.username'
+            }
+          }
+        },
         comments_count: {
           $size: {
             $filter: {
@@ -389,8 +339,6 @@ export async function getProfileTweetsHelper({
       tweet.guest_view += 1
     }
   })
-
-  console.log('tweets after update view: ', tweets)
 
   return {
     total,

@@ -19,7 +19,7 @@ import {
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { slug } from '~/utils/slug.util'
 import { IResTodayNewsOrOutstanding } from '../../shared/dtos/public/trending.dto'
-import { ETweetAudience, ETweetType } from '../../shared/enums/public/tweets.enum'
+import { ETweetAudience, ETweetStatus, ETweetType } from '../../shared/enums/public/tweets.enum'
 import { ITrending } from '../../shared/interfaces/public/trending.interface'
 import { COLLECTION_TWEETS_NAME, TweetsCollection, TweetsSchema } from '../../models/public/tweet.schema'
 import followsService from './follows.service'
@@ -337,7 +337,8 @@ class TrendingService {
               $text: { $search: searchString },
               created_at: { $gte: start_day, $lte: end_day },
               audience: ETweetAudience.Everyone,
-              community_id: { $eq: null }
+              community_id: { $eq: null },
+              status: ETweetStatus.Ready
             }
           },
 
@@ -382,7 +383,8 @@ class TrendingService {
               hashtags: { $in: trending_hashtags },
               created_at: { $gte: start_day, $lte: end_day },
               audience: ETweetAudience.Everyone,
-              community_id: { $eq: null }
+              community_id: { $eq: null },
+              status: ETweetStatus.Ready
             }
           },
           ...basePipeline
@@ -586,7 +588,8 @@ class TrendingService {
               $text: { $search: search_string },
               created_at: { $gte: start_day, $lte: end_day },
               audience: ETweetAudience.Everyone,
-              community_id: { $eq: null }
+              community_id: { $eq: null },
+              status: ETweetStatus.Ready
             }
           },
 
@@ -631,7 +634,8 @@ class TrendingService {
               hashtags: { $in: trending_hashtags },
               created_at: { $gte: start_day, $lte: end_day },
               audience: ETweetAudience.Everyone,
-              community_id: { $eq: null }
+              community_id: { $eq: null },
+              status: ETweetStatus.Ready
             }
           },
           ...basePipeline
@@ -778,7 +782,8 @@ class TrendingService {
           audience: ETweetAudience.Mentions,
           mentions: { $in: [user_active_id] }
         }
-      ]
+      ],
+      status: ETweetStatus.Ready
     } as any
 
     //

@@ -89,7 +89,7 @@ tweetsRoute.get(
   '/community',
   optionLogin(authenticationUserMiddleware),
   queryValidate(QueryDtoSchema),
-  asyncHandler(tweetsController.getCommunityTweets)
+  asyncHandler(tweetsController.getTweetsPendingByCommunityId)
 )
 
 /**

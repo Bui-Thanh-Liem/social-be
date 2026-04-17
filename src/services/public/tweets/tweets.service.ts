@@ -1,6 +1,6 @@
-import { Filter, ObjectId } from 'mongodb'
+import { ObjectId } from 'mongodb'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
-import { BadRequestError, ForbiddenError, NotFoundError } from '~/core/error.response'
+import { BadRequestError, NotFoundError } from '~/core/error.response'
 import { clientMongodb } from '~/database/mongodb.db'
 import { CreateNotiCommentDto } from '~/shared/dtos/public/notifications.dto'
 import { CreateTweetDto, ResCountViewLinkBookmarkInWeek } from '~/shared/dtos/public/tweets.dto'
@@ -12,8 +12,7 @@ import { IMedia } from '~/shared/interfaces/common/media.interface'
 import { ICommunity } from '~/shared/interfaces/public/community.interface'
 import { ITweet } from '~/shared/interfaces/public/tweet.interface'
 import { IUser } from '~/shared/interfaces/public/user.interface'
-import { BookmarksCollection, COLLECTION_BOOKMARKS_NAME } from '~/models/public/bookmark.schema'
-import { COLLECTION_COMMUNITIES_NAME, CommunitiesSchema } from '~/models/public/community.schema'
+import { BookmarksCollection } from '~/models/public/bookmark.schema'
 import { COLLECTION_USERS_NAME, UsersCollection } from '~/models/public/user.schema'
 import { ResMultiDto } from '~/shared/dtos/common/res-multi.dto'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
@@ -23,29 +22,31 @@ import CommunityGateway from '~/socket/gateways/Community.gateway'
 import { chunkArray } from '~/utils/chunk-array'
 import { convertObjectId } from '~/utils/convert-object-id'
 import { createKeyTweetDetails, createKeyTweetDetailsLock, createKeyTweetOnlyUser } from '~/utils/create-key-cache.util'
-import { getFilterQuery } from '~/utils/get-filter-query.util'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { normalizeWeekData } from '~/utils/normalize-week-data.util'
-import { EVisibilityType } from '../../../shared/enums/public/communities.enum'
 import { ENotificationType } from '../../../shared/enums/public/notifications.enum'
 import { EFeedType, ETweetAudience, ETweetStatus, ETweetType } from '../../../shared/enums/public/tweets.enum'
 import { ESourceViolation } from '../../../shared/enums/public/user-violations.enum'
-import { COLLECTION_LIKES_NAME, LikesCollection } from '../../../models/public/like.schema'
-import { COLLECTION_TWEETS_NAME, TweetsCollection, TweetsSchema } from '../../../models/public/tweet.schema'
+import { LikesCollection } from '../../../models/public/like.schema'
+import { TweetsCollection, TweetsSchema } from '../../../models/public/tweet.schema'
 import userViolationsService from '../../common/user-violations.service'
 import badWordsService from '../../private/bad-words.service'
 import bookmarksService from '../bookmarks.service'
 import CommunitiesService from '../communities.service'
-import followsService from '../follows.service'
 import hashtagsService from '../hashtags.service'
 import likesService from '../likes.service'
 import trendingService from '../trending.service'
 import uploadsService from '../uploads.service'
 import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
 import { CONSTANT_REGEX } from '~/shared/constants/regex.constant'
-import { EUserStatus } from '~/shared/enums/public/users.enum'
-import { getNewFeedsHelper } from './get-new-feeds.helper'
-import { getProfileTweetsHelper } from './get-profile-tweets.helper'
+import { getNewFeedsHelper } from './helpers/get-new-feeds.helper'
+import { getProfileTweetsHelper } from './helpers/get-profile-tweets.helper'
+import { adminGetTweetsHelper } from './helpers/admin-get-tweet.helper'
+import { getTweetBookmarkedHelper } from './helpers/get-tweet-bookmarked.helper'
+import { getTweetLikedHelper } from './helpers/get-tweet-liked.helper'
+import { getTweetChildrenHelper } from './helpers/get-tweet-children.helper'
+import { getOneByIdHelper } from './helpers/get-one-by-id.helper'
+import { getTweetsByCommunityIdHelper } from './helpers/get-tweets-by-community-id.helper'
 
 class TweetsService {
   //
@@ -258,7 +259,7 @@ class TweetsService {
     if (lock) {
       try {
         // 5. Nếu không có cache thì truy vấn DB
-        const tweet_db = await this._getOneById({
+        const tweet_db = await getOneByIdHelper({
           id,
           user_active_id
         })
@@ -298,268 +299,6 @@ class TweetsService {
     }
   }
 
-  //
-  private async _getOneById({
-    id,
-    user_active_id
-  }: {
-    id: string
-    user_active_id: string
-  }): Promise<TweetsSchema | null> {
-    const followed_user_ids = await followsService.getUserFollowing(user_active_id)
-    followed_user_ids.push(user_active_id)
-
-    //
-    const userActiveObjectId = user_active_id ? new ObjectId(user_active_id) : null
-
-    // 1. Định nghĩa điều kiện match (không đổi)
-    const match_condition = {
-      _id: new ObjectId(id),
-      status: ETweetStatus.Ready,
-      $or: [
-        { audience: ETweetAudience.Everyone },
-        {
-          audience: ETweetAudience.Followers,
-          user_id: { $in: followed_user_ids }
-        },
-        {
-          audience: ETweetAudience.Mentions,
-          mentions: { $in: [userActiveObjectId] }
-        },
-        {
-          user_id: userActiveObjectId // Chủ bài viết có quyền xem tất cả
-        }
-      ]
-    }
-
-    // 2. Aggregate để lấy chi tiết tweet (bỏ $addFields tính is_like, is_bookmark)
-    const tweet_db = await TweetsCollection.aggregate<TweetsSchema>([
-      {
-        $match: match_condition
-      },
-
-      // --- BƯỚC THÊM MỚI: Kiểm tra status người dùng ---
-      {
-        $lookup: {
-          from: COLLECTION_USERS_NAME,
-          localField: 'user_id',
-          foreignField: '_id',
-          as: 'author'
-        }
-      },
-      {
-        $unwind: '$author'
-      },
-      {
-        $match: {
-          'author.status.status': { $ne: EUserStatus.Hidden }
-        }
-      },
-      // ----------------------------------------------
-
-      {
-        $lookup: {
-          from: COLLECTION_USERS_NAME,
-          localField: 'mentions',
-          foreignField: '_id',
-          as: 'mentions',
-          pipeline: [{ $project: { name: 1, username: 1 } }]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_COMMUNITIES_NAME,
-          localField: 'community_id',
-          foreignField: '_id',
-          as: 'community_id',
-          pipeline: [{ $project: { _id: 1, name: 1, slug: 1, visibility_type: 1 } }]
-        }
-      },
-      {
-        $unwind: { path: '$community_id', preserveNullAndEmptyArrays: true }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_USERS_NAME, // tên collection chứa user
-          localField: 'user_id', // field trong tweet
-          foreignField: '_id', // field trong user
-          as: 'user_id',
-          pipeline: [
-            {
-              $project: {
-                avatar: 1,
-                name: 1,
-                bio: 1,
-                username: 1,
-                verify: 1,
-                cover_photo: 1,
-                day_of_birth: 1,
-                location: 1,
-                website: 1,
-                isPinnedReel: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $unwind: {
-          path: '$user_id', // chuyển đổi array sang object
-          preserveNullAndEmptyArrays: true // nếu user bị xóa vẫn trả về tweet - user_id: null
-        }
-      },
-      {
-        $lookup: {
-          from: 'hashtags',
-          localField: 'hashtags',
-          foreignField: '_id',
-          as: 'hashtags',
-          pipeline: [
-            {
-              $project: {
-                name: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_BOOKMARKS_NAME, // collection chứa bookmark
-          localField: '_id', // _id của tweet
-          foreignField: 'tweet_id', // field trong bookmark trỏ đến tweet
-          as: 'bookmarks', // tên array chứa kết quả
-          pipeline: [
-            {
-              $project: {
-                user_id: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_LIKES_NAME,
-          localField: '_id',
-          foreignField: 'tweet_id',
-          as: 'likes',
-          pipeline: [
-            {
-              $project: {
-                user_id: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_TWEETS_NAME,
-          localField: '_id',
-          foreignField: 'parent_id',
-          as: 'tweets_children'
-        }
-      },
-      {
-        $addFields: {
-          likes_count: { $size: '$likes' },
-          // is_like: {
-          //   $in: [new ObjectId(user_active_id), '$likes.user_id']
-          // },
-          // is_bookmark: {
-          //   $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
-          // },
-          // lấy id retweet của user (1 cái đầu tiên hoặc null)
-          retweet: {
-            $let: {
-              vars: {
-                matched: {
-                  $filter: {
-                    input: '$tweets_children',
-                    as: 'child',
-                    cond: {
-                      $and: [
-                        { $eq: ['$$child.type', ETweetType.Retweet] },
-                        { $eq: ['$$child.user_id', userActiveObjectId] }
-                      ]
-                    }
-                  }
-                }
-              },
-              in: { $arrayElemAt: ['$$matched._id', 0] }
-            }
-          },
-          // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
-          quote: {
-            $let: {
-              vars: {
-                matched: {
-                  $filter: {
-                    input: '$tweets_children',
-                    as: 'child',
-                    cond: {
-                      $and: [
-                        { $eq: ['$$child.type', ETweetType.QuoteTweet] },
-                        { $eq: ['$$child.user_id', userActiveObjectId] }
-                      ]
-                    }
-                  }
-                }
-              },
-              in: { $arrayElemAt: ['$$matched._id', 0] }
-            }
-          },
-          comments_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.Comment]
-                }
-              }
-            }
-          },
-          retweets_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.Retweet]
-                }
-              }
-            }
-          },
-          quotes_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.QuoteTweet]
-                }
-              }
-            }
-          }
-        }
-      }
-    ]).next()
-    console.log('Get in DB')
-
-    //
-    if (tweet_db?.community_id) {
-      const community = tweet_db?.community_id as unknown as CommunitiesSchema
-      if (community.visibility_type === EVisibilityType.Private) {
-        throw new ForbiddenError('Bài viết trong cộng đồng riêng tư không được phép xem ở chế độ này.')
-      }
-    }
-
-    // 3. Trả về kết quả
-    return tweet_db
-  }
-
   /**
    * @description Hàm tách riêng để xử lý các trường động theo user (is_like, is_bookmark)
    * @param tweet_db Kết quả tweet từ MongoDB Aggregate
@@ -581,255 +320,18 @@ class TweetsService {
   }
 
   //
-  async getTweetChildren({
-    id,
-    query,
-    user_id,
-    tweet_type
-  }: {
+  async getTweetChildren(payload: {
     id: string
     query: IQuery<ITweet>
     tweet_type: ETweetType
     user_id: string | undefined
   }): Promise<ResMultiType<ITweet>> {
-    const { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
-
-    //
-    const tweets = await TweetsCollection.aggregate<TweetsSchema>([
-      {
-        $match: {
-          parent_id: new ObjectId(id),
-          type: tweet_type
-        }
-      },
-      {
-        $sort: sort
-      },
-      {
-        $skip: skip
-      },
-      {
-        $limit: limit
-      },
-      {
-        $lookup: {
-          from: 'hashtags',
-          localField: 'hashtags',
-          foreignField: '_id',
-          as: 'hashtags'
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_USERS_NAME,
-          localField: 'mentions',
-          foreignField: '_id',
-          as: 'mentions'
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_USERS_NAME,
-          localField: 'user_id',
-          foreignField: '_id',
-          as: 'user_id',
-          pipeline: [
-            {
-              $project: {
-                avatar: 1,
-                bio: 1,
-                name: 1,
-                username: 1,
-                verify: 1,
-                cover_photo: 1,
-                day_of_birth: 1,
-                location: 1,
-                website: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $unwind: {
-          path: '$user_id',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_BOOKMARKS_NAME,
-          localField: '_id',
-          foreignField: 'tweet_id',
-          as: 'bookmarks'
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_LIKES_NAME,
-          localField: '_id',
-          foreignField: 'tweet_id',
-          as: 'likes'
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_TWEETS_NAME,
-          localField: '_id',
-          foreignField: 'parent_id',
-          as: 'tweets_children'
-        }
-      },
-      {
-        $addFields: {
-          bookmark_count: { $size: '$bookmarks' },
-          likes_count: { $size: '$likes' },
-          is_like: {
-            $in: [new ObjectId(user_id), '$likes.user_id']
-          },
-          is_bookmark: {
-            $in: [new ObjectId(user_id), '$bookmarks.user_id']
-          },
-          // lấy id retweet của user (1 cái đầu tiên hoặc null)
-          retweet: {
-            $let: {
-              vars: {
-                matched: {
-                  $filter: {
-                    input: '$tweets_children',
-                    as: 'child',
-                    cond: {
-                      $and: [
-                        { $eq: ['$$child.type', ETweetType.Retweet] },
-                        { $eq: ['$$child.user_id', new ObjectId(user_id)] }
-                      ]
-                    }
-                  }
-                }
-              },
-              in: { $arrayElemAt: ['$$matched._id', 0] }
-            }
-          },
-          // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
-          quote: {
-            $let: {
-              vars: {
-                matched: {
-                  $filter: {
-                    input: '$tweets_children',
-                    as: 'child',
-                    cond: {
-                      $and: [
-                        { $eq: ['$$child.type', ETweetType.QuoteTweet] },
-                        { $eq: ['$$child.user_id', new ObjectId(user_id)] }
-                      ]
-                    }
-                  }
-                }
-              },
-              in: { $arrayElemAt: ['$$matched._id', 0] }
-            }
-          },
-          comments_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.Comment]
-                }
-              }
-            }
-          },
-          retweets_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.Retweet]
-                }
-              }
-            }
-          },
-          quotes_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.QuoteTweet]
-                }
-              }
-            }
-          }
-        }
-      },
-      {
-        $project: {
-          bookmarks: 0, // loại bỏ array bookmarks khỏi kết quả
-          likes: 0, // loại bỏ array likes khỏi kết quả
-          comments: 0, // loại bỏ array comments khỏi kết quả (chỉ giữ comment_count)
-          tweets_children: 0 // chỉ lấy 1 cấp
-        }
-      }
-    ]).toArray()
-
-    // Increase views
-    const ids = tweets.map((tweet) => tweet._id as ObjectId)
-    const inc = user_id ? { user_view: 1 } : { guest_view: 1 }
-    const date = new Date()
-
-    //
-    const [total] = await Promise.all([
-      TweetsCollection.countDocuments({
-        parent_id: new ObjectId(id),
-        type: tweet_type
-      }),
-
-      TweetsCollection.updateMany(
-        {
-          _id: {
-            $in: ids
-          }
-        },
-        {
-          $inc: inc,
-          $set: {
-            updated_at: date
-          }
-        }
-      )
-    ])
-
-    //
-    tweets.forEach((tweet) => {
-      tweet.updated_at = date
-      if (user_id) {
-        tweet.user_view += 1
-      } else {
-        tweet.guest_view += 1
-      }
-    })
-
-    return {
-      total,
-      total_page: Math.ceil(total / limit),
-      items: this.signedCloudfrontMediaUrls(tweets) as TweetsSchema[]
-    }
+    return await getTweetChildrenHelper(payload)
   }
 
   // Chỉ có những bài viết không trong cộng đồng
-  async getNewFeeds({
-    query,
-    feed_type,
-    user_active_id
-  }: {
-    feed_type: EFeedType
-    query: IQuery<ITweet>
-    user_active_id: string
-  }) {
-    return await getNewFeedsHelper({ query, feed_type, user_active_id })
+  async getNewFeeds(payload: { feed_type: EFeedType; query: IQuery<ITweet>; user_active_id: string }) {
+    return await getNewFeedsHelper(payload)
   }
 
   //
@@ -896,14 +398,7 @@ class TweetsService {
   }
 
   // Hàm này dùng để lấy tweets khi truy cập profile của 1 user, chỉ lấy những bài viết có user_id là chủ bài viết
-  async getProfileTweets({
-    query,
-    user_id,
-    isMedia,
-    tweet_type,
-    isHighlight,
-    user_active_id
-  }: {
+  async getProfileTweets(payload: {
     user_id: string
     isMedia?: boolean
     query: IQuery<ITweet>
@@ -911,544 +406,23 @@ class TweetsService {
     tweet_type: ETweetType
     user_active_id: string
   }) {
-    return await getProfileTweetsHelper({
-      query,
-      user_id,
-      isMedia,
-      tweet_type,
-      isHighlight,
-      user_active_id
-    })
+    return await getProfileTweetsHelper(payload)
   }
 
   //
-  async getTweetLiked({
-    query,
-    user_active_id
-  }: {
+  async getTweetLiked(payload: {
     user_active_id: string
     query: IQuery<TweetsSchema>
   }): Promise<ResMultiType<TweetsSchema>> {
-    // Phân trang và truy vấn an toàn
-    const { skip, limit, sort, q } = getPaginationAndSafeQuery<TweetsSchema>(query)
-
-    // Lấy danh sách tweet_id mà user_id đã like
-    const likedTweetIds = await LikesCollection.distinct('tweet_id', {
-      user_id: new ObjectId(user_active_id)
-    })
-
-    // Điều kiện lọc tweet
-    const match_condition: any = {
-      _id: { $in: likedTweetIds } // Chỉ lấy tweet đã like
-    }
-
-    //
-    if (q) {
-      match_condition.$text = { $search: q }
-    }
-
-    // Pipeline tổng hợp
-    const tweets = await TweetsCollection.aggregate<TweetsSchema>([
-      {
-        $match: match_condition
-      },
-      {
-        $sort: sort
-      },
-      {
-        $skip: skip
-      },
-      {
-        $limit: limit
-      },
-      {
-        $lookup: {
-          from: COLLECTION_USERS_NAME,
-          localField: 'user_id',
-          foreignField: '_id',
-          as: 'user_id',
-          pipeline: [
-            {
-              $project: {
-                bio: 1,
-                name: 1,
-                email: 1,
-                username: 1,
-                avatar: 1,
-                verify: 1,
-                cover_photo: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $unwind: {
-          path: '$user_id',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      // lookup để kiểm tra user hiện tại có follow user_id không
-      {
-        $lookup: {
-          from: 'followers',
-          let: { target_user_id: '$user_id._id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$followed_user_id', '$$target_user_id'] },
-                    { $eq: ['$user_id', new ObjectId(user_active_id)] }
-                  ]
-                }
-              }
-            }
-          ],
-          as: 'userFollowCheck'
-        }
-      },
-      {
-        $addFields: {
-          'user_id.isFollow': { $gt: [{ $size: '$userFollowCheck' }, 0] }
-        }
-      },
-      {
-        $lookup: {
-          from: 'hashtags',
-          localField: 'hashtags',
-          foreignField: '_id',
-          as: 'hashtags',
-          pipeline: [
-            {
-              $project: {
-                name: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_USERS_NAME,
-          localField: 'mentions',
-          foreignField: '_id',
-          as: 'mentions',
-          pipeline: [
-            {
-              $project: {
-                name: 1,
-                username: 1,
-                avatar: 1,
-                verify: 1,
-                bio: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_BOOKMARKS_NAME,
-          localField: '_id',
-          foreignField: 'tweet_id',
-          as: 'bookmarks',
-          pipeline: [
-            {
-              $project: {
-                user_id: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_LIKES_NAME,
-          localField: '_id',
-          foreignField: 'tweet_id',
-          as: 'likes',
-          pipeline: [
-            {
-              $project: {
-                user_id: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_TWEETS_NAME,
-          localField: '_id',
-          foreignField: 'parent_id',
-          as: 'tweets_children'
-        }
-      },
-      {
-        $addFields: {
-          // bookmarks_count: { $size: '$bookmarks' },
-          likes_count: { $size: '$likes' },
-          is_like: {
-            $in: [new ObjectId(user_active_id), '$likes.user_id']
-          },
-          is_bookmark: {
-            $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
-          },
-          // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
-          quote: {
-            $let: {
-              vars: {
-                matched: {
-                  $filter: {
-                    input: '$tweets_children',
-                    as: 'child',
-                    cond: {
-                      $and: [
-                        { $eq: ['$$child.type', ETweetType.QuoteTweet] },
-                        { $eq: ['$$child.user_id', new ObjectId(user_active_id)] }
-                      ]
-                    }
-                  }
-                }
-              },
-              in: { $arrayElemAt: ['$$matched._id', 0] }
-            }
-          },
-          comments_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.Comment]
-                }
-              }
-            }
-          },
-          retweets_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.Retweet]
-                }
-              }
-            }
-          },
-          quotes_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.QuoteTweet]
-                }
-              }
-            }
-          }
-        }
-      }
-    ]).toArray()
-
-    // Tăng số lượt xem
-    const ids = tweets.map((tweet) => tweet._id as ObjectId)
-    const date = new Date()
-
-    const [total] = await Promise.all([
-      TweetsCollection.countDocuments(match_condition),
-      ids.length > 0
-        ? TweetsCollection.updateMany(
-            {
-              _id: { $in: ids }
-            },
-            {
-              $inc: { user_view: 1 },
-              $set: { updated_at: date }
-            }
-          )
-        : Promise.resolve()
-    ])
-
-    // Cập nhật views trong kết quả trả về
-    tweets.forEach((tweet) => {
-      tweet.updated_at = date
-      if (user_active_id) {
-        tweet.user_view = (tweet.user_view || 0) + 1
-      } else {
-        tweet.guest_view = (tweet.guest_view || 0) + 1
-      }
-    })
-
-    return {
-      total,
-      total_page: Math.ceil(total / limit),
-      items: this.signedCloudfrontMediaUrls(tweets) as TweetsSchema[]
-    }
+    return await getTweetLikedHelper(payload)
   }
 
   //
-  async getTweetBookmarked({
-    query,
-    user_active_id
-  }: {
+  async getTweetBookmarked(payload: {
     user_active_id: string
     query: IQuery<TweetsSchema>
   }): Promise<ResMultiType<TweetsSchema>> {
-    // Phân trang và truy vấn an toàn
-    const { skip, limit, sort, q } = getPaginationAndSafeQuery<TweetsSchema>(query)
-
-    // Lấy danh sách tweet_id mà user_id đã bookmark
-    const bookmarked_tweet_ids = await BookmarksCollection.distinct('tweet_id', {
-      user_id: new ObjectId(user_active_id)
-    })
-
-    // Điều kiện lọc tweet
-    const match_condition: any = {
-      _id: { $in: bookmarked_tweet_ids } // Chỉ lấy tweet đã bookmarks
-    }
-
-    //
-    if (q) {
-      match_condition.$text = { $search: q }
-    }
-
-    // Pipeline tổng hợp
-    const tweets = await TweetsCollection.aggregate<TweetsSchema>([
-      {
-        $match: match_condition
-      },
-      {
-        $sort: sort
-      },
-      {
-        $skip: skip
-      },
-      {
-        $limit: limit
-      },
-      {
-        $lookup: {
-          from: COLLECTION_USERS_NAME,
-          localField: 'user_id',
-          foreignField: '_id',
-          as: 'user_id',
-          pipeline: [
-            {
-              $project: {
-                bio: 1,
-                name: 1,
-                email: 1,
-                username: 1,
-                avatar: 1,
-                verify: 1,
-                cover_photo: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $unwind: {
-          path: '$user_id',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      // lookup để kiểm tra user hiện tại có follow user_id không
-      {
-        $lookup: {
-          from: 'followers',
-          let: { target_user_id: '$user_id._id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$followed_user_id', '$$target_user_id'] },
-                    { $eq: ['$user_id', new ObjectId(user_active_id)] }
-                  ]
-                }
-              }
-            }
-          ],
-          as: 'userFollowCheck'
-        }
-      },
-      {
-        $addFields: {
-          'user_id.isFollow': { $gt: [{ $size: '$userFollowCheck' }, 0] }
-        }
-      },
-      {
-        $lookup: {
-          from: 'hashtags',
-          localField: 'hashtags',
-          foreignField: '_id',
-          as: 'hashtags',
-          pipeline: [
-            {
-              $project: {
-                name: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_USERS_NAME,
-          localField: 'mentions',
-          foreignField: '_id',
-          as: 'mentions',
-          pipeline: [
-            {
-              $project: {
-                name: 1,
-                username: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_BOOKMARKS_NAME,
-          localField: '_id',
-          foreignField: 'tweet_id',
-          as: 'bookmarks',
-          pipeline: [
-            {
-              $project: {
-                user_id: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_LIKES_NAME,
-          localField: '_id',
-          foreignField: 'tweet_id',
-          as: 'likes',
-          pipeline: [
-            {
-              $project: {
-                user_id: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_TWEETS_NAME,
-          localField: '_id',
-          foreignField: 'parent_id',
-          as: 'tweets_children'
-        }
-      },
-      {
-        $addFields: {
-          likes_count: { $size: '$likes' },
-          is_like: {
-            $in: [new ObjectId(user_active_id), '$likes.user_id']
-          },
-          is_bookmark: {
-            $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
-          },
-          // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
-          quote: {
-            $let: {
-              vars: {
-                matched: {
-                  $filter: {
-                    input: '$tweets_children',
-                    as: 'child',
-                    cond: {
-                      $and: [
-                        { $eq: ['$$child.type', ETweetType.QuoteTweet] },
-                        { $eq: ['$$child.user_id', new ObjectId(user_active_id)] }
-                      ]
-                    }
-                  }
-                }
-              },
-              in: { $arrayElemAt: ['$$matched._id', 0] }
-            }
-          },
-          comments_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.Comment]
-                }
-              }
-            }
-          },
-          retweets_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.Retweet]
-                }
-              }
-            }
-          },
-          quotes_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.QuoteTweet]
-                }
-              }
-            }
-          }
-        }
-      }
-    ]).toArray()
-
-    // Tăng số lượt xem
-    const ids = tweets.map((tweet) => tweet._id as ObjectId)
-    const date = new Date()
-
-    const [total] = await Promise.all([
-      TweetsCollection.countDocuments(match_condition),
-      ids.length > 0
-        ? TweetsCollection.updateMany(
-            {
-              _id: { $in: ids }
-            },
-            {
-              $inc: { user_view: 1 },
-              $set: { updated_at: date }
-            }
-          )
-        : Promise.resolve()
-    ])
-
-    // Cập nhật views trong kết quả trả về
-    tweets.forEach((tweet) => {
-      tweet.updated_at = date
-      if (user_active_id) {
-        tweet.user_view = (tweet.user_view || 0) + 1
-      } else {
-        tweet.guest_view = (tweet.guest_view || 0) + 1
-      }
-    })
-
-    return {
-      total,
-      total_page: Math.ceil(total / limit),
-      items: this.signedCloudfrontMediaUrls(tweets) as TweetsSchema[]
-    }
+    return await getTweetBookmarkedHelper(payload)
   }
 
   //
@@ -1733,342 +707,41 @@ class TweetsService {
     }
   }
 
-  // ============================ COMMUNITY ============================
+  //
+  signedCloudfrontMediaUrls = (tweets: ITweet[] | ITweet | null) => {
+    //
+    if (!tweets) return tweets
+
+    //
+    if (!Array.isArray(tweets))
+      return {
+        ...tweets,
+        medias: tweets.medias?.map((m) => ({
+          ...m,
+          ...signedCloudfrontUrl(m)
+        })) as any
+      }
+
+    //
+    return tweets.map((tweet) => ({
+      ...tweet,
+      medias: tweet.medias?.map((m) => ({
+        ...m,
+        ...signedCloudfrontUrl(m)
+      })) as any
+    }))
+  }
+
+  // ========== COMMUNITY ==========
   // Lấy tất cả bài viết trong cộng đồng
-  async getCommunityTweets({
-    query,
-    isMedia,
-    isHighlight,
-    community_id,
-    user_active_id
-  }: {
+  async getTweetsByCommunityId(payload: {
     isMedia?: boolean
     community_id: string
     query: IQuery<ITweet>
     isHighlight?: boolean
     user_active_id: string
   }): Promise<ResMultiType<ITweet>> {
-    //
-    // eslint-disable-next-line prefer-const
-    let { skip, limit, sort, q } = getPaginationAndSafeQuery<ITweet>(query)
-
-    // Lấy danh sách của người nào đang theo dõi user_id
-    const following_user_ids = await followsService.getUserFollowing(user_active_id)
-
-    //
-    const match_condition = {
-      community_id: new ObjectId(community_id),
-      status: ETweetStatus.Ready,
-      $or: [
-        { audience: ETweetAudience.Everyone },
-        ...(following_user_ids.length
-          ? [{ audience: ETweetAudience.Followers, user_id: { $in: following_user_ids } }]
-          : [])
-      ]
-    } as Filter<TweetsSchema>
-
-    //
-    if (q) {
-      match_condition.$text = { $search: q }
-    }
-
-    //
-    if (isMedia) {
-      match_condition['medias.0'] = { $exists: true }
-    }
-
-    //
-    if (isHighlight) {
-      skip = 0
-      limit = 20
-      sort = { likes_count: -1, total_views: -1 } // Sắp xếp theo likes_count, sau đó total_views
-    }
-
-    // Pipeline tổng hợp
-    const tweets = await TweetsCollection.aggregate<TweetsSchema>([
-      {
-        $match: match_condition
-      },
-
-      // tính total_views nếu cần (ok để trước sort)
-      ...(isHighlight
-        ? [
-            {
-              $addFields: {
-                total_views: { $add: ['$user_view', '$guest_view'] }
-              }
-            }
-          ]
-        : []),
-
-      // --- IMPORTANT: lookup likes trước sort để có likes_count ---
-      {
-        $lookup: {
-          from: COLLECTION_LIKES_NAME,
-          localField: '_id',
-          foreignField: 'tweet_id',
-          as: 'likes',
-          pipeline: [
-            {
-              $project: {
-                user_id: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $addFields: { likes_count: { $size: '$likes' } }
-      },
-
-      // bây giờ sort sẽ hoạt động đúng vì likes_count đã có
-      {
-        $sort: sort
-      },
-      {
-        $skip: skip
-      },
-      {
-        $limit: limit
-      },
-      {
-        $lookup: {
-          from: COLLECTION_USERS_NAME,
-          localField: 'user_id',
-          foreignField: '_id',
-          as: 'user_id',
-          pipeline: [
-            {
-              $project: {
-                bio: 1,
-                name: 1,
-                email: 1,
-                username: 1,
-                avatar: 1,
-                verify: 1,
-                cover_photo: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $unwind: {
-          path: '$user_id',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      // lookup để kiểm tra user hiện tại có follow user_id không
-      {
-        $lookup: {
-          from: 'followers',
-          let: { target_user_id: '$user_id._id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$followed_user_id', '$$target_user_id'] },
-                    { $eq: ['$user_id', new ObjectId(user_active_id)] }
-                  ]
-                }
-              }
-            }
-          ],
-          as: 'userFollowCheck'
-        }
-      },
-      {
-        $addFields: {
-          'user_id.isFollow': { $gt: [{ $size: '$userFollowCheck' }, 0] }
-        }
-      },
-      {
-        $project: {
-          userFollowCheck: 0 // xoá field tạm
-        }
-      },
-      {
-        $lookup: {
-          from: 'hashtags',
-          localField: 'hashtags',
-          foreignField: '_id',
-          as: 'hashtags',
-          pipeline: [
-            {
-              $project: {
-                name: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_USERS_NAME,
-          localField: 'mentions',
-          foreignField: '_id',
-          as: 'mentions',
-          pipeline: [
-            {
-              $project: {
-                name: 1,
-                username: 1,
-                avatar: 1,
-                verify: 1,
-                bio: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_BOOKMARKS_NAME,
-          localField: '_id',
-          foreignField: 'tweet_id',
-          as: 'bookmarks',
-          pipeline: [
-            {
-              $project: {
-                user_id: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_LIKES_NAME,
-          localField: '_id',
-          foreignField: 'tweet_id',
-          as: 'likes',
-          pipeline: [
-            {
-              $project: {
-                user_id: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: COLLECTION_TWEETS_NAME,
-          localField: '_id',
-          foreignField: 'parent_id',
-          as: 'tweets_children'
-        }
-      },
-      {
-        $addFields: {
-          likes_count: { $size: '$likes' },
-          is_like: {
-            $in: [new ObjectId(user_active_id), '$likes.user_id']
-          },
-          is_bookmark: {
-            $in: [new ObjectId(user_active_id), '$bookmarks.user_id']
-          },
-          // lấy id quote tweet của user (1 cái đầu tiên hoặc null)
-          quote: {
-            $let: {
-              vars: {
-                matched: {
-                  $filter: {
-                    input: '$tweets_children',
-                    as: 'child',
-                    cond: {
-                      $and: [
-                        { $eq: ['$$child.type', ETweetType.QuoteTweet] },
-                        { $eq: ['$$child.user_id', new ObjectId(user_active_id)] }
-                      ]
-                    }
-                  }
-                }
-              },
-              in: { $arrayElemAt: ['$$matched._id', 0] }
-            }
-          },
-          mentions: {
-            $map: {
-              input: '$mentions',
-              as: 'm',
-              in: {
-                _id: '$m._id',
-                name: '$m.name',
-                username: '$m.username'
-              }
-            }
-          },
-          comments_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.Comment]
-                }
-              }
-            }
-          },
-          retweets_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.Retweet]
-                }
-              }
-            }
-          },
-          quotes_count: {
-            $size: {
-              $filter: {
-                input: '$tweets_children',
-                as: 'tweet',
-                cond: {
-                  $eq: ['$$tweet.type', ETweetType.QuoteTweet]
-                }
-              }
-            }
-          }
-        }
-      }
-    ]).toArray()
-
-    // Increase views
-    const ids = tweets.map((tweet) => tweet._id as ObjectId)
-    const date = new Date()
-
-    const [total] = await Promise.all([
-      TweetsCollection.countDocuments(match_condition),
-      TweetsCollection.updateMany(
-        {
-          _id: { $in: ids }
-        },
-        {
-          $inc: { user_view: 1 },
-          $set: { updated_at: date }
-        }
-      )
-    ])
-
-    //
-    tweets.forEach((tweet) => {
-      tweet.updated_at = date
-      if (user_active_id) {
-        tweet.user_view += 1
-      } else {
-        tweet.guest_view += 1
-      }
-    })
-
-    return {
-      total,
-      total_page: Math.ceil(total / limit),
-      items: this.signedCloudfrontMediaUrls(tweets) as TweetsSchema[]
-    }
+    return await getTweetsByCommunityIdHelper(payload)
   }
 
   // Đếm số bài viết chờ duyệt trong cộng đồng
@@ -2160,112 +833,89 @@ class TweetsService {
       items: this.signedCloudfrontMediaUrls(tweets) as TweetsSchema[]
     }
   }
-
-  //
-  signedCloudfrontMediaUrls = (tweets: ITweet[] | ITweet | null) => {
-    //
-    if (!tweets) return tweets
-
-    //
-    if (!Array.isArray(tweets))
-      return {
-        ...tweets,
-        medias: tweets.medias?.map((m) => ({
-          ...m,
-          ...signedCloudfrontUrl(m)
-        })) as any
-      }
-
-    //
-    return tweets.map((tweet) => ({
-      ...tweet,
-      medias: tweet.medias?.map((m) => ({
-        ...m,
-        ...signedCloudfrontUrl(m)
-      })) as any
-    }))
-  }
+  // ========== COMMUNITY ==========
 
   // ========== ADMIN ==========
   async adminGetTweets({
-    query
+    query,
+    admin_id
   }: {
-    query: IQuery<TweetsSchema>
     admin_id: string
+    query: IQuery<TweetsSchema>
   }): Promise<ResMultiDto<TweetsSchema>> {
-    const { skip, limit, sort, q, qf } = getPaginationAndSafeQuery<TweetsSchema>(query)
-    let filter: any = q ? { $text: { $search: q } } : {}
+    return await adminGetTweetsHelper({ query, admin_id })
+  }
+
+  async adminRemindTweet({
+    reason,
+    auth_id,
+    admin_id,
+    tweet_id
+  }: {
+    auth_id: string
+    admin_id: string
+    reason: string
+    tweet_id: string
+  }) {
+    //
+    await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+      content:
+        reason ||
+        'Quản trị viên đã gửi nhắc nhở về bài viết của bạn. Vui lòng kiểm tra lại nội dung và đảm bảo tuân thủ các quy định.',
+      type: ENotificationType.Other,
+      sender: auth_id,
+      receiver: auth_id
+    })
+  }
+
+  async adminChangeTweetStatus({
+    reason,
+    status,
+    auth_id,
+    tweet_id
+  }: {
+    reason: string
+    auth_id: string
+    tweet_id: string
+    status: ETweetStatus
+  }) {
+    const updated = await TweetsCollection.updateOne({ _id: new ObjectId(tweet_id) }, { $set: { status } })
 
     //
-    filter = getFilterQuery(qf, filter as any)
-
-    //
-    const tweets = await TweetsCollection.aggregate<TweetsSchema>([
-      {
-        $match: filter
-      },
-      {
-        $sort: sort
-      },
-      {
-        $skip: skip
-      },
-      {
-        $limit: limit
-      },
-      {
-        $lookup: {
-          from: 'communities',
-          localField: 'community_id',
-          foreignField: '_id',
-          as: 'community_id',
-          pipeline: [
-            {
-              $project: {
-                cover: 1,
-                name: 1,
-                slug: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $unwind: { path: '$community_id', preserveNullAndEmptyArrays: true }
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'user_id',
-          foreignField: '_id',
-          as: 'user_id',
-          pipeline: [
-            {
-              $project: {
-                name: 1,
-                username: 1,
-                email: 1,
-                avatar: 1,
-                verify: 1,
-                cover_photo: 1
-              }
-            }
-          ]
-        }
-      },
-      {
-        $unwind: { path: '$user_id', preserveNullAndEmptyArrays: true }
-      }
-    ]).toArray()
-
-    const total = await TweetsCollection.countDocuments(filter)
-
-    return {
-      total,
-      total_page: Math.ceil(total / limit),
-      items: this.signedCloudfrontMediaUrls(tweets) as TweetsSchema[]
+    if (updated.modifiedCount) {
+      await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+        content: reason || 'Quản trị viên đã thay đổi trạng thái bài viết của bạn.',
+        type: ENotificationType.Other,
+        sender: auth_id,
+        receiver: auth_id
+      })
     }
   }
+
+  async adminDeleteTweet({
+    reason,
+    auth_id,
+    admin_id,
+    tweet_id
+  }: {
+    reason: string
+    auth_id: string
+    admin_id: string
+    tweet_id: string
+  }) {
+    const deleted = await this.delete(tweet_id)
+
+    //
+    if (deleted) {
+      await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+        content: reason || 'Quản trị viên đã xóa bài viết của bạn. ',
+        type: ENotificationType.Other,
+        sender: auth_id,
+        receiver: auth_id
+      })
+    }
+  }
+  // ========== ADMIN ==========
 }
 
 export default new TweetsService()

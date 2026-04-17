@@ -1,10 +1,10 @@
 import { ObjectId } from 'mongodb'
-import { EFeedType, EFeedTypeItem, ETweetAudience, ETweetType } from '~/shared/enums/public/tweets.enum'
+import { EFeedType, EFeedTypeItem, ETweetAudience, ETweetStatus, ETweetType } from '~/shared/enums/public/tweets.enum'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ITweet } from '~/shared/interfaces/public/tweet.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
-import followsService from '../follows.service'
+import followsService from '../../follows.service'
 import { COLLECTION_TWEETS_NAME, TweetsCollection, TweetsSchema } from '~/models/public/tweet.schema'
 import { COLLECTION_USERS_NAME } from '~/models/public/user.schema'
 import { EUserStatus } from '~/shared/enums/public/users.enum'
@@ -17,7 +17,7 @@ import {
   CommunitiesSchema
 } from '~/models/public/community.schema'
 import { EMembershipType } from '~/shared/enums/public/communities.enum'
-import tweetsService from './tweets.service'
+import tweetsService from '../tweets.service'
 
 export async function getNewFeedsHelper({
   query,
@@ -74,6 +74,7 @@ export async function getNewFeedsHelper({
     TweetsCollection.aggregate<TweetsSchema>([
       {
         $match: {
+          status: ETweetStatus.Ready,
           community_id: { $eq: null }, // Chỉ lấy những bài viết không trong cộng đồng
           ...match_condition
         }

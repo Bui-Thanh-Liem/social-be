@@ -12,7 +12,7 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { slug } from '~/utils/slug.util'
 import { ResSearchPending } from '../../shared/dtos/public/search.dto'
 import { EVisibilityType } from '../../shared/enums/public/communities.enum'
-import { ETweetAudience, ETweetType } from '../../shared/enums/public/tweets.enum'
+import { ETweetAudience, ETweetStatus, ETweetType } from '../../shared/enums/public/tweets.enum'
 import { ITrending } from '../../shared/interfaces/public/trending.interface'
 import { COLLECTION_TWEETS_NAME, TweetsCollection, TweetsSchema } from '../../models/public/tweet.schema'
 import CommunitiesService from './communities.service'
@@ -248,7 +248,8 @@ class SearchService {
         $match: {
           ...has_q.query,
           ...hasF.query,
-          ...hasPf.query
+          ...hasPf.query,
+          status: ETweetStatus.Ready
         }
       },
 

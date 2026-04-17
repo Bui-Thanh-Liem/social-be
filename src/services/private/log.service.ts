@@ -16,13 +16,7 @@ class LogService {
     let filter: Partial<Record<keyof ILog, any>> = {}
 
     // Áp dụng filter từ qf nếu có
-    filter = getFilterQuery(qf, filter)
-
-    if (sd || ed) {
-      filter.created_at = {}
-      if (sd) filter.created_at.$gte = new Date(sd)
-      if (ed) filter.created_at.$lte = new Date(ed)
-    }
+    filter = getFilterQuery({ qf, filter, sd, ed })
 
     const [logs, total] = await Promise.all([
       LogsCollection.find(filter).sort(sort).skip(skip).limit(limit).toArray(),

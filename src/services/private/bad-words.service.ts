@@ -89,11 +89,11 @@ class BadWordsService {
   }
 
   async getMulti({ query }: { query: IQuery<IBadWord> }) {
-    const { skip, limit, sort, q, qf } = getPaginationAndSafeQuery<IBadWord>(query)
+    const { skip, limit, sort, q, qf, sd, ed } = getPaginationAndSafeQuery<IBadWord>(query)
     let filter: Partial<Record<keyof IBadWord, any>> = q ? { words: { $regex: q, $options: 'i' } } : {}
 
     // Áp dụng filter từ qf nếu có
-    filter = getFilterQuery(qf, filter)
+    filter = getFilterQuery({ qf, filter, sd, ed })
 
     //
     const [badWords, total] = await Promise.all([

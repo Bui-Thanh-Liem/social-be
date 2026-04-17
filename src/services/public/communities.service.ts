@@ -40,6 +40,7 @@ import CommunityInvitationService from './community-invitations.service'
 import CommunityMemberService from './community-members.service'
 import CommunityMentorService from './community-mentors.service'
 import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
+import { getFilterQuery } from '~/utils/get-filter-query.util'
 
 interface IPromoteDemote {
   actor_id: string
@@ -803,6 +804,7 @@ class CommunityService {
     }
   }
 
+  //
   async getOneBareInfoBySlug({ slug, user_id }: { slug: string; user_id?: string }): Promise<ICommunity> {
     const community = await CommunitiesCollection.aggregate<CommunitiesSchema>([
       // match slug
@@ -982,6 +984,7 @@ class CommunityService {
     return this.signedCloudfrontCoverUrls(community) as ICommunity
   }
 
+  //
   async getMultiMMById({
     community_id,
     user_id,
@@ -1149,6 +1152,7 @@ class CommunityService {
     return this.signedCloudfrontCoverUrls(community) as ICommunity
   }
 
+  //
   async togglePin({ user_id, community_id }: ICommunityPayload) {
     const user_object_id = new ObjectId(user_id)
     const community_object_id = new ObjectId(community_id)
@@ -1274,7 +1278,32 @@ class CommunityService {
     }
   }
 
-  // ================ ACTIVITY ============
+  //
+  signedCloudfrontCoverUrls = (communities: ICommunity[] | ICommunity | null) => {
+    //
+    if (!communities) return communities
+
+    //
+    if (!Array.isArray(communities))
+      return {
+        ...communities,
+        cover: {
+          ...communities.cover,
+          ...signedCloudfrontUrl(communities.cover)
+        }
+      }
+
+    //
+    return communities.map((community) => ({
+      ...community,
+      cover: {
+        ...community.cover,
+        ...signedCloudfrontUrl(community.cover)
+      }
+    }))
+  }
+
+  // ===== ACTIVITY =====
   async getMultiActivity({
     community_id,
     queries
@@ -1312,6 +1341,7 @@ class CommunityService {
     )
     return !!res.insertedId
   }
+  // ===== ACTIVITY =====
 
   // ===== ADMIN =====
   async adminGetCommunities({
@@ -1320,12 +1350,16 @@ class CommunityService {
     admin_id: string
     query: IQuery<ICommunity>
   }): Promise<ResMultiDto<ICommunity>> {
-    const { skip, limit, sort, q, qe } = getPaginationAndSafeQuery<ICommunity>(query)
-    const filter: any = q
+    const { skip, limit, sort, q, qf, sd, ed } = getPaginationAndSafeQuery<ICommunity>(query)
+    let filter: any = q
       ? {
           $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }]
         }
       : {}
+
+    //
+    filter = getFilterQuery<CommunitiesSchema>({ qf, filter, sd, ed })
+    console.log('Filter:', filter)
 
     //
     const [communities, total] = await Promise.all([
@@ -1345,6 +1379,7 @@ class CommunityService {
                 $project: {
                   _id: 1,
                   name: 1,
+                  star: 1,
                   verify: 1,
                   avatar: 1,
                   username: 1
@@ -1404,31 +1439,7 @@ class CommunityService {
       items: this.signedCloudfrontCoverUrls(communities) as ICommunity[]
     }
   }
-
-  //
-  signedCloudfrontCoverUrls = (communities: ICommunity[] | ICommunity | null) => {
-    //
-    if (!communities) return communities
-
-    //
-    if (!Array.isArray(communities))
-      return {
-        ...communities,
-        cover: {
-          ...communities.cover,
-          ...signedCloudfrontUrl(communities.cover)
-        }
-      }
-
-    //
-    return communities.map((community) => ({
-      ...community,
-      cover: {
-        ...community.cover,
-        ...signedCloudfrontUrl(community.cover)
-      }
-    }))
-  }
+  // ===== ADMIN =====
 }
 
 export default new CommunityService()

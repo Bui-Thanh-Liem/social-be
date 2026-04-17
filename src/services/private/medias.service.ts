@@ -9,8 +9,8 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 
 class MediaService {
   async getMedias({ admin_id, query }: { admin_id: string; query: IQuery<IMedia> }): Promise<ResMultiDto<IMedia>> {
-    const { skip, limit, sort, qf } = getPaginationAndSafeQuery<IMedia>(query)
-    const filter = getFilterQuery(qf, {})
+    const { skip, limit, sort, qf, sd, ed } = getPaginationAndSafeQuery<IMedia>(query)
+    const filter = getFilterQuery({ qf: qf as any, filter: {}, sd, ed })
 
     const [items, total] = await Promise.all([
       MediasCollection.aggregate<IMedia>([

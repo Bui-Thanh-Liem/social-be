@@ -646,7 +646,7 @@ class UsersService {
   // ===== ADMIN =====
   async adminGetUsers({ admin_id, query }: { admin_id: string; query: IQuery<IUser> }): Promise<ResMultiDto<IUser>> {
     //
-    const { skip, limit, sort, q, qf } = getPaginationAndSafeQuery<IUser>(query)
+    const { skip, limit, sort, q, qf, sd, ed } = getPaginationAndSafeQuery<IUser>(query)
     let filter: any = q
       ? {
           $or: [{ name: { $regex: q, $options: 'i' } }, { username: { $regex: q, $options: 'i' } }]
@@ -654,7 +654,8 @@ class UsersService {
       : {}
 
     //
-    filter = getFilterQuery(qf, filter as any)
+    filter = getFilterQuery<UsersSchema>({ qf, filter, sd, ed })
+    console.log('Filter:', filter)
 
     // Trường hợp đặt biệt , status lồng trong 2 cấp
     if (filter?.status) {
