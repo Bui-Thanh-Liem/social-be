@@ -82,7 +82,7 @@ class UsersController {
     res.json(new OkResponse(`Thay đổi mật khẩu thành công.`, result))
   }
 
-  // ===== ADMIN =====
+  // ========= ADMIN =========
   async adminGetUsers(req: Request, res: Response) {
     const { admin_id } = req.decoded_authorization as IJwtPayload
     const result = await usersService.adminGetUsers({
@@ -115,7 +115,7 @@ class UsersController {
     })
     res.json(new OkResponse('Nhắc nhở người dùng thành công', result))
   }
-  // ===== ADMIN =====
+  // ========= ADMIN =========
 }
 
 export default new UsersController()

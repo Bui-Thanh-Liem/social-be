@@ -246,6 +246,12 @@ class TweetsService {
     // 3. Nếu có cache thì trả về luôn - "null" cũng là 1 giá trị hợp lệ
     if (tweet_cache) {
       console.log('Get in cached')
+
+      //   - Nếu bài viết không ở trạng thái Ready và người xem không phải là chủ bài viết thì trả về lỗi
+      if (this.checkTweetAccess(tweet_cache, user_active_id)) {
+        throw new NotFoundError('Bài viết không tồn tại')
+      }
+
       return this._processUserSpecificFields(tweet_cache, user_active_id)
     }
 
@@ -277,6 +283,11 @@ class TweetsService {
           await cacheService.set(key_cache, tweet_db, 300)
         }
 
+        //   - Nếu bài viết không ở trạng thái Ready và người xem không phải là chủ bài viết thì trả về lỗi
+        if (this.checkTweetAccess(tweet_db, user_active_id)) {
+          throw new NotFoundError('Bài viết không tồn tại')
+        }
+
         //    - Tính toán is_like và is_bookmark ở tầng ứng dụng (Application Layer)
         return this._processUserSpecificFields(tweet_db, user_active_id)
       } catch (err) {
@@ -297,6 +308,9 @@ class TweetsService {
         user_active_id
       })
     }
+  }
+  private checkTweetAccess(tweet: TweetsSchema, user_active_id: string): boolean {
+    return tweet.status !== ETweetStatus.Ready && (tweet.user_id as unknown as IUser)._id?.toString() !== user_active_id
   }
 
   /**
@@ -872,14 +886,25 @@ class TweetsService {
     reason,
     status,
     auth_id,
+    admin_id,
     tweet_id
   }: {
     reason: string
     auth_id: string
+    admin_id: string
     tweet_id: string
     status: ETweetStatus
   }) {
     const updated = await TweetsCollection.updateOne({ _id: new ObjectId(tweet_id) }, { $set: { status } })
+
+    //
+    if ([ETweetStatus.Reject, ETweetStatus.Pending].includes(status)) {
+      // 1. Tạo key cache
+      const key_cache = createKeyTweetDetails(tweet_id)
+
+      // 2. Xóa cache trong Redis
+      await cacheService.del(key_cache)
+    }
 
     //
     if (updated.modifiedCount) {
@@ -907,6 +932,13 @@ class TweetsService {
 
     //
     if (deleted) {
+      // 1. Tạo key cache
+      const key_cache = createKeyTweetDetails(tweet_id)
+
+      // 2. Xóa cache trong Redis
+      await cacheService.del(key_cache)
+
+      // 3. Gửi thông báo cho người dùng
       await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
         content: reason || 'Quản trị viên đã xóa bài viết của bạn. ',
         type: ENotificationType.Other,

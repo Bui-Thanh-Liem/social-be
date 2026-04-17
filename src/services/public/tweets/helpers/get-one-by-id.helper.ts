@@ -26,19 +26,20 @@ export async function getOneByIdHelper({
   // 1. Định nghĩa điều kiện match (không đổi)
   const match_condition = {
     _id: new ObjectId(id),
-    status: ETweetStatus.Ready,
-    $or: [
-      { audience: ETweetAudience.Everyone },
+    $and: [
+      // Điều kiện về quyền xem (Audience) - Giữ nguyên logic
       {
-        audience: ETweetAudience.Followers,
-        user_id: { $in: followed_user_ids }
+        $or: [
+          { audience: ETweetAudience.Everyone },
+          { audience: ETweetAudience.Followers, user_id: { $in: followed_user_ids } },
+          { audience: ETweetAudience.Mentions, mentions: { $in: [userActiveObjectId] } },
+          { user_id: userActiveObjectId }
+        ]
       },
+      // ĐIỀU KIỆN STATUS: Tác giả xem bài của mình thì status gì cũng được,
+      // người khác xem thì bài phải Ready
       {
-        audience: ETweetAudience.Mentions,
-        mentions: { $in: [userActiveObjectId] }
-      },
-      {
-        user_id: userActiveObjectId // Chủ bài viết có quyền xem tất cả
+        $or: [{ user_id: userActiveObjectId }, { status: ETweetStatus.Ready }]
       }
     ]
   }
