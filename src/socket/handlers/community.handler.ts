@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io'
-import CommunityGateway from '../gateways/Community.gateway'
+import CommunityGateway from '../gateways/community.gateway'
 import { CONSTANT_EVENT_NAMES } from '~/shared/constants/socket.constant'
 
 export async function communityHandler(io: Server, socket: Socket) {

@@ -2,8 +2,8 @@ import { ObjectId } from 'mongodb'
 import { ResToggleFollow } from '~/shared/dtos/public/follows.dto'
 import { ENotificationType } from '~/shared/enums/public/notifications.enum'
 import { notificationQueue } from '~/infra/queues'
-import { FollowersCollection } from '~/models/public/follow.schema'
-import { UsersCollection } from '~/models/public/user.schema'
+import { FollowersCollection } from '~/schemas/public/follow.schema'
+import { UsersCollection } from '~/schemas/public/user.schema'
 import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
 
 class FollowsService {

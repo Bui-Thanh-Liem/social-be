@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { AdminTokensCollection, AdminTokensSchema } from '~/models/private/admin-tokens.schema'
+import { AdminTokensCollection, AdminTokensSchema } from '~/schemas/private/admin-tokens.schema'
 
 class AdminTokensService {
   async create({

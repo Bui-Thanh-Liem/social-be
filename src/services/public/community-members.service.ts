@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { ICommunityPayload } from '~/shared/interfaces/public/community.interface'
-import { CommunityMemberCollection, CommunityMemberSchema } from '~/models/public/community.schema'
+import { CommunityMemberCollection, CommunityMemberSchema } from '~/schemas/public/community.schema'
 
 class CommunityMemberService {
   async create({ user_id, community_id }: ICommunityPayload) {

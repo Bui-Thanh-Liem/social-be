@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { BadRequestError, UnauthorizedError } from '~/core/error.response'
 import { EUserTokenType } from '~/shared/enums/public/user-tokens.enum'
-import { UsersCollection } from '~/models/public/user.schema'
+import { UsersCollection } from '~/schemas/public/user.schema'
 import { verifyToken } from '~/utils/jwt.util'
 
 export async function verifyTokenForgotPasswordMiddleware(req: Request, res: Response, next: NextFunction) {

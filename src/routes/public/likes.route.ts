@@ -2,7 +2,7 @@ import { Router } from 'express'
 import likesController from '~/controllers/public/likes.controller'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
 import { paramsValidate } from '~/middlewares/common/params-validate.middleware'
-import { checkTweetExistMiddleware } from '~/middlewares/public/tweet/check-tweet-exist.middleware'
+import { checkTweetExistMiddleware } from '~/middlewares/common/check-tweet-exist.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 import { ParamIdDtoSchema } from '~/shared/dtos/common/param-id.dto'
 

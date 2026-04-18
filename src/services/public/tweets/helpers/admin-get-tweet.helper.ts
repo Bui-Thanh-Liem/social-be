@@ -1,9 +1,9 @@
-import { TweetsCollection, TweetsSchema } from '~/models/public/tweet.schema'
+import { TweetsCollection, TweetsSchema } from '~/schemas/public/tweet.schema'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ResMultiDto } from '~/shared/dtos/common/res-multi.dto'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import { getFilterQuery } from '~/utils/get-filter-query.util'
-import { COLLECTION_USERS_NAME } from '~/models/public/user.schema'
+import { COLLECTION_USERS_NAME } from '~/schemas/public/user.schema'
 import tweetsService from '../tweets.service'
 
 export async function adminGetTweetsHelper({

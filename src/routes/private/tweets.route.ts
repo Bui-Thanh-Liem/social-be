@@ -8,7 +8,7 @@ import { paramsValidate } from '~/middlewares/common/params-validate.middleware'
 import { ParamIdDtoSchema } from '~/shared/dtos/common/param-id.dto'
 import { bodyValidate } from '~/middlewares/common/body-validate.middleware'
 import { adminChangeTweetStatusDtoSchema, adminRemindTweetDtoSchema } from '~/shared/dtos/private/tweet.dto'
-import { checkTweetExistMiddleware } from '~/middlewares/public/tweet/check-tweet-exist.middleware'
+import { checkTweetExistMiddleware } from '~/middlewares/common/check-tweet-exist.middleware'
 
 const privateTweetsRoute = Router()
 

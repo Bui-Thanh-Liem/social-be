@@ -6,7 +6,7 @@ import { notificationQueue } from '~/infra/queues'
 import { EMediaStatus } from '~/shared/enums/public/medias.enum'
 import { ENotificationType } from '~/shared/enums/public/notifications.enum'
 import { DeleteMediaDto, PresignedUrlDto, ResPresignedUrl, UploadConfirmDto } from '~/shared/dtos/public/uploads.dto'
-import { MediasCollection } from '~/models/common/media.schema'
+import { MediasCollection } from '~/schemas/common/media.schema'
 import { IMedia } from '~/shared/interfaces/common/media.interface'
 import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
 

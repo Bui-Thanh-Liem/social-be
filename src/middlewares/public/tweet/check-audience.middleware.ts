@@ -4,11 +4,11 @@ import { BadRequestError, UnauthorizedError } from '~/core/error.response'
 import { ETweetAudience } from '~/shared/enums/public/tweets.enum'
 import { ITweet } from '~/shared/interfaces/public/tweet.interface'
 import { IUser } from '~/shared/interfaces/public/user.interface'
-import { FollowersCollection } from '~/models/public/follow.schema'
+import { FollowersCollection } from '~/schemas/public/follow.schema'
 import { EUserVerifyStatus } from '~/shared/enums/public/users.enum'
-import { UsersCollection } from '~/models/public/user.schema'
+import { UsersCollection } from '~/schemas/public/user.schema'
 import { IJwtPayload } from '~/shared/interfaces/common/jwt.interface'
-import { convertObjectId } from '~/utils/convert-object-id'
+import { convertObjectId } from '~/utils/convert-object-id.util'
 
 export async function checkAudienceMiddleware(req: Request, res: Response, next: NextFunction) {
   try {

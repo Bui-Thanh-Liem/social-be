@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb'
 import { NotFoundError } from '../../core/error.response'
 import { EAdminVerifyStatus } from '~/shared/enums/private/admins.enum'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
-import { AdminCollection, AdminSchema } from '~/models/private/admin.schema'
+import { AdminCollection, AdminSchema } from '~/schemas/private/admin.schema'
 import { IAdmin } from '~/shared/interfaces/private/admin.interface'
 
 class AdminService {

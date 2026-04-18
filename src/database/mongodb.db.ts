@@ -1,11 +1,11 @@
 import { Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { envs } from '~/configs/env.config'
 import { BadRequestError, InternalServerError } from '~/core/error.response'
-import { AdminTokensCollection, initAdminTokensCollection } from '~/models/private/admin-tokens.schema'
-import { AdminCollection, initAdminCollection } from '~/models/private/admin.schema'
-import { AccessRecentCollection, initAccessRecentCollection } from '~/models/public/access-recent.schema'
-import { BadWordsCollection, initBadWordsCollection } from '~/models/private/bad-word.schema'
-import { initBookmarksCollection } from '~/models/public/bookmark.schema'
+import { AdminTokensCollection, initAdminTokensCollection } from '~/schemas/private/admin-tokens.schema'
+import { AdminCollection, initAdminCollection } from '~/schemas/private/admin.schema'
+import { AccessRecentCollection, initAccessRecentCollection } from '~/schemas/public/access-recent.schema'
+import { BadWordsCollection, initBadWordsCollection } from '~/schemas/private/bad-word.schema'
+import { initBookmarksCollection } from '~/schemas/public/bookmark.schema'
 import {
   CommunitiesCollection,
   CommunityActivityCollection,
@@ -19,24 +19,24 @@ import {
   initCommunityMemberCollection,
   initCommunityMentorCollection,
   initCommunityPinCollection
-} from '~/models/public/community.schema'
-import { ConversationsCollection, initConversationsCollection } from '~/models/public/conversation.schema'
-import { initFollowersCollection } from '~/models/public/follow.schema'
-import { HashtagsCollection, initHashtagsCollection } from '~/models/public/hashtag.schema'
-import { initLikesCollection, LikesCollection } from '~/models/public/like.schema'
-import { initMediasCollection, MediasCollection } from '~/models/common/media.schema'
-import { initMessagesCollection, MessagesCollection } from '~/models/public/message.schema'
-import { initNotificationsCollection } from '~/models/public/notification.schema'
-import { initReelsCollection, ReelsCollection } from '~/models/public/reel.schema'
-import { initReportTweetCollection, ReportTweetCollection } from '~/models/public/report-tweet.schema'
-import { initSearchHistoryCollection, SearchHistoryCollection } from '~/models/public/search-history.schema'
-import { initTrendingCollection, TrendingCollection } from '~/models/public/trending.schema'
-import { initTweetsCollection, TweetsCollection } from '~/models/public/tweet.schema'
-import { initUserTokensCollection, UserTokensCollection } from '~/models/public/user-token.schema'
-import { initUserViolationsCollection } from '~/models/public/user-violation.schema'
-import { initUsersCollection, UsersCollection } from '~/models/public/user.schema'
+} from '~/schemas/public/community.schema'
+import { ConversationsCollection, initConversationsCollection } from '~/schemas/public/conversation.schema'
+import { initFollowersCollection } from '~/schemas/public/follow.schema'
+import { HashtagsCollection, initHashtagsCollection } from '~/schemas/public/hashtag.schema'
+import { initLikesCollection, LikesCollection } from '~/schemas/public/like.schema'
+import { initMediasCollection, MediasCollection } from '~/schemas/common/media.schema'
+import { initMessagesCollection, MessagesCollection } from '~/schemas/public/message.schema'
+import { initNotificationsCollection } from '~/schemas/public/notification.schema'
+import { initReelsCollection, ReelsCollection } from '~/schemas/public/reel.schema'
+import { initReportTweetCollection, ReportTweetCollection } from '~/schemas/public/report-tweet.schema'
+import { initSearchHistoryCollection, SearchHistoryCollection } from '~/schemas/public/search-history.schema'
+import { initTrendingCollection, TrendingCollection } from '~/schemas/public/trending.schema'
+import { initTweetsCollection, TweetsCollection } from '~/schemas/public/tweet.schema'
+import { initUserTokensCollection, UserTokensCollection } from '~/schemas/public/user-token.schema'
+import { initUserViolationsCollection } from '~/schemas/public/user-violation.schema'
+import { initUsersCollection, UsersCollection } from '~/schemas/public/user.schema'
 import { logger } from '~/utils/logger.util'
-import { initLogsCollection, LogsCollection } from '~/models/private/log.schema'
+import { initLogsCollection, LogsCollection } from '~/schemas/private/log.schema'
 
 const _MINPOOLSIZE = 5
 const _MAXPOOLSIZE = 50 // không bao giờ vượt, nếu hơn thì phải chờ

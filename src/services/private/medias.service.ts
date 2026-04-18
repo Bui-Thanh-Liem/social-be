@@ -1,7 +1,7 @@
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
 import { IMedia } from '~/shared/interfaces/common/media.interface'
 import { IUser } from '~/shared/interfaces/public/user.interface'
-import { MediasCollection } from '~/models/common/media.schema'
+import { MediasCollection } from '~/schemas/common/media.schema'
 import { ResMultiDto } from '~/shared/dtos/common/res-multi.dto'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { getFilterQuery } from '~/utils/get-filter-query.util'

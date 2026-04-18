@@ -5,10 +5,10 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import followsService from '../../follows.service'
 import { Filter, ObjectId } from 'mongodb'
 import { ETweetAudience, ETweetStatus, ETweetType } from '~/shared/enums/public/tweets.enum'
-import { COLLECTION_TWEETS_NAME, TweetsCollection, TweetsSchema } from '~/models/public/tweet.schema'
-import { COLLECTION_LIKES_NAME } from '~/models/public/like.schema'
-import { COLLECTION_USERS_NAME } from '~/models/public/user.schema'
-import { COLLECTION_BOOKMARKS_NAME } from '~/models/public/bookmark.schema'
+import { COLLECTION_TWEETS_NAME, TweetsCollection, TweetsSchema } from '~/schemas/public/tweet.schema'
+import { COLLECTION_LIKES_NAME } from '~/schemas/public/like.schema'
+import { COLLECTION_USERS_NAME } from '~/schemas/public/user.schema'
+import { COLLECTION_BOOKMARKS_NAME } from '~/schemas/public/bookmark.schema'
 import tweetsService from '../tweets.service'
 
 export async function getTweetsByCommunityIdHelper({

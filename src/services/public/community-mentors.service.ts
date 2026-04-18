@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
 import { BadRequestError } from '~/core/error.response'
 import { ICommunityPayload } from '~/shared/interfaces/public/community.interface'
-import { CommunityMentorCollection, CommunityMentorSchema } from '~/models/public/community.schema'
+import { CommunityMentorCollection, CommunityMentorSchema } from '~/schemas/public/community.schema'
 import { CONSTANT_MAX_LENGTH_MENTOR } from '../../shared/constants/communities.constant'
 
 class CommunityMentorService {

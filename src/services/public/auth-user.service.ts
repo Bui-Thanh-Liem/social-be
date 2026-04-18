@@ -12,7 +12,7 @@ import {
 } from '~/shared/dtos/public/auth-user.dto'
 import cacheService from '~/helpers/cache.helper'
 import { emailQueue, notificationQueue } from '~/infra/queues'
-import { UsersCollection, UsersSchema } from '~/models/public/user.schema'
+import { UsersCollection, UsersSchema } from '~/schemas/public/user.schema'
 import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
 import { ISendVerifyEmail } from '~/shared/interfaces/common/mail.interface'
 import { IGoogleToken, IGoogleUserProfile } from '~/shared/interfaces/common/oauth-google.interface'

@@ -3,7 +3,7 @@ import FollowsController from '~/controllers/public/follows.controller'
 import { UserIdDtoSchema } from '~/shared/dtos/public/users.dto'
 import { paramsValidate } from '~/middlewares/common/params-validate.middleware'
 import { authenticationUserMiddleware } from '~/middlewares/public/authentication-user.middleware'
-import { checkUserParamsMiddleware } from '~/middlewares/public/user/check-user-params.middleware'
+import { checkUserParamsMiddleware } from '~/middlewares/common/check-user-exist.middleware'
 import { asyncHandler } from '~/utils/async-handler.util'
 
 /**

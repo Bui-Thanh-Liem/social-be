@@ -5,17 +5,17 @@ import { ITweet } from '~/shared/interfaces/public/tweet.interface'
 import { ResMultiType } from '~/shared/types/response.type'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
 import followsService from '../../follows.service'
-import { COLLECTION_TWEETS_NAME, TweetsCollection, TweetsSchema } from '~/models/public/tweet.schema'
-import { COLLECTION_USERS_NAME } from '~/models/public/user.schema'
+import { COLLECTION_TWEETS_NAME, TweetsCollection, TweetsSchema } from '~/schemas/public/tweet.schema'
+import { COLLECTION_USERS_NAME } from '~/schemas/public/user.schema'
 import { EUserStatus } from '~/shared/enums/public/users.enum'
-import { COLLECTION_BOOKMARKS_NAME } from '~/models/public/bookmark.schema'
-import { COLLECTION_LIKES_NAME } from '~/models/public/like.schema'
+import { COLLECTION_BOOKMARKS_NAME } from '~/schemas/public/bookmark.schema'
+import { COLLECTION_LIKES_NAME } from '~/schemas/public/like.schema'
 import {
   COLLECTION_MEMBER_NAME,
   COLLECTION_MENTOR_NAME,
   CommunitiesCollection,
   CommunitiesSchema
-} from '~/models/public/community.schema'
+} from '~/schemas/public/community.schema'
 import { EMembershipType } from '~/shared/enums/public/communities.enum'
 import tweetsService from '../tweets.service'
 

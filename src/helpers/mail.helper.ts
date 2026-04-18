@@ -85,7 +85,7 @@ class MailHelper {
     return this.send({
       to: to_email,
       subject: 'Xác minh tài khoản của bạn',
-      template: 'verifyEmail',
+      template: 'verify-email',
       context: { name, url }
     })
   }
@@ -97,7 +97,7 @@ class MailHelper {
     return this.send({
       to: to_email,
       subject: 'Đặt lại mật khẩu',
-      template: 'forgotPassword',
+      template: 'forgot-password',
       context: { name, url }
     })
   }

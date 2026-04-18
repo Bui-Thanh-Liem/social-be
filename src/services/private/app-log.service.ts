@@ -1,4 +1,4 @@
-import { LogSchema, LogsCollection } from '~/models/private/log.schema'
+import { LogSchema, LogsCollection } from '~/schemas/private/log.schema'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { ILog } from '~/shared/interfaces/private/log.interface'
 import { getFilterQuery } from '~/utils/get-filter-query.util'

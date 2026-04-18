@@ -1,11 +1,11 @@
 import { ObjectId } from 'mongodb'
 import { IQuery } from '~/shared/interfaces/common/query.interface'
 import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query.util'
-import { COLLECTION_USERS_NAME } from '~/models/public/user.schema'
+import { COLLECTION_USERS_NAME } from '~/schemas/public/user.schema'
 import { CreateUserViolationsDto } from '~/shared/dtos/public/user-violations.dto'
 import { IUserViolation } from '~/shared/interfaces/public/user-violation.interface'
 import { ResMultiDto } from '~/shared/dtos/common/res-multi.dto'
-import { UserViolationSchema, UserViolationsCollection } from '~/models/public/user-violation.schema'
+import { UserViolationSchema, UserViolationsCollection } from '~/schemas/public/user-violation.schema'
 
 class UserViolationsService {
   async create(payload: CreateUserViolationsDto) {

@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { NotFoundError } from '~/core/error.response'
-import { BookmarksCollection } from '~/models/public/bookmark.schema'
+import { BookmarksCollection } from '~/schemas/public/bookmark.schema'
 import TweetsService from '~/services/public/tweets/tweets.service'
 import { ResToggleBookmark } from '../../shared/dtos/public/bookmarks.dto'
 

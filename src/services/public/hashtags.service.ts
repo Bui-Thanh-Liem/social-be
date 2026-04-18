@@ -7,7 +7,7 @@ import { slug } from '~/utils/slug.util'
 import BadWordsService from '../private/bad-words.service'
 import { ESourceViolation } from '../../shared/enums/public/user-violations.enum'
 import { IHashtag } from '../../shared/interfaces/public/hashtag.interface'
-import { HashtagsCollection, HashtagsSchema } from '../../models/public/hashtag.schema'
+import { HashtagsCollection, HashtagsSchema } from '../../schemas/public/hashtag.schema'
 import userViolationsService from '../common/user-violations.service'
 
 class HashtagsService {

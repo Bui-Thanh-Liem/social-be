@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { UserTokensCollection, UserTokensSchema } from '~/models/public/user-token.schema'
+import { UserTokensCollection, UserTokensSchema } from '~/schemas/public/user-token.schema'
 
 class UserTokensService {
   async create({
