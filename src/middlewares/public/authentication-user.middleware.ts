@@ -3,6 +3,7 @@ import { envs } from '~/configs/env.config'
 import { ForbiddenError, UnauthorizedError } from '~/core/error.response'
 import UsersService from '~/services/public/users.service'
 import { EUserStatus } from '~/shared/enums/public/users.enum'
+import authGateway from '~/socket/gateways/auth.gateway'
 import { verifyToken } from '~/utils/jwt.util'
 
 export async function authenticationUserMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -20,6 +21,7 @@ export async function authenticationUserMiddleware(req: Request, res: Response, 
       const user = await UsersService.getUserActive(decoded.user_id)
 
       if (!user) {
+        authGateway.logoutUser(decoded.user_id) // Đăng xuất user khỏi tất cả các thiết bị đang đăng nhập
         throw new UnauthorizedError('Vui lòng đăng nhập.')
       }
 

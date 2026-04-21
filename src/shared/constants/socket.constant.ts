@@ -1,6 +1,7 @@
 export const CONSTANT_EVENT_NAMES = {
   // USER
   USER_ONLINE: 'user:online',
+  USER_LOGOUT: 'user:logout',
 
   // MESSAGE
   SEND_MESSAGE: 'message:send',

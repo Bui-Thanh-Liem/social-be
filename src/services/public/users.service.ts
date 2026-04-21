@@ -22,6 +22,7 @@ import { ResMultiDto } from '~/shared/dtos/common/res-multi.dto'
 import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
 import userTokensService from './user-tokens.service'
 import { ENotificationType } from '~/shared/enums/public/notifications.enum'
+import authGateway from '~/socket/gateways/auth.gateway'
 
 class UsersService {
   async verifyEmail({
@@ -704,6 +705,7 @@ class UsersService {
 
     // Xoá mọi phiên đang đăng nhập của người dùng này
     if (status === EUserStatus.Block) {
+      authGateway.logoutUser(user_id)
       await userTokensService.deleteByUserId({ user_id })
     }
 

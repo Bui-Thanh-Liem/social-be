@@ -29,6 +29,7 @@ import userViolationsService from '../common/user-violations.service'
 import BadWordsService from '../private/bad-words.service'
 import userTokensService from './user-tokens.service'
 import UsersService from './users.service'
+import authGateway from '~/socket/gateways/auth.gateway'
 
 class AuthUserService {
   async signup(payload: RegisterUserDto) {
@@ -438,47 +439,52 @@ class AuthUserService {
 
   // Đã kiểm tra refresh_token hợp lệ ở route (nếu không hợp lệ thì không cho vào controller)
   async refreshToken({ refresh_token }: { refresh_token: string }) {
-    // Kiểm tra xem refresh_token này đã sử dụng chưa
-    const foundToken = await userTokensService.findByRefreshTokenUsed({ refresh_token })
+    try {
+      // Kiểm tra xem refresh_token này đã sử dụng chưa
+      const foundToken = await userTokensService.findByRefreshTokenUsed({ refresh_token })
 
-    // Nếu có (hacker sử dụng rồi hoặc là chính chủ sử dụng rồi giờ hacker sử dụng lại)
-    if (foundToken) {
-      const decoded = await verifyToken({ token: refresh_token, private_key: envs.JWT_SECRET_REFRESH_USER })
-      logger.error('Người dùng này đang sử dụng refresh_token đã được sử dụng rồi:::', decoded.user_id)
+      // Nếu có (hacker sử dụng rồi hoặc là chính chủ sử dụng rồi giờ hacker sử dụng lại)
+      if (foundToken) {
+        const decoded = await verifyToken({ token: refresh_token, private_key: envs.JWT_SECRET_REFRESH_USER })
+        logger.error('Người dùng này đang sử dụng refresh_token đã được sử dụng rồi:::', decoded.user_id)
 
-      // Xoá mọi phiên đang đăng nhập của người dùng này (an toàn nhất)
-      await userTokensService.deleteByUserId({ user_id: decoded.user_id })
-      throw new ForbiddenError('Có lỗi trong quá trình xử lý, vui lòng đăng nhập lại')
+        // Xoá mọi phiên đang đăng nhập của người dùng này (an toàn nhất)
+        await userTokensService.deleteByUserId({ user_id: decoded.user_id })
+        authGateway.logoutUser(decoded.user_id) // Đăng xuất user khỏi tất cả các thiết bị đang đăng nhập
+        throw new ForbiddenError('Có lỗi trong quá trình xử lý, vui lòng đăng nhập lại')
+      }
+
+      // Kiểm tra refresh_token có trong trạng thái đang sử dụng hay không
+      const holderToken = await userTokensService.findByRefreshToken({ refresh_token })
+      if (!holderToken) {
+        throw new UnauthorizedError('Có lỗi trong quá trình xử lý, vui lòng đăng nhập lại')
+      }
+
+      // Verify
+      const decoded = await verifyToken({ token: holderToken.refresh_token, private_key: envs.JWT_SECRET_REFRESH_USER })
+
+      // Kiểm tra tồn tại người dùng
+      const foundUser = await UsersService.findOneById(decoded.user_id)
+      if (!foundUser) throw new NotFoundError('Người dùng không tồn tại.')
+
+      // Tạo access/refresh token mới
+      const [access_token, new_refresh_token] = await createTokenPair({
+        payload: { user_id: decoded.user_id, role: 'user', admin_id: '' },
+        exp_refresh: decoded.exp,
+        private_access_key: envs.JWT_SECRET_ACCESS_USER,
+        private_refresh_key: envs.JWT_SECRET_REFRESH_USER,
+        expires_in_access: envs.JWT_EXPIRES_IN_15M,
+        expires_in_refresh: envs.JWT_EXPIRES_IN_30D
+      })
+
+      // Cập nhật lại token đang sử dụng và token đã được sử dụng.
+      await userTokensService.updateTokenUsed({ new_token: new_refresh_token, token_used: refresh_token })
+
+      //
+      return { access_token, refresh_token: new_refresh_token }
+    } catch (error) {
+      throw new UnauthorizedError('Có lỗi trong quá trình xử lý, vui lòng đăng nhập lại')
     }
-
-    // Kiểm tra refresh_token có trong trạng thái sử dụng hay không
-    const holderToken = await userTokensService.findByRefreshToken({ refresh_token })
-    if (!holderToken) {
-      throw new UnauthorizedError()
-    }
-
-    // Verify
-    const decoded = await verifyToken({ token: holderToken.refresh_token, private_key: envs.JWT_SECRET_REFRESH_USER })
-
-    // Kiểm tra tồn tại người dùng
-    const foundUser = await UsersService.findOneById(decoded.user_id)
-    if (!foundUser) throw new NotFoundError('Người dùng không tồn tại.')
-
-    // Tạo access/refresh token mới
-    const [access_token, new_refresh_token] = await createTokenPair({
-      payload: { user_id: decoded.user_id, role: 'user', admin_id: '' },
-      exp_refresh: decoded.exp,
-      private_access_key: envs.JWT_SECRET_ACCESS_USER,
-      private_refresh_key: envs.JWT_SECRET_REFRESH_USER,
-      expires_in_access: envs.JWT_EXPIRES_IN_15M,
-      expires_in_refresh: envs.JWT_EXPIRES_IN_30D
-    })
-
-    // Cập nhật lại token đang sử dụng và token đã được sử dụng.
-    await userTokensService.updateTokenUsed({ new_token: new_refresh_token, token_used: refresh_token })
-
-    //
-    return { access_token, refresh_token: new_refresh_token }
   }
 
   //
