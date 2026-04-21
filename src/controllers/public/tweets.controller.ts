@@ -11,7 +11,8 @@ import { IUser } from '~/shared/interfaces/public/user.interface'
 class TweetsController {
   async create(req: Request, res: Response) {
     const { user_id } = req.decoded_authorization as IJwtPayload
-    const { message, result } = await TweetsService.create(user_id!, req.body)
+    const { type } = req.user as IUser
+    const { message, result } = await TweetsService.create(user_id!, type, req.body)
     res.status(201).json(new CreatedResponse(message, result))
   }
 

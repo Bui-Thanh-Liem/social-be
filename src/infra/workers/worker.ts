@@ -4,6 +4,7 @@ import { emailWorker } from './email.worker'
 import { inviteWorker } from './invite.worker'
 import { notificationWorker } from './notification.worker'
 import { systemWorker } from './system.worker'
+import { tweetWorker } from './tweet.worker'
 
 async function bootstrapWorker() {
   try {
@@ -17,8 +18,9 @@ async function bootstrapWorker() {
 
     // 3. Log worker status
     logger.info('🚀 Workers are running...')
-    logger.info(`  - System Worker: ${systemWorker.name}`)
+    logger.info(`  - Tweet Worker: ${tweetWorker.name}`)
     logger.info(`  - Email Worker: ${emailWorker.name}`)
+    logger.info(`  - System Worker: ${systemWorker.name}`)
     logger.info(`  - Invite Worker: ${inviteWorker.name}`)
     logger.info(`  - Notification Worker: ${notificationWorker.name}`)
   } catch (err) {
@@ -34,7 +36,13 @@ async function shutdown() {
 
   try {
     // 1. Đóng tất cả workers
-    await Promise.all([systemWorker.close(), emailWorker.close(), inviteWorker.close(), notificationWorker.close()])
+    await Promise.all([
+      tweetWorker.close(),
+      emailWorker.close(),
+      systemWorker.close(),
+      inviteWorker.close(),
+      notificationWorker.close()
+    ])
     logger.info('✅ All workers closed')
 
     // 2. Đóng database connection

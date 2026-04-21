@@ -9,3 +9,9 @@ export enum EUserVerifyStatus {
   Verified,
   Banned
 }
+
+export enum EUserType {
+  Normal = 'Bình thường',
+  Pro = 'Chuyên nghiệp',
+  Kol = 'KOL'
+}

@@ -7,7 +7,7 @@ import { EMembershipType, EVisibilityType } from '~/shared/enums/public/communit
 import { ETweetAudience, ETweetType } from '~/shared/enums/public/tweets.enum'
 import { IUser } from '~/shared/interfaces/public/user.interface'
 import { FollowersCollection } from '~/schemas/public/follow.schema'
-import { EUserVerifyStatus } from '~/shared/enums/public/users.enum'
+import { EUserType, EUserVerifyStatus } from '~/shared/enums/public/users.enum'
 import { UsersCollection, UsersSchema } from '~/schemas/public/user.schema'
 import communitiesService from '~/services/public/communities.service'
 import TweetsService from '~/services/public/tweets/tweets.service'
@@ -424,7 +424,7 @@ async function createRandomTweets(users: Pick<IUser, '_id' | 'username'>[], comm
       const ht1 = [randomHashtag(), randomHashtag(), randomHashtag()]
 
       await Promise.all([
-        TweetsService.create(user._id!.toString(), {
+        TweetsService.create(user._id!.toString(), EUserType.Normal, {
           type: ETweetType.Tweet,
           audience: ETweetAudience.Everyone,
           content: generateRandomTweet(ht1, user.username!),

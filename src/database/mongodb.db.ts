@@ -21,7 +21,7 @@ import {
   initCommunityPinCollection
 } from '~/schemas/public/community.schema'
 import { ConversationsCollection, initConversationsCollection } from '~/schemas/public/conversation.schema'
-import { initFollowersCollection } from '~/schemas/public/follow.schema'
+import { FollowersCollection, initFollowersCollection } from '~/schemas/public/follow.schema'
 import { HashtagsCollection, initHashtagsCollection } from '~/schemas/public/hashtag.schema'
 import { initLikesCollection, LikesCollection } from '~/schemas/public/like.schema'
 import { initMediasCollection, MediasCollection } from '~/schemas/common/media.schema'
@@ -228,6 +228,7 @@ class Database {
       const indexAdmin = await AdminCollection.indexExists(['email_1', 'name_1'])
       const indexAdminTokens = await AdminTokensCollection.indexExists(['admin_id_1', 'refresh_token_1'])
       const indexLogs = await LogsCollection.indexExists(['admin_id_1', 'created_at_1'])
+      const indexFollowers = await FollowersCollection.indexExists(['followed_user_id_1', 'created_at_1'])
 
       // User
       if (!indexUser) {
@@ -367,6 +368,12 @@ class Database {
       if (!indexLogs) {
         LogsCollection.createIndex({ admin_id: 1 })
         LogsCollection.createIndex({ created_at: 1 })
+      }
+
+      // Followers
+      if (!indexFollowers) {
+        FollowersCollection.createIndex({ followed_user_id: 1 })
+        FollowersCollection.createIndex({ created_at: 1 })
       }
 
       logger.info('All indexes are ensured successfully')

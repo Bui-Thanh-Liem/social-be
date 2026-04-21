@@ -33,7 +33,7 @@ export async function getNewFeedsHelper({
   const { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
 
   //
-  const followed_user_ids = await followsService.getUserFollowing(user_active_id)
+  const followed_user_ids = await followsService.getUserFollowingIds(user_active_id)
   followed_user_ids.push(user_active_id)
 
   // Dynamic match condition based on feed type

@@ -14,7 +14,7 @@ import { getPaginationAndSafeQuery } from '~/utils/get-pagination-and-safe-query
 import { signToken, verifyToken } from '~/utils/jwt.util'
 import { logger } from '~/utils/logger.util'
 import { EUserTokenType } from '../../shared/enums/public/user-tokens.enum'
-import { EUserStatus, EUserVerifyStatus } from '../../shared/enums/public/users.enum'
+import { EUserStatus, EUserType, EUserVerifyStatus } from '../../shared/enums/public/users.enum'
 import accessRecentService from './access-recents.service'
 import followsService from './follows.service'
 import { getFilterQuery } from '~/utils/get-filter-query.util'
@@ -131,17 +131,7 @@ class UsersService {
         }
       },
       {
-        $lookup: {
-          from: 'followers',
-          localField: '_id',
-          foreignField: 'user_id',
-          as: 'following'
-        }
-      },
-      {
         $addFields: {
-          follower_count: { $size: '$followers' },
-          following_count: { $size: '$following' },
           isFollow: {
             $in: [new ObjectId(user_id_active), '$followers.user_id']
           }
@@ -217,7 +207,7 @@ class UsersService {
     }
 
     //
-    const followed_user_ids = await followsService.getUserFollowers(user_id)
+    const followed_user_ids = await followsService.getUserFollowerIds(user_id)
     const users = await UsersCollection.aggregate<UsersSchema>([
       {
         $match: {
@@ -303,7 +293,7 @@ class UsersService {
     }
 
     //
-    const following_user_ids = await followsService.getUserFollowing(id)
+    const following_user_ids = await followsService.getUserFollowingIds(id)
     const users = await UsersCollection.aggregate<UsersSchema>([
       {
         $match: {
@@ -608,11 +598,87 @@ class UsersService {
     ]
     const users = await UsersCollection.find(
       { email: { $in: guestEmails } },
-      { projection: { email: 1, name: 1, avatar: 1, status: 1 } }
+      { projection: { email: 1, name: 1, avatar: 1, status: 1, type: 1 } }
     ).toArray()
 
     return users
     // return this.signedCloudfrontAvatarUrls(users) as IUser[]
+  }
+
+  //
+  async incFollowCount(user_id: string, followed_user_id: string, increment = 1) {
+    await Promise.all([
+      // tăng/giảm follower_count của người được follow
+      UsersCollection.updateOne(
+        { _id: new ObjectId(followed_user_id) },
+        {
+          $inc: {
+            follower_count: increment
+          },
+          $currentDate: {
+            updated_at: true
+          }
+        }
+      ),
+
+      // tăng/giảm following_count của người follow
+      UsersCollection.updateOne(
+        { _id: new ObjectId(user_id) },
+        {
+          $inc: {
+            following_count: increment
+          },
+          $currentDate: {
+            updated_at: true
+          }
+        }
+      )
+    ])
+  }
+
+  //
+  async checkAndChangeUserType() {
+    const users = await UsersCollection.aggregate<{ _id: ObjectId }>([
+      {
+        $match: {
+          follower_count: { $gte: 50 },
+          type: { $ne: EUserType.Kol }
+        }
+      },
+      {
+        $project: {
+          _id: 1
+        }
+      }
+    ]).toArray()
+
+    await this.changeUserType({ user_ids: users.map((user) => user._id.toString()), type: EUserType.Kol })
+
+    return users.length
+  }
+
+  private async changeUserType({ user_ids, type }: { user_ids: string[]; type: EUserType }) {
+    //
+    await this.checkUsersExist(user_ids)
+
+    // Cập nhật loại tài khoản
+    const result = await UsersCollection.updateMany(
+      { _id: { $in: user_ids.map((id) => new ObjectId(id)) } },
+      {
+        $set: {
+          type
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+
+    // Xoá cache thôi không phải query
+    await Promise.all(user_ids.map((user_id) => this.resetUserActive(user_id)))
+
+    //
+    return result
   }
 
   //
@@ -751,6 +817,21 @@ class UsersService {
       await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
         content:
           reason || 'Bạn đã vi phạm một số điều khoản của chúng tôi, vui lòng chú ý hơn để tránh bị khoá tài khoản.',
+        type: ENotificationType.Other,
+        sender: user_id,
+        receiver: user_id
+      })
+    }
+  }
+
+  async adminChangeUserType({ user_id, admin_id, type }: { user_id: string; admin_id: string; type: EUserType }) {
+    //
+    const result = await this.changeUserType({ user_ids: [user_id], type })
+
+    //
+    if (result.modifiedCount) {
+      await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+        content: `Tài khoản của bạn đã được chuyển sang loại ${type} bởi quản trị viên.`,
         type: ENotificationType.Other,
         sender: user_id,
         receiver: user_id

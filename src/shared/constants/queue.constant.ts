@@ -1,5 +1,6 @@
 export const CONSTANT_QUEUE = {
   MAIL: '{email}',
+  TWEET: '{tweet}',
   INVITE: '{invite}',
   SYSTEM: '{system}',
   NOTIFICATION: '{notification}'
@@ -11,8 +12,10 @@ export const CONSTANT_JOB = {
   SEND_NOTI: 'send-noti',
   VERIFY_MAIL: 'verify-email',
   SEND_NOTI_LIKE: 'send-noti-like',
+  CHECK_USER_TYPE: 'check-user-type',
   FORGOT_PASSWORD: 'forgot-password',
   DELETE_MESSAGES: 'delete-messages',
+  HANDLE_NEWS_FEED: 'handle-news-feed',
   SEND_NOTI_COMMENT: 'send-noti-comment',
   DELETE_CHILDREN_TWEET: 'delete-children-tweet',
 

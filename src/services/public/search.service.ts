@@ -122,7 +122,7 @@ class SearchService {
     const { skip, limit, q, f, pf, sort, t } = getPaginationAndSafeQuery<ITweet>(query)
 
     //
-    const followed_user_ids = await followsService.getUserFollowing(user_id)
+    const followed_user_ids = await followsService.getUserFollowingIds(user_id)
     followed_user_ids.push(user_id)
 
     //
@@ -571,7 +571,7 @@ class SearchService {
     }
 
     if (pf) {
-      const followed_user_ids = await followsService.getUserFollowing(user_id)
+      const followed_user_ids = await followsService.getUserFollowingIds(user_id)
       hasPf.query = { _id: { $in: followed_user_ids } }
     }
 

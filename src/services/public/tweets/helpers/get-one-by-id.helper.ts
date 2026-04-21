@@ -17,7 +17,7 @@ export async function getOneByIdHelper({
   id: string
   user_active_id: string
 }): Promise<TweetsSchema | null> {
-  const followed_user_ids = await followsService.getUserFollowing(user_active_id)
+  const followed_user_ids = await followsService.getUserFollowingIds(user_active_id)
   followed_user_ids.push(user_active_id)
 
   //

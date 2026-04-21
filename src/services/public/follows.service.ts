@@ -5,6 +5,7 @@ import { notificationQueue } from '~/infra/queues'
 import { FollowersCollection } from '~/schemas/public/follow.schema'
 import { UsersCollection } from '~/schemas/public/user.schema'
 import { CONSTANT_JOB } from '~/shared/constants/queue.constant'
+import usersService from './users.service'
 
 class FollowsService {
   async toggleFollow(user_id: string, followed_user_id: string): Promise<ResToggleFollow> {
@@ -21,17 +22,20 @@ class FollowsService {
 
     //
     if (deleted?._id) {
+      await usersService.incFollowCount(user_id, followed_user_id, -1)
       return { status: 'Unfollow', _id: deleted._id.toString() }
     } else {
-      //
-      const inserted = await FollowersCollection.insertOne({
-        user_id: user_object_id,
-        followed_user_id: followed_user_object_id
-      })
+      // 1. Thực hiện các lệnh ghi chính
+      const [inserted] = await Promise.all([
+        FollowersCollection.insertOne(data_handle),
+        usersService.incFollowCount(user_id, followed_user_id, 1)
+      ])
 
-      // Gửi thông báo
+      // 2. Xử lý thông báo (Có thể chạy ngầm hoặc gộp)
+      // Thay vì query name ở đây, có thể truyền user_id vào Worker của Queue
+      // và để Worker tự query name để giảm thời gian phản hồi API (Response Time).
       const sender = await UsersCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { name: 1 } })
-      await notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
+      notificationQueue.add(CONSTANT_JOB.SEND_NOTI, {
         content: `${sender?.name} đang theo dõi bạn.`,
         type: ENotificationType.Follow,
         sender: user_id,
@@ -44,7 +48,7 @@ class FollowsService {
   }
 
   // Lấy user mình đang follow
-  async getUserFollowing(user_id: string) {
+  async getUserFollowingIds(user_id: string) {
     if (!user_id) return []
 
     const result_following = await FollowersCollection.find(
@@ -66,10 +70,10 @@ class FollowsService {
   }
 
   // Lấy user đang follow mình
-  async getUserFollowers(user_id: string) {
+  async getUserFollowerIds(user_id: string, limit?: number, skip?: number) {
     if (!user_id) return []
 
-    const result_follower = await FollowersCollection.find(
+    const query = FollowersCollection.find(
       {
         followed_user_id: new ObjectId(user_id)
       },
@@ -79,11 +83,21 @@ class FollowsService {
           user_id: 1
         }
       }
-    ).toArray()
+    )
 
-    //
-    const followers_user_ids = result_follower.map((x) => x.user_id) as unknown as string[]
-    return followers_user_ids
+    // apply skip trước
+    if (skip && skip > 0) {
+      query.skip(skip)
+    }
+
+    // nếu có limit thì apply
+    if (limit && limit > 0) {
+      query.limit(limit)
+    }
+
+    const result_follower = await query.toArray()
+
+    return result_follower.map((x) => x.user_id)
   }
 }
 

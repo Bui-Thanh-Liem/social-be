@@ -84,3 +84,16 @@ cron.schedule(
   },
   config
 )
+
+/**
+ * 🧹 JOB 6 — Mỗi 00h5p: tạo mỗi user (tạo trước ngày 10/03/2026) 1 tweets
+ */
+cron.schedule(
+  '0 5 * * *',
+  async () => {
+    console.log('[CRON-1D] 🧹 Checking and updating user types...')
+    systemQueue.add(CONSTANT_JOB.CHECK_USER_TYPE, {})
+    console.log('[CRON-1D] ✅ Checked and updated user types')
+  },
+  config
+)

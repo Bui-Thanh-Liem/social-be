@@ -32,7 +32,7 @@ export async function getProfileTweetsHelper({
   let { skip, limit, sort } = getPaginationAndSafeQuery<ITweet>(query)
 
   // Lấy danh sách của người nào đang theo dõi user_id
-  const followed_user_ids = await followsService.getUserFollowers(user_id)
+  const followed_user_ids = await followsService.getUserFollowerIds(user_id)
 
   // ép về string để so sánh cho chắc
   const is_following = followed_user_ids.some((f: ObjectId | string) => f.toString() === user_active_id?.toString())

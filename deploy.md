@@ -56,3 +56,24 @@ print("Đã xóa toàn bộ dữ liệu trong tất cả collection!");
 
 git tag v3 #
 git push origin v3 => CI/CD
+
+<!--  -->
+
+# 1. Xóa sạch index (dấu chấm là xóa toàn bộ cache quản lý file hiện tại)
+
+git rm -r --cached .
+
+# 2. Add lại toàn bộ (lúc này Git sẽ quét lại theo config ignorecase=false)
+
+git add .
+
+# 3. Kiểm tra lại bằng git status
+
+# Bạn sẽ thấy một loạt file báo là "renamed" từ Hoa sang thường
+
+git status
+
+# 4. Commit và Push
+
+git commit -m "Fix: sync all file casings to lowercase"
+git push origin main

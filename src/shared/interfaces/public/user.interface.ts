@@ -1,10 +1,10 @@
 import { IMediaBare } from '~/shared/interfaces/common/media-bare.interface'
 import { IBase } from '~/shared/interfaces/common/base.interface'
-import { EUserStatus, EUserVerifyStatus } from '~/shared/enums/public/users.enum'
+import { EUserStatus, EUserType, EUserVerifyStatus } from '~/shared/enums/public/users.enum'
 
-// interface IUserSettings {
-//   dark_mode: boolean
-// }
+export interface IUserSettings {
+  dark_mode: boolean
+}
 
 //
 export interface IUserStatus {
@@ -21,6 +21,9 @@ export interface IUser extends IBase {
   forgot_password_token?: string
   verify: EUserVerifyStatus
   status: IUserStatus
+  type: EUserType
+  follower_count: number
+  following_count: number
 
   //
   bio?: string
@@ -30,10 +33,8 @@ export interface IUser extends IBase {
   avatar?: IMediaBare
   isPinnedReel: boolean
   cover_photo?: IMediaBare
-  // settings: IUserSettings
+  settings: IUserSettings
 
   //
-  follower_count?: number
-  following_count?: number
   isFollow?: boolean // người đang active và user đang truy vấn
 }

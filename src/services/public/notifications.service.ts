@@ -111,9 +111,6 @@ class NotificationService {
 
     const new_noti = await NotificationsCollection.aggregate<INotification>(pipeline).next()
 
-    //
-    console.log('publishNotification:::', new_noti)
-
     // SignUrl nếu ref_id là media
     if (new_noti?.media_ref) {
       new_noti.media_ref = {

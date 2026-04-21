@@ -6,7 +6,7 @@ import { CreateNotiCommentDto } from '~/shared/dtos/public/notifications.dto'
 import { CreateTweetDto, ResCountViewLinkBookmarkInWeek } from '~/shared/dtos/public/tweets.dto'
 import cacheService from '~/helpers/cache.helper'
 import pessimisticLockServiceInstance from '~/helpers/pessimistic-lock.helper'
-import { notificationQueue } from '~/infra/queues'
+import { notificationQueue, tweetQueue } from '~/infra/queues'
 import { systemQueue } from '~/infra/queues/system.queue'
 import { IMedia } from '~/shared/interfaces/common/media.interface'
 import { ICommunity } from '~/shared/interfaces/public/community.interface'
@@ -47,10 +47,12 @@ import { getTweetLikedHelper } from './helpers/get-tweet-liked.helper'
 import { getTweetChildrenHelper } from './helpers/get-tweet-children.helper'
 import { getOneByIdHelper } from './helpers/get-one-by-id.helper'
 import { getTweetsByCommunityIdHelper } from './helpers/get-tweets-by-community-id.helper'
+import { EUserType } from '~/shared/enums/public/users.enum'
+import { IHandleNewsFeedType } from '~/shared/interfaces/common/handle-news-feed.interface'
 
 class TweetsService {
   //
-  async create(user_id: string, payload: CreateTweetDto) {
+  async create(user_id: string, userType: EUserType, payload: CreateTweetDto) {
     let message = 'Đăng bài thành công'
     const {
       audience,
@@ -158,7 +160,10 @@ class TweetsService {
     }
 
     // Mentions
-    const sender = await UsersCollection.findOne({ _id: new ObjectId(user_id) }, { projection: { name: 1 } })
+    const sender = await UsersCollection.findOne(
+      { _id: new ObjectId(user_id) },
+      { projection: { name: 1, avatar: 1, username: 1 } }
+    )
 
     // Gửi thông báo cho ai mà người comment/tweet nhắc đến
     if (mentions?.length) {
@@ -190,6 +195,7 @@ class TweetsService {
     // Gửi thông báo cho chủ bài viết là có người bình luận
     // ---
     // Emit comment mới về bài viết parent
+    // Nếu không phải comment và type = "KOL" thì thông báo và newsfeed
     if (type === ETweetType.Comment && parent_id) {
       await notificationQueue.add(CONSTANT_JOB.SEND_NOTI_COMMENT, {
         sender_id: user_id,
@@ -204,6 +210,18 @@ class TweetsService {
       if (newTw && parent_id) {
         await CommentGateway.sendNewComment(newTw, parent_id)
       }
+    } else if (type !== ETweetType.Comment && userType === EUserType.Kol) {
+      // Gửi thông báo cho newsfeed
+      const kol = {
+        name: sender?.name || '',
+        _id: new ObjectId(user_id),
+        avatar: sender?.avatar || '',
+        username: sender?.username || ''
+      }
+
+      console.log('[tweetService - create] :::', kol)
+
+      tweetQueue.add(CONSTANT_JOB.HANDLE_NEWS_FEED, { kol } as IHandleNewsFeedType)
     }
 
     // Gửi thông báo cho điều hành viên của cộng đồng
@@ -463,7 +481,7 @@ class TweetsService {
         }
 
         // Xóa các record của bookmark/like/comment
-        await systemQueue.add(CONSTANT_JOB.DELETE_CHILDREN_TWEET, { parent_id: tweet_id })
+        await tweetQueue.add(CONSTANT_JOB.DELETE_CHILDREN_TWEET, { parent_id: tweet_id })
       })
       return true
     } catch (error) {

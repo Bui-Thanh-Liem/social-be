@@ -155,7 +155,6 @@ export class CacheHelper {
   // ==========================================
   // User Status Tracking (Online/Offline)
   // ==========================================
-
   async markUserOnline(userId: string): Promise<void> {
     // Dùng Hash Tag {user_status} để đảm bảo toàn bộ Set online nằm trên cùng 1 node
     const key = `{user_status}:${createKeyUserOnline()}`
@@ -170,6 +169,7 @@ export class CacheHelper {
     await this.client.pipeline().srem(onlineKey, userId).hset(lastSeenKey, userId, Date.now().toString()).exec()
   }
 
+  // Kiểm tra trạng thái online của nhiều user cùng lúc
   async areUsersOnline(userIds: string[]): Promise<Record<string, boolean>> {
     if (!userIds.length) return {}
     const key = `{user_status}:${createKeyUserOnline()}`
@@ -185,6 +185,9 @@ export class CacheHelper {
       {} as Record<string, boolean>
     )
   }
+  // ==========================================
+  // User Status Tracking (Online/Offline)
+  // ==========================================
 
   async del(key: string): Promise<boolean> {
     const result = await this.client.del(key)

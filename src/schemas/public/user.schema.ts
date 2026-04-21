@@ -1,9 +1,8 @@
 import { Collection, Db } from 'mongodb'
-import { IUser, IUserStatus } from '~/shared/interfaces/public/user.interface'
+import { IUser, IUserSettings, IUserStatus } from '~/shared/interfaces/public/user.interface'
 import { IMediaBare } from '~/shared/interfaces/common/media-bare.interface'
 import { BaseSchema } from '~/shared/schemas/base.schema'
-import { EUserStatus, EUserVerifyStatus } from '../../shared/enums/public/users.enum'
-import { IReel } from '~/shared/interfaces/public/reel.interface'
+import { EUserStatus, EUserType, EUserVerifyStatus } from '../../shared/enums/public/users.enum'
 
 export const COLLECTION_USERS_NAME = 'users'
 export class UsersSchema extends BaseSchema implements IUser {
@@ -23,6 +22,10 @@ export class UsersSchema extends BaseSchema implements IUser {
   cover_photo?: IMediaBare
   status: IUserStatus
   isPinnedReel: boolean
+  type: EUserType
+  follower_count: number
+  following_count: number
+  settings: IUserSettings
 
   constructor(user: Partial<IUser>) {
     super()
@@ -41,6 +44,10 @@ export class UsersSchema extends BaseSchema implements IUser {
     this.isPinnedReel = user.isPinnedReel || false
     this.avatar = user.avatar || undefined
     this.cover_photo = user.cover_photo || undefined
+    this.type = EUserType.Normal
+    this.follower_count = 0
+    this.following_count = 0
+    this.settings = { dark_mode: false }
   }
 }
 

@@ -29,7 +29,7 @@ export async function getTweetsByCommunityIdHelper({
   let { skip, limit, sort, q } = getPaginationAndSafeQuery<ITweet>(query)
 
   // Lấy danh sách của người nào đang theo dõi user_id
-  const following_user_ids = await followsService.getUserFollowing(user_active_id)
+  const following_user_ids = await followsService.getUserFollowingIds(user_active_id)
 
   //
   const match_condition = {

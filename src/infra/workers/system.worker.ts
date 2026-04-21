@@ -5,7 +5,7 @@ import MessagesService from '~/services/public/messages.service'
 import NotificationsService from '~/services/public/notifications.service'
 import reportTweetService from '~/services/public/report-tweets.service'
 import TrendingService from '~/services/public/trending.service'
-import TweetsService from '~/services/public/tweets/tweets.service'
+import usersService from '~/services/public/users.service'
 import { CONSTANT_JOB, CONSTANT_QUEUE } from '~/shared/constants/queue.constant'
 import telegram from '~/telegram'
 import { logger } from '~/utils/logger.util'
@@ -20,12 +20,6 @@ export const systemWorker = new Worker(
       case CONSTANT_JOB.SYNC_LIKE: {
         await likesService.syncLikesFromCacheToDB()
         console.log(`✅ Synced likes from cache to DB`)
-        break
-      }
-      case CONSTANT_JOB.DELETE_CHILDREN_TWEET: {
-        const { parent_id } = job.data
-        await TweetsService.deleteChildrenTweet(parent_id)
-        console.log('Deleted children tweet of ', parent_id)
         break
       }
       case CONSTANT_JOB.DELETE_TWEET_REPORT: {
@@ -58,6 +52,12 @@ export const systemWorker = new Worker(
         await startMockTweets()
         await telegram.sendAlert(`🚨 <b>Thông báo từ hệ thống:</b> Đã tạo xong 1 tweets mới cho mỗi user!`)
         console.log('Created mock tweets')
+        break
+      }
+      case CONSTANT_JOB.CHECK_USER_TYPE: {
+        await usersService.checkAndChangeUserType()
+        await telegram.sendAlert(`🚨 <b>Thông báo từ hệ thống:</b> Đã kiểm tra và cập nhật loại người dùng!`)
+        console.log('Checked and updated user type for all users')
         break
       }
       default:
