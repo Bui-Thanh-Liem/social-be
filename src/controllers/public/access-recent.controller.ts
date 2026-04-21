@@ -20,7 +20,7 @@ class AccessRecentController {
       id: req.params.id
     })
     res.json(new OkResponse(`Xóa truy cập gần đây thành công`, deletedBadWord))
-  }
+  };
 
   async deleteAll(req: Request, res: Response) {
     const user = req.decoded_authorization as IJwtPayload
