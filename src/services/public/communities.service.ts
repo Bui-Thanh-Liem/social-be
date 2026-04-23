@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
-import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '~/core/error.response'
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from '~/core/error.response'
 import { clientMongodb } from '~/database/mongodb.db'
 import {
   ChangeInfoDto,
@@ -1257,7 +1257,7 @@ class CommunityService {
 
     //
     if (!is_admin && !is_mentor) {
-      throw new BadRequestError('Chỉ chủ sở hữu và điều hành viên mới có quyền xem.')
+      throw new UnauthorizedError('Chỉ chủ sở hữu và điều hành viên mới có quyền xem.')
     }
 
     const res = await TweetsService.changeStatusTweet({ tweet_id, status })

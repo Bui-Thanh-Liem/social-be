@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { signedCloudfrontUrl } from '~/cloud/aws/cloudfront.aws'
-import { BadRequestError, NotFoundError } from '~/core/error.response'
+import { BadRequestError, NotFoundError, UnauthorizedError } from '~/core/error.response'
 import { clientMongodb } from '~/database/mongodb.db'
 import { CreateNotiCommentDto } from '~/shared/dtos/public/notifications.dto'
 import { CreateTweetDto, ResCountViewLinkBookmarkInWeek } from '~/shared/dtos/public/tweets.dto'
@@ -801,7 +801,7 @@ class TweetsService {
 
     //
     if (!is_admin && !is_mentor) {
-      throw new BadRequestError('Chỉ chủ sở hữu và điều hành viên mới có quyền xem.')
+      throw new UnauthorizedError('Chỉ chủ sở hữu và điều hành viên mới có quyền xem.')
     }
 
     //
