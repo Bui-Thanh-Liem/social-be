@@ -92,33 +92,33 @@ class TweetsController {
   }
 
   async getTweetsPendingByCommunityId(req: Request, res: Response) {
-    const { user_id } = req?.decoded_authorization as IJwtPayload
+    const user = req?.decoded_authorization as IJwtPayload
     const queries = req.query as IQuery<ITweet>
 
     const result = await TweetsService.getTweetsPendingByCommunityId({
       query: queries,
-      user_active_id: user_id!,
+      user_active_id: user?.user_id,
       community_id: queries?.community_id as string
     })
     res.status(200).json(new OkResponse('Lấy tất vả bài viết chưa duyệt thành công.', result))
   }
 
   async getTweetLiked(req: Request, res: Response) {
-    const { user_id } = req.decoded_authorization as IJwtPayload
+    const user = req?.decoded_authorization as IJwtPayload
 
     const result = await TweetsService.getTweetLiked({
       query: req.query,
-      user_active_id: user_id!
+      user_active_id: user?.user_id
     })
     res.status(200).json(new OkResponse('Lấy bài viết đã thích thành công', result))
   }
 
   async getTweetBookmarked(req: Request, res: Response) {
-    const { user_id } = req.decoded_authorization as IJwtPayload
+    const user = req?.decoded_authorization as IJwtPayload
 
     const result = await TweetsService.getTweetBookmarked({
       query: req.query,
-      user_active_id: user_id!
+      user_active_id: user?.user_id
     })
     res.status(200).json(new OkResponse('Lấy bài viết đã lưu thành công', result))
   }
